@@ -24,6 +24,8 @@ export interface Database {
           sifflets_balance: number;
           winrate: number;
           trust_score: number;
+          last_refill_date: string | null;
+          has_onboarded: boolean;
           created_at: string;
         };
         Insert: {
@@ -32,6 +34,8 @@ export interface Database {
           sifflets_balance?: number;
           winrate?: number;
           trust_score?: number;
+          last_refill_date?: string | null;
+          has_onboarded?: boolean;
           created_at?: string;
         };
         Update: {
@@ -40,6 +44,8 @@ export interface Database {
           sifflets_balance?: number;
           winrate?: number;
           trust_score?: number;
+          last_refill_date?: string | null;
+          has_onboarded?: boolean;
           created_at?: string;
         };
         Relationships: [];

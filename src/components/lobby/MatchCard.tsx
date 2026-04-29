@@ -1,61 +1,72 @@
 import Link from "next/link";
 import type { MatchRow } from "@/lib/matches";
 
-function statusLabel(status: MatchRow["status"]) {
-  switch (status) {
-    case "live":
-      return "En direct";
-    case "upcoming":
-      return "À venir";
-    case "finished":
-      return "Terminé";
-  }
-}
-
 export function MatchCard({ match }: { match: MatchRow }) {
   const href = `/match/${match.id}`;
+  const isLive = match.status === "live";
+  const isFinished = match.status === "finished";
+
   const when = new Date(match.start_time).toLocaleString("fr-FR", {
-    dateStyle: "short",
-    timeStyle: "short",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
-  const inner = (
-    <>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-lg font-black text-white">
-            {match.team_home} — {match.team_away}
-          </p>
-          <p className="mt-1 text-xs text-green-100/80">{when}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {match.status === "live" && (
-            <span className="relative flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
-            </span>
-          )}
-          <span
-            className={
-              match.status === "live"
-                ? "rounded-full bg-red-600/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white"
-                : "rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-100"
-            }
-          >
-            {statusLabel(match.status)}
-          </span>
-        </div>
-      </div>
-      <p className="mt-3 text-xs text-green-200/70">Ouvrir la feuille de match →</p>
-    </>
-  );
-
-  const cardClass =
-    "block w-full rounded-2xl border border-white/10 bg-black/25 p-4 text-left shadow-lg transition hover:border-whistle/40 hover:bg-black/35 active:scale-[0.99]";
-
   return (
-    <Link href={href} className={cardClass}>
-      {inner}
+    <Link
+      href={href}
+      className={`block w-full rounded-2xl border p-4 text-left shadow-md transition active:scale-[0.99] ${
+        isLive
+          ? "border-green-500/30 bg-zinc-900 hover:border-green-500/50"
+          : "border-white/8 bg-zinc-900 hover:border-white/15"
+      }`}
+    >
+      {/* Status badge row */}
+      <div className="flex items-center justify-between gap-2">
+        {isLive ? (
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
+            </span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-green-500">
+              Live
+            </span>
+          </div>
+        ) : isFinished ? (
+          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+            Terminé
+          </span>
+        ) : (
+          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+            {when}
+          </span>
+        )}
+      </div>
+
+      {/* Teams */}
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <p className="min-w-0 flex-1 truncate text-lg font-black text-white">
+          {match.team_home}
+        </p>
+        <span className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1 text-sm font-black tabular-nums text-zinc-400">
+          vs
+        </span>
+        <p className="min-w-0 flex-1 truncate text-right text-lg font-black text-white">
+          {match.team_away}
+        </p>
+      </div>
+
+      {/* Footer */}
+      <p
+        className={`mt-3 text-xs font-semibold ${
+          isLive ? "text-green-500/80" : "text-zinc-600"
+        }`}
+      >
+        {isLive ? "Rejoindre le kop →" : isFinished ? "Voir le résumé →" : `Coup d'envoi : ${when}`}
+      </p>
     </Link>
   );
 }

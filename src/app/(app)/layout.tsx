@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AppHeader } from "@/components/layout/Header";
+import { TopBar } from "@/components/layout/TopBar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { Onboarding } from "@/components/onboarding/Onboarding";
 
 export default async function AppLayout({
   children,
@@ -18,7 +20,7 @@ export default async function AppLayout({
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("username, sifflets_balance")
+    .select("username, sifflets_balance, has_onboarded")
     .eq("id", user.id)
     .single();
 
@@ -27,12 +29,26 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-gradient-to-b from-pitch-800 to-pitch-900 text-chalk">
-      <AppHeader
+    <div className="flex min-h-full flex-1 flex-col bg-zinc-950 text-white">
+      <TopBar
         username={profile.username}
         siffletsBalance={profile.sifflets_balance}
       />
-      <div className="flex flex-1 flex-col">{children}</div>
+
+      {/* Scrollable content — clears fixed TopBar and BottomNav */}
+      <div
+        className="flex flex-1 flex-col"
+        style={{
+          paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))",
+          paddingBottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        {children}
+      </div>
+
+      <BottomNav />
+
+      {!profile.has_onboarded && <Onboarding />}
     </div>
   );
 }
