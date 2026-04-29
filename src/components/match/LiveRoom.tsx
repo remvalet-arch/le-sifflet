@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -71,8 +71,26 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
     );
   });
   const [pendingType, setPendingType] = useState<AlertActionType | null>(null);
+  const [signaledTypes, setSignaledTypes] = useState<Set<AlertActionType>>(
+    () => new Set(),
+  );
+  const signaledTimers = useRef<
+    Partial<Record<AlertActionType, ReturnType<typeof setTimeout>>>
+  >({});
   const [activeEvent, setActiveEvent] = useState<MarketEventRow | null>(null);
   const [localBalance, setLocalBalance] = useState(siffletsBalance);
+
+  function markAsSignaled(type: AlertActionType) {
+    setSignaledTypes((prev) => new Set([...prev, type]));
+    clearTimeout(signaledTimers.current[type]);
+    signaledTimers.current[type] = setTimeout(() => {
+      setSignaledTypes((prev) => {
+        const next = new Set(prev);
+        next.delete(type);
+        return next;
+      });
+    }, 30_000);
+  }
 
   // Cooldown countdown
   useEffect(() => {
@@ -209,7 +227,7 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
   const isOnCooldown = secondsLeft > 0;
 
   async function handleAlert(type: AlertActionType) {
-    if (isOnCooldown || pendingType) return;
+    if (isOnCooldown || pendingType || signaledTypes.has(type)) return;
     setPendingType(type);
     try {
       const res = await fetch("/api/alert", {
@@ -227,7 +245,8 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
-      toast.success("Signal envoyé au kop !");
+      markAsSignaled(type);
+      toast.success("Signal envoyé ! En attente d'autres confirmations…");
       if (json.data?.cooldown_until) {
         setCooldownUntil(new Date(json.data.cooldown_until));
       }
@@ -265,20 +284,29 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
             <div className="flex w-full flex-col gap-2.5">
               {ALERTS.map(({ type, emoji, label, color }) => {
                 const isPending = pendingType === type;
+                const isSignaled = signaledTypes.has(type);
                 return (
                   <button
                     key={type}
                     onClick={() => handleAlert(type)}
-                    disabled={!!pendingType}
-                    className={`flex h-[68px] w-full items-center gap-4 rounded-2xl border-2 bg-black/30 px-5 text-left shadow-md transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${color}`}
+                    disabled={!!pendingType || isSignaled}
+                    className={`flex h-[68px] w-full items-center gap-4 rounded-2xl border-2 bg-black/30 px-5 text-left shadow-md transition-all active:scale-[0.98] disabled:cursor-not-allowed ${
+                      isSignaled
+                        ? "border-whistle/50 bg-whistle/10 opacity-80"
+                        : `disabled:opacity-60 ${color}`
+                    }`}
                   >
                     <span className="shrink-0 text-2xl leading-none">
-                      {isPending ? "" : emoji}
+                      {isPending ? "" : isSignaled ? "⏳" : emoji}
                     </span>
                     {isPending ? (
                       <span className="flex items-center gap-2 text-sm font-semibold text-green-100/70">
                         <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
-                        En attente de confirmation…
+                        Envoi…
+                      </span>
+                    ) : isSignaled ? (
+                      <span className="text-sm font-bold text-whistle">
+                        Signal envoyé — En attente du kop…
                       </span>
                     ) : (
                       <span className="text-base font-black uppercase tracking-wide text-white">

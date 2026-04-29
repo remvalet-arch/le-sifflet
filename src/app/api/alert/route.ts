@@ -11,9 +11,10 @@ const VALID_TYPES: AlertActionType[] = [
   "red_card",
   "injury_sub",
 ];
-const THRESHOLD = 2;
-const WINDOW_SECONDS = 15;
+const ALERT_THRESHOLD = 2;
+const ALERT_WINDOW_SECONDS = 30;
 const COOLDOWN_MINUTES = 3;
+const MIN_TRUST_SCORE = 50;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -29,11 +30,26 @@ export async function POST(request: NextRequest) {
   };
   const { match_id, action_type } = body;
 
-  if (!match_id || !action_type || !VALID_TYPES.includes(action_type as AlertActionType)) {
+  if (
+    !match_id ||
+    !action_type ||
+    !VALID_TYPES.includes(action_type as AlertActionType)
+  ) {
     return errorResponse("Paramètres invalides", 400);
   }
 
   const validType = action_type as AlertActionType;
+
+  // Vérifie trust_score (anti-troll) — succès silencieux si insuffisant
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("trust_score")
+    .eq("id", user.id)
+    .single();
+
+  if ((profile?.trust_score ?? 0) < MIN_TRUST_SCORE) {
+    return successResponse({ cooldown_until: null });
+  }
 
   // Vérifie si le match est en cooldown
   const { data: match } = await supabase
@@ -49,7 +65,7 @@ export async function POST(request: NextRequest) {
     return errorResponse("Doucement l'arbitre, attends un peu…", 429);
   }
 
-  // Enregistre le signal (client user : INSERT policy OK)
+  // Enregistre le signal
   const { error: insertError } = await supabase.from("alert_signals").insert({
     match_id,
     user_id: user.id,
@@ -61,44 +77,68 @@ export async function POST(request: NextRequest) {
     return errorResponse(insertError.message);
   }
 
-  // Compte les signaux dans la fenêtre de temps
-  const since = new Date(Date.now() - WINDOW_SECONDS * 1000).toISOString();
-  const { count, error: countError } = await supabase
+  // Compte les signaux DISTINCTS (utilisateurs différents) dans la fenêtre de 30s
+  const since = new Date(Date.now() - ALERT_WINDOW_SECONDS * 1000).toISOString();
+  const { data: recentSignals, error: signalsError } = await supabase
     .from("alert_signals")
-    .select("*", { count: "exact", head: true })
+    .select("user_id")
     .eq("match_id", match_id)
     .eq("action_type", validType)
     .gte("created_at", since);
 
-  if (countError) {
-    console.error("[alert] Échec count alert_signals:", countError.message);
-    return errorResponse(countError.message);
+  if (signalsError) {
+    console.error("[alert] Échec fetch alert_signals:", signalsError.message);
+    return errorResponse(signalsError.message);
   }
 
-  console.log(`[alert] match=${match_id} type=${validType} count=${count ?? 0} threshold=${THRESHOLD}`);
+  const distinctUsers = [...new Set((recentSignals ?? []).map((s) => s.user_id))];
+  const distinctCount = distinctUsers.length;
+
+  console.log(
+    `[alert] match=${match_id} type=${validType} distinct=${distinctCount} threshold=${ALERT_THRESHOLD}`,
+  );
 
   let cooldown_until: string | null = null;
 
-  if ((count ?? 0) >= THRESHOLD) {
+  if (distinctCount >= ALERT_THRESHOLD) {
     let admin: ReturnType<typeof createAdminClient>;
     try {
       admin = createAdminClient();
     } catch (e) {
       console.error("[alert] createAdminClient failed:", e);
-      return errorResponse("Configuration serveur manquante (SUPABASE_SERVICE_ROLE_KEY)", 500);
+      return errorResponse(
+        "Configuration serveur manquante (SUPABASE_SERVICE_ROLE_KEY)",
+        500,
+      );
+    }
+
+    // Vérifie qu'il n'y a pas déjà un event 'open' du même type
+    const { data: existing } = await admin
+      .from("market_events")
+      .select("id")
+      .eq("match_id", match_id)
+      .eq("type", validType)
+      .eq("status", "open")
+      .maybeSingle();
+
+    if (existing) {
+      return successResponse({ cooldown_until: null });
     }
 
     const { error: eventError } = await admin.from("market_events").insert({
       match_id,
       type: validType,
       status: "open",
+      initiators: distinctUsers,
     });
 
     if (eventError) {
       console.error("[alert] Échec insert market_event:", eventError.message);
       return errorResponse("Impossible de créer l'événement");
     }
-    console.log(`[alert] ✅ market_event créé — match=${match_id} type=${validType}`);
+    console.log(
+      `[alert] ✅ market_event créé — match=${match_id} type=${validType} initiators=${distinctUsers.length}`,
+    );
 
     cooldown_until = new Date(
       Date.now() + COOLDOWN_MINUTES * 60 * 1000,

@@ -23,6 +23,7 @@ export interface Database {
           username: string;
           sifflets_balance: number;
           winrate: number;
+          trust_score: number;
           created_at: string;
         };
         Insert: {
@@ -30,6 +31,7 @@ export interface Database {
           username: string;
           sifflets_balance?: number;
           winrate?: number;
+          trust_score?: number;
           created_at?: string;
         };
         Update: {
@@ -37,6 +39,7 @@ export interface Database {
           username?: string;
           sifflets_balance?: number;
           winrate?: number;
+          trust_score?: number;
           created_at?: string;
         };
         Relationships: [];
@@ -128,6 +131,7 @@ export interface Database {
           result: string | null;
           created_at: string;
           resolved_at: string | null;
+          initiators: string[];
         };
         Insert: {
           id?: string;
@@ -137,6 +141,7 @@ export interface Database {
           result?: string | null;
           created_at?: string;
           resolved_at?: string | null;
+          initiators?: string[];
         };
         Update: {
           id?: string;
@@ -146,6 +151,7 @@ export interface Database {
           result?: string | null;
           created_at?: string;
           resolved_at?: string | null;
+          initiators?: string[];
         };
         Relationships: [];
       };
