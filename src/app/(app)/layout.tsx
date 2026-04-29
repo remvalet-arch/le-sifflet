@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/TopBar";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { Onboarding } from "@/components/onboarding/Onboarding";
 
 export default async function AppLayout({
   children,
@@ -14,19 +13,15 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/");
-  }
+  if (!user) redirect("/");
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("username, sifflets_balance, has_onboarded")
+    .select("username, sifflets_balance")
     .eq("id", user.id)
     .single();
 
-  if (error || !profile) {
-    redirect("/?error=profile");
-  }
+  if (error || !profile) redirect("/?error=profile");
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-zinc-950 text-white">
@@ -47,8 +42,6 @@ export default async function AppLayout({
       </div>
 
       <BottomNav />
-
-      {!profile.has_onboarded && <Onboarding />}
     </div>
   );
 }

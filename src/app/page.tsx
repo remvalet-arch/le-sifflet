@@ -1,51 +1,41 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
-import { Goal } from "lucide-react";
-import { HomeAuthCtas } from "@/components/home/HomeAuthCtas";
+import { createClient } from "@/lib/supabase/server";
+import { WhistleLogo } from "@/components/ui/WhistleLogo";
 
-export default function Home() {
+export default async function SplashPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) redirect("/lobby");
+
   return (
-    <div className="flex flex-1 flex-col bg-gradient-to-b from-pitch-800 to-pitch-900 text-chalk">
-      <header className="border-b border-white/10 px-4 py-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <div className="flex items-center gap-2 font-black uppercase tracking-tight">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-whistle text-pitch-900 shadow-md">
-              <Goal className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="text-lg">Le Sifflet</span>
-          </div>
-          <Link
-            href="/debug"
-            className="text-xs font-semibold uppercase tracking-wide text-green-200/90 underline-offset-4 hover:text-white hover:underline"
-          >
-            État API
-          </Link>
-        </div>
-      </header>
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-zinc-950 px-6">
+      <div className="flex w-full max-w-sm flex-col items-center gap-8 text-center">
+        <WhistleLogo size="xl" />
 
-      <main className="mx-auto flex max-w-3xl flex-1 flex-col justify-center gap-6 px-4 py-16 text-center">
-        <p className="text-sm font-bold uppercase tracking-widest text-whistle/90">
-          MVP — étape 2
-        </p>
-        <h1 className="text-4xl font-black uppercase leading-tight tracking-tight text-white sm:text-5xl">
-          T&apos;as sorti tes lunettes pour le hors-jeu ?
-        </h1>
-        <p className="text-lg text-green-100/95">
-          Connecte-toi pour rejoindre le lobby, voir les matchs et préparer la live
-          room.
-        </p>
-        <div className="flex flex-col items-center justify-center gap-3 pt-4">
-          <Suspense fallback={<div className="h-12 w-full max-w-xs rounded-full bg-white/10" />}>
-            <HomeAuthCtas />
-          </Suspense>
-          <Link
-            href="/debug"
-            className="text-xs font-semibold uppercase tracking-wide text-green-200/80 underline-offset-4 hover:text-white hover:underline"
-          >
-            Vérifier Supabase
-          </Link>
+        <div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter text-white">
+            Le Sifflet
+          </h1>
+          <p className="mt-2 text-base text-zinc-400">
+            Le deuxième écran des fans de foot
+          </p>
         </div>
-      </main>
+
+        <Link
+          href="/login"
+          className="flex h-14 w-full items-center justify-center rounded-2xl bg-green-500 text-base font-black uppercase tracking-wide text-zinc-950 shadow-md transition hover:bg-green-400 active:scale-[0.98]"
+        >
+          Rejoindre le Kop
+        </Link>
+
+        <p className="text-xs text-zinc-600">
+          100% gratuit · Aucun argent réel
+        </p>
+      </div>
     </div>
   );
 }
