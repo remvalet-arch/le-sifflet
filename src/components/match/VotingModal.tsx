@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Flag, Siren, Square, LoaderCircle } from "lucide-react";
+import { Flag, Siren, Square, Target, Activity, LoaderCircle } from "lucide-react";
 import type { MarketEventRow, MarketEventType } from "@/types/database";
 
 const EVENT_CONFIG: Record<
   MarketEventType,
   { question: string; Icon: React.ElementType }
 > = {
-  penalty: { question: "Il y a péno ?", Icon: Siren },
-  offside: { question: "Hors-jeu confirmé ?", Icon: Flag },
-  card: { question: "Carton mérité ?", Icon: Square },
+  penalty_check: { question: "Il y a péno là ?!", Icon: Siren },
+  penalty_outcome: { question: "Péno : au fond ou pas ?", Icon: Target },
+  var_goal: { question: "But annulé ?", Icon: Flag },
+  red_card: { question: "Sortez le rouge !", Icon: Square },
+  injury_sub: { question: "Cinéma ou civière ?", Icon: Activity },
 };
 
 function getMultiplierInfo(createdAt: string): {
@@ -54,7 +56,7 @@ export function VotingModal({
   const [loading, setLoading] = useState(false);
 
   const expired = secondsLeft === 0;
-  const cfg = EVENT_CONFIG[event.type] ?? EVENT_CONFIG.penalty;
+  const cfg = EVENT_CONFIG[event.type] ?? EVENT_CONFIG.penalty_check;
 
   useEffect(() => {
     if (expired) return;

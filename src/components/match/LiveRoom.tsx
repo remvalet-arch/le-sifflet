@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Siren, Flag, Square, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type {
   AlertActionType,
@@ -14,28 +14,44 @@ import { VotingModal } from "./VotingModal";
 
 const ALERTS: {
   type: AlertActionType;
+  emoji: string;
   label: string;
-  Icon: React.ElementType;
   color: string;
 }[] = [
   {
-    type: "penalty",
-    label: "Péno ?",
-    Icon: Siren,
-    color: "border-red-500/60 hover:border-red-400 hover:bg-red-900/30",
-  },
-  {
-    type: "offside",
-    label: "Hors-jeu ?",
-    Icon: Flag,
-    color: "border-blue-400/60 hover:border-blue-300 hover:bg-blue-900/30",
-  },
-  {
-    type: "card",
-    label: "Carton ?",
-    Icon: Square,
+    type: "penalty_check",
+    emoji: "📢",
+    label: "Y'A PÉNO LÀ !!",
     color:
-      "border-whistle/60 hover:border-whistle hover:bg-yellow-900/30 [&_svg]:fill-whistle [&_svg]:stroke-whistle",
+      "border-red-500/50 hover:border-red-400 hover:bg-red-950/40 active:bg-red-900/50",
+  },
+  {
+    type: "penalty_outcome",
+    emoji: "🥅",
+    label: "PÉNO : AU FOND OU PAS ?",
+    color:
+      "border-emerald-500/50 hover:border-emerald-400 hover:bg-emerald-950/40 active:bg-emerald-900/50",
+  },
+  {
+    type: "var_goal",
+    emoji: "🚩",
+    label: "HORS-JEU / BUT ANNULÉ ?",
+    color:
+      "border-blue-400/50 hover:border-blue-300 hover:bg-blue-950/40 active:bg-blue-900/50",
+  },
+  {
+    type: "red_card",
+    emoji: "🟥",
+    label: "SORTEZ LE ROUGE !",
+    color:
+      "border-red-700/60 hover:border-red-500 hover:bg-red-950/50 active:bg-red-900/60",
+  },
+  {
+    type: "injury_sub",
+    emoji: "🚑",
+    label: "CINÉMA OU CIVIÈRE ?",
+    color:
+      "border-orange-400/50 hover:border-orange-300 hover:bg-orange-950/40 active:bg-orange-900/50",
   },
 ];
 
@@ -77,7 +93,7 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
     return () => clearInterval(id);
   }, [cooldownUntil]);
 
-  // Vérifie s'il y a un event 'open' déjà actif à l'arrivée sur la page
+  // Event 'open' déjà actif à l'arrivée sur la page (joueur en retard)
   useEffect(() => {
     const supabase = createClient();
     const since = new Date(Date.now() - 90_000).toISOString();
@@ -147,8 +163,14 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
         },
         (payload) => {
           const event = payload.new as MarketEventRow;
-          if (event?.status !== "open") {
-            setActiveEvent((prev) => (prev?.id === event?.id ? null : prev));
+          if (event?.status === "resolved") {
+            setActiveEvent((prev) => {
+              if (prev?.id === event.id) {
+                toast.info("L'arbitre a tranché — résultat en cours…");
+                return null;
+              }
+              return prev;
+            });
           }
         },
       )
@@ -205,7 +227,7 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
-      toast.success("Sifflet enregistré !");
+      toast.success("Signal envoyé au kop !");
       if (json.data?.cooldown_until) {
         setCooldownUntil(new Date(json.data.cooldown_until));
       }
@@ -221,7 +243,7 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
 
   return (
     <>
-      <section className="mt-6 flex flex-col items-center gap-6 px-2">
+      <section className="mt-6 flex flex-col items-center gap-5 px-2">
         {isOnCooldown ? (
           <div className="flex w-full flex-col items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-6 py-8 text-center">
             <LoaderCircle className="h-8 w-8 animate-spin text-whistle" />
@@ -237,25 +259,32 @@ export function LiveRoom({ match, siffletsBalance, userId }: Props) {
           </div>
         ) : (
           <>
-            <p className="text-sm font-semibold uppercase tracking-widest text-green-100/70">
+            <p className="text-xs font-bold uppercase tracking-widest text-green-100/50">
               T&apos;as vu quelque chose ?
             </p>
-            <div className="flex w-full flex-col gap-3">
-              {ALERTS.map(({ type, label, Icon, color }) => {
-                const loading = pendingType === type;
+            <div className="flex w-full flex-col gap-2.5">
+              {ALERTS.map(({ type, emoji, label, color }) => {
+                const isPending = pendingType === type;
                 return (
                   <button
                     key={type}
                     onClick={() => handleAlert(type)}
                     disabled={!!pendingType}
-                    className={`flex h-20 w-full items-center justify-center gap-4 rounded-2xl border-2 bg-black/25 text-xl font-black uppercase tracking-wide text-white shadow-lg transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${color}`}
+                    className={`flex h-[68px] w-full items-center gap-4 rounded-2xl border-2 bg-black/30 px-5 text-left shadow-md transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${color}`}
                   >
-                    {loading ? (
-                      <LoaderCircle className="h-6 w-6 animate-spin" />
+                    <span className="shrink-0 text-2xl leading-none">
+                      {isPending ? "" : emoji}
+                    </span>
+                    {isPending ? (
+                      <span className="flex items-center gap-2 text-sm font-semibold text-green-100/70">
+                        <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
+                        En attente de confirmation…
+                      </span>
                     ) : (
-                      <Icon className="h-6 w-6" />
+                      <span className="text-base font-black uppercase tracking-wide text-white">
+                        {label}
+                      </span>
                     )}
-                    {label}
                   </button>
                 );
               })}

@@ -4,8 +4,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { AlertActionType } from "@/types/database";
 
-const VALID_TYPES: AlertActionType[] = ["penalty", "offside", "card"];
-const THRESHOLD = 1; // TEST : seuil abaissé à 1 pour valider la chaîne Realtime
+const VALID_TYPES: AlertActionType[] = [
+  "penalty_check",
+  "penalty_outcome",
+  "var_goal",
+  "red_card",
+  "injury_sub",
+];
+const THRESHOLD = 2;
 const WINDOW_SECONDS = 15;
 const COOLDOWN_MINUTES = 3;
 

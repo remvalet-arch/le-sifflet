@@ -1,8 +1,18 @@
 export type MatchStatus = "upcoming" | "live" | "finished";
-export type MarketEventType = "penalty" | "offside" | "card";
+export type MarketEventType =
+  | "penalty_check"
+  | "penalty_outcome"
+  | "var_goal"
+  | "red_card"
+  | "injury_sub";
 export type MarketEventStatus = "open" | "locked" | "resolved";
 export type BetStatus = "pending" | "won" | "lost";
-export type AlertActionType = "penalty" | "offside" | "card";
+export type AlertActionType =
+  | "penalty_check"
+  | "penalty_outcome"
+  | "var_goal"
+  | "red_card"
+  | "injury_sub";
 
 export interface Database {
   public: {
