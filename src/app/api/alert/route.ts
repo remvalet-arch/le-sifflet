@@ -74,8 +74,13 @@ export async function POST(request: NextRequest) {
   let cooldown_until: string | null = null;
 
   if ((count ?? 0) >= THRESHOLD) {
-    // Utilise le client admin (service_role) pour bypasser RLS sur market_events et matches
-    const admin = createAdminClient();
+    let admin: ReturnType<typeof createAdminClient>;
+    try {
+      admin = createAdminClient();
+    } catch (e) {
+      console.error("[alert] createAdminClient failed:", e);
+      return errorResponse("Configuration serveur manquante (SUPABASE_SERVICE_ROLE_KEY)", 500);
+    }
 
     const { error: eventError } = await admin.from("market_events").insert({
       match_id,
