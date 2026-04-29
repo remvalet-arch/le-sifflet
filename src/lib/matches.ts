@@ -1,13 +1,6 @@
-export type MatchStatus = "upcoming" | "live" | "finished";
+import type { MatchRow, MatchStatus } from "@/types/database";
 
-export type MatchRow = {
-  id: string;
-  team_home: string;
-  team_away: string;
-  status: MatchStatus;
-  start_time: string;
-  created_at: string;
-};
+export type { MatchStatus, MatchRow } from "@/types/database";
 
 const STATUS_ORDER: Record<MatchStatus, number> = {
   live: 0,

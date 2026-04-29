@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ToasterProvider } from "@/components/providers/ToasterProvider";
 
 const appUrl =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -47,6 +48,7 @@ export default function RootLayout({
     <html lang="fr" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         {children}
+        <ToasterProvider />
       </body>
     </html>
   );
