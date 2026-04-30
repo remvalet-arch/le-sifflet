@@ -2,14 +2,49 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { MatchTimelineEventRow } from "@/types/database";
+import type { MatchTimelineEventRow, TimelineEventType } from "@/types/database";
 
-const ICONS: Record<string, string> = {
+const ICONS: Record<TimelineEventType, string> = {
   goal:         "⚽",
   yellow_card:  "🟨",
   red_card:     "🟥",
   substitution: "🔄",
 };
+
+function EventCard({
+  ev,
+  side,
+}: {
+  ev: MatchTimelineEventRow;
+  side: "home" | "away";
+}) {
+  const icon = ICONS[ev.event_type];
+  const isGoal = ev.event_type === "goal";
+  const isSub = ev.event_type === "substitution";
+  const isRight = side === "away";
+
+  return (
+    <div
+      className={`flex max-w-[140px] items-center gap-2 rounded-xl border px-3 py-2.5 ${
+        isGoal
+          ? "border-green-700/40 bg-green-900/30"
+          : "border-white/8 bg-zinc-800/60"
+      } ${isRight ? "flex-row-reverse" : ""}`}
+    >
+      <span className="text-xl leading-none">{icon}</span>
+      <div className={`flex flex-col ${isRight ? "items-end" : ""}`}>
+        <span className="text-xs font-black text-white">{ev.minute}&apos;</span>
+        <span
+          className={`mt-0.5 text-[11px] leading-tight text-zinc-400 ${
+            isSub ? "max-w-[80px]" : "max-w-[80px] truncate"
+          }`}
+        >
+          {ev.player_name}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 type Props = { matchId: string };
 
@@ -72,43 +107,26 @@ export function MatchTimeline({ matchId }: Props) {
   }
 
   return (
-    <div className="relative mt-4 pb-4">
-      {/* Ligne centrale verticale */}
-      <div className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-zinc-700" />
+    <div className="relative mt-6 pb-4">
+      {/* Ligne centrale */}
+      <div className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-zinc-800" />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {events.map((ev) => {
-          const icon = ICONS[ev.event_type] ?? "•";
           const isHome = ev.team_side === "home";
           return (
             <div key={ev.id} className="relative flex items-center">
-              {/* Côté domicile (gauche) */}
-              <div className="flex flex-1 items-center justify-end pr-4 text-right">
-                {isHome ? (
-                  <>
-                    <span className="mr-1 text-sm font-semibold text-white">
-                      {ev.player_name}
-                    </span>
-                    <span className="text-base leading-none">{icon}</span>
-                  </>
-                ) : null}
+              {/* Côté domicile */}
+              <div className="flex flex-1 justify-end pr-4">
+                {isHome && <EventCard ev={ev} side="home" />}
               </div>
 
-              {/* Badge minute (centre) */}
-              <div className="z-10 flex h-8 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-black text-zinc-300 ring-1 ring-zinc-700">
-                {ev.minute}&apos;
-              </div>
+              {/* Point central sur la ligne */}
+              <div className="z-10 h-3 w-3 shrink-0 rounded-full bg-zinc-600 ring-2 ring-zinc-950" />
 
-              {/* Côté extérieur (droite) */}
-              <div className="flex flex-1 items-center pl-4">
-                {!isHome ? (
-                  <>
-                    <span className="text-base leading-none">{icon}</span>
-                    <span className="ml-1 text-sm font-semibold text-white">
-                      {ev.player_name}
-                    </span>
-                  </>
-                ) : null}
+              {/* Côté extérieur */}
+              <div className="flex flex-1 justify-start pl-4">
+                {!isHome && <EventCard ev={ev} side="away" />}
               </div>
             </div>
           );

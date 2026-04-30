@@ -202,26 +202,30 @@ export function LiveRoom({
 
   return (
     <>
-      {/* Scoreboard réactif */}
-      <div className="mt-4">
+      {/* En-tête sticky : scoreboard + onglets */}
+      <div
+        className="sticky z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md"
+        style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
+      >
         <Scoreboard match={liveMatch} />
-      </div>
 
-      {/* Tab switcher */}
-      <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-zinc-800/60 p-1">
-        {(["kop", "compo"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`rounded-xl py-2.5 text-sm font-black uppercase tracking-wide transition ${
-              activeTab === tab
-                ? "bg-zinc-700 text-white shadow"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            {tab === "kop" ? "Le Kop" : "Compos"}
-          </button>
-        ))}
+        {/* Onglets style Google — underline indicator */}
+        <div className="flex border-b border-white/8">
+          {(["kop", "compo"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`relative flex-1 py-3 text-sm font-black uppercase tracking-wide transition-colors ${
+                activeTab === tab ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {tab === "kop" ? "Le Kop" : "Compos"}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-t-full bg-green-500" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Contenu de l'onglet */}

@@ -1,52 +1,114 @@
 import type { MatchRow } from "@/types/database";
 
+function shortTeamName(name: string): string {
+  const s = name
+    .replace(/\b(F\.C\.|FC|OGC|RC|SC|AC|AS|AFC)\b\.?\s*/gi, "")
+    .trim()
+    .replace(/\s+/g, " ");
+  const words = s.split(" ").filter(Boolean);
+  const twoWords = words.slice(0, 2).join(" ");
+  return twoWords.length <= 14 ? twoWords : words[0] ?? name;
+}
+
+function TeamCrest({
+  logo,
+  color,
+}: {
+  logo?: string | null;
+  color?: string | null;
+}) {
+  return (
+    <div
+      className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 text-xl shadow-sm"
+      style={{ backgroundColor: color ?? "#3f3f46" }}
+    >
+      {logo ? (
+        <span className="text-lg leading-none">{logo}</span>
+      ) : (
+        <span className="text-sm leading-none text-white/40">⚽</span>
+      )}
+    </div>
+  );
+}
+
+function TeamSide({
+  name,
+  logo,
+  color,
+}: {
+  name: string;
+  logo?: string | null;
+  color?: string | null;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center gap-1.5">
+      <TeamCrest logo={logo} color={color} />
+      <span className="line-clamp-2 max-w-[72px] text-center text-[10px] font-bold leading-tight text-white/70">
+        {shortTeamName(name)}
+      </span>
+    </div>
+  );
+}
+
 export function Scoreboard({ match }: { match: MatchRow }) {
   const isLive = match.status === "live";
   const showScore = isLive || match.status === "finished";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 px-6 py-5 shadow-xl">
-      <div className="mb-4 flex items-center justify-center gap-2">
+    <div className="px-6 pt-4 pb-3">
+      {/* Crests + score */}
+      <div className="flex items-center justify-between gap-3">
+        <TeamSide
+          name={match.team_home}
+          logo={match.home_team_logo}
+          color={match.home_team_color}
+        />
+
+        <div className="flex flex-col items-center">
+          {showScore ? (
+            <span className="text-4xl font-black tabular-nums tracking-tight text-white">
+              {match.home_score}
+              <span className="mx-2 text-2xl font-bold text-white/30">—</span>
+              {match.away_score}
+            </span>
+          ) : (
+            <span className="text-xl font-black uppercase tracking-[0.25em] text-white/30">
+              VS
+            </span>
+          )}
+        </div>
+
+        <TeamSide
+          name={match.team_away}
+          logo={match.away_team_logo}
+          color={match.away_team_color}
+        />
+      </div>
+
+      {/* Status */}
+      <div className="mt-2.5 flex items-center justify-center gap-1.5">
         {isLive && (
-          <span className="relative flex h-2.5 w-2.5">
+          <span className="relative flex h-2 w-2 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
           </span>
         )}
         <span
-          className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
+          className={`text-[11px] font-black uppercase tracking-widest ${
             isLive
-              ? "bg-red-600/90 text-white"
-              : match.status === "upcoming"
-                ? "bg-white/15 text-white/70"
-                : "bg-white/10 text-white/50"
+              ? "text-red-400"
+              : match.status === "finished"
+                ? "text-zinc-500"
+                : "text-zinc-400"
           }`}
         >
           {isLive
             ? match.match_minute !== null
-              ? `${match.match_minute}'`
+              ? `En direct · ${match.match_minute}'`
               : "En direct"
             : match.status === "upcoming"
               ? "À venir"
               : "Terminé"}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <span className="flex-1 text-left text-base font-black leading-tight text-white sm:text-lg">
-          {match.team_home}
-        </span>
-        {showScore ? (
-          <span className="shrink-0 text-3xl font-black tabular-nums text-white">
-            {match.home_score} — {match.away_score}
-          </span>
-        ) : (
-          <span className="shrink-0 text-sm font-bold uppercase tracking-widest text-white/40">
-            VS
-          </span>
-        )}
-        <span className="flex-1 text-right text-base font-black leading-tight text-white sm:text-lg">
-          {match.team_away}
         </span>
       </div>
     </div>

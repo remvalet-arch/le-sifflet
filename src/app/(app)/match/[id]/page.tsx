@@ -62,7 +62,7 @@ export default async function MatchPage({ params }: Props) {
         />
       ) : (
         <>
-          <div className="mt-4">
+          <div className="mt-4 rounded-2xl border border-white/10 bg-zinc-900/60 shadow-xl">
             <Scoreboard match={match} />
           </div>
           <p className="mt-3 text-center text-xs text-zinc-500">{when}</p>
