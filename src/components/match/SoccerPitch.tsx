@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { LineupRow } from "@/types/database";
 
@@ -87,7 +87,7 @@ type Props = {
   awayTeamColor?: string;
 };
 
-export function SoccerPitch({
+export const SoccerPitch = memo(function SoccerPitch({
   matchId,
   teamHome,
   teamAway,
@@ -204,4 +204,4 @@ export function SoccerPitch({
       )}
     </div>
   );
-}
+});

@@ -14,8 +14,9 @@ import { Scoreboard } from "./Scoreboard";
 import { MatchTimeline } from "./MatchTimeline";
 import { SoccerPitch } from "./SoccerPitch";
 import { ActionDrawer } from "./ActionDrawer";
+import { PolymarketTab } from "./PolymarketTab";
 
-type Tab = "kop" | "compo";
+type Tab = "kop" | "compo" | "polymarket";
 type Props = {
   match: MatchRow;
   siffletsBalance: number;
@@ -197,8 +198,14 @@ export function LiveRoom({
     }
   }
 
-  const cooldownMins = Math.floor(cooldownSecs / 60);
+  const cooldownMins    = Math.floor(cooldownSecs / 60);
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: "kop",       label: "Le Kop"      },
+    { id: "compo",     label: "Compos"      },
+    { id: "polymarket", label: "📊 Polymarket" },
+  ];
 
   return (
     <>
@@ -211,16 +218,16 @@ export function LiveRoom({
 
         {/* Onglets style Google — underline indicator */}
         <div className="flex border-b border-white/8">
-          {(["kop", "compo"] as const).map((tab) => (
+          {TABS.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`relative flex-1 py-3 text-sm font-black uppercase tracking-wide transition-colors ${
-                activeTab === tab ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex-1 py-3 text-xs font-black uppercase tracking-wide transition-colors ${
+                activeTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {tab === "kop" ? "Le Kop" : "Compos"}
-              {activeTab === tab && (
+              {tab.label}
+              {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-t-full bg-green-500" />
               )}
             </button>
@@ -229,7 +236,9 @@ export function LiveRoom({
       </div>
 
       {/* Contenu de l'onglet */}
-      {activeTab === "kop" && <MatchTimeline matchId={liveMatch.id} />}
+      {activeTab === "kop" && (
+        <MatchTimeline matchId={liveMatch.id} isModerator={isModerator} />
+      )}
       {activeTab === "compo" && (
         <SoccerPitch
           matchId={liveMatch.id}
@@ -239,12 +248,23 @@ export function LiveRoom({
           awayTeamColor={liveMatch.away_team_color ?? undefined}
         />
       )}
+      {activeTab === "polymarket" && (
+        <PolymarketTab
+          matchId={liveMatch.id}
+          userId={userId}
+          siffletsBalance={localBalance}
+          teamHome={liveMatch.team_home}
+          teamAway={liveMatch.team_away}
+          onBetSuccess={(amount) => setLocalBalance((b) => b - amount)}
+        />
+      )}
 
-      {/* Drawer d'action (ouvert par le Super Button de la BottomNav) */}
+      {/* Drawer d'action */}
       <ActionDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         isModerator={isModerator}
+        matchStatus={liveMatch.status}
         isOnCooldown={cooldownSecs > 0}
         cooldownMins={cooldownMins}
         cooldownSecs={cooldownSecsStr}

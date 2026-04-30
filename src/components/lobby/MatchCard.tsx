@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { MatchRow } from "@/lib/matches";
+import { isMatchInProgress } from "@/lib/matches";
 
 export function MatchCard({ match }: { match: MatchRow }) {
   const href = `/match/${match.id}`;
-  const isLive = match.status === "live";
+  const isLive = isMatchInProgress(match.status);
   const isFinished = match.status === "finished";
 
   const when = new Date(match.start_time).toLocaleString("fr-FR", {

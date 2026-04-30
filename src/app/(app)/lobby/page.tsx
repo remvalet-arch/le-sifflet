@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { MatchCard } from "@/components/lobby/MatchCard";
 import { Onboarding } from "@/components/onboarding/Onboarding";
-import { sortMatchesForLobby, type MatchRow } from "@/lib/matches";
+import { sortMatchesForLobby, isMatchInProgress, type MatchRow } from "@/lib/matches";
 
 export const metadata = { title: "Stade" };
 
@@ -31,7 +31,7 @@ export default async function LobbyPage() {
   }
 
   const matches = sortMatchesForLobby((matchesResult.data ?? []) as MatchRow[]);
-  const live = matches.filter((m) => m.status === "live");
+  const live = matches.filter((m) => isMatchInProgress(m.status));
   const upcoming = matches.filter((m) => m.status === "upcoming");
   const finished = matches.filter((m) => m.status === "finished");
   const needsOnboarding = profileResult.data?.has_onboarded === false;

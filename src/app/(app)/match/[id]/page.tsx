@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LiveRoom } from "@/components/match/LiveRoom";
 import { Scoreboard } from "@/components/match/Scoreboard";
+import { isMatchInProgress } from "@/lib/matches";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -53,7 +54,7 @@ export default async function MatchPage({ params }: Props) {
         ← Terrain
       </Link>
 
-      {match.status === "live" || (isModerator && match.status === "upcoming") ? (
+      {(isMatchInProgress(match.status) || (isModerator && match.status === "upcoming")) ? (
         <LiveRoom
           match={match}
           siffletsBalance={siffletsBalance}
