@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type {
   AlertActionType,
@@ -14,8 +13,7 @@ import { VotingModal } from "./VotingModal";
 import { Scoreboard } from "./Scoreboard";
 import { MatchTimeline } from "./MatchTimeline";
 import { SoccerPitch } from "./SoccerPitch";
-import { AlertDrawer } from "./AlertDrawer";
-import { ModeratorDrawer } from "./ModeratorDrawer";
+import { ActionDrawer } from "./ActionDrawer";
 
 type Tab = "kop" | "compo";
 type Props = {
@@ -53,9 +51,8 @@ export function LiveRoom({
   const [activeEvent, setActiveEvent] = useState<MarketEventRow | null>(null);
   const [localBalance, setLocalBalance] = useState(siffletsBalance);
 
-  // Drawers
-  const [alertDrawerOpen, setAlertDrawerOpen] = useState(false);
-  const [modDrawerOpen, setModDrawerOpen] = useState(false);
+  // Drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Cooldown countdown
   useEffect(() => {
@@ -148,6 +145,13 @@ export function LiveRoom({
     return () => { void supabase.removeChannel(channel); };
   }, [match.id, userId]);
 
+  // Écoute le Super Button de la BottomNav
+  useEffect(() => {
+    const open = () => setDrawerOpen(true);
+    window.addEventListener("sifflet:open-drawer", open);
+    return () => window.removeEventListener("sifflet:open-drawer", open);
+  }, []);
+
   function markAsSignaled(type: AlertActionType) {
     setSignaledTypes((prev) => new Set([...prev, type]));
     clearTimeout(signaledTimers.current[type]);
@@ -224,39 +228,17 @@ export function LiveRoom({
         />
       )}
 
-      {/* FAB fixé au-dessus de la BottomNav */}
-      <div className="fixed bottom-20 right-4 z-30 flex items-center gap-2">
-        {isModerator && (
-          <button
-            onClick={() => setModDrawerOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-zinc-800 text-lg shadow-lg transition hover:bg-zinc-700 active:scale-95"
-            aria-label="Espace modérateur"
-          >
-            <Settings className="h-5 w-5 text-zinc-400" />
-          </button>
-        )}
-        <button
-          onClick={() => setAlertDrawerOpen(true)}
-          className="flex h-12 items-center gap-2 rounded-full bg-green-500 px-5 font-black text-sm uppercase tracking-wide text-zinc-950 shadow-lg shadow-green-500/30 transition hover:bg-green-400 active:scale-95"
-        >
-          🚨 Alerte
-        </button>
-      </div>
-
-      {/* Drawers */}
-      <AlertDrawer
-        open={alertDrawerOpen}
-        onClose={() => setAlertDrawerOpen(false)}
+      {/* Drawer d'action (ouvert par le Super Button de la BottomNav) */}
+      <ActionDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        isModerator={isModerator}
         isOnCooldown={cooldownSecs > 0}
         cooldownMins={cooldownMins}
         cooldownSecs={cooldownSecsStr}
         pendingType={pendingType}
         signaledTypes={signaledTypes}
         onAlert={handleAlert}
-      />
-      <ModeratorDrawer
-        open={modDrawerOpen}
-        onClose={() => setModDrawerOpen(false)}
         matchId={liveMatch.id}
         teamHome={liveMatch.team_home}
         teamAway={liveMatch.team_away}
