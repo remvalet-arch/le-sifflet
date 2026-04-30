@@ -6,7 +6,7 @@ export type MatchStatus =
   | "paused"
   | "finished";
 
-export type TimelineEventType = "goal" | "yellow_card" | "red_card" | "substitution";
+export type TimelineEventType = "goal" | "yellow_card" | "red_card" | "substitution" | "info";
 export type MarketEventType =
   | "penalty_check"
   | "penalty_outcome"
@@ -289,6 +289,7 @@ export interface Database {
           team_side: "home" | "away";
           player_name: string;
           is_own_goal: boolean;
+          details: string | null;
           created_at: string;
         };
         Insert: {
@@ -299,6 +300,7 @@ export interface Database {
           team_side: "home" | "away";
           player_name: string;
           is_own_goal?: boolean;
+          details?: string | null;
           created_at?: string;
         };
         Update: {
@@ -309,6 +311,7 @@ export interface Database {
           team_side?: "home" | "away";
           player_name?: string;
           is_own_goal?: boolean;
+          details?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -409,6 +412,18 @@ export interface Database {
           p_potential_reward: number;
         };
         Returns: string;
+      };
+      increment_match_score: {
+        Args: {
+          p_match_id: string;
+          p_home_delta: number;
+          p_away_delta: number;
+        };
+        Returns: undefined;
+      };
+      resolve_long_term_bets: {
+        Args: { p_match_id: string };
+        Returns: undefined;
       };
     };
   };

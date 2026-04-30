@@ -49,7 +49,7 @@ VALUES
   -- En direct — Demi-finale aller UCL (Atléti 1-1 Arsenal, 88')
   (
     'Atlético Madrid', 'Arsenal F.C.',
-    'live', '2026-04-29T19:00:00Z', 1, 1, 88,
+    'second_half', '2026-04-29T19:00:00Z', 1, 1, 88,
     '#CE3524', '#EF0107', NULL, NULL
   );
 

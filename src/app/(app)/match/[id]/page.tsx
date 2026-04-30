@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LiveRoom } from "@/components/match/LiveRoom";
 import { Scoreboard } from "@/components/match/Scoreboard";
 import { isMatchInProgress } from "@/lib/matches";
+import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,7 @@ export default async function MatchPage({ params }: Props) {
     .single();
 
   const siffletsBalance = profile?.sifflets_balance ?? 0;
-  const isModerator = (profile?.trust_score ?? 0) > 150;
+  const isModerator = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
 
   const when = new Date(match.start_time).toLocaleString("fr-FR", {
     dateStyle: "long",

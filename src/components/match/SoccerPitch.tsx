@@ -11,7 +11,6 @@ function lastName(fullName: string) {
   return parts[parts.length - 1] ?? fullName;
 }
 
-/** Retourne "white" si la couleur de fond est sombre, "black" sinon. */
 function contrastText(hex: string): "white" | "black" {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -19,6 +18,7 @@ function contrastText(hex: string): "white" | "black" {
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return lum > 0.5 ? "black" : "white";
 }
+
 
 function PlayerDot({
   name,
@@ -55,7 +55,7 @@ function PlayerDot({
   );
 }
 
-function PlayerRow({
+function LineupRow({
   players,
   bgColor,
   textIsWhite,
@@ -78,6 +78,73 @@ function PlayerRow({
     </div>
   );
 }
+
+// ── Vue liste (effectif global ou titulaires incomplets) ──────────────────────
+
+function RosterList({
+  teamHome,
+  teamAway,
+  homePlayers,
+  awayPlayers,
+  bench,
+  isGlobal,
+}: {
+  teamHome: string;
+  teamAway: string;
+  homePlayers: { id: string; player_name: string; position: string }[];
+  awayPlayers: { id: string; player_name: string; position: string }[];
+  bench: { id: string; player_name: string }[];
+  isGlobal: boolean;
+}) {
+  return (
+    <div className="mt-4 space-y-3">
+      {isGlobal && (
+        <p className="text-center text-[11px] text-zinc-600">
+          Effectif global — composition de match non disponible
+        </p>
+      )}
+      {[
+        { label: teamHome, players: homePlayers },
+        { label: teamAway, players: awayPlayers },
+      ].map(({ label, players }) => (
+        <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
+          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">{label}</p>
+          {players.length === 0 ? (
+            <p className="text-xs text-zinc-600">Aucun joueur renseigné</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {players
+                .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9))
+                .map((p) => (
+                  <span
+                    key={p.id}
+                    className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-300"
+                  >
+                    <span className="mr-1 text-zinc-500">{p.position}</span>
+                    {p.player_name}
+                  </span>
+                ))}
+            </div>
+          )}
+        </div>
+      ))}
+      {bench.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
+          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">Remplaçants</p>
+          <div className="flex flex-wrap gap-2">
+            {bench.map((p) => (
+              <span key={p.id} className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400">
+                {p.player_name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
 
 type Props = {
   matchId: string;
@@ -117,91 +184,100 @@ export const SoccerPitch = memo(function SoccerPitch({
     );
   }
 
-  const starters = lineups.filter((p) => p.status === "starter");
-  const bench    = lineups.filter((p) => p.status === "bench");
+  // ── Cas 1 : lineups spécifiques au match ──────────────────────────────────
 
-  const byPosHome = (pos: string) =>
-    starters
-      .filter((p) => p.team_side === "home" && p.position === pos)
-      .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9));
+  if (lineups.length > 0) {
+    const starters     = lineups.filter((p) => p.status === "starter");
+    const bench        = lineups.filter((p) => p.status === "bench");
+    const homeStarters = starters.filter((p) => p.team_side === "home");
+    const awayStarters = starters.filter((p) => p.team_side === "away");
 
-  const byPosAway = (pos: string) =>
-    starters
-      .filter((p) => p.team_side === "away" && p.position === pos)
-      .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9));
+    const byPosHome = (pos: string) =>
+      homeStarters.filter((p) => p.position === pos)
+        .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9));
+    const byPosAway = (pos: string) =>
+      awayStarters.filter((p) => p.position === pos)
+        .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9));
 
-  if (starters.length === 0) {
+    // Titulaires incomplets → liste
+    if (homeStarters.length < 11 || awayStarters.length < 11) {
+      return (
+        <RosterList
+          teamHome={teamHome}
+          teamAway={teamAway}
+          homePlayers={homeStarters}
+          awayPlayers={awayStarters}
+          bench={bench}
+          isGlobal={false}
+        />
+      );
+    }
+
+    // Titulaires complets → terrain tactique
+    const homeBg        = homeTeamColor ?? "#166534";
+    const awayBg        = awayTeamColor ?? "#3f3f46";
+    const homeTextWhite = contrastText(homeBg) === "white";
+    const awayTextWhite = contrastText(awayBg) === "white";
+
     return (
-      <p className="py-10 text-center text-sm text-zinc-500">
-        Compositions non disponibles pour ce match.
-      </p>
+      <div className="mt-4 space-y-3">
+        <div className="relative overflow-hidden rounded-2xl border border-green-700/40 bg-green-800">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-[15%] right-[15%] top-0 h-12 border-b border-l border-r border-white/20" />
+            <div className="absolute left-[35%] right-[35%] top-0 h-5 border-b border-l border-r border-white/20" />
+            <div className="absolute left-4 right-4 top-1/2 h-px -translate-y-1/2 bg-white/25" />
+            <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25" />
+            <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
+            <div className="absolute bottom-0 left-[35%] right-[35%] h-5 border-l border-r border-t border-white/20" />
+            <div className="absolute bottom-0 left-[15%] right-[15%] h-12 border-l border-r border-t border-white/20" />
+          </div>
+
+          <div className="pt-3">
+            <p className="mb-0 text-center text-[9px] font-black uppercase tracking-widest text-white/40">
+              {teamAway}
+            </p>
+            <LineupRow players={byPosAway("G")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
+            <LineupRow players={byPosAway("D")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
+            <LineupRow players={byPosAway("M")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
+            <LineupRow players={byPosAway("A")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
+          </div>
+
+          <div className="h-8" />
+
+          <div className="pb-3">
+            <LineupRow players={byPosHome("A")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
+            <LineupRow players={byPosHome("M")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
+            <LineupRow players={byPosHome("D")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
+            <LineupRow players={byPosHome("G")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
+            <p className="mt-0 text-center text-[9px] font-black uppercase tracking-widest text-white/40">
+              {teamHome}
+            </p>
+          </div>
+        </div>
+
+        {bench.length > 0 && (
+          <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
+            <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">
+              Remplaçants
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {bench.map((p) => (
+                <span key={p.id} className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400">
+                  {p.player_name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
-  // Calcul du contraste à partir des couleurs d'équipe
-  const homeBg       = homeTeamColor ?? "#166534"; // vert foncé par défaut
-  const awayBg       = awayTeamColor ?? "#3f3f46"; // zinc-700 par défaut
-  const homeTextWhite = contrastText(homeBg) === "white";
-  const awayTextWhite = contrastText(awayBg) === "white";
+  // ── Cas 2 : aucune donnée ────────────────────────────────────────────────
 
   return (
-    <div className="mt-4 space-y-3">
-      {/* Terrain */}
-      <div className="relative overflow-hidden rounded-2xl border border-green-700/40 bg-green-800">
-        {/* Lignes du terrain */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-[15%] right-[15%] top-0 h-12 border-b border-l border-r border-white/20" />
-          <div className="absolute left-[35%] right-[35%] top-0 h-5 border-b border-l border-r border-white/20" />
-          <div className="absolute left-4 right-4 top-1/2 h-px -translate-y-1/2 bg-white/25" />
-          <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25" />
-          <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
-          <div className="absolute bottom-0 left-[35%] right-[35%] h-5 border-l border-r border-t border-white/20" />
-          <div className="absolute bottom-0 left-[15%] right-[15%] h-12 border-l border-r border-t border-white/20" />
-        </div>
-
-        {/* Équipe extérieure (haut du terrain) */}
-        <div className="pt-3">
-          <p className="mb-0 text-center text-[9px] font-black uppercase tracking-widest text-white/40">
-            {teamAway}
-          </p>
-          <PlayerRow players={byPosAway("G")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-          <PlayerRow players={byPosAway("D")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-          <PlayerRow players={byPosAway("M")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-          <PlayerRow players={byPosAway("A")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-        </div>
-
-        <div className="h-8" />
-
-        {/* Équipe domicile (bas du terrain) */}
-        <div className="pb-3">
-          <PlayerRow players={byPosHome("A")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-          <PlayerRow players={byPosHome("M")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-          <PlayerRow players={byPosHome("D")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-          <PlayerRow players={byPosHome("G")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-          <p className="mt-0 text-center text-[9px] font-black uppercase tracking-widest text-white/40">
-            {teamHome}
-          </p>
-        </div>
-      </div>
-
-      {/* Remplaçants */}
-      {bench.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
-          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">
-            Remplaçants
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {bench.map((p) => (
-              <span
-                key={p.id}
-                className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400"
-              >
-                {p.player_name}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    <p className="py-10 text-center text-sm text-zinc-500">
+      Compositions non disponibles pour ce match.
+    </p>
   );
 });

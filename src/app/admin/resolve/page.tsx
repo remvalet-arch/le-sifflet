@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchRow } from "@/types/database";
 import { AdminEventCard } from "./AdminEventCard";
+import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 export const metadata = { title: "Admin — Résolution des events" };
 
@@ -11,6 +12,14 @@ export default async function AdminResolvePage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("trust_score")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) redirect("/lobby");
 
   const { data: events } = await supabase
     .from("market_events")

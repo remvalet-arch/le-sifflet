@@ -1,0 +1,1 @@
+export const MODERATOR_THRESHOLD = 150;

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 export const metadata = { title: "Classement" };
 
@@ -57,7 +58,7 @@ export default async function LeaderboardPage() {
                     }`}
                   >
                     {player.username}
-                    {player.trust_score > 150 && " 🛡️"}
+                    {player.trust_score >= MODERATOR_THRESHOLD && " 🛡️"}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400">
                     {player.sifflets_balance.toLocaleString("fr-FR")} pts
@@ -96,7 +97,7 @@ export default async function LeaderboardPage() {
                   }`}
                 >
                   {player.username}
-                  {player.trust_score > 150 && (
+                  {player.trust_score >= MODERATOR_THRESHOLD && (
                     <span className="ml-1">🛡️</span>
                   )}
                   {isMe && (

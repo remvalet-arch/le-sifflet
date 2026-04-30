@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { TimelineEventType } from "@/types/database";
+import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 const VALID_TYPES = ["goal", "yellow_card", "red_card", "substitution"];
 
@@ -17,7 +18,7 @@ async function getModerator() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score <= 150) {
+  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
     return { user: null, error: errorResponse("Accès réservé aux modérateurs (score ≥ 150)", 403) };
   }
   return { user, error: null };
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient();
+  const ownGoal = event_type === "goal" ? (is_own_goal ?? false) : false;
+
   const { data, error: dbError } = await admin
     .from("match_timeline_events")
     .insert({
@@ -65,12 +68,26 @@ export async function POST(request: NextRequest) {
       minute,
       team_side: team_side as "home" | "away",
       player_name: player_name.trim(),
-      is_own_goal: event_type === "goal" ? (is_own_goal ?? false) : false,
+      is_own_goal: ownGoal,
     })
     .select()
     .single();
 
   if (dbError) return errorResponse(dbError.message);
+
+  // ── Sync du score en cas de but ───────────────────────────────────────────
+  // But contre son camp : le point va à l'équipe adverse
+  if (event_type === "goal") {
+    const scoringTeamIsHome = ownGoal
+      ? team_side === "away"   // CSC domicile → point extérieur
+      : team_side === "home";  // But normal domicile → point domicile
+    void admin.rpc("increment_match_score", {
+      p_match_id:   match_id,
+      p_home_delta: scoringTeamIsHome ? 1 : 0,
+      p_away_delta: scoringTeamIsHome ? 0 : 1,
+    });
+  }
+
   return successResponse(data);
 }
 

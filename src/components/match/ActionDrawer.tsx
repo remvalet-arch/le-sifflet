@@ -11,11 +11,10 @@ import { syncMatchData, syncTeamRoster } from "@/app/actions/syncData";
 // ── Alertes communautaires ────────────────────────────────────────────────────
 
 const ALERTS: { type: AlertActionType; emoji: string; label: string }[] = [
-  { type: "penalty_check",   emoji: "📢", label: "Y'A PÉNO LÀ !!"         },
-  { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND OU PAS ?" },
-  { type: "var_goal",        emoji: "🚩", label: "HORS-JEU / BUT ANNULÉ ?" },
-  { type: "red_card",        emoji: "🟥", label: "SORTEZ LE ROUGE !"        },
-  { type: "injury_sub",      emoji: "🚑", label: "CINÉMA OU CIVIÈRE ?"      },
+  { type: "penalty_check",   emoji: "🔎", label: "VAR : Y'A PÉNALTY ?"     },
+  { type: "var_goal",        emoji: "🔎", label: "VAR : BUT OU HORS-JEU ?" },
+  { type: "red_card",        emoji: "🔎", label: "VAR : CARTON ROUGE ?"     },
+  { type: "penalty_outcome", emoji: "⚡️", label: "PÉNO : AU FOND OU RATÉ ?" },
 ];
 
 // ── Panneau de contrôle des états ─────────────────────────────────────────────
@@ -50,7 +49,7 @@ const MVP_TEAMS = [
 
 // ── Feuille de match ──────────────────────────────────────────────────────────
 
-const EVENT_LABELS: Record<TimelineEventType, string> = {
+const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
   goal:         "⚽ But",
   yellow_card:  "🟨 Carton jaune",
   red_card:     "🟥 Carton rouge",
@@ -227,15 +226,23 @@ export function ActionDrawer({
 
   async function handleStatusChange(newStatus: MatchStatus) {
     setChangingStatus(true);
+    // "Fin du match" → endpoint dédié qui résout aussi les paris long terme
+    const endpoint = newStatus === "finished"
+      ? "/api/admin/finish-match"
+      : "/api/match-state";
     try {
-      const res = await fetch("/api/match-state", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ match_id: matchId, status: newStatus }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
       if (!res.ok) { toast.error(json.error ?? "Erreur"); return; }
-      toast.success(`État → ${STATUS_LABELS[newStatus]}`);
+      toast.success(
+        newStatus === "finished"
+          ? "Match terminé — Paris long terme résolus !"
+          : `État → ${STATUS_LABELS[newStatus]}`,
+      );
       onClose();
     } catch {
       toast.error("Connexion perdue");
@@ -520,7 +527,7 @@ export function ActionDrawer({
         ) : (
           <>
             <p className="mb-4 text-center text-xs font-black uppercase tracking-widest text-zinc-500">
-              Que se passe-t-il ?
+              Signaler une action
             </p>
             <AlertGrid
               isOnCooldown={isOnCooldown}

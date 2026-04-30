@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEventDetails, getTeamRoster } from "@/lib/services/thesportsdb";
 import type { MatchStatus } from "@/types/database";
+import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 // ── Ligues autorisées MVP ─────────────────────────────────────────────────────
 // Ligue 1 : 4334 | Champions League : 4480
@@ -47,7 +48,7 @@ async function assertModerator() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score <= 150) {
+  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
     throw new Error("Accès réservé aux modérateurs (score ≥ 150)");
   }
 }

@@ -6,7 +6,7 @@ import { LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { TimelineEventType, LineupRow } from "@/types/database";
 
-const EVENT_LABELS: Record<TimelineEventType, string> = {
+const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
   goal:         "⚽ But",
   yellow_card:  "🟨 Carton jaune",
   red_card:     "🟥 Carton rouge",

@@ -11,9 +11,10 @@ const ICONS: Record<TimelineEventType, string> = {
   yellow_card:  "🟨",
   red_card:     "🟥",
   substitution: "🔄",
+  info:         "📣",
 };
 
-const EVENT_LABELS: Record<TimelineEventType, string> = {
+const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
   goal:         "⚽ But",
   yellow_card:  "🟨 Carton jaune",
   red_card:     "🟥 Carton rouge",
@@ -24,7 +25,7 @@ const SELECT_CLS =
   "w-full rounded-lg border border-white/10 bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-white focus:border-green-500/50 focus:outline-none";
 
 type EditState = {
-  event_type: TimelineEventType;
+  event_type: Exclude<TimelineEventType, "info">;
   minute: string;
   player_name: string;
   is_own_goal: boolean;
@@ -155,9 +156,10 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
   }, [matchId]);
 
   function startEdit(ev: MatchTimelineEventRow) {
+    if (ev.event_type === "info") return;
     setEditingId(ev.id);
     setEditForm({
-      event_type:  ev.event_type,
+      event_type:  ev.event_type as Exclude<TimelineEventType, "info">,
       minute:      String(ev.minute),
       player_name: ev.player_name,
       is_own_goal: ev.is_own_goal,
@@ -235,9 +237,25 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
 
       <div className="flex flex-col gap-6">
         {events.map((ev) => {
-          const isHome = ev.team_side === "home";
+          const isInfo    = ev.event_type === "info";
+          const isHome    = ev.team_side === "home";
           const isEditing = editingId === ev.id;
 
+          // ── Événement info : bulle centrée ──────────────────────────────────
+          if (isInfo) {
+            return (
+              <div key={ev.id} className="relative flex justify-center px-4">
+                <div className="z-10 flex items-center gap-2 rounded-full border border-zinc-700/60 bg-zinc-900 px-4 py-1.5">
+                  <span className="text-[10px] font-black text-zinc-500">{ev.minute}&apos;</span>
+                  <span className="text-[11px] font-semibold text-zinc-400">
+                    {ev.details ?? ev.player_name}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          // ── Événement standard : gauche / droite ────────────────────────────
           return (
             <div key={ev.id} className="flex flex-col gap-2">
               <div className="relative flex items-start">
@@ -286,10 +304,10 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
                         <label className="mb-1 block text-[10px] font-bold text-zinc-500">Type</label>
                         <select
                           value={editForm.event_type}
-                          onChange={(e) => setEditForm((f) => ({ ...f, event_type: e.target.value as TimelineEventType, is_own_goal: false }))}
+                          onChange={(e) => setEditForm((f) => ({ ...f, event_type: e.target.value as Exclude<TimelineEventType, "info">, is_own_goal: false }))}
                           className={SELECT_CLS}
                         >
-                          {(Object.entries(EVENT_LABELS) as [TimelineEventType, string][]).map(([val, label]) => (
+                          {(Object.entries(EVENT_LABELS) as [Exclude<TimelineEventType, "info">, string][]).map(([val, label]) => (
                             <option key={val} value={val}>{label}</option>
                           ))}
                         </select>

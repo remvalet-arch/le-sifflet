@@ -4,17 +4,29 @@ import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import type { LineupRow } from "@/types/database";
+import { calculateDynamicOdds } from "@/lib/odds";
+import type { PlayerRow } from "@/types/database";
+
+function normalizeTeam(name: string): string {
+  return name
+    .replace(/\b(F\.C\.|FC|AFC|RFC|SC|AC|AS|OGC|RC)\b\.?\s*/gi, "")
+    .trim()
+    .toLowerCase();
+}
+function teamsMatch(a: string, b: string): boolean {
+  const na = normalizeTeam(a); const nb = normalizeTeam(b);
+  return na.includes(nb) || nb.includes(na);
+}
 
 // ── Odds ──────────────────────────────────────────────────────────────────────
 
 const SCORER_ODDS = 3.5;
 
-const SCORE_GRID = [
-  { score: "1-0", odds: 4.5 }, { score: "0-0", odds: 11.0 }, { score: "0-1", odds: 4.5 },
-  { score: "2-0", odds: 7.0 }, { score: "1-1", odds: 5.5  }, { score: "0-2", odds: 7.0 },
-  { score: "2-1", odds: 6.5 }, { score: "1-2", odds: 6.5  }, { score: "3-0", odds: 13.0 },
-  { score: "0-3", odds: 13.0 }, { score: "2-2", odds: 9.0 }, { score: "3-1", odds: 11.0 },
+const SCORE_GRID: { score: string; baseOdds: number }[] = [
+  { score: "1-0", baseOdds: 5.0  }, { score: "0-0", baseOdds: 8.0  }, { score: "0-1", baseOdds: 5.0  },
+  { score: "2-0", baseOdds: 8.0  }, { score: "1-1", baseOdds: 5.0  }, { score: "0-2", baseOdds: 8.0  },
+  { score: "2-1", baseOdds: 5.0  }, { score: "1-2", baseOdds: 5.0  }, { score: "3-0", baseOdds: 12.0 },
+  { score: "0-3", baseOdds: 12.0 }, { score: "2-2", baseOdds: 8.0  }, { score: "3-1", baseOdds: 12.0 },
 ];
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -27,6 +39,8 @@ type Props = {
   teamAway: string;
   onBetSuccess: (amountStaked: number) => void;
 };
+
+type OddsData = { counts: Record<string, number>; total: number };
 
 // ── Mise input réutilisable ───────────────────────────────────────────────────
 
@@ -153,9 +167,10 @@ export function PolymarketTab({
   teamAway,
   onBetSuccess,
 }: Props) {
-  const [lineups, setLineups]       = useState<LineupRow[]>([]);
+  const [players, setPlayers]               = useState<PlayerRow[]>([]);
   const [loadingLineups, setLoadingLineups] = useState(true);
-  const [existingBets, setExistingBets] = useState<{ bet_type: string; bet_value: string }[]>([]);
+  const [existingBets, setExistingBets]   = useState<{ bet_type: string; bet_value: string }[]>([]);
+  const [oddsData, setOddsData]           = useState<OddsData>({ counts: {}, total: 0 });
 
   // Accordéon
   const [scorerOpen, setScorerOpen] = useState(true);
@@ -174,16 +189,19 @@ export function PolymarketTab({
   useEffect(() => {
     const supabase = createClient();
 
-    // Joueurs offensifs et milieux
+    // Joueurs de champ depuis l'effectif global (D, M, A — gardien exclu)
+    // On récupère tout et filtre côté client pour éviter les problèmes ilike + espaces
     void supabase
-      .from("lineups")
+      .from("players")
       .select("*")
-      .eq("match_id", matchId)
-      .in("position", ["A", "M"])
-      .eq("status", "starter")
+      .in("position", ["D", "M", "A"])
       .order("position", { ascending: true })
+      .order("player_name", { ascending: true })
       .then(({ data }) => {
-        setLineups(data ?? []);
+        const filtered = (data ?? []).filter(
+          (p) => teamsMatch(p.team_name, teamHome) || teamsMatch(p.team_name, teamAway),
+        );
+        setPlayers(filtered);
         setLoadingLineups(false);
       });
 
@@ -193,10 +211,22 @@ export function PolymarketTab({
       .select("bet_type, bet_value")
       .eq("match_id", matchId)
       .then(({ data }) => setExistingBets(data ?? []));
-  }, [matchId]);
+
+    // Cotes dynamiques : distribution des paris sur les scores exacts
+    void fetch(`/api/long-term-odds?match_id=${matchId}`)
+      .then((res) => res.json())
+      .then((json: { ok: boolean; data?: OddsData }) => {
+        if (json.ok && json.data) setOddsData(json.data);
+      })
+      .catch(() => {/* silencieux — fallback aux cotes de base */});
+  }, [matchId, teamHome, teamAway]);
 
   function hasAlreadyBet(betType: string, betValue: string): boolean {
     return existingBets.some((b) => b.bet_type === betType && b.bet_value === betValue);
+  }
+
+  function getScoreOdds(score: string, baseOdds: number): number {
+    return calculateDynamicOdds(baseOdds, oddsData.counts[score] ?? 0, oddsData.total);
   }
 
   async function placeBet(betType: "scorer" | "exact_score", betValue: string, amount: string, odds: number) {
@@ -228,6 +258,11 @@ export function PolymarketTab({
 
     onBetSuccess(parsed);
     setExistingBets((prev) => [...prev, { bet_type: betType, bet_value: betValue }]);
+    // Mettre à jour localement les compteurs de paris
+    setOddsData((prev) => ({
+      counts: { ...prev.counts, [betValue]: (prev.counts[betValue] ?? 0) + 1 },
+      total:  prev.total + 1,
+    }));
     toast.success(`Pari long terme enregistré ! (×${odds})`);
     return true;
   }
@@ -244,14 +279,15 @@ export function PolymarketTab({
     if (!selectedScore) { toast.error("Sélectionne un score"); return; }
     const entry = SCORE_GRID.find((s) => s.score === selectedScore);
     if (!entry) return;
+    const odds = getScoreOdds(selectedScore, entry.baseOdds);
     setScoreSubmitting(true);
-    const ok = await placeBet("exact_score", selectedScore, scoreAmount, entry.odds);
+    const ok = await placeBet("exact_score", selectedScore, scoreAmount, odds);
     if (ok) { setSelectedScore(null); setScoreAmount(""); }
     setScoreSubmitting(false);
   }
 
-  const homeAttackers = lineups.filter((p) => p.team_side === "home");
-  const awayAttackers = lineups.filter((p) => p.team_side === "away");
+  const homeAttackers = players.filter((p) => teamsMatch(p.team_name, teamHome));
+  const awayAttackers = players.filter((p) => teamsMatch(p.team_name, teamAway));
 
   return (
     <div className="mt-4 flex flex-col gap-3 pb-4">
@@ -269,8 +305,8 @@ export function PolymarketTab({
           <div className="flex justify-center py-6">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
           </div>
-        ) : lineups.length === 0 ? (
-          <p className="py-4 text-center text-xs text-zinc-500">Compositions non disponibles</p>
+        ) : players.length === 0 ? (
+          <p className="py-4 text-center text-xs text-zinc-500">Effectif non synchronisé — importe l&apos;effectif via le panneau modérateur</p>
         ) : (
           <>
             {homeAttackers.length > 0 && (
@@ -356,9 +392,10 @@ export function PolymarketTab({
         onToggle={() => setScoreOpen((v) => !v)}
       >
         <div className="grid grid-cols-3 gap-2">
-          {SCORE_GRID.map(({ score, odds }) => {
-            const bet = hasAlreadyBet("exact_score", score);
-            const sel = selectedScore === score;
+          {SCORE_GRID.map(({ score, baseOdds }) => {
+            const odds = getScoreOdds(score, baseOdds);
+            const bet  = hasAlreadyBet("exact_score", score);
+            const sel  = selectedScore === score;
             return (
               <button
                 key={score}
@@ -382,12 +419,13 @@ export function PolymarketTab({
         {selectedScore && (() => {
           const entry = SCORE_GRID.find((s) => s.score === selectedScore);
           if (!entry) return null;
+          const odds = getScoreOdds(selectedScore, entry.baseOdds);
           return (
             <BetInput
               balance={siffletsBalance}
               amount={scoreAmount}
               setAmount={setScoreAmount}
-              odds={entry.odds}
+              odds={odds}
               onSubmit={() => { void handleScoreBet(); }}
               submitting={scoreSubmitting}
             />

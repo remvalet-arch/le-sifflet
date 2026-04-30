@@ -202,9 +202,9 @@ export function LiveRoom({
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "kop",       label: "Le Kop"      },
-    { id: "compo",     label: "Compos"      },
-    { id: "polymarket", label: "📊 Polymarket" },
+    { id: "kop",        label: "Temps forts" },
+    { id: "compo",      label: "Compositions" },
+    { id: "polymarket", label: "Prédictions"  },
   ];
 
   return (
