@@ -151,7 +151,7 @@ export function VotingModal({
   }
 
   return (
-    <div className="animate-modal-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-4 backdrop-blur-sm sm:items-center">
+    <div className="animate-modal-backdrop fixed inset-0 z-[60] flex items-end justify-center bg-black/75 px-4 pb-24 pt-4 backdrop-blur-sm sm:items-center sm:pb-4">
       <div className="animate-modal-sheet w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl sm:animate-modal-center">
         <div className="px-6 pb-6 pt-5">
 
