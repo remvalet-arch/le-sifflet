@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { LoaderCircle, Users } from "lucide-react";
+import { LoaderCircle, Users, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { computeCurrentOdds } from "@/lib/constants/odds";
 import type { MarketEventRow, MarketEventType } from "@/types/database";
@@ -151,12 +151,12 @@ export function VotingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-4 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
+    <div className="animate-modal-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-4 backdrop-blur-sm sm:items-center">
+      <div className="animate-modal-sheet w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl sm:animate-modal-center">
         <div className="px-6 pb-6 pt-5">
 
           {/* Header */}
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-3">
               <span className="text-2xl">{cfg.emoji}</span>
               <div>
@@ -166,12 +166,22 @@ export function VotingModal({
                 <p className="text-lg font-black text-white">{cfg.question}</p>
               </div>
             </div>
-            {betCount > 0 && (
-              <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-zinc-800 px-2.5 py-1 text-xs font-bold text-zinc-400">
-                <Users className="h-3 w-3" />
-                {betCount}
-              </div>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {betCount > 0 && (
+                <div className="flex items-center gap-1 rounded-full border border-white/10 bg-zinc-800 px-2.5 py-1 text-xs font-bold text-zinc-400">
+                  <Users className="h-3 w-3" />
+                  {betCount}
+                </div>
+              )}
+              {/* Toujours visible — permet de passer sans parier */}
+              <button
+                onClick={onClose}
+                aria-label="Passer ce vote"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-500 transition hover:bg-zinc-700 hover:text-white active:scale-90"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Initiateurs */}
@@ -251,7 +261,7 @@ export function VotingModal({
                   key={v}
                   onClick={() => setAmount(Math.min(v, siffletsBalance))}
                   disabled={expired || loading || siffletsBalance < v}
-                  className="h-9 flex-1 rounded-xl border border-white/15 bg-zinc-800 text-sm font-bold text-zinc-300 transition hover:border-green-500/30 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="h-11 flex-1 rounded-xl border border-white/15 bg-zinc-800 text-sm font-bold text-zinc-300 transition hover:border-green-500/30 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {v}
                 </button>
@@ -259,7 +269,7 @@ export function VotingModal({
               <button
                 onClick={() => setAmount(siffletsBalance)}
                 disabled={expired || loading || siffletsBalance < 10}
-                className="h-9 flex-1 rounded-xl border border-green-500/30 bg-zinc-800 text-sm font-bold text-green-400 transition hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+                className="h-11 flex-1 rounded-xl border border-green-500/30 bg-zinc-800 text-sm font-bold text-green-400 transition hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-30"
               >
                 MAX
               </button>

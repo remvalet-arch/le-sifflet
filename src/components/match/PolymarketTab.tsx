@@ -75,7 +75,7 @@ function BetInput({
             key={p}
             onClick={() => setAmount(String(p))}
             disabled={p > balance}
-            className={`flex-1 rounded-lg py-1.5 text-xs font-black transition ${
+            className={`h-11 flex-1 rounded-lg text-xs font-black transition ${
               amount === String(p)
                 ? "bg-green-600 text-white"
                 : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600 disabled:opacity-40"
@@ -86,7 +86,7 @@ function BetInput({
         ))}
         <button
           onClick={() => setAmount(String(balance))}
-          className={`flex-1 rounded-lg py-1.5 text-xs font-black transition ${
+          className={`h-11 flex-1 rounded-lg text-xs font-black transition ${
             amount === String(balance)
               ? "bg-green-600 text-white"
               : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
@@ -117,7 +117,7 @@ function BetInput({
       <button
         onClick={onSubmit}
         disabled={!isValid || submitting}
-        className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting
           ? <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -323,7 +323,7 @@ export function PolymarketTab({
                         key={p.id}
                         onClick={() => { if (!bet) setSelectedScorer(sel ? null : p.player_name); }}
                         disabled={bet}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                        className={`rounded-xl px-3 py-2.5 text-xs font-semibold transition ${
                           bet
                             ? "cursor-default border border-green-700/40 bg-green-900/20 text-green-400 line-through"
                             : sel
@@ -354,7 +354,7 @@ export function PolymarketTab({
                         key={p.id}
                         onClick={() => { if (!bet) setSelectedScorer(sel ? null : p.player_name); }}
                         disabled={bet}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                        className={`rounded-xl px-3 py-2.5 text-xs font-semibold transition ${
                           bet
                             ? "cursor-default border border-green-700/40 bg-green-900/20 text-green-400 line-through"
                             : sel
@@ -401,7 +401,7 @@ export function PolymarketTab({
                 key={score}
                 onClick={() => { if (!bet) setSelectedScore(sel ? null : score); }}
                 disabled={bet}
-                className={`flex flex-col items-center rounded-xl border py-2.5 text-xs font-black transition ${
+                className={`flex flex-col items-center rounded-xl border py-3 text-xs font-black transition ${
                   bet
                     ? "cursor-default border-green-700/40 bg-green-900/20 text-green-400"
                     : sel

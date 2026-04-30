@@ -3,18 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, User } from "lucide-react";
-
-const TABS = [
-  { href: "/lobby",   Icon: Landmark, label: "Stade"  },
-  { href: "/profile", Icon: User,     label: "Profil" },
-] as const;
+import { Landmark, Trophy, User } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
   const [superVisible, setSuperVisible] = useState(false);
 
-  // LiveRoom signals when the drawer is available (live match or moderator on upcoming)
   useEffect(() => {
     const onAvailable = (e: Event) => {
       setSuperVisible((e as CustomEvent<{ enabled: boolean }>).detail.enabled);
@@ -23,8 +17,8 @@ export function BottomNav() {
     return () => window.removeEventListener("sifflet:drawer-available", onAvailable);
   }, []);
 
-  // Safety guard: never show the button outside match pages
   const isMatchPage = /^\/match\//.test(pathname);
+  const showSuperButton = isMatchPage && superVisible;
 
   return (
     <nav className="fixed bottom-0 z-50 w-full overflow-visible border-t border-white/8 bg-zinc-950/90 backdrop-blur-md">
@@ -32,9 +26,12 @@ export function BottomNav() {
         className="relative flex items-end"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
       >
-        <TabLink href="/lobby"   Icon={TABS[0].Icon} label={TABS[0].label} pathname={pathname} />
+        <TabLink href="/lobby" Icon={Landmark} label="Stade" pathname={pathname} />
 
-        {superVisible && isMatchPage && (
+        {/* Slot central context-aware :
+            → Super-Bouton en LiveRoom (match En Direct)
+            → Classement sur toutes les autres pages */}
+        {showSuperButton ? (
           <div className="relative flex flex-1 justify-center">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("sifflet:open-drawer"))}
@@ -46,12 +43,13 @@ export function BottomNav() {
                 <rect x="14" y="8" width="10" height="8" rx="4" />
               </svg>
             </button>
-            {/* Height placeholder so the nav keeps its size */}
             <span className="py-2.5 text-[10px] opacity-0 select-none" aria-hidden>·</span>
           </div>
+        ) : (
+          <TabLink href="/leaderboard" Icon={Trophy} label="Kop" pathname={pathname} />
         )}
 
-        <TabLink href="/profile" Icon={TABS[1].Icon} label={TABS[1].label} pathname={pathname} />
+        <TabLink href="/profile" Icon={User} label="Profil" pathname={pathname} />
       </div>
     </nav>
   );

@@ -222,7 +222,7 @@ export function LiveRoom({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex-1 py-3 text-xs font-black uppercase tracking-wide transition-colors ${
+              className={`relative flex flex-1 min-h-[44px] items-center justify-center text-xs font-black uppercase tracking-wide transition-colors ${
                 activeTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >

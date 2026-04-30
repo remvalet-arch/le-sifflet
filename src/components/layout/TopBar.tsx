@@ -85,7 +85,7 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
           <button
             onClick={() => setOpen(true)}
             aria-label="Ouvrir le menu"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -116,7 +116,8 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:text-white"
+            aria-label="Fermer le menu"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:text-white active:scale-90"
           >
             <X className="h-4 w-4" />
           </button>
