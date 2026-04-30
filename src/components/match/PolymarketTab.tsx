@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, LoaderCircle } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { calculateDynamicOdds } from "@/lib/odds";
@@ -18,16 +18,20 @@ function teamsMatch(a: string, b: string): boolean {
   return na.includes(nb) || nb.includes(na);
 }
 
-// ── Odds ──────────────────────────────────────────────────────────────────────
-
 const SCORER_ODDS = 3.5;
 
-const SCORE_GRID: { score: string; baseOdds: number }[] = [
-  { score: "1-0", baseOdds: 5.0  }, { score: "0-0", baseOdds: 8.0  }, { score: "0-1", baseOdds: 5.0  },
-  { score: "2-0", baseOdds: 8.0  }, { score: "1-1", baseOdds: 5.0  }, { score: "0-2", baseOdds: 8.0  },
-  { score: "2-1", baseOdds: 5.0  }, { score: "1-2", baseOdds: 5.0  }, { score: "3-0", baseOdds: 12.0 },
-  { score: "0-3", baseOdds: 12.0 }, { score: "2-2", baseOdds: 8.0  }, { score: "3-1", baseOdds: 12.0 },
-];
+const SCORE_BASE_ODDS: Record<string, number> = {
+  "1-0": 5.0,  "0-0": 8.0,  "0-1": 5.0,
+  "2-0": 8.0,  "1-1": 5.0,  "0-2": 8.0,
+  "2-1": 5.0,  "1-2": 5.0,  "3-0": 12.0,
+  "0-3": 12.0, "2-2": 8.0,  "3-1": 12.0,
+  "1-3": 12.0, "3-2": 16.0, "2-3": 16.0,
+  "4-0": 20.0, "0-4": 20.0, "4-1": 20.0, "1-4": 20.0,
+};
+
+function getBaseOdds(score: string): number {
+  return SCORE_BASE_ODDS[score] ?? 20.0;
+}
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -42,7 +46,7 @@ type Props = {
 
 type OddsData = { counts: Record<string, number>; total: number };
 
-// ── Mise input réutilisable ───────────────────────────────────────────────────
+// ── BetInput ─────────────────────────────────────────────────────────────────
 
 function BetInput({
   balance,
@@ -51,6 +55,8 @@ function BetInput({
   odds,
   onSubmit,
   submitting,
+  success,
+  submitLabel,
 }: {
   balance: number;
   amount: string;
@@ -58,11 +64,12 @@ function BetInput({
   odds: number;
   onSubmit: () => void;
   submitting: boolean;
+  success?: boolean;
+  submitLabel?: string;
 }) {
-  const parsed   = parseInt(amount) || 0;
-  const reward   = Math.round(parsed * odds);
-  const isValid  = parsed >= 10 && parsed <= balance;
-  const PRESETS  = [10, 50, 100];
+  const parsed  = parseInt(amount) || 0;
+  const reward  = Math.round(parsed * odds);
+  const isValid = parsed >= 10 && parsed <= balance;
 
   return (
     <div className="mt-3 rounded-xl border border-white/8 bg-zinc-800/60 p-3">
@@ -70,7 +77,7 @@ function BetInput({
         Mise (min. 10 Sifflets)
       </p>
       <div className="flex gap-2">
-        {PRESETS.map((p) => (
+        {[10, 50, 100].map((p) => (
           <button
             key={p}
             onClick={() => setAmount(String(p))}
@@ -111,24 +118,31 @@ function BetInput({
           <span className="font-black text-green-400">
             {reward.toLocaleString("fr-FR")} Sifflets
           </span>{" "}
-          (×{odds})
+          (×{odds.toFixed(2)})
         </p>
       )}
       <button
         onClick={onSubmit}
-        disabled={!isValid || submitting}
-        className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={!isValid || submitting || success}
+        className={`mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl font-black uppercase tracking-wide transition-all ${
+          success
+            ? "bg-green-700 text-green-300"
+            : "bg-green-500 text-zinc-950 hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+        }`}
       >
-        {submitting
-          ? <LoaderCircle className="h-4 w-4 animate-spin" />
-          : "Parier"
-        }
+        {success ? (
+          <><Check className="h-4 w-4" /> Pari enregistré ! ⚽</>
+        ) : submitting ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+        ) : (
+          submitLabel ?? "Parier"
+        )}
       </button>
     </div>
   );
 }
 
-// ── Accordéon ─────────────────────────────────────────────────────────────────
+// ── Accordion ─────────────────────────────────────────────────────────────────
 
 function Accordion({
   title,
@@ -167,30 +181,30 @@ export function PolymarketTab({
   teamAway,
   onBetSuccess,
 }: Props) {
-  const [players, setPlayers]               = useState<PlayerRow[]>([]);
+  const [players, setPlayers]             = useState<PlayerRow[]>([]);
   const [loadingLineups, setLoadingLineups] = useState(true);
   const [existingBets, setExistingBets]   = useState<{ bet_type: string; bet_value: string }[]>([]);
   const [oddsData, setOddsData]           = useState<OddsData>({ counts: {}, total: 0 });
 
-  // Accordéon
   const [scorerOpen, setScorerOpen] = useState(true);
   const [scoreOpen, setScoreOpen]   = useState(false);
 
   // Buteur
-  const [selectedScorer, setSelectedScorer] = useState<string | null>(null);
-  const [scorerAmount, setScorerAmount]     = useState("");
+  const [selectedScorer, setSelectedScorer]     = useState<string | null>(null);
+  const [scorerAmount, setScorerAmount]         = useState("");
   const [scorerSubmitting, setScorerSubmitting] = useState(false);
+  const [scorerSuccess, setScorerSuccess]       = useState(false);
 
-  // Score exact
-  const [selectedScore, setSelectedScore]   = useState<string | null>(null);
+  // Score exact — deux inputs libres
+  const [homeScoreInput, setHomeScoreInput] = useState("");
+  const [awayScoreInput, setAwayScoreInput] = useState("");
   const [scoreAmount, setScoreAmount]       = useState("");
   const [scoreSubmitting, setScoreSubmitting] = useState(false);
+  const [scoreSuccess, setScoreSuccess]     = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Joueurs de champ depuis l'effectif global (D, M, A — gardien exclu)
-    // On récupère tout et filtre côté client pour éviter les problèmes ilike + espaces
     void supabase
       .from("players")
       .select("*")
@@ -205,20 +219,18 @@ export function PolymarketTab({
         setLoadingLineups(false);
       });
 
-    // Paris déjà placés par l'utilisateur
     void supabase
       .from("long_term_bets")
       .select("bet_type, bet_value")
       .eq("match_id", matchId)
       .then(({ data }) => setExistingBets(data ?? []));
 
-    // Cotes dynamiques : distribution des paris sur les scores exacts
     void fetch(`/api/long-term-odds?match_id=${matchId}`)
       .then((res) => res.json())
       .then((json: { ok: boolean; data?: OddsData }) => {
         if (json.ok && json.data) setOddsData(json.data);
       })
-      .catch(() => {/* silencieux — fallback aux cotes de base */});
+      .catch(() => {/* silencieux — fallback cotes de base */});
   }, [matchId, teamHome, teamAway]);
 
   function hasAlreadyBet(betType: string, betValue: string): boolean {
@@ -229,13 +241,17 @@ export function PolymarketTab({
     return calculateDynamicOdds(baseOdds, oddsData.counts[score] ?? 0, oddsData.total);
   }
 
-  async function placeBet(betType: "scorer" | "exact_score", betValue: string, amount: string, odds: number) {
+  async function placeBet(
+    betType: "scorer" | "exact_score",
+    betValue: string,
+    amount: string,
+    odds: number,
+  ): Promise<boolean> {
     const parsed = parseInt(amount);
     if (isNaN(parsed) || parsed < 10) { toast.error("Mise minimum : 10 Sifflets"); return false; }
     if (parsed > siffletsBalance) { toast.error("Solde insuffisant !"); return false; }
 
     const potentialReward = Math.round(parsed * odds);
-
     const supabase = createClient();
     const { error } = await supabase.rpc("place_long_term_bet", {
       p_match_id:         matchId,
@@ -258,12 +274,11 @@ export function PolymarketTab({
 
     onBetSuccess(parsed);
     setExistingBets((prev) => [...prev, { bet_type: betType, bet_value: betValue }]);
-    // Mettre à jour localement les compteurs de paris
     setOddsData((prev) => ({
       counts: { ...prev.counts, [betValue]: (prev.counts[betValue] ?? 0) + 1 },
       total:  prev.total + 1,
     }));
-    toast.success(`Pari long terme enregistré ! (×${odds})`);
+    toast.success(`Pari enregistré ! (×${odds.toFixed(2)})`);
     return true;
   }
 
@@ -271,18 +286,43 @@ export function PolymarketTab({
     if (!selectedScorer) { toast.error("Sélectionne un buteur"); return; }
     setScorerSubmitting(true);
     const ok = await placeBet("scorer", selectedScorer, scorerAmount, SCORER_ODDS);
-    if (ok) { setSelectedScorer(null); setScorerAmount(""); }
+    if (ok) {
+      setScorerSuccess(true);
+      setTimeout(() => {
+        setScorerSuccess(false);
+        setSelectedScorer(null);
+        setScorerAmount("");
+      }, 2000);
+    }
     setScorerSubmitting(false);
   }
 
+  // Score exact — valeurs dérivées des inputs
+  const hNum = parseInt(homeScoreInput);
+  const aNum = parseInt(awayScoreInput);
+  const scoreInputsValid =
+    homeScoreInput !== "" && awayScoreInput !== "" &&
+    !isNaN(hNum) && !isNaN(aNum) && hNum >= 0 && aNum >= 0;
+  const derivedScore    = scoreInputsValid ? `${hNum}-${aNum}` : null;
+  const derivedBaseOdds = derivedScore ? getBaseOdds(derivedScore) : 1;
+  const derivedOdds     = derivedScore ? getScoreOdds(derivedScore, derivedBaseOdds) : 1;
+  const alreadyBetScore = derivedScore ? hasAlreadyBet("exact_score", derivedScore) : false;
+  const scoreAmountNum  = parseInt(scoreAmount) || 0;
+
   async function handleScoreBet() {
-    if (!selectedScore) { toast.error("Sélectionne un score"); return; }
-    const entry = SCORE_GRID.find((s) => s.score === selectedScore);
-    if (!entry) return;
-    const odds = getScoreOdds(selectedScore, entry.baseOdds);
+    if (!derivedScore) { toast.error("Saisis les deux scores"); return; }
+    const odds = getScoreOdds(derivedScore, getBaseOdds(derivedScore));
     setScoreSubmitting(true);
-    const ok = await placeBet("exact_score", selectedScore, scoreAmount, odds);
-    if (ok) { setSelectedScore(null); setScoreAmount(""); }
+    const ok = await placeBet("exact_score", derivedScore, scoreAmount, odds);
+    if (ok) {
+      setScoreSuccess(true);
+      setTimeout(() => {
+        setScoreSuccess(false);
+        setHomeScoreInput("");
+        setAwayScoreInput("");
+        setScoreAmount("");
+      }, 2000);
+    }
     setScoreSubmitting(false);
   }
 
@@ -306,15 +346,18 @@ export function PolymarketTab({
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
           </div>
         ) : players.length === 0 ? (
-          <p className="py-4 text-center text-xs text-zinc-500">Effectif non synchronisé — importe l&apos;effectif via le panneau modérateur</p>
+          <p className="py-4 text-center text-xs text-zinc-500">
+            Effectif non synchronisé — importe l&apos;effectif via le panneau modérateur
+          </p>
         ) : (
           <>
+            {/* Home players grid */}
             {homeAttackers.length > 0 && (
-              <div className="mb-3">
+              <div className="mb-4">
                 <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
                   {teamHome}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {homeAttackers.map((p) => {
                     const bet = hasAlreadyBet("scorer", p.player_name);
                     const sel = selectedScorer === p.player_name;
@@ -323,29 +366,37 @@ export function PolymarketTab({
                         key={p.id}
                         onClick={() => { if (!bet) setSelectedScorer(sel ? null : p.player_name); }}
                         disabled={bet}
-                        className={`rounded-xl px-3 py-2.5 text-xs font-semibold transition ${
+                        className={`relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition-all ${
                           bet
-                            ? "cursor-default border border-green-700/40 bg-green-900/20 text-green-400 line-through"
+                            ? "cursor-default border-green-700/40 bg-green-900/20"
                             : sel
-                              ? "border border-green-500 bg-green-600 text-white"
-                              : "border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-500"
+                              ? "border-green-500 bg-green-500/10 shadow-[0_0_14px_rgba(34,197,94,0.25)]"
+                              : "border-zinc-700 bg-zinc-800 active:scale-95 hover:border-zinc-500"
                         }`}
                       >
-                        {p.player_name}
-                        {!bet && <span className="ml-1.5 text-[10px] text-zinc-400">×{SCORER_ODDS}</span>}
-                        {bet && <span className="ml-1.5 text-[10px]">✓</span>}
+                        {sel && (
+                          <Check className="absolute right-2 top-2 h-3.5 w-3.5 text-green-400" />
+                        )}
+                        <span className={`text-xs font-bold leading-tight ${bet ? "text-green-400 line-through" : sel ? "text-white" : "text-zinc-200"}`}>
+                          {p.player_name}
+                        </span>
+                        <span className={`text-[10px] font-black ${bet ? "text-green-500" : sel ? "text-green-400" : "text-zinc-500"}`}>
+                          {bet ? "✓ Parié" : `×${SCORER_ODDS}`}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
               </div>
             )}
+
+            {/* Away players grid */}
             {awayAttackers.length > 0 && (
-              <div className="mb-1">
+              <div className="mb-2">
                 <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
                   {teamAway}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {awayAttackers.map((p) => {
                     const bet = hasAlreadyBet("scorer", p.player_name);
                     const sel = selectedScorer === p.player_name;
@@ -354,23 +405,31 @@ export function PolymarketTab({
                         key={p.id}
                         onClick={() => { if (!bet) setSelectedScorer(sel ? null : p.player_name); }}
                         disabled={bet}
-                        className={`rounded-xl px-3 py-2.5 text-xs font-semibold transition ${
+                        className={`relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition-all ${
                           bet
-                            ? "cursor-default border border-green-700/40 bg-green-900/20 text-green-400 line-through"
+                            ? "cursor-default border-green-700/40 bg-green-900/20"
                             : sel
-                              ? "border border-green-500 bg-green-600 text-white"
-                              : "border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-500"
+                              ? "border-green-500 bg-green-500/10 shadow-[0_0_14px_rgba(34,197,94,0.25)]"
+                              : "border-zinc-700 bg-zinc-800 active:scale-95 hover:border-zinc-500"
                         }`}
                       >
-                        {p.player_name}
-                        {!bet && <span className="ml-1.5 text-[10px] text-zinc-400">×{SCORER_ODDS}</span>}
-                        {bet && <span className="ml-1.5 text-[10px]">✓</span>}
+                        {sel && (
+                          <Check className="absolute right-2 top-2 h-3.5 w-3.5 text-green-400" />
+                        )}
+                        <span className={`text-xs font-bold leading-tight ${bet ? "text-green-400 line-through" : sel ? "text-white" : "text-zinc-200"}`}>
+                          {p.player_name}
+                        </span>
+                        <span className={`text-[10px] font-black ${bet ? "text-green-500" : sel ? "text-green-400" : "text-zinc-500"}`}>
+                          {bet ? "✓ Parié" : `×${SCORER_ODDS}`}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
               </div>
             )}
+
+            {/* BetInput apparaît quand un joueur est sélectionné */}
             {selectedScorer && (
               <BetInput
                 balance={siffletsBalance}
@@ -379,58 +438,167 @@ export function PolymarketTab({
                 odds={SCORER_ODDS}
                 onSubmit={() => { void handleScorerBet(); }}
                 submitting={scorerSubmitting}
+                success={scorerSuccess}
+                submitLabel={`Parier sur ${selectedScorer}`}
               />
             )}
           </>
         )}
       </Accordion>
 
-      {/* ── Score exact ── */}
+      {/* ── Score Exact ── */}
       <Accordion
         title="🎯 Score Exact"
         open={scoreOpen}
         onToggle={() => setScoreOpen((v) => !v)}
       >
-        <div className="grid grid-cols-3 gap-2">
-          {SCORE_GRID.map(({ score, baseOdds }) => {
-            const odds = getScoreOdds(score, baseOdds);
-            const bet  = hasAlreadyBet("exact_score", score);
-            const sel  = selectedScore === score;
-            return (
+        {/* Blasons + inputs */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Home */}
+          <div className="flex flex-1 flex-col items-center gap-1.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-700 text-lg font-black text-white">
+              {teamHome[0]?.toUpperCase() ?? "?"}
+            </div>
+            <p className="line-clamp-2 text-center text-[10px] font-bold uppercase tracking-wide text-zinc-400 leading-tight">
+              {teamHome}
+            </p>
+          </div>
+
+          {/* Score inputs */}
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={20}
+              value={homeScoreInput}
+              onChange={(e) => setHomeScoreInput(e.target.value)}
+              placeholder="–"
+              className="h-16 w-16 rounded-xl border-2 border-zinc-600 bg-zinc-900 text-center text-2xl font-black text-white focus:border-green-500 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="text-xl font-black text-zinc-500">-</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={20}
+              value={awayScoreInput}
+              onChange={(e) => setAwayScoreInput(e.target.value)}
+              placeholder="–"
+              className="h-16 w-16 rounded-xl border-2 border-zinc-600 bg-zinc-900 text-center text-2xl font-black text-white focus:border-green-500 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
+
+          {/* Away */}
+          <div className="flex flex-1 flex-col items-center gap-1.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-700 text-lg font-black text-white">
+              {teamAway[0]?.toUpperCase() ?? "?"}
+            </div>
+            <p className="line-clamp-2 text-center text-[10px] font-bold uppercase tracking-wide text-zinc-400 leading-tight">
+              {teamAway}
+            </p>
+          </div>
+        </div>
+
+        {/* Panel cote + mise — révélation fluide */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-out ${
+            scoreInputsValid ? "mt-4 max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          {alreadyBetScore ? (
+            <p className="py-3 text-center text-sm font-bold text-green-400">
+              ✓ Tu as déjà parié sur ce score
+            </p>
+          ) : (
+            <>
+              {/* Cote dynamique */}
+              <div className="flex items-center justify-between rounded-xl border border-white/8 bg-zinc-800/60 px-4 py-2.5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">Score</p>
+                  <p className="text-base font-black text-white">{derivedScore}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">Cote dynamique</p>
+                  <p className="text-2xl font-black text-green-400">×{derivedOdds.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Mise */}
+              <div className="mt-3">
+                <div className="flex gap-2">
+                  {[10, 50, 100].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setScoreAmount(String(p))}
+                      disabled={p > siffletsBalance}
+                      className={`h-11 flex-1 rounded-lg text-xs font-black transition ${
+                        scoreAmount === String(p)
+                          ? "bg-green-600 text-white"
+                          : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600 disabled:opacity-40"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setScoreAmount(String(siffletsBalance))}
+                    className={`h-11 flex-1 rounded-lg text-xs font-black transition ${
+                      scoreAmount === String(siffletsBalance)
+                        ? "bg-green-600 text-white"
+                        : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                    }`}
+                  >
+                    MAX
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={10}
+                  max={siffletsBalance}
+                  placeholder="Montant…"
+                  value={scoreAmount}
+                  onChange={(e) => setScoreAmount(e.target.value)}
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-green-500/50 focus:outline-none"
+                />
+                {scoreAmountNum >= 10 && (
+                  <p className="mt-1.5 text-right text-xs text-zinc-400">
+                    Gain potentiel :{" "}
+                    <span className="font-black text-green-400">
+                      {Math.round(scoreAmountNum * derivedOdds).toLocaleString("fr-FR")} Sifflets
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Bouton valider */}
               <button
-                key={score}
-                onClick={() => { if (!bet) setSelectedScore(sel ? null : score); }}
-                disabled={bet}
-                className={`flex flex-col items-center rounded-xl border py-3 text-xs font-black transition ${
-                  bet
-                    ? "cursor-default border-green-700/40 bg-green-900/20 text-green-400"
-                    : sel
-                      ? "border-green-500 bg-green-600 text-white"
-                      : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:border-zinc-500"
+                onClick={() => { void handleScoreBet(); }}
+                disabled={
+                  !scoreInputsValid ||
+                  scoreSubmitting ||
+                  scoreAmountNum < 10 ||
+                  scoreAmountNum > siffletsBalance ||
+                  scoreSuccess
+                }
+                className={`mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-black uppercase tracking-wide transition-all ${
+                  scoreSuccess
+                    ? "bg-green-700 text-green-300"
+                    : "bg-green-500 text-zinc-950 hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
                 }`}
               >
-                <span className="text-base leading-none">{score}</span>
-                <span className="mt-0.5 text-[10px] text-zinc-400">×{odds}</span>
-                {bet && <span className="text-[10px] text-green-400">✓ Parié</span>}
+                {scoreSuccess ? (
+                  <><Check className="h-5 w-5" /> Pari enregistré ! ⚽</>
+                ) : scoreSubmitting ? (
+                  <LoaderCircle className="h-5 w-5 animate-spin" />
+                ) : (
+                  `VALIDER MON SCORE : ${derivedScore ?? "–"}`
+                )}
               </button>
-            );
-          })}
+            </>
+          )}
         </div>
-        {selectedScore && (() => {
-          const entry = SCORE_GRID.find((s) => s.score === selectedScore);
-          if (!entry) return null;
-          const odds = getScoreOdds(selectedScore, entry.baseOdds);
-          return (
-            <BetInput
-              balance={siffletsBalance}
-              amount={scoreAmount}
-              setAmount={setScoreAmount}
-              odds={odds}
-              onSubmit={() => { void handleScoreBet(); }}
-              submitting={scoreSubmitting}
-            />
-          );
-        })()}
       </Accordion>
     </div>
   );

@@ -382,6 +382,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      badges: {
+        Row: {
+          id: string;
+          slug: string;
+          label: string;
+          description: string;
+          icon_name: string;
+          criteria_type: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          label: string;
+          description: string;
+          icon_name: string;
+          criteria_type: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          label?: string;
+          description?: string;
+          icon_name?: string;
+          criteria_type?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_badges: {
+        Row: {
+          user_id: string;
+          badge_id: string;
+          unlocked_at: string;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+          unlocked_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          badge_id?: string;
+          unlocked_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -444,3 +492,5 @@ export type MatchTimelineEventRow =
 export type LongTermBetRow =
   Database["public"]["Tables"]["long_term_bets"]["Row"];
 export type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
+export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
+export type UserBadgeRow = Database["public"]["Tables"]["user_badges"]["Row"];

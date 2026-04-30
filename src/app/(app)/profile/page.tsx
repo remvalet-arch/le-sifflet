@@ -1,6 +1,9 @@
 import { Frown, Target, TrendingUp, Trophy, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
+import { TrophyWall } from "@/components/profile/TrophyWall";
+import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
+import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import type { BetRow, LongTermBetRow, MarketEventRow, MatchRow } from "@/types/database";
 
@@ -66,7 +69,13 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: profile }, { data: rawShortBets }, { data: rawLongBets }] = await Promise.all([
+  const [
+    { data: profile },
+    { data: rawShortBets },
+    { data: rawLongBets },
+    { data: allBadges },
+    { data: userBadgesData },
+  ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
       .from("bets")
@@ -80,7 +89,12 @@ export default async function ProfilePage() {
       .eq("user_id", user.id)
       .order("placed_at", { ascending: false })
       .limit(30),
+    supabase.from("badges").select("*").order("created_at"),
+    supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
   ]);
+
+  // Vérification asynchrone des nouveaux badges (idempotent)
+  void checkAndUnlockBadges(user.id);
 
   const shortBets: BetRow[]        = rawShortBets ?? [];
   const longBets:  LongTermBetRow[] = rawLongBets  ?? [];
@@ -162,9 +176,11 @@ export default async function ProfilePage() {
   const grade = getTrustGrade(trustScore);
   const karma = getKarmaBadge(trustScore);
   const rank  = getRank(balance);
+  const unlockedBadgeIds = (userBadgesData ?? []).map((ub) => ub.badge_id);
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+      <BadgeUnlockListener userId={user.id} />
       {/* Hero */}
       <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
         <div className="flex flex-col items-center gap-2 px-6 pb-5 pt-7">
@@ -230,6 +246,14 @@ export default async function ProfilePage() {
         </div>
         <p className="mt-1.5 text-right text-[10px] text-zinc-600">/ 1000</p>
       </div>
+
+      {/* Trophy wall */}
+      {allBadges && allBadges.length > 0 && (
+        <TrophyWall
+          badges={allBadges}
+          unlockedBadgeIds={unlockedBadgeIds}
+        />
+      )}
 
       {/* Unified bet history */}
       <h2 className="mt-6 text-xs font-bold uppercase tracking-widest text-zinc-500">
