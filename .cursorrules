@@ -1,0 +1,5 @@
+# RÈGLES DE DÉVELOPPEMENT POUR LE SIFFLET
+
+1. DOCUMENTATION VIVANTE : À chaque fois que tu (l'IA) implémentes une nouvelle fonctionnalité majeure, modifies la base de données, ou corriges un bug critique, tu DOIS obligatoirement mettre à jour le fichier `PROJECT_STATE.md` à la fin de ton intervention pour refléter le nouvel état du projet.
+2. PAS D'HALLUCINATION DATA : Ne génère jamais de fausses données (joueurs, matchs) en dur. Utilise toujours nos scripts SQL existants ou TheSportsDB.
+3. PRIORITÉ UX : L'application est Mobile-First. Garde toujours l'interface aérée (inspiration Google Sport, TikTok pour l'action principale).

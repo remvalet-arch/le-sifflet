@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import { Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { LineupRow } from "@/types/database";
 
@@ -178,8 +179,24 @@ export const SoccerPitch = memo(function SoccerPitch({
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+      <div className="mt-4 animate-pulse overflow-hidden rounded-2xl border border-green-700/40 bg-green-800/30 py-6">
+        {([
+          [1, 4, 3, 4, 1],
+          [1, 4, 3, 4, 1],
+        ] as number[][]).map((rows, half) => (
+          <div key={half} className={`flex flex-col gap-3 ${half === 1 ? "mt-4" : ""}`}>
+            {rows.map((count, rowIdx) => (
+              <div key={rowIdx} className="flex justify-center gap-3">
+                {Array.from({ length: count }).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <div className="h-8 w-8 rounded-full bg-green-700/50" />
+                    <div className="h-1.5 w-10 rounded-full bg-green-700/30" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     );
   }
@@ -276,8 +293,11 @@ export const SoccerPitch = memo(function SoccerPitch({
   // ── Cas 2 : aucune donnée ────────────────────────────────────────────────
 
   return (
-    <p className="py-10 text-center text-sm text-zinc-500">
-      Compositions non disponibles pour ce match.
-    </p>
+    <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
+      <Users className="h-10 w-10 text-zinc-600" />
+      <p className="text-center text-sm font-semibold text-zinc-400">
+        Les compos ne sont pas encore tombées. Le coach fait durer le suspense.
+      </p>
+    </div>
   );
 });

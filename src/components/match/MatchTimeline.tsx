@@ -216,8 +216,32 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
 
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+      <div className="relative mt-6 animate-pulse pb-4">
+        <div className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-zinc-800" />
+        <div className="flex flex-col gap-6">
+          {(
+            [
+              { side: "home", w: "w-28" },
+              { side: "away", w: "w-32" },
+              { side: "home", w: "w-24" },
+              { side: "away", w: "w-20" },
+            ] as { side: "home" | "away"; w: string }[]
+          ).map((item, i) => (
+            <div key={i} className="relative flex items-start">
+              <div className="flex flex-1 justify-end pr-4">
+                {item.side === "home" && (
+                  <div className={`h-12 ${item.w} rounded-xl bg-zinc-800`} />
+                )}
+              </div>
+              <div className="z-10 mt-4 h-3 w-3 shrink-0 rounded-full bg-zinc-700 ring-2 ring-zinc-950" />
+              <div className="flex flex-1 justify-start pl-4">
+                {item.side === "away" && (
+                  <div className={`h-12 ${item.w} rounded-xl bg-zinc-800`} />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

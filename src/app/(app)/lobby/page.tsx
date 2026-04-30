@@ -1,3 +1,4 @@
+import { CalendarX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MatchCard } from "@/components/lobby/MatchCard";
 import { Onboarding } from "@/components/onboarding/Onboarding";
@@ -40,10 +41,12 @@ export default async function LobbyPage() {
     <>
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
         {matches.length === 0 ? (
-          <p className="rounded-2xl border border-white/8 bg-zinc-900 p-6 text-center text-sm text-zinc-500">
-            Aucun match pour l&apos;instant.{" "}
-            <code className="text-green-500">supabase/seed.sql</code> → SQL Editor.
-          </p>
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
+            <CalendarX className="h-10 w-10 text-zinc-600" />
+            <p className="text-center text-sm font-semibold text-zinc-400">
+              Aucun match prévu aujourd&apos;hui. Va t&apos;échauffer&nbsp;!
+            </p>
+          </div>
         ) : (
           <>
             {live.length > 0 && (
