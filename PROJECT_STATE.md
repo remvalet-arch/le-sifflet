@@ -1,7 +1,7 @@
 # PROJECT_STATE — Le Sifflet
 
 > Documentation vivante de l'application. À mettre à jour à chaque évolution majeure (feature, schéma, bug critique).
-> Dernière mise à jour : 2026-04-30 — tests automatisés (simulation backend + Playwright E2E).
+> Dernière mise à jour : 2026-04-30 — clarifications UX paris, streaming Suspense lobby, loading.tsx manquants.
 
 ---
 
@@ -151,14 +151,14 @@ erDiagram
 |---|---|---|
 | **Auth** | Google OAuth PKCE → callback → cookies sécurisés. | `src/app/auth/callback/route.ts`, `src/app/login/page.tsx`, `src/middleware.ts` |
 | **Onboarding** | Modal 3 étapes au premier login, flag `has_onboarded`. | `src/components/onboarding/Onboarding.tsx`, `src/app/actions/onboarding.ts` |
-| **Lobby** | Tri En Direct → À venir → Terminés, `MatchCard` aérée. | `src/app/(app)/lobby/page.tsx`, `src/components/lobby/MatchCard.tsx`, `src/lib/matches.ts` |
+| **Lobby** | Tri En Direct → À venir → Terminés, `MatchCard` aérée. Streaming Suspense : auth rapide → `<MatchListFetcher>` isolé, `loading.tsx` + `MatchCardSkeleton` réutilisable. | `src/app/(app)/lobby/page.tsx`, `src/components/lobby/MatchCard.tsx`, `src/components/lobby/MatchCardSkeleton.tsx`, `src/lib/matches.ts` |
 | **Live Room** | 4 abonnements Realtime (matches, market_events INSERT/UPDATE, bets UPDATE filtré user). | `src/components/match/LiveRoom.tsx` |
 | **Mécanique Waze** | Seuil 2 users distincts en 30 s → `market_event` OPEN + cooldown 3 min. | `src/app/api/alert/route.ts` |
 | **VotingModal** | Cotes dégressives (peak par type, decay 2.5 %/s après 10 s, floor 1.01). | `src/components/match/VotingModal.tsx`, `src/lib/constants/odds.ts` |
 | **Paris court terme** | RPC atomique `place_bet` v2 (vérif multiplier serveur, FOR UPDATE, UNIQUE). | `src/app/api/bet/route.ts`, migration `0011_place_bet_v2.sql` |
 | **Résolution events court terme** | Auto via API mock (≥ 3 min) + admin manuel. Payout + karma initiateurs (+10 / -20). | `src/app/api/verify-event/route.ts`, `src/app/api/admin/resolve-event/route.ts`, `src/lib/resolve-event.ts`, migration `0008_karma_waze.sql` |
 | **Notifications** | Toast Sonner sur win/loss + flash animé du solde TopBar. | `src/components/match/LiveRoom.tsx`, `src/components/layout/TopBar.tsx` |
-| **Profil** | Hero, solde, grade trust score, refill quotidien, stats (réussite, gagné, paris), historique paris court terme. | `src/app/(app)/profile/page.tsx`, `src/components/profile/RefillButton.tsx` |
+| **Profil** | Hero, solde, grade trust score, badge karma (🟨/📢/🛡️), refill quotidien, stats (réussite, gagné, paris), historique unifié court+long terme avec badges `pending` différenciés (⏳ VAR / ⏳ Fin du match). | `src/app/(app)/profile/page.tsx`, `src/components/profile/RefillButton.tsx` |
 | **Refill quotidien** | +500 Sifflets si solde < 500 et cooldown 24 h respecté. | `src/app/api/refill/route.ts`, migration `0009_profile_extras.sql` |
 | **Leaderboard** | Top 50 + podium + ligne « moi » sticky + badge 🛡️ pour `trust_score >= MODERATOR_THRESHOLD`. | `src/app/(app)/leaderboard/page.tsx` |
 | **Sécurité admin** | `MODERATOR_THRESHOLD = 150` dans `permissions.ts`, `>= 150` appliqué partout (6 fichiers). `/admin/resolve` + `/api/admin/resolve-event` verrouillés côté serveur (403 si non-modérateur). | `src/lib/constants/permissions.ts`, `src/app/api/admin/resolve-event/route.ts`, `src/app/admin/resolve/page.tsx` |
@@ -209,9 +209,9 @@ erDiagram
 
 ### UX / Mobile
 - Service Worker PWA réel (manifest seul ne suffit pas pour l'expérience installable).
-- États de chargement (skeletons) sur le lobby et le profil — actuellement écran vide pendant le fetch.
+- ~~États de chargement (skeletons) sur le lobby et le profil — ✅ loading.tsx sur lobby, profil, match/[id], leaderboard + Suspense streaming lobby.~~
 - Gestion d'erreurs centralisée (Sentry / logger structuré). Aujourd'hui : `console.error` en sec serveur, toast générique côté client.
-- Empty states quand `lineups` ou `players` non synchronisés (texte aujourd'hui correct mais sans CTA).
+- ~~Empty states quand `lineups` ou `players` non synchronisés — ✅ icônes lucide + messages contextuels.~~
 
 ### Data & qualité
 - Vrai provider sport (remplacer `verifyEventWithAPI` mock) — Stats Perform, Opta ou TheSportsDB livescore endpoint.
@@ -234,7 +234,7 @@ erDiagram
 
 ### UX
 - Le Super-Bouton ne se réabonne pas aux changements de statut match → si un upcoming démarre pendant que l'user est sur la page, le bouton ne s'affiche pas avant un refresh.
-- Afficher les paris long terme dans `/profile` (aujourd'hui historique = bets court terme uniquement).
+- ~~Afficher les paris long terme dans `/profile` — ✅ historique unifié court+long terme.~~
 - Toast quand le statut du match change (« 🟨 Mi-temps ! ») via Realtime sur `matches`.
 - Animation de payout plus marquante quand `trust_score` augmente (pas seulement le solde).
 
@@ -323,3 +323,5 @@ npm run test:e2e:ui   # Tests E2E avec interface visuelle Playwright
 
 **Avant chaque commit** : `npm run lint && npm run typecheck` (cf. `CLAUDE.md` règle 1).
 **Avant chaque mise en production** : `npm run test:backend && npm run test:e2e`.
+
+**Script d'audit SQL** : `supabase/audit_pending_bets.sql` — détecte les paris longs `pending` sur des matchs déjà `finished` (résolution ratée silencieusement). À coller dans le SQL Editor Supabase si un joueur signale un pari bloqué.

@@ -16,10 +16,18 @@ const SHORT_BET_LABELS: Record<string, { label: string; emoji: string }> = {
 };
 
 const BET_STATUS = {
-  won:     { label: "Gagné",      cls: "bg-green-500/20 text-green-400 border-green-500/30" },
-  lost:    { label: "Perdu",      cls: "bg-red-500/20 text-red-400 border-red-500/30" },
-  pending: { label: "En attente", cls: "bg-zinc-800 text-zinc-400 border-white/10" },
+  won:  { label: "Gagné", cls: "bg-green-500/20 text-green-400 border-green-500/30" },
+  lost: { label: "Perdu", cls: "bg-red-500/20 text-red-400 border-red-500/30" },
 } as const;
+
+// Badges "pending" différenciés selon le type de pari
+const PENDING_SHORT = { label: "⏳ En attente de la VAR",   cls: "bg-orange-500/15 text-orange-400 border-orange-500/25" };
+const PENDING_LONG  = { label: "⏳ Attente fin du match",    cls: "bg-blue-500/15 text-blue-400 border-blue-500/25" };
+
+function getStatusBadge(status: string, kind: "short" | "long") {
+  if (status === "pending") return kind === "short" ? PENDING_SHORT : PENDING_LONG;
+  return BET_STATUS[status as keyof typeof BET_STATUS] ?? PENDING_SHORT;
+}
 
 function getTrustGrade(score: number) {
   if (score >= 200)
@@ -248,7 +256,7 @@ export default async function ProfilePage() {
             if (entry.kind === "short") {
               const { data: bet, event, match } = entry;
               const eCfg  = event ? (SHORT_BET_LABELS[event.type] ?? { label: event.type, emoji: "⚡" }) : { label: "—", emoji: "⚡" };
-              const sCfg  = BET_STATUS[bet.status as keyof typeof BET_STATUS] ?? BET_STATUS.pending;
+              const sCfg  = getStatusBadge(bet.status, "short");
               const reward = Math.round(Number(bet.potential_reward));
 
               return (
@@ -286,7 +294,7 @@ export default async function ProfilePage() {
 
             // Long-term bet
             const { data: ltb, match } = entry;
-            const sCfg  = BET_STATUS[ltb.status as keyof typeof BET_STATUS] ?? BET_STATUS.pending;
+            const sCfg  = getStatusBadge(ltb.status, "long");
             const reward = Math.round(Number(ltb.potential_reward));
             const betLabel =
               ltb.bet_type === "scorer"
