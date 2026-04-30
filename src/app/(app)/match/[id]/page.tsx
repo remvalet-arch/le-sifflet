@@ -48,12 +48,12 @@ export default async function MatchPage({ params }: Props) {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       <Link
         href="/lobby"
-        className="text-sm font-bold text-whistle underline-offset-2 hover:underline"
+        className="inline-flex items-center gap-1.5 text-sm font-bold text-whistle transition-opacity hover:opacity-70"
       >
         ← Terrain
       </Link>
 
-      {match.status === "live" ? (
+      {match.status === "live" || (isModerator && match.status === "upcoming") ? (
         <LiveRoom
           match={match}
           siffletsBalance={siffletsBalance}

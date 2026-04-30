@@ -246,14 +246,20 @@ export function ActionDrawer({
                 {isSub ? (
                   <>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">🔴 Joueur sortant</label>
+                      <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-zinc-400">
+                        <span className="text-base leading-none text-red-400">↓</span>
+                        Joueur sortant
+                      </label>
                       <select value={playerOut} onChange={(e) => setPlayerOut(e.target.value)} className={SELECT_CLS} disabled={starters.length === 0}>
                         <option value="">{starters.length === 0 ? "Aucun titulaire" : "Sélectionner…"}</option>
                         {starters.map((p) => <option key={p.id} value={p.player_name}>{p.player_name}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">🟢 Joueur entrant</label>
+                      <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-zinc-400">
+                        <span className="text-base leading-none text-green-400">↑</span>
+                        Joueur entrant
+                      </label>
                       <select value={playerIn} onChange={(e) => setPlayerIn(e.target.value)} className={SELECT_CLS} disabled={bench.length === 0}>
                         <option value="">{bench.length === 0 ? "Aucun remplaçant" : "Sélectionner…"}</option>
                         {bench.map((p) => <option key={p.id} value={p.player_name}>{p.player_name}</option>)}
@@ -272,9 +278,12 @@ export function ActionDrawer({
 
                 <button
                   type="submit" disabled={submitting}
-                  className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {submitting ? <LoaderCircle className="h-5 w-5 animate-spin" /> : "Valider"}
+                  {submitting
+                    ? <LoaderCircle className="h-5 w-5 animate-spin" />
+                    : isSub ? "Valider le changement" : "Valider l'événement"
+                  }
                 </button>
               </form>
             )}

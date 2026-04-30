@@ -145,6 +145,14 @@ export function LiveRoom({
     return () => { void supabase.removeChannel(channel); };
   }, [match.id, userId]);
 
+  // Signale à la BottomNav que le Super Button doit être affiché
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("sifflet:drawer-available", { detail: { enabled: true } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("sifflet:drawer-available", { detail: { enabled: false } }));
+    };
+  }, []);
+
   // Écoute le Super Button de la BottomNav
   useEffect(() => {
     const open = () => setDrawerOpen(true);
