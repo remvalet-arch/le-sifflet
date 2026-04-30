@@ -1,15 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Menu, X, BookOpen, Settings, LogOut } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { WhistleLogo } from "@/components/ui/WhistleLogo";
+import { createClient } from "@/lib/supabase/client";
+import type { ProfileRow } from "@/types/database";
 
-type Props = { siffletsBalance: number; username: string };
+type Props = { siffletsBalance: number; username: string; userId: string };
 
-export function TopBar({ siffletsBalance, username }: Props) {
+export function TopBar({ siffletsBalance, username, userId }: Props) {
   const [open, setOpen] = useState(false);
+  const [balance, setBalance] = useState(siffletsBalance);
+  const [flash, setFlash] = useState(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Realtime : met à jour le solde dès qu'un pari est résolu
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`topbar-profile-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${userId}`,
+        },
+        (payload) => {
+          const updated = payload.new as ProfileRow;
+          if (updated.sifflets_balance > balance) {
+            setFlash(true);
+            if (flashTimer.current) clearTimeout(flashTimer.current);
+            flashTimer.current = setTimeout(() => setFlash(false), 2000);
+          }
+          setBalance(updated.sifflets_balance);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+      void supabase.removeChannel(channel);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   return (
     <>
@@ -26,10 +63,22 @@ export function TopBar({ siffletsBalance, username }: Props) {
             </span>
           </Link>
 
-          {/* Balance */}
-          <div className="rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-sm font-black tabular-nums text-green-400">
-            {siffletsBalance.toLocaleString("fr-FR")}
-            <span className="ml-1 text-xs font-normal text-green-400/60">pts</span>
+          {/* Balance — flash vert quand le solde augmente */}
+          <div
+            className={`rounded-full border px-3 py-1 text-sm font-black tabular-nums transition-all duration-500 ${
+              flash
+                ? "border-green-400 bg-green-400/20 text-green-300 shadow-lg shadow-green-400/30"
+                : "border-green-500/30 bg-green-500/10 text-green-400"
+            }`}
+          >
+            {balance.toLocaleString("fr-FR")}
+            <span
+              className={`ml-1 text-xs font-normal transition-colors duration-500 ${
+                flash ? "text-green-300/80" : "text-green-400/60"
+              }`}
+            >
+              pts
+            </span>
           </div>
 
           {/* Burger */}
@@ -58,7 +107,6 @@ export function TopBar({ siffletsBalance, username }: Props) {
         }`}
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        {/* Sheet header */}
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">

@@ -46,15 +46,28 @@ export function MatchCard({ match }: { match: MatchRow }) {
         )}
       </div>
 
-      {/* Teams */}
+      {/* Teams + score */}
       <div className="mt-3 flex items-center justify-between gap-4">
-        <p className="min-w-0 flex-1 truncate text-lg font-black text-white">
+        <p className="min-w-0 flex-1 truncate text-base font-black text-white">
           {match.team_home}
         </p>
-        <span className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1 text-sm font-black tabular-nums text-zinc-400">
-          vs
-        </span>
-        <p className="min-w-0 flex-1 truncate text-right text-lg font-black text-white">
+        {isLive || isFinished ? (
+          <div className="flex shrink-0 flex-col items-center gap-0.5">
+            <span className="rounded-lg bg-zinc-800 px-3 py-1 text-sm font-black tabular-nums text-white">
+              {match.home_score} — {match.away_score}
+            </span>
+            {isLive && match.match_minute !== null && (
+              <span className="text-[10px] font-bold text-green-400">
+                {match.match_minute}&apos;
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1 text-sm font-black tabular-nums text-zinc-400">
+            vs
+          </span>
+        )}
+        <p className="min-w-0 flex-1 truncate text-right text-base font-black text-white">
           {match.team_away}
         </p>
       </div>

@@ -28,6 +28,7 @@ export default async function AppLayout({
       <TopBar
         username={profile.username}
         siffletsBalance={profile.sifflets_balance}
+        userId={user.id}
       />
 
       {/* Scrollable content — clears fixed TopBar and BottomNav */}

@@ -1,4 +1,5 @@
 export type MatchStatus = "upcoming" | "live" | "finished";
+export type TimelineEventType = "goal" | "yellow_card" | "red_card" | "substitution";
 export type MarketEventType =
   | "penalty_check"
   | "penalty_outcome"
@@ -58,6 +59,13 @@ export interface Database {
           status: MatchStatus;
           start_time: string;
           alert_cooldown_until: string | null;
+          home_score: number;
+          away_score: number;
+          match_minute: number | null;
+          home_team_color: string | null;
+          away_team_color: string | null;
+          home_team_logo: string | null;
+          away_team_logo: string | null;
           created_at: string;
         };
         Insert: {
@@ -67,6 +75,13 @@ export interface Database {
           status?: MatchStatus;
           start_time: string;
           alert_cooldown_until?: string | null;
+          home_score?: number;
+          away_score?: number;
+          match_minute?: number | null;
+          home_team_color?: string | null;
+          away_team_color?: string | null;
+          home_team_logo?: string | null;
+          away_team_logo?: string | null;
           created_at?: string;
         };
         Update: {
@@ -76,6 +91,43 @@ export interface Database {
           status?: MatchStatus;
           start_time?: string;
           alert_cooldown_until?: string | null;
+          home_score?: number;
+          away_score?: number;
+          match_minute?: number | null;
+          home_team_color?: string | null;
+          away_team_color?: string | null;
+          home_team_logo?: string | null;
+          away_team_logo?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      lineups: {
+        Row: {
+          id: string;
+          match_id: string;
+          player_name: string;
+          team_side: "home" | "away";
+          position: "G" | "D" | "M" | "A";
+          status: "starter" | "bench";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          player_name: string;
+          team_side: "home" | "away";
+          position?: "G" | "D" | "M" | "A";
+          status?: "starter" | "bench";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          match_id?: string;
+          player_name?: string;
+          team_side?: "home" | "away";
+          position?: "G" | "D" | "M" | "A";
+          status?: "starter" | "bench";
           created_at?: string;
         };
         Relationships: [];
@@ -218,6 +270,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      match_timeline_events: {
+        Row: {
+          id: string;
+          match_id: string;
+          event_type: TimelineEventType;
+          minute: number;
+          team_side: "home" | "away";
+          player_name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          event_type: TimelineEventType;
+          minute: number;
+          team_side: "home" | "away";
+          player_name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          match_id?: string;
+          event_type?: TimelineEventType;
+          minute?: number;
+          team_side?: "home" | "away";
+          player_name?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -228,6 +310,7 @@ export interface Database {
           p_event_id: string;
           p_chosen_option: string;
           p_amount_staked: number;
+          p_multiplier?: number;
         };
         Returns: string;
       };
@@ -248,6 +331,9 @@ export type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
 export type RoomMemberRow = Database["public"]["Tables"]["room_members"]["Row"];
 export type MarketEventRow =
   Database["public"]["Tables"]["market_events"]["Row"];
+export type LineupRow = Database["public"]["Tables"]["lineups"]["Row"];
 export type BetRow = Database["public"]["Tables"]["bets"]["Row"];
 export type AlertSignalRow =
   Database["public"]["Tables"]["alert_signals"]["Row"];
+export type MatchTimelineEventRow =
+  Database["public"]["Tables"]["match_timeline_events"]["Row"];
