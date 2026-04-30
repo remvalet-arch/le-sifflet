@@ -1,7 +1,7 @@
 # PROJECT_STATE — Le Sifflet
 
 > Documentation vivante de l'application. À mettre à jour à chaque évolution majeure (feature, schéma, bug critique).
-> Dernière mise à jour : 2026-04-30 — sécurité admin, sync score, résolution paris long terme.
+> Dernière mise à jour : 2026-04-30 — tests automatisés (simulation backend + Playwright E2E).
 
 ---
 
@@ -215,7 +215,7 @@ erDiagram
 
 ### Data & qualité
 - Vrai provider sport (remplacer `verifyEventWithAPI` mock) — Stats Perform, Opta ou TheSportsDB livescore endpoint.
-- Tests : aucun framework configuré (Vitest / Playwright recommandés pour les RPCs et le flow critique).
+- ~~Tests : aucun framework configuré — ✅ simulation backend + Playwright E2E ajoutés.~~
 - Internationalisation : 100 % FR en dur — bloquant si scope CDM 2026 multi-langue.
 
 ---
@@ -245,14 +245,81 @@ erDiagram
 
 ---
 
+## 🧪 TESTS AUTOMATISÉS
+
+> **Ces tests doivent être exécutés avant chaque mise en production.**
+
+### Simulation backend (moteur financier)
+
+```bash
+npm run test:backend
+```
+
+**Fichier :** `scripts/simulate-match-scenario.ts`
+
+Ce script Node.js (service_role Supabase) teste le moteur de résolution des paris long terme sans passer par l'UI :
+
+1. Crée 3 utilisateurs de test (modérateur + joueur A + joueur B, 1000 Sifflets chacun).
+2. Crée un faux match PSG vs OL.
+3. Joueur A : pari buteur "Mbappé" (mise 100, cote ×3.5 → gain 350).
+4. Joueur B : pari score exact "0-0" (mise 100, cote ×8.0 → gain 800).
+5. Insère 3 buts en timeline (Mbappé 47', Hakimi 73', Lacazette 82').
+6. Fixe le score final 2-1, appelle `resolve_long_term_bets`.
+7. **Assertions** :
+   - Joueur A → 1250 Sifflets, statut `won` ✓
+   - Joueur B → 900 Sifflets (pari perdu), statut `lost` ✓
+8. Nettoyage complet (utilisateurs + match supprimés).
+
+**Prérequis :** `.env.local` avec `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
+
+---
+
+### Tests E2E Playwright (interface utilisateur)
+
+```bash
+# Lancer en mode headless (CI / avant deploy)
+npm run test:e2e
+
+# Lancer avec l'UI Playwright (debug interactif)
+npm run test:e2e:ui
+```
+
+**Fichiers :**
+- `playwright.config.ts` — configuration (browser Pixel 7 simulé, webServer auto)
+- `tests/e2e/global-setup.ts` — crée l'utilisateur E2E et génère la session via magic link
+- `tests/e2e/user-journey.spec.ts` — 5 tests couvrant le parcours complet
+
+**Scénarios couverts :**
+
+| Test | Assertion |
+|---|---|
+| **Lobby** | Au moins une `MatchCard` (`<a href="/match/…">`) est visible |
+| **LiveRoom — Super-Bouton** | Le FAB (aria-label "Ouvrir le tiroir d'action") est présent sur un match En Direct |
+| **LiveRoom — Onglets** | Les 3 onglets Temps forts / Compositions / Prédictions sont rendus |
+| **Prédictions** | Clic sur un bouton de score → formulaire "Mise (min. 10 Sifflets)" s'affiche |
+| **Profil** | Solde + badge karma + section "Mes Paris" visibles |
+
+**Prérequis :**
+- `.env.local` avec `TEST_AUTH_SECRET` (générer avec `openssl rand -hex 32`), `TEST_USER_EMAIL`, `TEST_USER_PASSWORD`.
+- App en cours (`npm run dev`) ou `CI=true` pour que Playwright la démarre seul.
+- Au moins un match en base (`supabase/seed.sql`).
+
+**Architecture auth :** le global setup appelle `GET /api/test/auth` (endpoint dev-only protégé par `TEST_AUTH_SECRET`) qui génère un magic link Supabase → le navigateur headless le suit → cookies SSR sauvegardés dans `tests/e2e/.auth/user.json`.
+
+---
+
 ## 🔧 Commandes utiles
 
 ```bash
-npm run dev        # localhost:3000
-npm run build      # production
-npm run lint       # ESLint
-npm run typecheck  # tsc --noEmit
-npm run format     # Prettier
+npm run dev           # localhost:3000
+npm run build         # production
+npm run lint          # ESLint
+npm run typecheck     # tsc --noEmit
+npm run format        # Prettier
+npm run test:backend  # Simulation moteur financier (Node.js + service_role)
+npm run test:e2e      # Tests E2E Playwright (headless Chromium)
+npm run test:e2e:ui   # Tests E2E avec interface visuelle Playwright
 ```
 
 **Avant chaque commit** : `npm run lint && npm run typecheck` (cf. `CLAUDE.md` règle 1).
+**Avant chaque mise en production** : `npm run test:backend && npm run test:e2e`.
