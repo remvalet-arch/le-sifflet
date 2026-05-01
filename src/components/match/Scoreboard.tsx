@@ -29,12 +29,16 @@ function TeamCrest({
   logo?: string | null;
   color?: string | null;
 }) {
+  const isUrl = logo?.startsWith("http");
   return (
     <div
-      className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 text-xl shadow-sm"
-      style={{ backgroundColor: color ?? "#3f3f46" }}
+      className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-sm"
+      style={{ backgroundColor: isUrl ? "transparent" : (color ?? "#3f3f46") }}
     >
-      {logo ? (
+      {isUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo!} alt="" className="h-10 w-10 object-contain" />
+      ) : logo ? (
         <span className="text-lg leading-none">{logo}</span>
       ) : (
         <span className="text-sm leading-none text-white/40">⚽</span>

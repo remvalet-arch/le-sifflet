@@ -114,7 +114,7 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
       .from("match_timeline_events")
       .select("*")
       .eq("match_id", matchId)
-      .order("minute", { ascending: true })
+      .order("minute", { ascending: false })
       .then(({ data }) => {
         setEvents(data ?? []);
         setLoading(false);
@@ -127,7 +127,7 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
         { event: "INSERT", schema: "public", table: "match_timeline_events", filter: `match_id=eq.${matchId}` },
         (payload) => {
           setEvents((prev) =>
-            [...prev, payload.new as MatchTimelineEventRow].sort((a, b) => a.minute - b.minute),
+            [...prev, payload.new as MatchTimelineEventRow].sort((a, b) => b.minute - a.minute),
           );
         },
       )
@@ -138,7 +138,7 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
           const updated = payload.new as MatchTimelineEventRow;
           setEvents((prev) =>
             prev.map((e) => (e.id === updated.id ? updated : e))
-              .sort((a, b) => a.minute - b.minute),
+              .sort((a, b) => b.minute - a.minute),
           );
         },
       )

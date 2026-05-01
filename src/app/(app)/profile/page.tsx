@@ -1,8 +1,9 @@
-import { Frown, Target, TrendingUp, Trophy, Shield } from "lucide-react";
+import { Target, TrendingUp, Trophy, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
-import { TrophyWall } from "@/components/profile/TrophyWall";
 import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
+import { ProfileClient } from "@/components/profile/ProfileClient";
+import type { ShortBetEntry, LongBetEntry } from "@/components/profile/ProfileClient";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import type { BetRow, LongTermBetRow, MarketEventRow, MatchRow } from "@/types/database";
@@ -11,42 +12,18 @@ export const metadata = { title: "Mon Profil" };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const SHORT_BET_LABELS: Record<string, { label: string; emoji: string }> = {
-  penalty_check:   { label: "Péno ?", emoji: "📢" },
-  penalty_outcome: { label: "Résultat péno", emoji: "🥅" },
-  var_goal:        { label: "Hors-jeu / But", emoji: "🚩" },
-  red_card:        { label: "Carton rouge", emoji: "🟥" },
-};
-
-const BET_STATUS = {
-  won:  { label: "Gagné", cls: "bg-green-500/20 text-green-400 border-green-500/30" },
-  lost: { label: "Perdu", cls: "bg-red-500/20 text-red-400 border-red-500/30" },
-} as const;
-
-// Badges "pending" différenciés selon le type de pari
-const PENDING_SHORT = { label: "⏳ En attente de la VAR",   cls: "bg-orange-500/15 text-orange-400 border-orange-500/25" };
-const PENDING_LONG  = { label: "⏳ Attente fin du match",    cls: "bg-blue-500/15 text-blue-400 border-blue-500/25" };
-
-function getStatusBadge(status: string, kind: "short" | "long") {
-  if (status === "pending") return kind === "short" ? PENDING_SHORT : PENDING_LONG;
-  return BET_STATUS[status as keyof typeof BET_STATUS] ?? PENDING_SHORT;
-}
-
 function getTrustGrade(score: number) {
-  if (score >= 200)
-    return { label: "Arbitre Élite",    icon: "🏅", color: "text-yellow-400", bar: "bg-yellow-400" };
-  if (score >= 100)
-    return { label: "Arbitre Officiel", icon: "✅", color: "text-green-400",  bar: "bg-green-500" };
-  if (score >= 50)
-    return { label: "Lanceur d'Alerte", icon: "⚡", color: "text-blue-400",   bar: "bg-blue-400" };
-  return   { label: "Carton Jaune",     icon: "⚠️", color: "text-orange-400", bar: "bg-orange-400" };
+  if (score >= 200) return { label: "Arbitre Élite",    icon: "🏅", color: "text-yellow-400", bar: "bg-yellow-400" };
+  if (score >= 100) return { label: "Arbitre Officiel", icon: "✅", color: "text-green-400",  bar: "bg-green-500"  };
+  if (score >= 50)  return { label: "Lanceur d'Alerte", icon: "⚡", color: "text-blue-400",   bar: "bg-blue-400"   };
+  return             { label: "Carton Jaune",     icon: "⚠️", color: "text-orange-400", bar: "bg-orange-400" };
 }
 
 function getKarmaBadge(score: number) {
   if (score >= MODERATOR_THRESHOLD)
-    return { emoji: "🛡️", label: "Modérateur", cls: "border border-yellow-500/50 text-yellow-400 bg-yellow-500/10" };
+    return { emoji: "🛡️", label: "Modérateur",  cls: "border border-yellow-500/50 text-yellow-400 bg-yellow-500/10" };
   if (score >= 50)
-    return { emoji: "📢", label: "Supporteur",  cls: "border border-white/10 text-zinc-400 bg-zinc-800" };
+    return { emoji: "📢", label: "Supporteur",   cls: "border border-white/10 text-zinc-400 bg-zinc-800" };
   return   { emoji: "🟨", label: "Carton Jaune", cls: "border border-orange-500/30 text-orange-400 bg-orange-500/10" };
 }
 
@@ -56,17 +33,11 @@ function getRank(balance: number) {
   return                      { label: "Remplaçant",      emoji: "🪑" };
 }
 
-type UnifiedBet =
-  | { kind: "short"; data: BetRow;        event?: MarketEventRow; match?: Pick<MatchRow, "id" | "team_home" | "team_away">; placedAt: string }
-  | { kind: "long";  data: LongTermBetRow; match?: Pick<MatchRow, "id" | "team_home" | "team_away">; placedAt: string };
-
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ProfilePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
   const [
@@ -77,91 +48,83 @@ export default async function ProfilePage() {
     { data: userBadgesData },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase
-      .from("bets")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("placed_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("long_term_bets")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("placed_at", { ascending: false })
-      .limit(30),
+    supabase.from("bets").select("*").eq("user_id", user.id).order("placed_at", { ascending: false }).limit(30),
+    supabase.from("long_term_bets").select("*").eq("user_id", user.id).order("placed_at", { ascending: false }).limit(30),
     supabase.from("badges").select("*").order("created_at"),
     supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
   ]);
 
-  // Vérification asynchrone des nouveaux badges (idempotent)
   void checkAndUnlockBadges(user.id);
 
-  const shortBets: BetRow[]        = rawShortBets ?? [];
+  const shortBets: BetRow[]         = rawShortBets ?? [];
   const longBets:  LongTermBetRow[] = rawLongBets  ?? [];
   const balance    = profile?.sifflets_balance ?? 0;
   const trustScore = profile?.trust_score      ?? 100;
 
-  // Enrich short bets with event + match data
+  // Enrich short bets
   const eventIds = [...new Set(shortBets.map((b) => b.event_id))];
   const eventMap = new Map<string, MarketEventRow>();
   const matchMap = new Map<string, Pick<MatchRow, "id" | "team_home" | "team_away">>();
 
   if (eventIds.length > 0) {
-    const { data: events } = await supabase
-      .from("market_events")
-      .select("*")
-      .in("id", eventIds);
+    const { data: events } = await supabase.from("market_events").select("*").in("id", eventIds);
     (events ?? []).forEach((e) => eventMap.set(e.id, e));
 
     const fromShortMatchIds = [...new Set((events ?? []).map((e) => e.match_id))];
     const fromLongMatchIds  = [...new Set(longBets.map((b) => b.match_id))];
     const allMatchIds = [...new Set([...fromShortMatchIds, ...fromLongMatchIds])];
-
     if (allMatchIds.length > 0) {
-      const { data: matches } = await supabase
-        .from("matches")
-        .select("id, team_home, team_away")
-        .in("id", allMatchIds);
+      const { data: matches } = await supabase.from("matches").select("id, team_home, team_away").in("id", allMatchIds);
       (matches ?? []).forEach((m) => matchMap.set(m.id, m));
     }
   } else if (longBets.length > 0) {
     const longMatchIds = [...new Set(longBets.map((b) => b.match_id))];
-    const { data: matches } = await supabase
-      .from("matches")
-      .select("id, team_home, team_away")
-      .in("id", longMatchIds);
+    const { data: matches } = await supabase.from("matches").select("id, team_home, team_away").in("id", longMatchIds);
     (matches ?? []).forEach((m) => matchMap.set(m.id, m));
   }
 
-  // Build unified + sorted list
-  const unified: UnifiedBet[] = [
-    ...shortBets.map((b) => {
-      const event = eventMap.get(b.event_id);
-      const match = event ? matchMap.get(event.match_id) : undefined;
-      return { kind: "short" as const, data: b, event, match, placedAt: b.placed_at };
-    }),
-    ...longBets.map((b) => ({
-      kind: "long" as const,
-      data: b,
-      match: matchMap.get(b.match_id),
-      placedAt: b.placed_at,
-    })),
-  ].sort((a, b) => new Date(b.placedAt).getTime() - new Date(a.placedAt).getTime());
+  // Build flat serializable entries for ProfileClient
+  const shortEntries: ShortBetEntry[] = shortBets.map((b) => {
+    const event = eventMap.get(b.event_id);
+    const match = event ? matchMap.get(event.match_id) : undefined;
+    return {
+      id: b.id,
+      status: b.status,
+      chosen_option: b.chosen_option,
+      amount_staked: b.amount_staked,
+      potential_reward: Number(b.potential_reward),
+      placed_at: b.placed_at,
+      eventType: event?.type,
+      teamHome: match?.team_home,
+      teamAway: match?.team_away,
+    };
+  });
 
-  // Stats (all bets combined)
-  const allStatuses = [
-    ...shortBets.map((b) => b.status),
-    ...longBets.map((b)  => b.status),
-  ];
+  const longEntries: LongBetEntry[] = longBets.map((b) => {
+    const match = matchMap.get(b.match_id);
+    return {
+      id: b.id,
+      status: b.status,
+      bet_type: b.bet_type,
+      bet_value: b.bet_value,
+      amount_staked: b.amount_staked,
+      potential_reward: Number(b.potential_reward),
+      placed_at: b.placed_at,
+      teamHome: match?.team_home,
+      teamAway: match?.team_away,
+    };
+  });
+
+  // Stats (all bets)
+  const allStatuses  = [...shortBets.map((b) => b.status), ...longBets.map((b) => b.status)];
   const totalBets    = allStatuses.length;
   const wonCount     = allStatuses.filter((s) => s === "won").length;
   const resolvedCount = allStatuses.filter((s) => s !== "pending").length;
-  const winRate = resolvedCount > 0 ? Math.round((wonCount / resolvedCount) * 100) : 0;
-  const totalEarned =
+  const winRate      = resolvedCount > 0 ? Math.round((wonCount / resolvedCount) * 100) : 0;
+  const totalEarned  =
     shortBets.filter((b) => b.status === "won").reduce((s, b) => s + Math.round(Number(b.potential_reward)), 0) +
     longBets.filter((b)  => b.status === "won").reduce((s, b) => s + Math.round(Number(b.potential_reward)), 0);
 
-  // Refill eligibility
   const REFILL_THRESHOLD = 500;
   // eslint-disable-next-line react-hooks/purity
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -173,39 +136,61 @@ export default async function ProfilePage() {
       ? new Date(new Date(profile.last_refill_date).getTime() + 24 * 60 * 60 * 1000).toISOString()
       : null;
 
-  const grade = getTrustGrade(trustScore);
-  const karma = getKarmaBadge(trustScore);
-  const rank  = getRank(balance);
+  const grade  = getTrustGrade(trustScore);
+  const karma  = getKarmaBadge(trustScore);
+  const rank   = getRank(balance);
   const unlockedBadgeIds = (userBadgesData ?? []).map((ub) => ub.badge_id);
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
-      {/* Hero */}
+
+      {/* ── Hero compact ── */}
       <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
-        <div className="flex flex-col items-center gap-2 px-6 pb-5 pt-7">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-3xl">
+        <div className="flex items-center gap-4 px-5 py-4">
+          {/* Avatar */}
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
             🎽
           </div>
-          <p className="text-lg font-black text-white">
-            {profile?.username ?? "Joueur"}
-          </p>
-          <span className="text-sm font-bold text-zinc-400">
-            {rank.emoji} {rank.label}
-          </span>
-          {/* Karma badge */}
-          <span className={`rounded-full px-3 py-0.5 text-xs font-black ${karma.cls}`}>
-            {karma.emoji} {karma.label}
-          </span>
+          {/* Info */}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-black text-white">{profile?.username ?? "Joueur"}</p>
+              <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}>
+                {karma.emoji} {karma.label}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              {rank.emoji} {rank.label}
+            </p>
+          </div>
+          {/* Balance */}
+          <div className="text-right">
+            <p className="text-2xl font-black tabular-nums text-white">
+              {balance.toLocaleString("fr-FR")}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+              Sifflets
+            </p>
+          </div>
         </div>
-        <div className="border-t border-white/8 bg-green-500/5 px-6 py-5 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-            Solde actuel
-          </p>
-          <p className="mt-1 text-5xl font-black text-white">
-            {balance.toLocaleString("fr-FR")}
-          </p>
-          <p className="text-sm font-semibold text-zinc-500">Sifflets</p>
+
+        {/* Trust bar (compact) */}
+        <div className="border-t border-white/8 px-5 py-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+              Confiance
+            </span>
+            <span className={`text-[10px] font-black ${grade.color}`}>
+              {grade.icon} {grade.label} · {trustScore}
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
+              style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
+            />
+          </div>
         </div>
       </div>
 
@@ -215,144 +200,29 @@ export default async function ProfilePage() {
       )}
 
       {/* Stats */}
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <StatCard Icon={Target}    label="Réussite" value={`${winRate}%`} />
-        <StatCard Icon={TrendingUp} label="Gagné"   value={totalEarned.toLocaleString("fr-FR")} />
-        <StatCard Icon={Trophy}    label="Paris"    value={String(totalBets)} />
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <StatCard Icon={Target}    label="Réussite" value={`${winRate}%`}                           />
+        <StatCard Icon={TrendingUp} label="Gagnés"  value={totalEarned.toLocaleString("fr-FR")}      />
+        <StatCard Icon={Trophy}    label="Paris"    value={String(totalBets)}                        />
       </div>
 
-      {/* Trust score */}
-      <div className="mt-4 rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-              Score de confiance
-            </p>
-            <p className={`mt-1 text-3xl font-black tabular-nums ${grade.color}`}>
-              {trustScore}
-            </p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-sm font-bold text-white">
-              <span>{grade.icon}</span>
-              {grade.label}
-            </p>
-          </div>
-          <Shield className={`mt-1 h-8 w-8 shrink-0 ${grade.color}`} />
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-            style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
-          />
-        </div>
-        <p className="mt-1.5 text-right text-[10px] text-zinc-600">/ 1000</p>
-      </div>
-
-      {/* Trophy wall */}
-      {allBadges && allBadges.length > 0 && (
-        <TrophyWall
-          badges={allBadges}
-          unlockedBadgeIds={unlockedBadgeIds}
-        />
-      )}
-
-      {/* Unified bet history */}
-      <h2 className="mt-6 text-xs font-bold uppercase tracking-widest text-zinc-500">
-        Mes Paris
-      </h2>
-
-      {unified.length === 0 ? (
-        <div className="mt-3 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
-          <Frown className="h-10 w-10 text-zinc-600" />
-          <p className="text-center text-sm font-semibold text-zinc-400">
-            Tu n&apos;as pas encore mouillé le maillot. Fais ton premier prono&nbsp;!
+      {/* Trust score bouton modérateur */}
+      {trustScore >= MODERATOR_THRESHOLD && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
+          <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
+          <p className="text-xs font-bold text-yellow-400">
+            Accès Modérateur activé — tu peux forcer les résultats VAR
           </p>
         </div>
-      ) : (
-        <div className="mt-3 flex flex-col gap-2">
-          {unified.map((entry) => {
-            const date = new Date(entry.placedAt).toLocaleString("fr-FR", {
-              day:    "numeric",
-              month:  "short",
-              hour:   "2-digit",
-              minute: "2-digit",
-            });
-
-            if (entry.kind === "short") {
-              const { data: bet, event, match } = entry;
-              const eCfg  = event ? (SHORT_BET_LABELS[event.type] ?? { label: event.type, emoji: "⚡" }) : { label: "—", emoji: "⚡" };
-              const sCfg  = getStatusBadge(bet.status, "short");
-              const reward = Math.round(Number(bet.potential_reward));
-
-              return (
-                <div key={bet.id} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-[11px] text-zinc-600">{date}</p>
-                      {match && (
-                        <p className="truncate text-sm font-bold text-white">
-                          {match.team_home} — {match.team_away}
-                        </p>
-                      )}
-                      <p className="mt-0.5 text-xs text-zinc-500">
-                        {eCfg.emoji} {eCfg.label}
-                      </p>
-                    </div>
-                    <span className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-black ${sCfg.cls}`}>
-                      {sCfg.label}
-                      {bet.status === "won" && ` +${reward.toLocaleString("fr-FR")}`}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-zinc-600">
-                    <span>
-                      Choix{" "}
-                      <strong className="font-black uppercase text-white">{bet.chosen_option}</strong>
-                    </span>
-                    <span>·</span>
-                    <span>Mise <strong className="text-zinc-300">{bet.amount_staked}</strong> pts</span>
-                    <span>·</span>
-                    <span>Gain pot. <strong className="text-zinc-300">{reward}</strong> pts</span>
-                  </div>
-                </div>
-              );
-            }
-
-            // Long-term bet
-            const { data: ltb, match } = entry;
-            const sCfg  = getStatusBadge(ltb.status, "long");
-            const reward = Math.round(Number(ltb.potential_reward));
-            const betLabel =
-              ltb.bet_type === "scorer"
-                ? `⚽ Buteur : ${ltb.bet_value}`
-                : `🎯 Score Exact : ${ltb.bet_value}`;
-
-            return (
-              <div key={ltb.id} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-zinc-600">{date}</p>
-                    {match && (
-                      <p className="truncate text-sm font-bold text-white">
-                        {match.team_home} — {match.team_away}
-                      </p>
-                    )}
-                    <p className="mt-0.5 text-xs text-zinc-500">{betLabel}</p>
-                  </div>
-                  <span className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-black ${sCfg.cls}`}>
-                    {sCfg.label}
-                    {ltb.status === "won" && ` +${reward.toLocaleString("fr-FR")}`}
-                    {ltb.status === "lost" && ` −${ltb.amount_staked}`}
-                  </span>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-zinc-600">
-                  <span>Mise <strong className="text-zinc-300">{ltb.amount_staked}</strong> pts</span>
-                  <span>·</span>
-                  <span>Gain pot. <strong className="text-zinc-300">{reward}</strong> pts</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       )}
+
+      {/* Tabs : Paris VAR / Prédictions / Trophées */}
+      <ProfileClient
+        shortBets={shortEntries}
+        longBets={longEntries}
+        allBadges={allBadges ?? []}
+        unlockedBadgeIds={unlockedBadgeIds}
+      />
     </main>
   );
 }
@@ -367,10 +237,10 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-4">
-      <Icon className="h-5 w-5 text-zinc-500" />
-      <p className="text-lg font-black text-white">{value}</p>
-      <p className="text-center text-xs font-semibold text-zinc-500">{label}</p>
+    <div className="flex flex-col items-center gap-1 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-3.5">
+      <Icon className="h-4 w-4 text-zinc-500" />
+      <p className="text-base font-black text-white">{value}</p>
+      <p className="text-center text-[10px] font-semibold text-zinc-500">{label}</p>
     </div>
   );
 }

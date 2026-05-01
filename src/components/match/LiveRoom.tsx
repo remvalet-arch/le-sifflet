@@ -255,6 +255,8 @@ export function LiveRoom({
           siffletsBalance={localBalance}
           teamHome={liveMatch.team_home}
           teamAway={liveMatch.team_away}
+          homeTeamLogo={liveMatch.home_team_logo}
+          awayTeamLogo={liveMatch.away_team_logo}
           onBetSuccess={(amount) => setLocalBalance((b) => b - amount)}
         />
       )}
