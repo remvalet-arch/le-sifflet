@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #09090b;
+  --foreground: #f8fafc;
 }
 
 /* ── Animations globales ───────────────────────────────────────────────────── */
@@ -10,6 +10,11 @@
 @keyframes shimmer {
   from { background-position: -200% center; }
   to   { background-position:  200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
 }
 
 @keyframes modal-fade-in {
@@ -29,6 +34,7 @@
 
 @theme inline {
   --animate-shimmer:        shimmer 2.5s linear infinite;
+  --animate-float:          float 4s ease-in-out infinite;
   --animate-modal-backdrop: modal-fade-in 200ms ease-out both;
   --animate-modal-sheet:    modal-slide-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-modal-center:   modal-scale-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -52,12 +58,6 @@
   --color-whistle-dark: #ca8a04;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-  }
-}
 
 body {
   background: var(--background);
