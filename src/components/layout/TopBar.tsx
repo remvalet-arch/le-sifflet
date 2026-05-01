@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Menu, X, BookOpen, Settings, LogOut } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
-import { WhistleLogo } from "@/components/ui/WhistleLogo";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileRow } from "@/types/database";
 
@@ -56,11 +55,11 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
       >
         <div className="flex h-14 items-center justify-between px-4">
           {/* Logo */}
-          <Link href="/lobby" className="flex items-center gap-2.5">
-            <WhistleLogo size="sm" />
-            <span className="text-sm font-black uppercase tracking-tight text-white">
-              Le Sifflet
+          <Link href="/lobby" className="flex items-center gap-2">
+            <span className="rounded border border-white/25 px-1.5 py-0.5 text-[11px] font-black tracking-widest text-white">
+              VAR
             </span>
+            <span className="text-sm font-black uppercase tracking-widest text-white">TIME</span>
           </Link>
 
           {/* Balance — flash vert quand le solde augmente */}

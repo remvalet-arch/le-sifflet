@@ -249,7 +249,7 @@ export function VotingModal({
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-bold text-zinc-400">
-                Mise (Sifflets)
+                Engagement (Pts)
               </span>
               <span className="text-xs text-zinc-600">
                 Solde : {siffletsBalance.toLocaleString("fr-FR")} pts

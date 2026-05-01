@@ -82,7 +82,7 @@ function BetInput({
   return (
     <div className="mt-3 rounded-xl border border-white/8 bg-zinc-800/60 p-3">
       <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-zinc-500">
-        Mise (min. 10 Sifflets)
+        Engagement (min. 10 Pts)
       </p>
       <div className="flex gap-2">
         {[10, 50, 100].map((p) => (
@@ -122,9 +122,9 @@ function BetInput({
       />
       {parsed >= 10 && (
         <p className="mt-1.5 text-right text-xs text-zinc-400">
-          Gain potentiel :{" "}
+          Récompense :{" "}
           <span className="font-black text-green-400">
-            {reward.toLocaleString("fr-FR")} Sifflets
+            {reward.toLocaleString("fr-FR")} Pts
           </span>{" "}
           (×{odds.toFixed(2)})
         </p>
@@ -280,7 +280,7 @@ export function PolymarketTab({
     odds: number,
   ): Promise<boolean> {
     const parsed = parseInt(amount);
-    if (isNaN(parsed) || parsed < 10) { toast.error("Mise minimum : 10 Sifflets"); return false; }
+    if (isNaN(parsed) || parsed < 10) { toast.error("Engagement minimum : 10 Pts"); return false; }
     if (parsed > siffletsBalance) { toast.error("Solde insuffisant !"); return false; }
 
     const potentialReward = Math.round(parsed * odds);
@@ -462,9 +462,9 @@ export function PolymarketTab({
                 />
                 {scoreAmountNum >= 10 && (
                   <p className="mt-1.5 text-right text-xs text-zinc-400">
-                    Gain potentiel :{" "}
+                    Récompense :{" "}
                     <span className="font-black text-green-400">
-                      {Math.round(scoreAmountNum * derivedOdds).toLocaleString("fr-FR")} Sifflets
+                      {Math.round(scoreAmountNum * derivedOdds).toLocaleString("fr-FR")} Pts
                     </span>
                   </p>
                 )}

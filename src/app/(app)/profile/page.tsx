@@ -170,7 +170,7 @@ export default async function ProfilePage() {
               {balance.toLocaleString("fr-FR")}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-              Sifflets
+              Pts
             </p>
           </div>
         </div>

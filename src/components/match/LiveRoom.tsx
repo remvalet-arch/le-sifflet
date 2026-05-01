@@ -135,7 +135,7 @@ export function LiveRoom({
           if (bet.status === "won") {
             const reward = Math.round(Number(bet.potential_reward));
             setLocalBalance((b) => b + reward);
-            toast.success(`Pari gagné ! +${reward.toLocaleString("fr-FR")} Sifflets 🎉`);
+            toast.success(`Prédiction juste ! +${reward.toLocaleString("fr-FR")} Pts 🎉`);
           } else if (bet.status === "lost") {
             toast.error("Pari perdu… Meilleure chance la prochaine fois !");
           }

@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { WhistleLogo } from "@/components/ui/WhistleLogo";
 import { SignInWithGoogleButton } from "@/components/auth/SignInWithGoogleButton";
 
-export const metadata = { title: "Connexion — Le Sifflet" };
+export const metadata = { title: "Connexion — VAR Time" };
 
 export default async function LoginPage() {
   const supabase = await createClient();
@@ -18,7 +17,12 @@ export default async function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center">
-          <WhistleLogo size="lg" />
+          <div className="flex items-center gap-2">
+            <span className="rounded border border-white/30 px-2.5 py-1 text-lg font-black tracking-widest text-white">
+              VAR
+            </span>
+            <span className="text-xl font-black uppercase tracking-widest text-white">TIME</span>
+          </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white">
               Sécurise ton profil

@@ -14,7 +14,7 @@ export function AppHeader({ username, siffletsBalance }: AppHeaderProps) {
           href="/lobby"
           className="min-w-0 shrink font-black uppercase tracking-tight text-white"
         >
-          <span className="truncate text-sm sm:text-base">Le Sifflet</span>
+          <span className="truncate text-sm sm:text-base">VAR Time</span>
         </Link>
 
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">

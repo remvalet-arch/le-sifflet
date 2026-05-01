@@ -13,12 +13,12 @@ const STEPS = [
   {
     emoji: "⏱️",
     title: "La VAR hésite ?",
-    text: "Une action litigieuse ? Lance l'alerte ! Si le stade confirme, les paris s'ouvrent. Prédis le verdict avant que l'arbitre ne tranche.",
+    text: "Une action litigieuse ? Lance l'alerte ! Si le stade confirme, les prédictions s'ouvrent. Prédis le verdict avant que l'arbitre ne tranche.",
   },
   {
     emoji: "🏆",
     title: "Pour la gloire (100% gratuit)",
-    text: "Pas d'argent réel, on joue pour le respect. Gagne des Sifflets avec de bonnes alertes. Les trolls perdent tout. Prêt ?",
+    text: "Pas d'argent réel, on joue pour le respect. Gagne des Pts avec de bonnes prédictions. Les trolls perdent tout. Prêt ?",
   },
 ];
 

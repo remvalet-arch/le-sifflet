@@ -8,17 +8,17 @@ const appUrl =
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: "Le Sifflet",
-    template: "%s | Le Sifflet",
+    default: "VAR Time",
+    template: "%s | VAR Time",
   },
   description:
-    "Second écran football : signale les actions en direct, parie sur les décisions, grimpe au classement.",
-  applicationName: "Le Sifflet",
+    "Second écran football : signale les actions en direct, prédis les décisions de la VAR, grimpe au classement.",
+  applicationName: "VAR Time",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Le Sifflet",
+    title: "VAR Time",
   },
   formatDetection: {
     telephone: false,

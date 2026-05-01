@@ -46,7 +46,7 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
-      toast.success(`+500 Sifflets ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} pts 🎉`);
+      toast.success(`+500 Pts ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} pts 🎉`);
       router.refresh();
     } catch {
       toast.error("Connexion perdue, réessaie !");

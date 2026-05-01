@@ -1,11 +1,11 @@
 {
-  "name": "Le Sifflet",
-  "short_name": "Sifflet",
-  "description": "Second écran football — signale, parie, siffle en direct.",
+  "name": "VAR Time",
+  "short_name": "VAR Time",
+  "description": "Second écran football — signale les actions, prédis la VAR, grimpe au classement.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#14532d",
-  "theme_color": "#166534",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "orientation": "portrait-primary",
   "icons": [
     {

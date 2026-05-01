@@ -21,13 +21,13 @@ export async function POST(request: NextRequest) {
     return errorResponse("Paramètres manquants", 400);
   }
   if (!["scorer", "exact_score"].includes(bet_type)) {
-    return errorResponse("Type de pari invalide", 400);
+    return errorResponse("Type de prédiction invalide", 400);
   }
   if (typeof amount_staked !== "number" || amount_staked < 10) {
-    return errorResponse("Mise minimum : 10 Sifflets", 400);
+    return errorResponse("Mise minimum : 10 Pts", 400);
   }
   if (typeof potential_reward !== "number" || potential_reward <= 0) {
-    return errorResponse("Gain potentiel invalide", 400);
+    return errorResponse("Récompense potentielle invalide", 400);
   }
 
   // Vérifie que le match n'est pas terminé
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!match || match.status === "finished") {
-    return errorResponse("Le match est terminé, les paris sont fermés", 400);
+    return errorResponse("Le match est terminé, les prédictions sont fermées", 400);
   }
 
   // RPC atomique : débite le solde + insère le pari
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     if (error.message.includes("insuffisant")) return errorResponse("Solde insuffisant", 400);
     if (error.message.includes("unique") || error.code === "23505") {
-      return errorResponse("Tu as déjà un pari sur cette option", 409);
+      return errorResponse("Tu as déjà une prédiction sur cette option", 409);
     }
     return errorResponse(error.message);
   }

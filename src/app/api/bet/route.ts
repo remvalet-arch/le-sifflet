@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     !Number.isInteger(amount_staked) ||
     amount_staked < 10
   ) {
-    return errorResponse("Mise invalide (min. 10 Sifflets)", 400);
+    return errorResponse("Mise invalide (min. 10 Pts)", 400);
   }
 
   if (typeof multiplier !== "number" || multiplier < 1.01) {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (!event || event.status !== "open") {
-    return errorResponse("Les paris sont clos", 400);
+    return errorResponse("Les prédictions sont closes", 400);
   }
 
   const maxMulti = maxAllowedMultiplier(
@@ -74,13 +74,13 @@ export async function POST(request: NextRequest) {
   if (error) {
     const msg = error.message ?? "";
     if (msg.includes("event_not_open"))
-      return errorResponse("Les paris sont clos", 400);
+      return errorResponse("Les prédictions sont closes", 400);
     if (msg.includes("event_expired"))
       return errorResponse("Le temps de vote est écoulé", 400);
     if (msg.includes("insufficient_balance"))
       return errorResponse("Solde insuffisant", 400);
     if (msg.includes("invalid_amount"))
-      return errorResponse("Mise invalide (min. 10 Sifflets)", 400);
+      return errorResponse("Mise invalide (min. 10 Pts)", 400);
     if (msg.includes("invalid_multiplier"))
       return errorResponse("Multiplicateur invalide", 400);
     if (msg.includes("unauthorized"))
