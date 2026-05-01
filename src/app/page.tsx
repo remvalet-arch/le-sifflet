@@ -1,20 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { QrCode } from "lucide-react";
+import { Monitor, Zap, Shield, QrCode } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { WhistleLogo } from "@/components/ui/WhistleLogo";
-
-const RANKS = [
-  { emoji: "🌿", name: "Sifflet de Bois",    sub: "Tu commences. L'arbitre rigole.",    w: "w-[12%]", bar: "bg-zinc-500"  },
-  { emoji: "🥉", name: "Sifflet de Bronze",  sub: "Tu te chauffes. La commu t'écoute.", w: "w-[38%]", bar: "bg-amber-600" },
-  { emoji: "🥈", name: "Sifflet d'Argent",   sub: "L'arbitre te respecte.",             w: "w-[65%]", bar: "bg-slate-400" },
-  { emoji: "💎", name: "Sifflet de Diamant", sub: "La VAR t'appelle direct.",           w: "w-[88%]", bar: "bg-cyan-400"  },
-];
 
 export const metadata = {
-  title: "Le Sifflet — Le Waze du foot",
+  title: "VAR Time — L'arbitre, c'est toi",
   description:
-    "Signale les fautes en direct, fais tes prédictions sur la VAR avant tout le monde et grimpe au rang de Sifflet d'Or.",
+    "Lance l'alerte, prédis le verdict de la VAR en direct et prouve ton instinct au kop. 100% gratuit.",
 };
 
 export default async function LandingPage() {
@@ -27,15 +19,17 @@ export default async function LandingPage() {
   return (
     <main
       className="min-h-screen overflow-x-hidden text-white"
-      style={{ background: "radial-gradient(ellipse at top, rgba(6,78,59,0.35) 0%, #09090b 55%)" }}
+      style={{ background: "radial-gradient(ellipse at top, rgba(6,78,59,0.14) 0%, #09090b 60%)" }}
     >
+
       {/* ── Nav ── */}
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-6 sm:px-8">
+        {/* VAR TIME logo — geste carré VAR */}
         <div className="flex items-center gap-2.5">
-          <WhistleLogo size="sm" />
-          <span className="text-sm font-black uppercase tracking-tight text-white">
-            Le Sifflet
+          <span className="rounded border border-white/25 px-1.5 py-0.5 text-[11px] font-black tracking-widest text-white">
+            VAR
           </span>
+          <span className="text-sm font-black uppercase tracking-widest text-white">TIME</span>
         </div>
         <Link
           href="/login"
@@ -46,11 +40,11 @@ export default async function LandingPage() {
       </nav>
 
       {/* ═══════════════════════════════════════════
-          HERO — split-screen desktop
+          HERO — split screen asymétrique
       ═══════════════════════════════════════════ */}
       <section className="relative mx-auto max-w-6xl px-5 pb-16 pt-8 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20">
 
-        {/* Pitch deco */}
+        {/* Deco pitch */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
           <div className="h-[min(70vw,520px)] w-[min(70vw,520px)] rounded-full border border-white/[0.03]" />
           <div className="absolute h-3 w-3 rounded-full bg-white/[0.04]" />
@@ -65,25 +59,24 @@ export default async function LandingPage() {
             </span>
           </div>
 
-          <h1 className="text-[clamp(2.4rem,8vw,4.2rem)] font-black uppercase leading-[0.88] tracking-[-0.04em] text-white">
+          <h1 className="text-[clamp(2.4rem,8vw,4.5rem)] font-black uppercase leading-[0.88] tracking-[-0.04em] text-white">
             T&rsquo;as sorti tes lunettes pour le hors-jeu&nbsp;?
           </h1>
 
           <div className="mt-5 h-1 w-24 rounded-full bg-gradient-to-r from-green-500 to-emerald-300" />
 
           <p className="mt-6 max-w-md text-base leading-relaxed text-zinc-400">
-            Deviens le premier arbitre de ton canapé. Rejoins la communauté qui signale
-            les fautes en direct, prédis les décisions de la VAR avant l&rsquo;arbitre
-            central, et prouve ton expertise foot.{" "}
+            L&rsquo;arbitre est aveugle&nbsp;? Appelle la VAR. Lance l&rsquo;alerte,
+            prédis le verdict en direct et prouve ton instinct au kop.{" "}
             <em className="not-italic font-bold text-zinc-200">100% gratuit.</em>
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/login"
-              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_32px_rgba(250,204,21,0.45)] transition hover:scale-[1.02] hover:shadow-[0_0_48px_rgba(250,204,21,0.55)] active:scale-[0.97]"
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition hover:bg-green-400 hover:shadow-[0_0_45px_rgba(34,197,94,0.55)] active:scale-[0.97]"
             >
-              ⚡ Lancer une prédiction éclair →
+              Appeler la VAR →
             </Link>
             <a
               href="#comment"
@@ -100,40 +93,25 @@ export default async function LandingPage() {
 
         {/* ── Téléphone droite ── */}
         <div className="relative z-10 mt-14 flex justify-center lg:mt-0 lg:justify-end">
-          {/* Phone with tilt + floating cards */}
-          <div className="relative lg:rotate-[14deg] lg:translate-y-4">
-            {/* Scale up on desktop */}
-            <div className="lg:scale-110 lg:origin-center">
-              <PhoneMockup />
-            </div>
+          <div className="relative lg:rotate-6">
+            <PhoneMockup />
 
-            {/* Floating card 1 : récompense */}
+            {/* Floating card 1 */}
             <div
-              className="absolute -left-14 top-14 hidden rounded-2xl border border-green-500/20 bg-zinc-800/95 px-3.5 py-2.5 shadow-2xl backdrop-blur-sm lg:block"
+              className="absolute -left-12 top-14 hidden rounded-xl border border-white/10 bg-zinc-900/95 px-3 py-2.5 backdrop-blur-sm shadow-[0_0_20px_rgba(34,197,94,0.12)] lg:block"
               style={{ animation: "float 4s ease-in-out infinite" }}
             >
-              <p className="text-[8px] font-bold text-zinc-400">🎉 Prédiction juste !</p>
-              <p className="text-[13px] font-black text-green-400">+500 Sifflets</p>
+              <p className="text-[9px] font-bold text-zinc-500">Alerte communauté</p>
+              <p className="text-[12px] font-black text-white">Penalty&nbsp;?</p>
             </div>
 
-            {/* Floating card 2 : VAR */}
+            {/* Floating card 2 */}
             <div
-              className="absolute -right-12 top-1/3 hidden rounded-2xl border border-red-500/20 bg-zinc-800/95 px-3.5 py-2.5 shadow-2xl backdrop-blur-sm lg:block"
-              style={{ animation: "float 5s ease-in-out 0.8s infinite" }}
+              className="absolute -right-10 bottom-28 hidden rounded-xl border border-green-500/20 bg-zinc-900/95 px-3 py-2.5 backdrop-blur-sm shadow-[0_0_20px_rgba(34,197,94,0.2)] lg:block"
+              style={{ animation: "float 5s ease-in-out 1s infinite" }}
             >
-              <p className="text-[8px] font-black uppercase tracking-widest text-red-400">
-                ⚡ VAR EN COURS
-              </p>
-              <p className="text-[10px] font-bold text-zinc-300">127 signalements</p>
-            </div>
-
-            {/* Floating card 3 : multiplicateur */}
-            <div
-              className="absolute -left-16 bottom-28 hidden rounded-2xl border border-yellow-500/20 bg-zinc-800/95 px-3.5 py-2.5 shadow-2xl backdrop-blur-sm lg:block"
-              style={{ animation: "float 4.5s ease-in-out 1.6s infinite" }}
-            >
-              <p className="text-[8px] font-bold text-zinc-400">Multiplicateur</p>
-              <p className="text-[17px] font-black text-yellow-400">×2.0</p>
+              <p className="text-[9px] font-bold text-zinc-500">Prédiction juste</p>
+              <p className="text-[13px] font-black text-green-400">+500 Pts</p>
             </div>
           </div>
         </div>
@@ -142,7 +120,7 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════
           COMMENT ÇA MARCHE — Game Panels
       ═══════════════════════════════════════════ */}
-      <section id="comment" className="scroll-mt-8 py-20 lg:py-28">
+      <section id="comment" className="scroll-mt-8 py-20 lg:py-24">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
 
           <div className="mb-2 flex items-center gap-3">
@@ -153,38 +131,37 @@ export default async function LandingPage() {
             <div className="h-px flex-1 bg-white/8" />
           </div>
 
-          <h2 className="mt-4 text-center text-[clamp(1.9rem,5.5vw,3rem)] font-black uppercase leading-[0.95] tracking-tight text-white">
-            Le Waze du football.
+          <h2 className="mt-4 text-center text-[clamp(1.8rem,5vw,2.8rem)] font-black uppercase leading-[0.95] tracking-tight text-white">
+            Trois étapes.
             <br />
             <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-              En direct.
+              Zéro excuses.
             </span>
           </h2>
 
-          {/* 3 Game Panels — middle card surélevé */}
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
             <GamePanel
               step="01"
-              emoji="⚡"
+              Icon={Monitor}
               color="green"
-              title="Le Signalement Communautaire"
-              body="Une embrouille dans la surface ? Signale l'action. Si le reste du canapé valide ton flair, le chrono démarre."
+              title="Le Signalement"
+              body="Péno oublié ? Lance l'alerte. Si le canapé valide, les prédictions s'ouvrent."
             />
-            <div className="md:-translate-y-6 lg:-translate-y-10">
+            <div className="md:-translate-y-4">
               <GamePanel
                 step="02"
-                emoji="🪙"
+                Icon={Zap}
                 color="yellow"
-                title="La Prédiction Éclair"
-                body="60 secondes pour lire dans les pensées de l'arbitre. Engage tes Sifflets sur le verdict de la VAR. Plus ton réflexe est bon, plus ton multiplicateur explose."
+                title="Le Chrono"
+                body="60 secondes de pression. Engage tes points sur le verdict (OUI/NON). Plus tu es rapide, plus ça rapporte."
               />
             </div>
             <GamePanel
               step="03"
-              emoji="👑"
-              color="purple"
-              title="Le Score de Karma"
-              body="Tes intuitions sont toujours justes ? Fais exploser ton Karma pour débloquer des trophées de prestige et devenir la légende de l'appli."
+              Icon={Shield}
+              color="blue"
+              title="Le Karma"
+              body="Ton flair est légendaire ? Fais exploser ton Karma, débloque des trophées et deviens le boss du kop."
             />
           </div>
 
@@ -200,122 +177,76 @@ export default async function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          GAMIFICATION — flex row desktop
+          MOBILE DOWNLOAD — desktop only
       ═══════════════════════════════════════════ */}
-      <section className="pb-20 lg:py-8 lg:pb-24">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-zinc-900">
-            <div className="pointer-events-none absolute inset-0" aria-hidden>
-              <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-green-500/10 blur-3xl" />
-              <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-yellow-500/8 blur-3xl" />
-            </div>
-
-            <div className="relative p-6 lg:flex lg:items-center lg:gap-14 lg:p-12">
-
-              {/* Rang progression */}
-              <div className="flex-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-                  Progression
-                </span>
-                <h2 className="mt-1.5 text-[clamp(1.4rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
-                  Prouve ton expertise
-                  <br />
-                  <span className="animate-shimmer bg-[length:200%_auto] bg-gradient-to-r from-yellow-500 via-yellow-200 to-yellow-500 bg-clip-text text-transparent">
-                    au Kop.
-                  </span>
-                </h2>
-
-                <div className="mt-7 flex flex-col gap-4">
-                  {RANKS.map((rank) => (
-                    <div key={rank.name} className="flex items-center gap-3">
-                      <span className="text-xl" aria-hidden>{rank.emoji}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <p className="text-xs font-black text-white">{rank.name}</p>
-                          <p className="shrink-0 text-[9px] text-zinc-600">{rank.sub}</p>
-                        </div>
-                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-zinc-800">
-                          <div
-                            className={`h-full rounded-full transition-[width] duration-700 ${rank.bar} ${rank.w}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Trophy Sifflet d'Or — flottant */}
-              <div className="mt-8 flex items-center justify-center gap-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5 lg:mt-0 lg:min-w-[280px] lg:flex-col lg:py-10">
-                <div
-                  className="relative shrink-0"
-                  style={{ animation: "float 3.5s ease-in-out infinite" }}
-                >
-                  <div
-                    className="absolute inset-0 animate-pulse rounded-3xl bg-gradient-to-r from-yellow-500/20 via-yellow-300/40 to-yellow-500/20 blur-2xl"
-                    aria-hidden
-                  />
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-yellow-400 to-amber-500 shadow-[0_0_48px_rgba(250,204,21,0.6)]">
-                    <svg width={42} height={42} viewBox="0 0 24 24" fill="white" aria-hidden>
-                      <circle cx="8" cy="12" r="8" />
-                      <rect x="14" y="8" width="10" height="8" rx="4" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-yellow-400">
-                    Sifflet d&rsquo;Or
-                  </p>
-                  <p className="mt-1 text-5xl font-black tabular-nums text-white">98%</p>
-                  <p className="mt-0.5 text-[10px] text-zinc-500">
-                    de pronos réussis · Niveau légendaire
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          DESKTOP QR
-      ═══════════════════════════════════════════ */}
-      <section className="hidden border-t border-white/8 py-16 md:block">
-        <div className="mx-auto flex max-w-lg flex-col items-center px-5 sm:px-8">
+      <section className="hidden border-t border-white/8 md:block">
+        <div className="mx-auto flex max-w-lg flex-col items-center px-5 py-20 sm:px-8">
           <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
             Application mobile
           </span>
-          <h2 className="mt-2 text-center text-[clamp(1.5rem,4vw,2.2rem)] font-black uppercase leading-tight tracking-tight text-white">
-            Le Sifflet se joue
+          <h2 className="mt-3 text-center text-[clamp(1.5rem,4vw,2.4rem)] font-black uppercase leading-tight tracking-tight text-white">
+            Le match se joue
             <br />
-            <span className="text-green-400">dans le canapé.</span>
+            <span className="text-green-400">dans ta poche.</span>
           </h2>
-          <p className="mt-3 max-w-[280px] text-center text-sm leading-relaxed text-zinc-500">
-            Scanne depuis ton mobile et rejoins le Kop en direct pour le prochain match.
+          <p className="mt-3 max-w-xs text-center text-sm leading-relaxed text-zinc-500">
+            Installe VAR Time sur ton mobile. Chaque match devient un duel d&rsquo;instincts.
           </p>
 
-          <div className="mt-8 flex h-48 w-48 items-center justify-center rounded-2xl border-2 border-green-500/40 bg-zinc-900 shadow-[0_0_40px_rgba(34,197,94,0.18)]">
+          {/* Store buttons */}
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <button
+              disabled
+              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/15 bg-black px-5 py-3.5 transition hover:border-white/30"
+              title="Bientôt disponible"
+            >
+              <AppleIcon className="h-6 w-6 shrink-0 text-white" />
+              <div className="text-left">
+                <p className="text-[9px] text-zinc-500">Download on the</p>
+                <p className="text-sm font-black text-white">App Store</p>
+              </div>
+            </button>
+            <button
+              disabled
+              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/15 bg-black px-5 py-3.5 transition hover:border-white/30"
+              title="Bientôt disponible"
+            >
+              <AndroidIcon className="h-6 w-6 shrink-0 text-white" />
+              <div className="text-left">
+                <p className="text-[9px] text-zinc-500">Get it on</p>
+                <p className="text-sm font-black text-white">Google Play</p>
+              </div>
+            </button>
+          </div>
+
+          {/* QR */}
+          <div className="mt-8 flex h-40 w-40 items-center justify-center rounded-2xl border-2 border-green-500/40 bg-zinc-900 shadow-[0_0_40px_rgba(34,197,94,0.18)]">
             <div className="flex flex-col items-center gap-2">
-              <QrCode className="h-20 w-20 text-green-400/60" strokeWidth={1.5} />
-              <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
-                QR bientôt disponible
+              <QrCode className="h-16 w-16 text-green-400/60" strokeWidth={1.5} />
+              <span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">
+                bientôt disponible
               </span>
             </div>
           </div>
-          <p className="mt-5 text-[11px] text-zinc-600">
-            Ou ouvre directement{" "}
-            <span className="font-bold text-green-400">ton lien de déploiement</span> sur
-            mobile
-          </p>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════
           FOOTER
       ═══════════════════════════════════════════ */}
-      <footer className="border-t border-white/8 py-8 text-center">
-        <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-          © 2026 Le Sifflet. Fait avec passion, mauvaise foi et zéro argent réel.
+      <footer className="border-t border-white/8 py-10 text-center">
+        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-600">
+          © 2026 VAR Time.
+        </p>
+        <div className="mt-3 flex items-center justify-center gap-4">
+          <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">CGU</a>
+          <span className="text-zinc-800">•</span>
+          <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">Mentions Légales</a>
+          <span className="text-zinc-800">•</span>
+          <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">Jeu Responsable</a>
+        </div>
+        <p className="mx-auto mt-4 max-w-sm px-4 text-[9px] text-zinc-700">
+          VAR Time est un jeu gratuit de simulation. Aucun argent réel ne peut être engagé ou gagné.
         </p>
       </footer>
     </main>
@@ -324,68 +255,53 @@ export default async function LandingPage() {
 
 // ── Composants internes ───────────────────────────────────────────────────────
 
-const GAME_PANEL_STYLES = {
+const PANEL_STYLES = {
   green: {
-    border:  "border-green-500/25 hover:border-green-500/50",
-    glow:    "bg-green-500/10",
-    iconBg:  "bg-green-500/15 ring-1 ring-green-500/30",
-    accent:  "text-green-400",
-    shadow:  "hover:shadow-[0_0_40px_rgba(34,197,94,0.08)]",
+    border:  "border-zinc-800 hover:border-green-500/40",
+    glow:    "bg-green-500/8",
+    icon:    "text-green-400",
+    shadow:  "hover:shadow-[0_0_30px_rgba(34,197,94,0.07)]",
   },
   yellow: {
-    border:  "border-yellow-500/25 hover:border-yellow-500/50",
-    glow:    "bg-yellow-500/10",
-    iconBg:  "bg-yellow-500/15 ring-1 ring-yellow-500/30",
-    accent:  "text-yellow-400",
-    shadow:  "hover:shadow-[0_0_40px_rgba(250,204,21,0.08)]",
+    border:  "border-zinc-800 hover:border-yellow-500/40",
+    glow:    "bg-yellow-500/8",
+    icon:    "text-yellow-400",
+    shadow:  "hover:shadow-[0_0_30px_rgba(250,204,21,0.07)]",
   },
-  purple: {
-    border:  "border-purple-500/25 hover:border-purple-500/50",
-    glow:    "bg-purple-500/10",
-    iconBg:  "bg-purple-500/15 ring-1 ring-purple-500/30",
-    accent:  "text-purple-400",
-    shadow:  "hover:shadow-[0_0_40px_rgba(168,85,247,0.08)]",
+  blue: {
+    border:  "border-zinc-800 hover:border-blue-500/40",
+    glow:    "bg-blue-500/8",
+    icon:    "text-blue-400",
+    shadow:  "hover:shadow-[0_0_30px_rgba(59,130,246,0.07)]",
   },
 } as const;
 
 function GamePanel({
   step,
-  emoji,
+  Icon,
   color,
   title,
   body,
 }: {
   step: string;
-  emoji: string;
-  color: keyof typeof GAME_PANEL_STYLES;
+  Icon: React.ElementType;
+  color: keyof typeof PANEL_STYLES;
   title: string;
   body: string;
 }) {
-  const s = GAME_PANEL_STYLES[color];
-
+  const s = PANEL_STYLES[color];
   return (
     <div
-      className={`group relative h-full overflow-hidden rounded-2xl border bg-zinc-900 p-6 transition-all ${s.border} ${s.shadow}`}
+      className={`group relative h-full overflow-hidden rounded-2xl border bg-zinc-900/50 p-6 backdrop-blur-sm transition-all ${s.border} ${s.shadow}`}
     >
-      {/* Corner glow */}
       <div
-        className={`pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full blur-3xl transition-opacity group-hover:opacity-150 ${s.glow}`}
+        className={`pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full blur-3xl ${s.glow}`}
         aria-hidden
       />
-
-      {/* Emoji icon */}
-      <div
-        className={`relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl text-4xl ${s.iconBg}`}
-      >
-        {emoji}
-      </div>
-
-      {/* Step + title */}
-      <p className={`mb-2 text-[9px] font-black uppercase tracking-widest ${s.accent}`}>
+      <Icon className={`relative mb-5 h-10 w-10 ${s.icon}`} strokeWidth={1.5} />
+      <p className={`mb-2 text-[9px] font-black uppercase tracking-widest ${s.icon}`}>
         {step} — {title}
       </p>
-
-      {/* Body */}
       <p className="text-sm leading-relaxed text-zinc-400">{body}</p>
     </div>
   );
@@ -394,14 +310,11 @@ function GamePanel({
 function PhoneMockup() {
   return (
     <div className="relative w-52">
-      {/* Glow */}
       <div
         className="absolute inset-0 -m-6 rounded-[3.5rem] bg-green-500/15 blur-3xl"
         aria-hidden
       />
-
-      {/* Phone frame */}
-      <div className="relative overflow-hidden rounded-[2.5rem] border-[3px] border-zinc-700 bg-zinc-900 shadow-[0_32px_80px_rgba(0,0,0,0.8)]">
+      <div className="relative overflow-hidden rounded-[2.5rem] border-[3px] border-zinc-700 bg-zinc-900 shadow-[0_32px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(34,197,94,0.08)]">
         {/* Notch */}
         <div className="flex items-center justify-center border-b border-zinc-800 py-2.5">
           <div className="h-1.5 w-14 rounded-full bg-zinc-700" />
@@ -409,8 +322,7 @@ function PhoneMockup() {
 
         {/* Screen */}
         <div className="flex flex-col gap-2.5 bg-zinc-950 p-3 pb-5">
-
-          {/* Scoreboard mini */}
+          {/* Scoreboard */}
           <div className="overflow-hidden rounded-xl bg-zinc-900">
             <div className="flex items-center justify-between px-3 py-2">
               <span className="text-[9px] font-black text-white">PSG</span>
@@ -459,7 +371,7 @@ function PhoneMockup() {
             </div>
           </div>
 
-          {/* Engagement row */}
+          {/* Engagement */}
           <div className="flex items-center rounded-lg bg-zinc-800/80 px-2.5 py-1.5">
             <span className="text-[8px] text-zinc-500">Engagement</span>
             <span className="ml-auto text-[10px] font-black text-white">50 pts</span>
@@ -476,16 +388,32 @@ function PhoneMockup() {
       </div>
 
       {/* LIVE badge */}
-      <div className="absolute -right-4 top-10 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-lg shadow-red-900/40">
+      <div className="absolute -right-4 top-10 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-[0_0_20px_rgba(220,38,38,0.5)]">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
         <span className="text-[9px] font-black text-white">LIVE</span>
       </div>
 
       {/* Notification bubble — mobile only */}
-      <div className="absolute -left-6 bottom-20 max-w-[130px] rounded-2xl border border-white/10 bg-zinc-800 px-3 py-2 shadow-xl lg:hidden">
-        <p className="text-[8px] font-bold text-zinc-400">🎉 Prédiction juste !</p>
-        <p className="text-[10px] font-black text-green-400">+200 Sifflets</p>
+      <div className="absolute -left-6 bottom-20 max-w-[130px] rounded-2xl border border-white/10 bg-zinc-800 px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.15)] lg:hidden">
+        <p className="text-[8px] font-bold text-zinc-400">Prédiction juste</p>
+        <p className="text-[10px] font-black text-green-400">+200 Pts</p>
       </div>
     </div>
+  );
+}
+
+function AppleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+    </svg>
+  );
+}
+
+function AndroidIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M17.523 15.342a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-11.046 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2M3.513 8.958l1.56-2.702a.499.499 0 0 1 .863.499L4.375 9.457A9.5 9.5 0 0 0 12 18.5a9.5 9.5 0 0 0 7.625-9.043l-1.56-2.702a.499.499 0 0 1 .862-.499l1.56 2.702A11 11 0 0 1 23 11.5C23 17.854 18.075 23 12 23S1 17.854 1 11.5a11 11 0 0 1 2.513-7.042zM8.5 1.5l1.5 3h4l1.5-3H8.5z" />
+    </svg>
   );
 }
