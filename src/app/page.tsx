@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Monitor, Zap, Shield, QrCode } from "lucide-react";
+import { Monitor, Zap, Shield, QrCode, Target, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -42,7 +42,7 @@ export default async function LandingPage() {
       {/* ═══════════════════════════════════════════
           HERO — split screen asymétrique
       ═══════════════════════════════════════════ */}
-      <section className="relative mx-auto max-w-6xl px-5 pb-16 pt-8 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20">
+      <section className="relative mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 lg:pb-16">
 
         {/* Deco pitch */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
@@ -92,7 +92,7 @@ export default async function LandingPage() {
         </div>
 
         {/* ── Téléphone droite ── */}
-        <div className="relative z-10 mt-14 flex justify-center lg:mt-0 lg:justify-end">
+        <div className="relative z-10 mt-14 mb-32 flex justify-center pb-8 lg:mt-0 lg:mb-12 lg:justify-end lg:pb-4">
           <div className="relative lg:rotate-6">
             <PhoneMockup />
 
@@ -165,10 +165,42 @@ export default async function LandingPage() {
             />
           </div>
 
+          {/* Pronostics avant match — carte pleine largeur */}
+          <div className="mt-14 overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-zinc-900/90 via-zinc-950/95 to-zinc-900/90 p-6 shadow-[0_0_50px_rgba(16,185,129,0.12)] backdrop-blur-sm sm:p-8 md:p-10">
+            <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-10">
+              <div className="relative mx-auto flex shrink-0 items-center justify-center md:mx-0">
+                <div
+                  className="absolute h-36 w-36 rounded-full bg-green-500/20 blur-3xl"
+                  aria-hidden
+                />
+                <div className="relative flex items-center gap-3">
+                  <Target
+                    className="h-20 w-20 text-green-400 drop-shadow-[0_0_24px_rgba(34,197,94,0.55)] sm:h-24 sm:w-24"
+                    strokeWidth={1.25}
+                  />
+                  <Calendar
+                    className="h-14 w-14 text-emerald-300/90 drop-shadow-[0_0_18px_rgba(52,211,153,0.45)] sm:h-16 sm:w-16"
+                    strokeWidth={1.25}
+                  />
+                </div>
+              </div>
+              <div className="min-w-0 flex-1 text-center md:text-left">
+                <h3 className="text-[clamp(1.35rem,4.5vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+                  Pas qu&rsquo;un excité du direct.
+                </h3>
+                <p className="mt-4 text-sm leading-relaxed text-zinc-400 sm:text-base">
+                  Fais tes pronos d&rsquo;avant-match (score, buteurs) pour gagner des{" "}
+                  <strong className="font-bold text-zinc-200">Sifflets</strong>. Ce sont tes munitions pour pouvoir
+                  faire &lsquo;Tapis&rsquo; sur la VAR en direct.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-12 flex justify-center">
             <Link
               href="/login"
-              className="flex h-14 items-center justify-center rounded-2xl border border-green-500/30 bg-green-500/10 px-10 font-black uppercase tracking-wide text-green-400 transition hover:bg-green-500/20 active:scale-95"
+              className="flex h-14 items-center justify-center rounded-2xl bg-green-500 px-10 font-black uppercase tracking-wide text-black shadow-[0_0_30px_rgba(34,197,94,0.4)] transition hover:bg-green-400 hover:shadow-[0_0_45px_rgba(34,197,94,0.55)] active:scale-[0.97]"
             >
               Rejoindre le Kop →
             </Link>
@@ -227,6 +259,34 @@ export default async function LandingPage() {
                 bientôt disponible
               </span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          GRADES KOP — progression (vitrine)
+      ═══════════════════════════════════════════ */}
+      <section className="border-t border-white/8 py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+            Prouve ton expertise au kop.
+          </h2>
+          <div className="mx-auto mt-10 max-w-2xl rounded-3xl border border-green-500/40 bg-zinc-900/50 p-6 shadow-[0_0_40px_rgba(34,197,94,0.15)] backdrop-blur-sm sm:p-8">
+            <p className="text-center text-sm leading-relaxed text-zinc-400">
+              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss de la VAR en accumulant les bonnes
+              prédictions.
+            </p>
+            <ol className="relative mt-8 list-none space-y-0 p-0">
+              <KopRankStep
+                step={1}
+                label="Arbitre de District"
+                variant="muted"
+                isLast={false}
+              />
+              <KopRankStep step={2} label="Sifflet de Bronze" variant="bronze" isLast={false} />
+              <KopRankStep step={3} label="Sifflet d&rsquo;Argent" variant="silver" isLast={false} />
+              <KopRankStep step={4} label="Boss de la VAR" variant="gold" isLast />
+            </ol>
           </div>
         </div>
       </section>
@@ -307,82 +367,134 @@ function GamePanel({
   );
 }
 
+function KopRankStep({
+  step,
+  label,
+  variant,
+  isLast,
+}: {
+  step: number;
+  label: string;
+  variant: "muted" | "bronze" | "silver" | "gold";
+  isLast: boolean;
+}) {
+  const circle =
+    variant === "muted"
+      ? "border-zinc-700 bg-zinc-800/80 text-zinc-500"
+      : variant === "bronze"
+        ? "border-amber-600/70 bg-gradient-to-br from-amber-950/80 to-zinc-900 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.15)]"
+        : variant === "silver"
+          ? "border-zinc-400/50 bg-gradient-to-br from-zinc-600/30 to-zinc-900 text-zinc-200 shadow-[0_0_18px_rgba(212,212,216,0.12)]"
+          : "border-amber-300/80 bg-gradient-to-br from-amber-400/25 to-yellow-600/20 text-amber-100 shadow-[0_0_28px_rgba(250,204,21,0.35)]";
+
+  const labelClass =
+    variant === "muted"
+      ? "text-zinc-500"
+      : variant === "bronze"
+        ? "bg-gradient-to-r from-amber-700 via-orange-500 to-amber-500 bg-clip-text font-black text-transparent"
+        : variant === "silver"
+          ? "bg-gradient-to-r from-zinc-300 via-zinc-100 to-zinc-400 bg-clip-text font-black text-transparent"
+          : "inline-block bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-400 bg-[length:200%_100%] bg-clip-text font-black text-transparent animate-[shimmer_2.5s_linear_infinite]";
+
+  return (
+    <li className="relative flex gap-4 pb-8 last:pb-0">
+      {!isLast ? (
+        <div
+          className="absolute left-[17px] top-9 h-[calc(100%-0.25rem)] w-px bg-gradient-to-b from-green-500/35 to-green-500/5"
+          aria-hidden
+        />
+      ) : null}
+      <div
+        className={`relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[11px] font-black ${circle}`}
+      >
+        {step}
+      </div>
+      <div className="min-w-0 pt-0.5">
+        <p className={`text-sm font-bold tracking-tight sm:text-base ${labelClass}`}>{label}</p>
+      </div>
+    </li>
+  );
+}
+
 function PhoneMockup() {
   return (
-    <div className="relative w-52">
+    <div className="relative mx-auto w-52 max-w-full sm:w-56">
       <div
         className="absolute inset-0 -m-6 rounded-[3.5rem] bg-green-500/15 blur-3xl"
         aria-hidden
       />
-      <div className="relative overflow-hidden rounded-[2.5rem] border-[3px] border-zinc-700 bg-zinc-900 shadow-[0_32px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(34,197,94,0.08)]">
+      {/* Coque : ratio smartphone moderne (~9:19.5), contenu fluide sans étirement */}
+      <div className="relative flex aspect-[9/19.5] w-full flex-col overflow-hidden rounded-[2.5rem] border-[3px] border-zinc-700 bg-zinc-900 shadow-[0_32px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(34,197,94,0.08)]">
         {/* Notch */}
-        <div className="flex items-center justify-center border-b border-zinc-800 py-2.5">
+        <div className="flex shrink-0 items-center justify-center border-b border-zinc-800 py-2">
           <div className="h-1.5 w-14 rounded-full bg-zinc-700" />
         </div>
 
-        {/* Screen */}
-        <div className="flex flex-col gap-2.5 bg-zinc-950 p-3 pb-5">
-          {/* Scoreboard */}
-          <div className="overflow-hidden rounded-xl bg-zinc-900">
-            <div className="flex items-center justify-between px-3 py-2">
-              <span className="text-[9px] font-black text-white">PSG</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-white">1</span>
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
-                <span className="text-xs font-black text-white">0</span>
+        {/* Écran — remplit la hauteur restante, pas de déformation du contenu */}
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 bg-zinc-950 p-2.5 pb-3">
+          <div className="min-h-0 shrink-0 space-y-1.5">
+            {/* Scoreboard */}
+            <div className="overflow-hidden rounded-xl bg-zinc-900">
+              <div className="flex items-center justify-between px-2.5 py-1.5">
+                <span className="text-[9px] font-black text-white">PSG</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-white">1</span>
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                  <span className="text-xs font-black text-white">0</span>
+                </div>
+                <span className="text-[9px] font-black text-white">OL</span>
               </div>
-              <span className="text-[9px] font-black text-white">OL</span>
+              <div className="bg-green-500/10 px-2.5 py-0.5 text-center">
+                <span className="text-[8px] font-black text-green-400">47&rsquo; EN DIRECT</span>
+              </div>
             </div>
-            <div className="bg-green-500/10 px-3 py-1 text-center">
-              <span className="text-[8px] font-black text-green-400">47&rsquo; EN DIRECT</span>
+
+            {/* Event */}
+            <div className="px-0.5">
+              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">
+                Décision en cours
+              </p>
+              <p className="text-[0.8rem] font-black leading-tight text-white">Il y a péno là&nbsp;?!</p>
+            </div>
+
+            {/* Timer */}
+            <div>
+              <div className="mb-1 flex justify-between text-[8px]">
+                <span className="text-zinc-500">Temps restant</span>
+                <span className="font-black text-white">67s</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                <div className="h-full w-3/4 rounded-full bg-green-500" />
+              </div>
             </div>
           </div>
 
-          {/* Event */}
-          <div className="px-0.5">
-            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">
-              Décision en cours
-            </p>
-            <p className="text-[0.85rem] font-black leading-tight text-white">
-              Il y a péno là&nbsp;?!
-            </p>
-          </div>
-
-          {/* Timer */}
-          <div>
-            <div className="mb-1.5 flex justify-between text-[8px]">
-              <span className="text-zinc-500">Temps restant</span>
-              <span className="font-black text-white">67s</span>
+          <div className="min-h-0 shrink-0 space-y-1.5">
+            {/* OUI / NON */}
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="flex min-h-0 flex-col items-center justify-center rounded-xl border-2 border-green-500 bg-green-500/15 py-2">
+                <span className="text-[8px] font-black uppercase text-green-400">OUI</span>
+                <span className="text-xs font-black text-green-400">×2.00</span>
+              </div>
+              <div className="flex min-h-0 flex-col items-center justify-center rounded-xl border-2 border-zinc-600 bg-zinc-800 py-2">
+                <span className="text-[8px] font-black uppercase text-zinc-300">NON</span>
+                <span className="text-xs font-black text-zinc-400">×1.80</span>
+              </div>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-              <div className="h-full w-3/4 rounded-full bg-green-500" />
-            </div>
-          </div>
 
-          {/* OUI / NON */}
-          <div className="grid grid-cols-2 gap-2 pt-0.5">
-            <div className="flex h-12 flex-col items-center justify-center rounded-xl border-2 border-green-500 bg-green-500/15">
-              <span className="text-[9px] font-black uppercase text-green-400">OUI</span>
-              <span className="text-sm font-black text-green-400">×2.00</span>
+            {/* Engagement */}
+            <div className="flex items-center rounded-lg bg-zinc-800/80 px-2 py-1.5">
+              <span className="text-[8px] text-zinc-500">Engagement</span>
+              <span className="ml-auto text-[10px] font-black text-white">50 pts</span>
+              <span className="ml-1 text-[8px] text-green-400">→ +100</span>
             </div>
-            <div className="flex h-12 flex-col items-center justify-center rounded-xl border-2 border-zinc-600 bg-zinc-800">
-              <span className="text-[9px] font-black uppercase text-zinc-300">NON</span>
-              <span className="text-sm font-black text-zinc-400">×1.80</span>
+
+            {/* CTA */}
+            <div className="flex items-center justify-center rounded-xl bg-green-500 py-2">
+              <span className="text-[8px] font-black uppercase tracking-wide text-zinc-950">
+                Valider ma prédiction →
+              </span>
             </div>
-          </div>
-
-          {/* Engagement */}
-          <div className="flex items-center rounded-lg bg-zinc-800/80 px-2.5 py-1.5">
-            <span className="text-[8px] text-zinc-500">Engagement</span>
-            <span className="ml-auto text-[10px] font-black text-white">50 pts</span>
-            <span className="ml-1.5 text-[8px] text-green-400">→ +100</span>
-          </div>
-
-          {/* CTA */}
-          <div className="flex items-center justify-center rounded-xl bg-green-500 py-2.5">
-            <span className="text-[9px] font-black uppercase tracking-wide text-zinc-950">
-              Valider ma prédiction →
-            </span>
           </div>
         </div>
       </div>
@@ -394,7 +506,7 @@ function PhoneMockup() {
       </div>
 
       {/* Notification bubble — mobile only */}
-      <div className="absolute -left-6 bottom-20 max-w-[130px] rounded-2xl border border-white/10 bg-zinc-800 px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.15)] lg:hidden">
+      <div className="absolute -left-6 bottom-[12%] max-w-[130px] rounded-2xl border border-white/10 bg-zinc-800 px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.15)] lg:hidden">
         <p className="text-[8px] font-bold text-zinc-400">Prédiction juste</p>
         <p className="text-[10px] font-black text-green-400">+200 Pts</p>
       </div>

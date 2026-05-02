@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MatchCard } from "@/components/lobby/MatchCard";
 import { MatchListSkeleton } from "@/components/lobby/MatchCardSkeleton";
 import { Onboarding } from "@/components/onboarding/Onboarding";
-import { sortMatchesForLobby, isMatchInProgress, type MatchRow } from "@/lib/matches";
+import { sortMatchesForLobby, isLobbyLiveStatus, type MatchRow } from "@/lib/matches";
 
 export const metadata = { title: "Stade" };
 
@@ -26,9 +26,10 @@ async function MatchListFetcher() {
   }
 
   const matches = sortMatchesForLobby((data ?? []) as MatchRow[]);
-  const live     = matches.filter((m) => isMatchInProgress(m.status));
-  const upcoming = matches.filter((m) => m.status === "upcoming");
-  const finished = matches.filter((m) => m.status === "finished");
+
+  const liveMatches = matches.filter((m) => isLobbyLiveStatus(m.status));
+  const upcomingMatches = matches.filter((m) => m.status === "upcoming");
+  const finishedMatches = matches.filter((m) => m.status === "finished");
 
   if (matches.length === 0) {
     return (
@@ -43,16 +44,18 @@ async function MatchListFetcher() {
 
   return (
     <>
-      {live.length > 0 && <Section title="En Direct" live matches={live} />}
-      {upcoming.length > 0 && (
+      {liveMatches.length > 0 && (
+        <Section title="En Direct" live matches={liveMatches} />
+      )}
+      {upcomingMatches.length > 0 && (
         <Section
           title="À venir"
-          matches={upcoming}
-          className={live.length > 0 ? "mt-8" : ""}
+          matches={upcomingMatches}
+          className={liveMatches.length > 0 ? "mt-8" : ""}
         />
       )}
-      {finished.length > 0 && (
-        <Section title="Terminés" matches={finished} className="mt-8 opacity-50" />
+      {finishedMatches.length > 0 && (
+        <Section title="Terminés" matches={finishedMatches} className="mt-8 opacity-50" />
       )}
     </>
   );

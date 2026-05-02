@@ -1,15 +1,15 @@
 import type { MatchRow, MatchStatus } from "@/types/database";
-import { isMatchInProgress } from "@/lib/matches";
+import { formatMatchStatus, isMatchInProgress } from "@/lib/matches";
 
 function getStatusLabel(status: MatchStatus, minute: number | null): string {
-  switch (status) {
-    case "first_half":  return minute !== null ? `1ère mi-temps · ${minute}'` : "1ère mi-temps";
-    case "half_time":   return "Mi-temps";
-    case "second_half": return minute !== null ? `2ème mi-temps · ${minute}'` : "2ème mi-temps";
-    case "paused":      return "Interruption";
-    case "finished":    return "Terminé";
-    case "upcoming":    return "À venir";
+  const base = formatMatchStatus(status);
+  if (
+    minute !== null &&
+    (status === "first_half" || status === "second_half")
+  ) {
+    return `${base} · ${minute}'`;
   }
+  return base;
 }
 
 function shortTeamName(name: string): string {

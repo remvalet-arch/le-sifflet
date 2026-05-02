@@ -1,7 +1,7 @@
 # PROJECT_STATE — Le Sifflet
 
 > Documentation vivante de l'application. À mettre à jour à chaque évolution majeure (feature, schéma, bug critique).
-> Dernière mise à jour : 2026-04-30 — clarifications UX paris, streaming Suspense lobby, loading.tsx manquants.
+> Dernière mise à jour : 2026-05-02 — Sync live : [`syncLiveMatches()`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-live`](src/app/api/admin/sync-live/route.ts) (modérateur **ou** `Authorization: Bearer` + `CRON_SECRET` pour [Vercel Cron](vercel.json) toutes les 2 min). Colonne timeline [`0026`](supabase/migrations/0026_match_timeline_thesportsdb_event_id.sql). Ingestion TSDB : [`trigger-initial-sync`](src/app/api/admin/trigger-initial-sync/route.ts), `SPORTSDB_API_KEY` / `CRON_SECRET` (`.env.example`).
 
 ---
 
@@ -9,6 +9,15 @@
 
 **Le Sifflet** est une PWA mobile-first « second écran » pour fans de foot, pensée pour la Coupe du Monde 2026. Le joueur incarne un arbitre virtuel : il signale les actions litigieuses en direct (mécanique Waze), mise des « Sifflets » sur le verdict et grimpe au classement.
 Le ton est tongue-in-cheek (tutoiement, références MPG), 100 % gratuit, aucune monnaie réelle.
+
+### Vitrine publique (`/` — VAR Time)
+
+La landing ([`src/app/page.tsx`](src/app/page.tsx)) présente **deux piliers** cohérents avec le produit :
+
+- **Live** : signalement communautaire + paris instantanés sur le verdict (VAR / chrono).
+- **Avant match** : prédictions classiques (score exact, buteurs, vainqueur) — côté app : paris long terme (`long_term_bets`, onglet Prédictions sur la fiche match).
+
+Les **quatre grades** affichés en bas de page (ex. « Boss de la VAR ») sont une **échelle marketing** pour la narration ; le profil in-app reste piloté par **trust_score** et les badges karma (page Profil), sans équivalence technique obligatoire vers ces intitulés.
 
 ---
 
@@ -21,7 +30,8 @@ Le ton est tongue-in-cheek (tutoiement, références MPG), 100 % gratuit, aucune
 | Toasts | `sonner` | Provider monté dans `src/app/layout.tsx`. |
 | Auth & DB | **Supabase** (`@supabase/ssr` 0.10) | OAuth Google PKCE, JWT rafraîchi par middleware. |
 | Realtime | Supabase Realtime | 6 tables en `REPLICA IDENTITY FULL` : `matches`, `market_events`, `bets`, `alert_signals`, `profiles`, `match_timeline_events`. |
-| Données externes | TheSportsDB API | `src/lib/services/thesportsdb.ts` — Ligue 1 (4334) + Champions League (4480). |
+| Données externes | TheSportsDB API | `src/lib/services/thesportsdb.ts` (matchs / events). **Ingestion tampon** : [`src/services/sportsdb-sync.ts`](src/services/sportsdb-sync.ts) — Ligue 1 (4334) + VIP, upsert `competitions` / `teams` / `players` / `matches` ; throttle ~550 ms. **Live** : `syncLiveMatches()` — `GET /api/admin/sync-live` (modérateur ou **cron** `CRON_SECRET`). Cron planifié : [`vercel.json`](vercel.json). Déclencheur initial : `GET /api/admin/trigger-initial-sync` (`?rosters=1`). |
+| Images TSDB | `next/image` prêt | [`next.config.ts`](next.config.ts) — `remotePatterns` `www.thesportsdb.com`, `r2.thesportsdb.com`. |
 | Sécurité serveur | `service_role` admin client | `src/lib/supabase/admin.ts` — bypass RLS pour les opérations sensibles. |
 | Réponses API | Helpers `successResponse` / `errorResponse` | `src/lib/api-response.ts` — shape `{ ok, data | error }`. |
 | Middleware | `src/middleware.ts` | Refresh JWT + protection `/lobby` et `/match/*`. |
@@ -48,6 +58,9 @@ erDiagram
     profiles ||--o{ alert_signals : send
     profiles ||--o{ rooms : owns
     profiles }o--o{ rooms : "via room_members"
+    competitions ||--o{ teams : has
+    matches }o--o| competitions : optional
+    players }o--o| teams : optional
     matches ||--o{ market_events : has
     matches ||--o{ alert_signals : receives
     matches ||--o{ match_timeline_events : has
@@ -64,6 +77,17 @@ erDiagram
         timestamptz last_refill_date
         bool has_onboarded
     }
+    competitions {
+        uuid id PK
+        text name
+        text thesportsdb_league_id "UNIQUE"
+    }
+    teams {
+        uuid id PK
+        uuid competition_id FK
+        text thesportsdb_team_id "UNIQUE"
+        text equipment_url
+    }
     matches {
         uuid id PK
         text team_home
@@ -74,6 +98,9 @@ erDiagram
         int match_minute
         text thesportsdb_event_id "UNIQUE"
         timestamptz alert_cooldown_until
+        uuid competition_id
+        uuid home_team_id
+        uuid away_team_id
     }
     market_events {
         uuid id PK
@@ -132,6 +159,8 @@ erDiagram
         text team_name
         text player_name
         text position
+        uuid team_id
+        text cutout_url
     }
 ```
 
@@ -141,7 +170,7 @@ erDiagram
 - `profiles.sifflets_balance >= 0` CHECK + UPDATE limité à `username` côté client.
 - `auth.users` → trigger `on_auth_user_created` → INSERT auto dans `profiles`.
 
-**Migrations appliquées** : `0001` à `0020` — schéma + alert signals + RPCs + Realtime fixes + nouveaux types d'alertes + karma + refill + livescore + place_bet v2 + timeline + Realtime profiles + couleurs équipes + match states granulaires + own_goal + long term bets + RLS lineups + table players + info events.
+**Migrations appliquées** : `0001` à `0026` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE, dédup import TSDB). Ingestion TSDB hors migration (service TypeScript + routes admin).
 
 ---
 
@@ -168,7 +197,8 @@ erDiagram
 | **Pitch tactique** | Composition 11 v 11 avec couleurs équipe + contraste auto + bench. | `src/components/match/SoccerPitch.tsx` |
 | **ActionDrawer modérateur** | 3 onglets : Alertes / Feuille de match / Contrôle d'état + sync TheSportsDB inline. | `src/components/match/ActionDrawer.tsx`, `src/app/actions/syncData.ts` |
 | **Contrôle d'état match** | 5 boutons (coup d'envoi, mi-temps, reprise, interruption, fin), génère événement timeline `info`. | `src/app/api/match-state/route.ts`, migration `0020_timeline_info_events.sql` |
-| **Sync TheSportsDB** | Import match (Ligue 1 + UCL) + import effectif (4 équipes MVP). | `src/lib/services/thesportsdb.ts`, `src/app/actions/syncData.ts`, migration `0019_players_table.sql` |
+| **Sync TheSportsDB** | Import match (Ligue 1 + UCL) + import effectif (4 équipes MVP) via Server Action modérateur. | `src/lib/services/thesportsdb.ts`, `src/app/actions/syncData.ts`, migration `0019_players_table.sql` |
+| **Ingestion tampon TSDB** | Phase 1 : ligues / équipes / rosters (`competitions`, `teams`, `players`). Phase 2 : calendrier `matches` via `eventsnext(league).php`, résolution FK `home_team_id` / `away_team_id` en **requête(s) `teams` batchées**, upsert `thesportsdb_event_id`. | [`src/services/sportsdb-sync.ts`](src/services/sportsdb-sync.ts), [`src/app/api/admin/trigger-initial-sync/route.ts`](src/app/api/admin/trigger-initial-sync/route.ts), [`src/app/api/admin/sync-matches/route.ts`](src/app/api/admin/sync-matches/route.ts) |
 | **Paris long terme — création** | Buteur (×3.5 fixe) + Score exact (cotes dynamiques selon popularité). | `src/components/match/PolymarketTab.tsx`, `src/app/api/long-term-bet/route.ts`, `src/app/api/long-term-odds/route.ts`, `src/lib/odds.ts` |
 | **Page Règles** | 5 sections explicatives (alertes, paris, karma, classement, refill). | `src/app/(app)/rules/page.tsx` |
 | **PWA basique** | Metadata + manifest + theme color + Apple web app. | `src/app/layout.tsx` |

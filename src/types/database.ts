@@ -58,6 +58,75 @@ export interface Database {
         };
         Relationships: [];
       };
+      competitions: {
+        Row: {
+          id: string;
+          name: string;
+          badge_url: string | null;
+          thesportsdb_league_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          badge_url?: string | null;
+          thesportsdb_league_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          badge_url?: string | null;
+          thesportsdb_league_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      teams: {
+        Row: {
+          id: string;
+          competition_id: string;
+          name: string;
+          short_name: string | null;
+          logo_url: string | null;
+          color_primary: string | null;
+          color_secondary: string | null;
+          equipment_url: string | null;
+          thesportsdb_team_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          competition_id: string;
+          name: string;
+          short_name?: string | null;
+          logo_url?: string | null;
+          color_primary?: string | null;
+          color_secondary?: string | null;
+          equipment_url?: string | null;
+          thesportsdb_team_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          competition_id?: string;
+          name?: string;
+          short_name?: string | null;
+          logo_url?: string | null;
+          color_primary?: string | null;
+          color_secondary?: string | null;
+          equipment_url?: string | null;
+          thesportsdb_team_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       matches: {
         Row: {
           id: string;
@@ -75,6 +144,9 @@ export interface Database {
           away_team_logo: string | null;
           thesportsdb_event_id: string | null;
           created_at: string;
+          competition_id: string | null;
+          home_team_id: string | null;
+          away_team_id: string | null;
         };
         Insert: {
           id?: string;
@@ -92,6 +164,9 @@ export interface Database {
           away_team_logo?: string | null;
           thesportsdb_event_id?: string | null;
           created_at?: string;
+          competition_id?: string | null;
+          home_team_id?: string | null;
+          away_team_id?: string | null;
         };
         Update: {
           id?: string;
@@ -109,6 +184,9 @@ export interface Database {
           away_team_logo?: string | null;
           thesportsdb_event_id?: string | null;
           created_at?: string;
+          competition_id?: string | null;
+          home_team_id?: string | null;
+          away_team_id?: string | null;
         };
         Relationships: [];
       };
@@ -290,6 +368,7 @@ export interface Database {
           player_name: string;
           is_own_goal: boolean;
           details: string | null;
+          thesportsdb_event_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -301,6 +380,7 @@ export interface Database {
           player_name: string;
           is_own_goal?: boolean;
           details?: string | null;
+          thesportsdb_event_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -312,6 +392,7 @@ export interface Database {
           player_name?: string;
           is_own_goal?: boolean;
           details?: string | null;
+          thesportsdb_event_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -361,6 +442,8 @@ export interface Database {
           player_name: string;
           position: "G" | "D" | "M" | "A" | null;
           synced_at: string;
+          team_id: string | null;
+          cutout_url: string | null;
         };
         Insert: {
           id?: string;
@@ -370,6 +453,8 @@ export interface Database {
           player_name: string;
           position?: "G" | "D" | "M" | "A" | null;
           synced_at?: string;
+          team_id?: string | null;
+          cutout_url?: string | null;
         };
         Update: {
           id?: string;
@@ -379,6 +464,8 @@ export interface Database {
           player_name?: string;
           position?: "G" | "D" | "M" | "A" | null;
           synced_at?: string;
+          team_id?: string | null;
+          cutout_url?: string | null;
         };
         Relationships: [];
       };
@@ -492,5 +579,7 @@ export type MatchTimelineEventRow =
 export type LongTermBetRow =
   Database["public"]["Tables"]["long_term_bets"]["Row"];
 export type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
+export type CompetitionRow = Database["public"]["Tables"]["competitions"]["Row"];
+export type TeamRow = Database["public"]["Tables"]["teams"]["Row"];
 export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
 export type UserBadgeRow = Database["public"]["Tables"]["user_badges"]["Row"];

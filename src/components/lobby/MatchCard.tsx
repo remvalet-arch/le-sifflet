@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { MatchRow } from "@/lib/matches";
-import { isMatchInProgress } from "@/lib/matches";
+import { formatMatchStatus, isLobbyLiveStatus } from "@/lib/matches";
+import { LiveBadge } from "@/components/lobby/LiveBadge";
 
 export function MatchCard({ match }: { match: MatchRow }) {
   const href = `/match/${match.id}`;
-  const isLive = isMatchInProgress(match.status);
+  const isLive = isLobbyLiveStatus(match.status);
   const isFinished = match.status === "finished";
 
   const when = new Date(match.start_time).toLocaleString("fr-FR", {
@@ -27,18 +28,10 @@ export function MatchCard({ match }: { match: MatchRow }) {
       {/* Status badge row */}
       <div className="flex items-center justify-between gap-2">
         {isLive ? (
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
-            </span>
-            <span className="text-[11px] font-black uppercase tracking-widest text-green-500">
-              Live
-            </span>
-          </div>
+          <LiveBadge status={match.status} />
         ) : isFinished ? (
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
-            Terminé
+            {formatMatchStatus("finished")}
           </span>
         ) : (
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">

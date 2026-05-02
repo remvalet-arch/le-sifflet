@@ -214,7 +214,10 @@ export function LiveRoom({
         className="sticky z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md"
         style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
-        <Scoreboard match={liveMatch} />
+        <Scoreboard
+          key={`${liveMatch.status}-${liveMatch.match_minute ?? ""}-${liveMatch.home_score}-${liveMatch.away_score}`}
+          match={liveMatch}
+        />
 
         {/* Onglets style Google — underline indicator */}
         <div className="flex border-b border-white/8">

@@ -1,4 +1,4 @@
-const API_BASE = `https://www.thesportsdb.com/api/v1/json/${process.env.THESPORTSDB_API_KEY ?? "123"}/`;
+const API_BASE = `https://www.thesportsdb.com/api/v1/json/${process.env.SPORTSDB_API_KEY ?? process.env.THESPORTSDB_API_KEY ?? "123"}/`;
 
 // ── Types bruts de l'API ──────────────────────────────────────────────────────
 
