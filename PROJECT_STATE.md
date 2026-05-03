@@ -1,13 +1,13 @@
-# PROJECT_STATE — Le Sifflet
+# PROJECT_STATE — VAR Time
 
 > Documentation vivante de l'application. À mettre à jour à chaque évolution majeure (feature, schéma, bug critique).
-> Dernière mise à jour : 2026-05-03 — **Lobby = API-Football uniquement** : [`fetchLobbyMatchesForParisDay`](src/lib/lobby-queries.ts) filtre `competition!inner` + `.in(api_football_league_id, TOP_LEAGUE_API_IDS)` + journée [`getLobbyCalendarDayYmd`](src/lib/paris-day.ts) / `parisDayUtcRangeIso`. [`MatchLobby`](src/components/lobby/MatchLobby.tsx) : groupement / onglets par ID ligue seulement ; **Direct** = live + groupe par ID ; onglet ligue = tous statuts + tri heure. Horaires : [`normalizeMatchStartTimeIso`](src/lib/format-match-time.ts) + `Intl` `Europe/Paris`. Sync : [`ensureCompetitionForApiLeague`](src/services/api-football-fixtures-import.ts) met à jour le nom si `api_football_league_id` existe ; TSDB [`ensureCompetitionByLeagueId`](src/services/sportsdb-sync.ts) ne réécrit plus le nom si l’ID API est déjà posé. **Import calendrier Top 5** : [`syncApiFootballFixturesForDate`](src/services/api-football-fixtures-import.ts) + modérateur [`GET /api/admin/sync-apifootball-fixtures?date=YYYY-MM-DD`](src/app/api/admin/sync-apifootball-fixtures/route.ts) (ligues 61, 39, 140, 135, 78). **Live** : [`syncApiFootballMatch`](src/services/api-football-sync.ts), [`syncLiveMatches`](src/services/sportsdb-sync.ts), [`/api/admin/sync-live`](src/app/api/admin/sync-live/route.ts), [`/api/cron/match-monitor`](src/app/api/cron/match-monitor/route.ts). Migrations jusqu’à [`0032`](supabase/migrations/0032_competitions_api_football_league_id.sql). TSDB inchangé pour cosmétique : [`trigger-initial-sync`](src/app/api/admin/trigger-initial-sync/route.ts). `SPORTSDB_API_KEY` / `CRON_SECRET` / `API_FOOTBALL_KEY` (`.env.example`).
+> Dernière mise à jour : 2026-05-03 — **Lobby MPG** : `matches.round_short` + `has_lineups` ([`0033`](supabase/migrations/0033_matches_round_lineups.sql)) ; [`syncApiFootballFixturesByRound`](src/services/api-football-fixtures-import.ts) + modérateur [`GET /api/admin/sync-apifootball-round`](src/app/api/admin/sync-apifootball-round/route.ts) (`leagueId`, `roundName` = libellé API ex. `Regular Season - 34`). [`match-monitor`](src/app/api/cron/match-monitor/route.ts) : si le score change (hors FT), appel immédiat `syncApiFootballMatch` pour timeline/buteurs. Logos ligue : [`remote-logo-hosts.ts`](src/lib/remote-logo-hosts.ts) + `next.config` (`*.api-sports.io`). [`fetchLobbyMatchesForParisDay`](src/lib/lobby-queries.ts) / [`fetchLobbyMatchesByRound`](src/lib/lobby-queries.ts) + URL `?league=&round=` ; [`MatchLobby`](src/components/lobby/MatchLobby.tsx) / [`MatchCard`](src/components/lobby/MatchCard.tsx). Migrations jusqu’à [`0033`](supabase/migrations/0033_matches_round_lineups.sql). `SPORTSDB_API_KEY` / `CRON_SECRET` / `API_FOOTBALL_KEY` (`.env.example`).
 
 ---
 
 ## 🎯 Vision du MVP
 
-**Le Sifflet** est une PWA mobile-first « second écran » pour fans de foot, pensée pour la Coupe du Monde 2026. Le joueur incarne un arbitre virtuel : il signale les actions litigieuses en direct (mécanique Waze), mise des « Sifflets » sur le verdict et grimpe au classement.
+**VAR Time** est une PWA mobile-first « second écran » pour fans de foot, pensée pour la Coupe du Monde 2026. Le joueur incarne un arbitre virtuel : il signale les actions litigieuses en direct (mécanique Waze), engage des « Pts » sur le verdict et grimpe au classement.
 Le ton est tongue-in-cheek (tutoiement, références MPG), 100 % gratuit, aucune monnaie réelle.
 
 ### Vitrine publique (`/` — VAR Time)
@@ -30,7 +30,7 @@ Les **quatre grades** affichés en bas de page (ex. « Boss de la VAR ») sont u
 | Toasts | `sonner` | Provider monté dans `src/app/layout.tsx`. |
 | Auth & DB | **Supabase** (`@supabase/ssr` 0.10) | OAuth Google PKCE, JWT rafraîchi par middleware. |
 | Realtime | Supabase Realtime | 6 tables en `REPLICA IDENTITY FULL` : `matches`, `market_events`, `bets`, `alert_signals`, `profiles`, `match_timeline_events`. |
-| Données externes | **TheSportsDB** (cosmétique / calendrier statique) + **API-Football** (api-sports.io v3, **live** + **calendrier Top 5**) | TSDB : `src/lib/services/thesportsdb.ts`, [`sportsdb-sync.ts`](src/services/sportsdb-sync.ts), [`GET /api/admin/sync-matches`](src/app/api/admin/sync-matches/route.ts). API-Football : [`api-football-client.ts`](src/lib/api-football-client.ts), [`api-football-sync.ts`](src/services/api-football-sync.ts), [`api-football-fixtures-import.ts`](src/services/api-football-fixtures-import.ts), [`GET /api/admin/sync-apifootball-fixtures`](src/app/api/admin/sync-apifootball-fixtures/route.ts), [`top-leagues.ts`](src/lib/constants/top-leagues.ts), `competitions.api_football_league_id` ([`0032`](supabase/migrations/0032_competitions_api_football_league_id.sql)). **Live** : `syncLiveMatches`, `GET /api/admin/sync-live`, `GET /api/cron/match-monitor`. Déclencheur TSDB : `GET /api/admin/trigger-initial-sync`. |
+| Données externes | **TheSportsDB** (cosmétique / calendrier statique) + **API-Football** (api-sports.io v3, **live** + **calendrier Top 5**) | TSDB : `src/lib/services/thesportsdb.ts`, [`sportsdb-sync.ts`](src/services/sportsdb-sync.ts), [`GET /api/admin/sync-matches`](src/app/api/admin/sync-matches/route.ts). API-Football : [`api-football-client.ts`](src/lib/api-football-client.ts), [`api-football-sync.ts`](src/services/api-football-sync.ts), [`api-football-fixtures-import.ts`](src/services/api-football-fixtures-import.ts), [`GET /api/admin/sync-apifootball-fixtures`](src/app/api/admin/sync-apifootball-fixtures/route.ts), [`GET /api/admin/sync-apifootball-round`](src/app/api/admin/sync-apifootball-round/route.ts) (`?leagueId=&roundName=` ex. `Regular Season - 34`), [`top-leagues.ts`](src/lib/constants/top-leagues.ts), `competitions.api_football_league_id` ([`0032`](supabase/migrations/0032_competitions_api_football_league_id.sql)), `matches.round_short`/`has_lineups` ([`0033`](supabase/migrations/0033_matches_round_lineups.sql)). **Live** : `syncLiveMatches`, `GET /api/admin/sync-live`, `GET /api/cron/match-monitor`. Déclencheur TSDB : `GET /api/admin/trigger-initial-sync`. |
 | Images TSDB | `next/image` prêt | [`next.config.ts`](next.config.ts) — `remotePatterns` `www.thesportsdb.com`, `r2.thesportsdb.com`, `media.api-sports.io`. |
 | Sécurité serveur | `service_role` admin client | `src/lib/supabase/admin.ts` — bypass RLS pour les opérations sensibles. |
 | Réponses API | Helpers `successResponse` / `errorResponse` | `src/lib/api-response.ts` — shape `{ ok, data | error }`. |
@@ -45,7 +45,7 @@ Les **quatre grades** affichés en bas de page (ex. « Boss de la VAR ») sont u
 - `place_bet(p_event_id, p_chosen_option, p_amount_staked, p_multiplier)` — débit atomique + insert pari court terme.
 - `place_long_term_bet(p_match_id, p_bet_type, p_bet_value, p_amount_staked, p_potential_reward)` — débit atomique + insert pari long terme.
 - `resolve_event(p_event_id, p_result)` — paye gagnants + ajuste karma initiateurs (service_role only).
-- `handle_new_user()` — trigger Supabase qui crée le profil + 1000 Sifflets à l'inscription.
+- `handle_new_user()` — trigger Supabase qui crée le profil + 1000 Pts à l'inscription.
 
 ---
 
@@ -71,7 +71,7 @@ erDiagram
     profiles {
         uuid id PK
         text username
-        int sifflets_balance "default 1000"
+        int sifflets_balance "default 1000 — affiché « Pts » en UI"
         int trust_score "default 100, max 1000"
         numeric winrate
         timestamptz last_refill_date
@@ -104,6 +104,8 @@ erDiagram
         uuid competition_id
         uuid home_team_id
         uuid away_team_id
+        text round_short "ex. J34 — affiché dans le lobby 0033"
+        bool has_lineups "true quand lineups sync 0033"
     }
     market_events {
         uuid id PK
@@ -176,7 +178,7 @@ erDiagram
 - `profiles.sifflets_balance >= 0` CHECK + UPDATE limité à `username` côté client.
 - `auth.users` → trigger `on_auth_user_created` → INSERT auto dans `profiles`.
 
-**Migrations appliquées** : `0001` à `0032` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE) — TSDB `lookuptimeline` ; **`0027`** : `teams.team_color_1` / `team_color_2`, `stadium_name` / `stadium_thumb`, `players.image_url` (import cosmétique TSDB). **`0028`** : suppression des `CHECK` sur `lineups.position` et `players.position` ; [`map-tsdb-position.ts`](src/lib/map-tsdb-position.ts), [`pitch-lineups.ts`](src/lib/pitch-lineups.ts). **`0029`** : `teams.api_football_id` / `matches.api_football_id`. **`0030`** : colonne `match_timeline_events.api_football_event_id`, `lineups.player_id` → `players`. **`0031`** : index UNIQUE partiel `idx_unique_api_football_event_id` sur `api_football_event_id` (upsert PostgREST) ; retrait de l’index homonyme `0030` si présent. **`0032`** : `competitions.api_football_league_id` (UNIQUE partiel). **Live / calendrier** : [`api-football-sync.ts`](src/services/api-football-sync.ts), [`api-football-fixtures-import.ts`](src/services/api-football-fixtures-import.ts), [`api-football-client.ts`](src/lib/api-football-client.ts), `GET /api/admin/map-apifootball-teams`, `GET /api/admin/sync-apifootball-fixtures`. Ingestion TSDB hors migration (calendrier / cosmétique).
+**Migrations appliquées** : `0001` à `0033` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE) — TSDB `lookuptimeline` ; **`0027`** : `teams.team_color_1` / `team_color_2`, `stadium_name` / `stadium_thumb`, `players.image_url` (import cosmétique TSDB). **`0028`** : suppression des `CHECK` sur `lineups.position` et `players.position` ; [`map-tsdb-position.ts`](src/lib/map-tsdb-position.ts), [`pitch-lineups.ts`](src/lib/pitch-lineups.ts). **`0029`** : `teams.api_football_id` / `matches.api_football_id`. **`0030`** : colonne `match_timeline_events.api_football_event_id`, `lineups.player_id` → `players`. **`0031`** : index UNIQUE partiel `idx_unique_api_football_event_id` sur `api_football_event_id` (upsert PostgREST) ; retrait de l’index homonyme `0030` si présent. **`0032`** : `competitions.api_football_league_id` (UNIQUE partiel). **`0033`** : `matches.round_short TEXT` + `matches.has_lineups BOOLEAN DEFAULT FALSE` — alimentation par `syncApiFootballFixturesByRound` / lineups sync. **Live / calendrier** : [`api-football-sync.ts`](src/services/api-football-sync.ts), [`api-football-fixtures-import.ts`](src/services/api-football-fixtures-import.ts), [`api-football-client.ts`](src/lib/api-football-client.ts), `GET /api/admin/map-apifootball-teams`, `GET /api/admin/sync-apifootball-fixtures`. Ingestion TSDB hors migration (calendrier / cosmétique).
 
 ---
 
@@ -186,7 +188,7 @@ erDiagram
 |---|---|---|
 | **Auth** | Google OAuth PKCE → callback → cookies sécurisés. | `src/app/auth/callback/route.ts`, `src/app/login/page.tsx`, `src/middleware.ts` |
 | **Onboarding** | Modal 3 étapes au premier login, flag `has_onboarded`. | `src/components/onboarding/Onboarding.tsx`, `src/app/actions/onboarding.ts` |
-| **Lobby** | Journée **Europe/Paris** (`NEXT_PUBLIC_LOBBY_DATE` optionnel), une requête `matches` + `teams` ×2 + `competitions` + `match_timeline_events`, onglets **Direct** (groupé par ligue) + Top 5, cartes MPG (`MatchLobby` / `MatchCard` : score rouge en direct, buteurs). Suspense + skeleton. | `src/app/(app)/lobby/page.tsx`, [`MatchLobby.tsx`](src/components/lobby/MatchLobby.tsx), [`MatchCard.tsx`](src/components/lobby/MatchCard.tsx), [`lobby-queries.ts`](src/lib/lobby-queries.ts), [`paris-day.ts`](src/lib/paris-day.ts), [`format-match-time.ts`](src/lib/format-match-time.ts), [`MatchCardSkeleton.tsx`](src/components/lobby/MatchCardSkeleton.tsx), [`matches.ts`](src/lib/matches.ts) |
+| **Lobby** | Journée **Europe/Paris** (`NEXT_PUBLIC_LOBBY_DATE` optionnel), onglets **Direct** (groupé par ligue) + Top 5 + navigation par journée (`?league=&round=`). Cartes MPG (`MatchLobby` / `MatchCard` : score rouge en direct, buteurs, badge « Compos dispos » si `has_lineups`, lien « Toute la J34 → »). API-Football comme source de vérité pour calendrier et rounds (`round_short` ex. `J34`, migration `0033`). Suspense + skeleton. | `src/app/(app)/lobby/page.tsx`, [`MatchLobby.tsx`](src/components/lobby/MatchLobby.tsx), [`MatchCard.tsx`](src/components/lobby/MatchCard.tsx), [`lobby-queries.ts`](src/lib/lobby-queries.ts), [`top-leagues.ts`](src/lib/constants/top-leagues.ts), [`paris-day.ts`](src/lib/paris-day.ts), [`format-match-time.ts`](src/lib/format-match-time.ts), [`MatchCardSkeleton.tsx`](src/components/lobby/MatchCardSkeleton.tsx), [`remote-logo-hosts.ts`](src/lib/remote-logo-hosts.ts) |
 | **Live Room** | Monté sur **toute** fiche match (`upcoming` → `finished`) : onglets Temps forts / Compositions (`MatchLineups`) / Prédictions + 4 abonnements Realtime (matches, market_events INSERT/UPDATE, bets UPDATE filtré user). État vide timeline : message différent si terminé vs à venir / en cours. | `src/app/(app)/match/[id]/page.tsx`, `src/components/match/LiveRoom.tsx`, `src/components/match/MatchTimeline.tsx`, `src/components/match/MatchLineups.tsx` |
 | **Mécanique Waze** | Seuil 2 users distincts en 30 s → `market_event` OPEN + cooldown 3 min. | `src/app/api/alert/route.ts` |
 | **VotingModal** | Cotes dégressives (peak par type, decay 2.5 %/s après 10 s, floor 1.01). | `src/components/match/VotingModal.tsx`, `src/lib/constants/odds.ts` |
@@ -194,7 +196,7 @@ erDiagram
 | **Résolution events court terme** | Auto via API mock (≥ 3 min) + admin manuel. Payout + karma initiateurs (+10 / -20). | `src/app/api/verify-event/route.ts`, `src/app/api/admin/resolve-event/route.ts`, `src/lib/resolve-event.ts`, migration `0008_karma_waze.sql` |
 | **Notifications** | Toast Sonner sur win/loss + flash animé du solde TopBar. | `src/components/match/LiveRoom.tsx`, `src/components/layout/TopBar.tsx` |
 | **Profil** | Hero, solde, grade trust score, badge karma (🟨/📢/🛡️), refill quotidien, stats (réussite, gagné, paris), historique unifié court+long terme avec badges `pending` différenciés (⏳ VAR / ⏳ Fin du match). | `src/app/(app)/profile/page.tsx`, `src/components/profile/RefillButton.tsx` |
-| **Refill quotidien** | +500 Sifflets si solde < 500 et cooldown 24 h respecté. | `src/app/api/refill/route.ts`, migration `0009_profile_extras.sql` |
+| **Refill quotidien** | +500 Pts si solde < 500 et cooldown 24 h respecté. | `src/app/api/refill/route.ts`, migration `0009_profile_extras.sql` |
 | **Leaderboard** | Top 50 + podium + ligne « moi » sticky + badge 🛡️ pour `trust_score >= MODERATOR_THRESHOLD`. | `src/app/(app)/leaderboard/page.tsx` |
 | **Sécurité admin** | `MODERATOR_THRESHOLD = 150` dans `permissions.ts`, `>= 150` appliqué partout (6 fichiers). `/admin/resolve` + `/api/admin/resolve-event` verrouillés côté serveur (403 si non-modérateur). | `src/lib/constants/permissions.ts`, `src/app/api/admin/resolve-event/route.ts`, `src/app/admin/resolve/page.tsx` |
 | **Sync score via timeline** | Ajout d'un `goal` incrémente atomiquement `home_score`/`away_score` via RPC `increment_match_score`. CSC gère l'inversion d'équipe. | `src/app/api/timeline-event/route.ts`, migration `0021_score_and_resolve.sql` |
@@ -302,8 +304,8 @@ Ce script Node.js (service_role Supabase) teste le moteur de résolution des par
 5. Insère 3 buts en timeline (Mbappé 47', Hakimi 73', Lacazette 82').
 6. Fixe le score final 2-1, appelle `resolve_long_term_bets`.
 7. **Assertions** :
-   - Joueur A → 1250 Sifflets, statut `won` ✓
-   - Joueur B → 900 Sifflets (pari perdu), statut `lost` ✓
+   - Joueur A → 1250 Pts, statut `won` ✓
+   - Joueur B → 900 Pts (pari perdu), statut `lost` ✓
 8. Nettoyage complet (utilisateurs + match supprimés).
 
 **Prérequis :** `.env.local` avec `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
@@ -332,7 +334,7 @@ npm run test:e2e:ui
 | **Lobby** | Au moins une `MatchCard` (`<a href="/match/…">`) est visible |
 | **LiveRoom — Super-Bouton** | Le FAB (aria-label "Ouvrir le tiroir d'action") est présent sur un match En Direct |
 | **LiveRoom — Onglets** | Les 3 onglets Temps forts / Compositions / Prédictions sont rendus |
-| **Prédictions** | Clic sur un bouton de score → formulaire "Mise (min. 10 Sifflets)" s'affiche |
+| **Prédictions** | Clic sur un bouton de score → formulaire "Engagement (min. 10 Pts)" s'affiche |
 | **Profil** | Solde + badge karma + section "Mes Paris" visibles |
 
 **Prérequis :**

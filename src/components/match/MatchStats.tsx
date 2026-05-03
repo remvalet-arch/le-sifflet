@@ -1,0 +1,214 @@
+"use client";
+
+import { memo, useEffect, useState } from "react";
+import { BarChart2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import type { MatchStatisticsRow, MatchStatus } from "@/types/database";
+
+/** Stats affichées dans cet ordre — les autres sont ignorées. */
+const FEATURED_STATS: { type: string; label: string }[] = [
+  { type: "Ball Possession",  label: "Possession" },
+  { type: "Shots on Goal",    label: "Tirs cadrés" },
+  { type: "Total Shots",      label: "Tirs totaux" },
+  { type: "Corner Kicks",     label: "Corners" },
+  { type: "Fouls",            label: "Fautes" },
+  { type: "Yellow Cards",     label: "Cartons jaunes" },
+  { type: "Red Cards",        label: "Cartons rouges" },
+  { type: "Offsides",         label: "Hors-jeux" },
+  { type: "Goalkeeper Saves", label: "Arrêts" },
+  { type: "Passes %",         label: "Précision passes" },
+];
+
+type Props = {
+  matchId: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  teamHome: string;
+  teamAway: string;
+  homeTeamLogo: string | null;
+  awayTeamLogo: string | null;
+  matchStatus: MatchStatus;
+};
+
+function parseStatValue(v: string | null): number {
+  if (!v || v === "null") return 0;
+  const n = parseFloat(v.replace("%", "").replace(",", ".").trim());
+  return Number.isNaN(n) ? 0 : n;
+}
+
+function StatRow({
+  label,
+  homeRaw,
+  awayRaw,
+}: {
+  label: string;
+  homeRaw: string | null;
+  awayRaw: string | null;
+}) {
+  const h = parseStatValue(homeRaw);
+  const a = parseStatValue(awayRaw);
+  const total = h + a;
+  const homePct = total === 0 ? 50 : Math.round((h / total) * 100);
+  const awayPct = 100 - homePct;
+
+  const homeWins = h > a;
+  const awayWins = a > h;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className={homeWins ? "font-bold text-white" : "text-zinc-500"}>
+          {homeRaw ?? "—"}
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          {label}
+        </span>
+        <span className={awayWins ? "font-bold text-white" : "text-zinc-500"}>
+          {awayRaw ?? "—"}
+        </span>
+      </div>
+      <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
+        <div
+          className={`h-full rounded-l-full transition-all duration-700 ${homeWins ? "bg-green-500" : "bg-zinc-600"}`}
+          style={{ width: `${homePct}%` }}
+        />
+        <div
+          className={`h-full rounded-r-full transition-all duration-700 ${awayWins ? "bg-blue-500" : "bg-zinc-700"}`}
+          style={{ width: `${awayPct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export const MatchStats = memo(function MatchStats({
+  matchId,
+  homeTeamId,
+  awayTeamId,
+  teamHome,
+  teamAway,
+  homeTeamLogo,
+  awayTeamLogo,
+  matchStatus,
+}: Props) {
+  const [rows, setRows] = useState<MatchStatisticsRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    // Chargement initial
+    void supabase
+      .from("match_statistics")
+      .select("*")
+      .eq("match_id", matchId)
+      .then(({ data }) => {
+        setRows(data ?? []);
+        setLoading(false);
+      });
+
+    // Realtime : mise à jour live quand le monitor upserte de nouvelles stats
+    const channel = supabase
+      .channel(`match-stats-${matchId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "match_statistics", filter: `match_id=eq.${matchId}` },
+        () => {
+          void supabase
+            .from("match_statistics")
+            .select("*")
+            .eq("match_id", matchId)
+            .then(({ data }) => { if (data) setRows(data); });
+        },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [matchId]);
+
+  // Construit un index { type → { home?: string, away?: string } }
+  const statsMap = new Map<string, { home: string | null; away: string | null }>();
+  for (const row of rows) {
+    const isHome = row.team_id === homeTeamId;
+    const isAway = row.team_id === awayTeamId;
+    if (!isHome && !isAway) continue;
+    const entry = statsMap.get(row.type) ?? { home: null, away: null };
+    if (isHome) entry.home = row.value;
+    else entry.away = row.value;
+    statsMap.set(row.type, entry);
+  }
+
+  const hasStats = statsMap.size > 0;
+  const visibleStats = FEATURED_STATS.filter((s) => statsMap.has(s.type));
+
+  const isUpcoming = matchStatus === "upcoming";
+
+  if (loading) {
+    return (
+      <div className="px-4 py-10 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!hasStats) {
+    return (
+      <div className="flex flex-col items-center gap-3 px-4 py-16 text-center">
+        <BarChart2 className="h-10 w-10 text-zinc-700" strokeWidth={1.5} />
+        <p className="text-sm font-bold text-zinc-500">
+          {isUpcoming
+            ? "Les statistiques seront disponibles dès le coup d'envoi."
+            : "Statistiques en cours de chargement…"}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 py-6 space-y-6">
+      {/* En-tête équipes */}
+      <div className="flex items-center justify-between">
+        <TeamHeader name={teamHome} logo={homeTeamLogo} align="left" />
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Stats</span>
+        <TeamHeader name={teamAway} logo={awayTeamLogo} align="right" />
+      </div>
+
+      {/* Barres de stats */}
+      <div className="space-y-5">
+        {visibleStats.map((s) => {
+          const entry = statsMap.get(s.type)!;
+          return (
+            <StatRow
+              key={s.type}
+              label={s.label}
+              homeRaw={entry.home}
+              awayRaw={entry.away}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
+function TeamHeader({
+  name,
+  logo,
+  align,
+}: {
+  name: string;
+  logo: string | null;
+  align: "left" | "right";
+}) {
+  return (
+    <div className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}>
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt={name} className="h-6 w-6 object-contain" />
+      ) : (
+        <div className="h-6 w-6 rounded-full bg-zinc-800" />
+      )}
+      <span className="max-w-[80px] truncate text-xs font-bold text-zinc-300">{name}</span>
+    </div>
+  );
+}

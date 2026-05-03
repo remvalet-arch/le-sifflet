@@ -166,6 +166,10 @@ export interface Database {
           competition_id: string | null;
           home_team_id: string | null;
           away_team_id: string | null;
+          round_short: string | null;
+          has_lineups: boolean;
+          last_events_sync_at: string | null;
+          last_stats_sync_at: string | null;
         };
         Insert: {
           id?: string;
@@ -187,6 +191,10 @@ export interface Database {
           competition_id?: string | null;
           home_team_id?: string | null;
           away_team_id?: string | null;
+          round_short?: string | null;
+          has_lineups?: boolean;
+          last_events_sync_at?: string | null;
+          last_stats_sync_at?: string | null;
         };
         Update: {
           id?: string;
@@ -208,6 +216,10 @@ export interface Database {
           competition_id?: string | null;
           home_team_id?: string | null;
           away_team_id?: string | null;
+          round_short?: string | null;
+          has_lineups?: boolean;
+          last_events_sync_at?: string | null;
+          last_stats_sync_at?: string | null;
         };
         Relationships: [];
       };
@@ -547,6 +559,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      match_statistics: {
+        Row: {
+          id: string;
+          match_id: string;
+          team_id: string;
+          type: string;
+          value: string | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          team_id: string;
+          type: string;
+          value?: string | null;
+          synced_at?: string;
+        };
+        Update: {
+          id?: string;
+          match_id?: string;
+          team_id?: string;
+          type?: string;
+          value?: string | null;
+          synced_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -613,3 +652,4 @@ export type CompetitionRow = Database["public"]["Tables"]["competitions"]["Row"]
 export type TeamRow = Database["public"]["Tables"]["teams"]["Row"];
 export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
 export type UserBadgeRow = Database["public"]["Tables"]["user_badges"]["Row"];
+export type MatchStatisticsRow = Database["public"]["Tables"]["match_statistics"]["Row"];

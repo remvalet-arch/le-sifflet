@@ -1,13 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
-import { syncApiFootballFixturesForDate } from "@/services/api-football-fixtures-import";
-
-const YMD = /^\d{4}-\d{2}-\d{2}$/;
+import { isLobbyTrackedLeagueApiId } from "@/lib/constants/top-leagues";
+import { syncApiFootballFixturesByRound } from "@/services/api-football-fixtures-import";
 
 /**
- * GET /api/admin/sync-apifootball-fixtures?date=YYYY-MM-DD
- * Import des matchs **Top 5 + coupes UEFA** (API-Football) pour une journée — modérateurs uniquement.
+ * GET /api/admin/sync-apifootball-round?leagueId=61&roundName=Regular%20Season%20-%2034
+ * Import API-Football d’une journée complète (`round`) pour une ligue — modérateurs uniquement.
  */
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -32,13 +31,24 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const date = url.searchParams.get("date")?.trim() ?? "";
-  if (!YMD.test(date)) {
-    return errorResponse("Paramètre date obligatoire (YYYY-MM-DD), ex. ?date=2026-05-03", 400);
+  const leagueRaw = url.searchParams.get("leagueId")?.trim() ?? "";
+  const roundRaw = url.searchParams.get("roundName")?.trim() ?? "";
+  const leagueId = parseInt(leagueRaw, 10);
+  if (Number.isNaN(leagueId) || leagueId <= 0) {
+    return errorResponse("Paramètre leagueId obligatoire (nombre), ex. ?leagueId=61", 400);
+  }
+  if (!isLobbyTrackedLeagueApiId(leagueId)) {
+    return errorResponse("leagueId doit être une ligue suivie au lobby (Top 5 + coupes UEFA).", 400);
+  }
+  if (roundRaw === "") {
+    return errorResponse(
+      "Paramètre roundName obligatoire (libellé API-Football), ex. ?roundName=Regular Season - 34",
+      400,
+    );
   }
 
   try {
-    const summary = await syncApiFootballFixturesForDate(date);
+    const summary = await syncApiFootballFixturesByRound(leagueId, roundRaw);
     return successResponse(summary);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erreur inconnue";

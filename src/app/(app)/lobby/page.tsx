@@ -4,14 +4,30 @@ import { createClient } from "@/lib/supabase/server";
 import { MatchListSkeleton } from "@/components/lobby/MatchCardSkeleton";
 import { MatchLobby } from "@/components/lobby/MatchLobby";
 import { Onboarding } from "@/components/onboarding/Onboarding";
-import { fetchLobbyMatchesForParisDay } from "@/lib/lobby-queries";
+import {
+  fetchLobbyMatchesByRound,
+  fetchLobbyMatchesForParisDay,
+  parseLobbyRoundParams,
+} from "@/lib/lobby-queries";
 import { getLobbyCalendarDayYmd } from "@/lib/paris-day";
 
 export const metadata = { title: "Stade" };
 
-async function MatchListFetcher() {
+type Search = Record<string, string | string[] | undefined>;
+
+async function MatchListFetcher({
+  viewMode,
+  roundContext,
+}: {
+  viewMode: "day" | "round";
+  roundContext: { leagueApiId: number; roundShort: string } | null;
+}) {
   const supabase = await createClient();
-  const { data, error } = await fetchLobbyMatchesForParisDay(supabase);
+
+  const { data, error } =
+    viewMode === "round" && roundContext != null
+      ? await fetchLobbyMatchesByRound(supabase, roundContext.leagueApiId, roundContext.roundShort)
+      : await fetchLobbyMatchesForParisDay(supabase);
 
   if (error) {
     return (
@@ -22,6 +38,18 @@ async function MatchListFetcher() {
   }
 
   if (data.length === 0) {
+    if (viewMode === "round" && roundContext != null) {
+      return (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
+          <CalendarX className="h-10 w-10 text-zinc-600" />
+          <p className="text-center text-sm font-semibold text-zinc-400">
+            Aucun match pour la journée{" "}
+            <span className="font-mono text-chalk">{roundContext.roundShort}</span> (ligue{" "}
+            {roundContext.leagueApiId}).
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
         <CalendarX className="h-10 w-10 text-zinc-600" />
@@ -33,10 +61,27 @@ async function MatchListFetcher() {
     );
   }
 
-  return <MatchLobby initialMatches={data} />;
+  return (
+    <MatchLobby
+      key={
+        viewMode === "round" && roundContext != null
+          ? `round-${roundContext.leagueApiId}-${roundContext.roundShort}`
+          : "day"
+      }
+      initialMatches={data}
+      viewMode={viewMode}
+      roundContext={roundContext}
+    />
+  );
 }
 
-export default async function LobbyPage() {
+type PageProps = { searchParams: Promise<Search> };
+
+export default async function LobbyPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const roundContext = parseLobbyRoundParams(sp);
+  const viewMode = roundContext != null ? "round" : "day";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -55,8 +100,11 @@ export default async function LobbyPage() {
   return (
     <>
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-        <Suspense fallback={<MatchListSkeleton />}>
-          <MatchListFetcher />
+        <Suspense
+          key={viewMode === "round" && roundContext ? `${roundContext.leagueApiId}-${roundContext.roundShort}` : "day"}
+          fallback={<MatchListSkeleton />}
+        >
+          <MatchListFetcher viewMode={viewMode} roundContext={roundContext} />
         </Suspense>
       </main>
 

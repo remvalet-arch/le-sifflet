@@ -14,9 +14,9 @@ import { Scoreboard } from "./Scoreboard";
 import { MatchTimeline } from "./MatchTimeline";
 import { MatchLineups } from "./MatchLineups";
 import { ActionDrawer } from "./ActionDrawer";
-import { PolymarketTab } from "./PolymarketTab";
+import { MatchStats } from "./MatchStats";
 
-type Tab = "kop" | "compo" | "polymarket";
+type Tab = "kop" | "compo" | "stats";
 type Props = {
   match: MatchRow;
   siffletsBalance: number;
@@ -202,9 +202,9 @@ export function LiveRoom({
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "kop",        label: "Temps forts" },
-    { id: "compo",      label: "Compositions" },
-    { id: "polymarket", label: "Prédictions"  },
+    { id: "kop",   label: "Temps forts"  },
+    { id: "compo", label: "Compositions" },
+    { id: "stats", label: "Statistiques" },
   ];
 
   return (
@@ -259,16 +259,16 @@ export function LiveRoom({
           awayTeamColor={liveMatch.away_team_color}
         />
       )}
-      {activeTab === "polymarket" && (
-        <PolymarketTab
+      {activeTab === "stats" && (
+        <MatchStats
           matchId={liveMatch.id}
-          userId={userId}
-          siffletsBalance={localBalance}
+          homeTeamId={liveMatch.home_team_id}
+          awayTeamId={liveMatch.away_team_id}
           teamHome={liveMatch.team_home}
           teamAway={liveMatch.team_away}
           homeTeamLogo={liveMatch.home_team_logo}
           awayTeamLogo={liveMatch.away_team_logo}
-          onBetSuccess={(amount) => setLocalBalance((b) => b - amount)}
+          matchStatus={liveMatch.status}
         />
       )}
 

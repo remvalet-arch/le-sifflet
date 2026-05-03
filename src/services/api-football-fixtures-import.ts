@@ -5,7 +5,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchApiFootball, getApiFootballSeasonYear } from "@/lib/api-football-client";
-import { TOP_LEAGUES } from "@/lib/constants/top-leagues";
+import { EUROPEAN_CUPS, TOP_LEAGUES } from "@/lib/constants/top-leagues";
 import { num, patchMatchFromFixtureRow } from "@/services/api-football-sync";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
@@ -115,8 +115,164 @@ export type SyncApiFootballFixturesForDateResult = {
   errors: string[];
 };
 
+export type SyncApiFootballFixturesByRoundResult = {
+  leagueId: number;
+  roundName: string;
+  season: string;
+  fixturesFetched: number;
+  matchesUpserted: number;
+  skippedNoTeams: number;
+  errors: string[];
+};
+
+/** Compteurs mutables pour `importFixtureList` (référence partagée avec le résultat appelant). */
+type MutableFixtureImport = {
+  errors: string[];
+  skippedNoTeams: number;
+  matchesUpserted: number;
+};
+
+function labelFallbackForLeagueId(leagueApiId: number): string {
+  const top = TOP_LEAGUES.find((l) => l.apiFootballLeagueId === leagueApiId);
+  if (top) return top.label;
+  const cup = EUROPEAN_CUPS.find((c) => c.apiFootballLeagueId === leagueApiId);
+  if (cup) return cup.label;
+  return `League ${String(leagueApiId)}`;
+}
+
 /**
- * Pour chaque ligue Top 5 : `GET /fixtures?league=&season=&date=` puis upsert `matches` (`api_football_id`).
+ * Upsert des lignes `response[]` de `/fixtures` pour une ligue API donnée (compétition + matchs).
+ * @param calendarDateFallback date `YYYY-MM-DD` si `fixture.timestamp` / `fixture.date` absents (import par jour).
+ */
+async function importFixtureList(
+  admin: Admin,
+  list: unknown[],
+  leagueApiId: number,
+  labelFallback: string,
+  calendarDateFallback: string,
+  out: MutableFixtureImport,
+): Promise<void> {
+  const apiTeamIds: number[] = [];
+  for (const item of list) {
+    const row = item as Record<string, unknown>;
+    const teams = row.teams as Record<string, unknown> | undefined;
+    const h = num((teams?.home as Record<string, unknown> | undefined)?.id);
+    const a = num((teams?.away as Record<string, unknown> | undefined)?.id);
+    if (h != null) apiTeamIds.push(h);
+    if (a != null) apiTeamIds.push(a);
+  }
+  const teamMap = await fetchTeamsByApiIds(admin, apiTeamIds);
+
+  const firstRow = list[0] as Record<string, unknown> | undefined;
+  const leagueObj = firstRow?.league as Record<string, unknown> | undefined;
+  const leagueName =
+    typeof leagueObj?.name === "string" && leagueObj.name.trim() !== ""
+      ? leagueObj.name.trim()
+      : labelFallback;
+  const leagueLogo =
+    typeof leagueObj?.logo === "string" && leagueObj.logo.trim() !== "" ? leagueObj.logo.trim() : null;
+
+  let competitionId: string;
+  try {
+    competitionId = await ensureCompetitionForApiLeague(admin, leagueApiId, leagueName, leagueLogo);
+  } catch (e) {
+    out.errors.push(`competition L${String(leagueApiId)}: ${e instanceof Error ? e.message : String(e)}`);
+    return;
+  }
+
+  for (const item of list) {
+    const row = item as Record<string, unknown>;
+    const fixture = row.fixture as Record<string, unknown> | undefined;
+    const fid = num(fixture?.id);
+    if (fid == null) continue;
+
+    const teams = row.teams as Record<string, unknown> | undefined;
+    const homeApi = num((teams?.home as Record<string, unknown> | undefined)?.id);
+    const awayApi = num((teams?.away as Record<string, unknown> | undefined)?.id);
+    const homeName =
+      typeof (teams?.home as Record<string, unknown> | undefined)?.name === "string"
+        ? String((teams?.home as Record<string, unknown>).name).trim()
+        : "";
+    const awayName =
+      typeof (teams?.away as Record<string, unknown> | undefined)?.name === "string"
+        ? String((teams?.away as Record<string, unknown>).name).trim()
+        : "";
+
+    if (homeApi == null || awayApi == null || homeName === "" || awayName === "") {
+      out.skippedNoTeams += 1;
+      continue;
+    }
+
+    const homeRow = teamMap.get(homeApi);
+    const awayRow = teamMap.get(awayApi);
+    if (!homeRow || !awayRow) {
+      out.skippedNoTeams += 1;
+      continue;
+    }
+
+    const homeLogo =
+      typeof (teams?.home as Record<string, unknown> | undefined)?.logo === "string"
+        ? String((teams?.home as Record<string, unknown>).logo).trim()
+        : "";
+    const awayLogo =
+      typeof (teams?.away as Record<string, unknown> | undefined)?.logo === "string"
+        ? String((teams?.away as Record<string, unknown>).logo).trim()
+        : "";
+
+    const ts = fixture?.timestamp;
+    let start_time: string;
+    if (typeof ts === "number" && !Number.isNaN(ts)) {
+      start_time = new Date(ts * 1000).toISOString();
+    } else if (typeof ts === "string" && ts.trim() !== "") {
+      const n = parseInt(ts, 10);
+      start_time = !Number.isNaN(n) ? new Date(n * 1000).toISOString() : new Date().toISOString();
+    } else {
+      const dateStr =
+        typeof fixture?.date === "string" && fixture.date.trim() !== ""
+          ? fixture.date.trim()
+          : calendarDateFallback;
+      start_time = new Date(`${dateStr}T12:00:00.000Z`).toISOString();
+    }
+
+    const patch = patchMatchFromFixtureRow(row);
+    const syntheticEventId = `apifb-fxt-${String(fid)}`;
+
+    const insert: Database["public"]["Tables"]["matches"]["Insert"] = {
+      thesportsdb_event_id: syntheticEventId,
+      team_home: homeName,
+      team_away: awayName,
+      start_time,
+      status: patch.status ?? "upcoming",
+      home_score: patch.home_score ?? 0,
+      away_score: patch.away_score ?? 0,
+      match_minute: patch.match_minute ?? null,
+      home_team_id: homeRow.id,
+      away_team_id: awayRow.id,
+      competition_id: competitionId,
+      home_team_logo: homeLogo || homeRow.logo_url,
+      away_team_logo: awayLogo || awayRow.logo_url,
+      home_team_color: homeRow.color_primary,
+      away_team_color: awayRow.color_primary,
+      api_football_id: fid,
+      round_short: patch.round_short ?? null,
+    };
+
+    const { error: upErr } = await admin.from("matches").upsert(insert, { onConflict: "api_football_id" });
+    if (upErr) {
+      out.errors.push(`match fixture ${String(fid)}: ${upErr.message}`);
+      continue;
+    }
+    out.matchesUpserted += 1;
+  }
+}
+
+const SYNC_LEAGUES_FOR_DATE: readonly { apiFootballLeagueId: number; label: string }[] = [
+  ...TOP_LEAGUES.map((l) => ({ apiFootballLeagueId: l.apiFootballLeagueId, label: l.label })),
+  ...EUROPEAN_CUPS.map((c) => ({ apiFootballLeagueId: c.apiFootballLeagueId, label: c.label })),
+];
+
+/**
+ * Pour chaque ligue Top 5 + coupe UEFA : `GET /fixtures?league=&season=&date=` puis upsert `matches` (`api_football_id`).
  * @param dateYmd `YYYY-MM-DD` (jour calendrier API, en pratique aligné UTC côté API pour la journée).
  */
 export async function syncApiFootballFixturesForDate(dateYmd: string): Promise<SyncApiFootballFixturesForDateResult> {
@@ -134,7 +290,7 @@ export async function syncApiFootballFixturesForDate(dateYmd: string): Promise<S
   };
 
   let first = true;
-  for (const league of TOP_LEAGUES) {
+  for (const league of SYNC_LEAGUES_FOR_DATE) {
     if (!first) await delay(wait);
     first = false;
 
@@ -160,117 +316,56 @@ export async function syncApiFootballFixturesForDate(dateYmd: string): Promise<S
       continue;
     }
 
-    const apiTeamIds: number[] = [];
-    for (const item of list) {
-      const row = item as Record<string, unknown>;
-      const teams = row.teams as Record<string, unknown> | undefined;
-      const h = num((teams?.home as Record<string, unknown> | undefined)?.id);
-      const a = num((teams?.away as Record<string, unknown> | undefined)?.id);
-      if (h != null) apiTeamIds.push(h);
-      if (a != null) apiTeamIds.push(a);
-    }
-    const teamMap = await fetchTeamsByApiIds(admin, apiTeamIds);
-
-    const firstRow = list[0] as Record<string, unknown> | undefined;
-    const leagueObj = firstRow?.league as Record<string, unknown> | undefined;
-    const leagueName =
-      typeof leagueObj?.name === "string" && leagueObj.name.trim() !== ""
-        ? leagueObj.name.trim()
-        : league.label;
-    const leagueLogo =
-      typeof leagueObj?.logo === "string" && leagueObj.logo.trim() !== "" ? leagueObj.logo.trim() : null;
-
-    let competitionId: string;
-    try {
-      competitionId = await ensureCompetitionForApiLeague(admin, league.apiFootballLeagueId, leagueName, leagueLogo);
-    } catch (e) {
-      result.errors.push(
-        `competition L${String(league.apiFootballLeagueId)}: ${e instanceof Error ? e.message : String(e)}`,
-      );
-      continue;
-    }
-
-    for (const item of list) {
-      const row = item as Record<string, unknown>;
-      const fixture = row.fixture as Record<string, unknown> | undefined;
-      const fid = num(fixture?.id);
-      if (fid == null) continue;
-
-      const teams = row.teams as Record<string, unknown> | undefined;
-      const homeApi = num((teams?.home as Record<string, unknown> | undefined)?.id);
-      const awayApi = num((teams?.away as Record<string, unknown> | undefined)?.id);
-      const homeName =
-        typeof (teams?.home as Record<string, unknown> | undefined)?.name === "string"
-          ? String((teams?.home as Record<string, unknown>).name).trim()
-          : "";
-      const awayName =
-        typeof (teams?.away as Record<string, unknown> | undefined)?.name === "string"
-          ? String((teams?.away as Record<string, unknown>).name).trim()
-          : "";
-
-      if (homeApi == null || awayApi == null || homeName === "" || awayName === "") {
-        result.skippedNoTeams += 1;
-        continue;
-      }
-
-      const homeRow = teamMap.get(homeApi);
-      const awayRow = teamMap.get(awayApi);
-      if (!homeRow || !awayRow) {
-        result.skippedNoTeams += 1;
-        continue;
-      }
-
-      const homeLogo =
-        typeof (teams?.home as Record<string, unknown> | undefined)?.logo === "string"
-          ? String((teams?.home as Record<string, unknown>).logo).trim()
-          : "";
-      const awayLogo =
-        typeof (teams?.away as Record<string, unknown> | undefined)?.logo === "string"
-          ? String((teams?.away as Record<string, unknown>).logo).trim()
-          : "";
-
-      const ts = fixture?.timestamp;
-      let start_time: string;
-      if (typeof ts === "number" && !Number.isNaN(ts)) {
-        start_time = new Date(ts * 1000).toISOString();
-      } else if (typeof ts === "string" && ts.trim() !== "") {
-        const n = parseInt(ts, 10);
-        start_time = !Number.isNaN(n) ? new Date(n * 1000).toISOString() : new Date().toISOString();
-      } else {
-        const dateStr = typeof fixture?.date === "string" ? fixture.date : dateYmd;
-        start_time = new Date(`${dateStr}T12:00:00.000Z`).toISOString();
-      }
-
-      const patch = patchMatchFromFixtureRow(row);
-      const syntheticEventId = `apifb-fxt-${String(fid)}`;
-
-      const insert: Database["public"]["Tables"]["matches"]["Insert"] = {
-        thesportsdb_event_id: syntheticEventId,
-        team_home: homeName,
-        team_away: awayName,
-        start_time,
-        status: patch.status ?? "upcoming",
-        home_score: patch.home_score ?? 0,
-        away_score: patch.away_score ?? 0,
-        match_minute: patch.match_minute ?? null,
-        home_team_id: homeRow.id,
-        away_team_id: awayRow.id,
-        competition_id: competitionId,
-        home_team_logo: homeLogo || homeRow.logo_url,
-        away_team_logo: awayLogo || awayRow.logo_url,
-        home_team_color: homeRow.color_primary,
-        away_team_color: awayRow.color_primary,
-        api_football_id: fid,
-      };
-
-      const { error: upErr } = await admin.from("matches").upsert(insert, { onConflict: "api_football_id" });
-      if (upErr) {
-        result.errors.push(`match fixture ${String(fid)}: ${upErr.message}`);
-        continue;
-      }
-      result.matchesUpserted += 1;
-    }
+    await importFixtureList(admin, list, league.apiFootballLeagueId, league.label, dateYmd, result);
   }
 
   return result;
+}
+
+/**
+ * `GET /fixtures?league=&season=&round=` — importe toute une journée / tour (ex. « Regular Season - 34 »),
+ * quelles que soient les dates des matchs.
+ */
+export async function syncApiFootballFixturesByRound(
+  leagueId: number,
+  roundName: string,
+): Promise<SyncApiFootballFixturesByRoundResult> {
+  const trimmed = roundName.trim();
+  const season = String(getApiFootballSeasonYear());
+  const empty: SyncApiFootballFixturesByRoundResult = {
+    leagueId,
+    roundName: trimmed,
+    season,
+    fixturesFetched: 0,
+    matchesUpserted: 0,
+    skippedNoTeams: 0,
+    errors: [],
+  };
+  if (!Number.isFinite(leagueId) || leagueId <= 0 || trimmed === "") {
+    empty.errors.push("leagueId et roundName sont obligatoires.");
+    return empty;
+  }
+
+  const admin = createAdminClient();
+  let payload: unknown;
+  try {
+    payload = await fetchApiFootball<unknown>("fixtures", {
+      league: String(leagueId),
+      season,
+      round: trimmed,
+    });
+  } catch (e) {
+    empty.errors.push(e instanceof Error ? e.message : String(e));
+    return empty;
+  }
+
+  const list = extractFixtureList(payload);
+  empty.fixturesFetched = list.length;
+  if (list.length === 0) {
+    return empty;
+  }
+
+  const fallbackDate = new Date().toISOString().slice(0, 10);
+  await importFixtureList(admin, list, leagueId, labelFallbackForLeagueId(leagueId), fallbackDate, empty);
+  return empty;
 }

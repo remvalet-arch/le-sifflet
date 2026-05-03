@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: "media.api-sports.io",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "v3.football.api-sports.io",
+        pathname: "/**",
+      },
     ],
   },
 };

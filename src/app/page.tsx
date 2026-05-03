@@ -190,7 +190,7 @@ export default async function LandingPage() {
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-zinc-400 sm:text-base">
                   Fais tes pronos d&rsquo;avant-match (score, buteurs) pour gagner des{" "}
-                  <strong className="font-bold text-zinc-200">Sifflets</strong>. Ce sont tes munitions pour pouvoir
+                  <strong className="font-bold text-zinc-200">Pts</strong>. Ce sont tes munitions pour pouvoir
                   faire &lsquo;Tapis&rsquo; sur la VAR en direct.
                 </p>
               </div>

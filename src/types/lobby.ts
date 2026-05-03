@@ -15,7 +15,7 @@ type TimelineEmbed = Pick<
   "id" | "event_type" | "minute" | "team_side" | "player_name"
 >;
 
-/** Match lobby : ligne `matches` + relations embed Supabase. */
+/** Match lobby : ligne `matches` (dont `round_short`, `has_lineups`) + relations embed Supabase. */
 export type LobbyMatchRow = MatchRow & {
   home_team: TeamEmbed | null;
   away_team: TeamEmbed | null;
