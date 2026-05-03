@@ -178,10 +178,13 @@ export function MatchLobby({
   initialMatches,
   viewMode = "day",
   roundContext = null,
+  dayFallbackBanner = null,
 }: {
   initialMatches: LobbyMatchRow[];
   viewMode?: "day" | "round";
   roundContext?: { leagueApiId: number; roundShort: string } | null;
+  /** Liste du jour = auto-forward (aucun match sur le football day). */
+  dayFallbackBanner?: { shownDayLabelFr: string } | null;
 }) {
   const [tab, setTab] = useState<LobbyTabKey>(() => defaultTabForProps(viewMode, roundContext));
 
@@ -244,6 +247,16 @@ export function MatchLobby({
           <Link href="/lobby" className="font-bold uppercase tracking-wide text-whistle hover:underline">
             ← Jour Paris
           </Link>
+        </div>
+      )}
+
+      {!roundView && dayFallbackBanner != null && (
+        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-xs leading-snug text-amber-100/95">
+          <p className="font-black uppercase tracking-wide text-amber-400/95">Aujourd&apos;hui : repos</p>
+          <p className="mt-1 font-medium text-amber-50/90">
+            Prochains matchs le{" "}
+            <span className="font-bold capitalize text-white">{dayFallbackBanner.shownDayLabelFr}</span>
+          </p>
         </div>
       )}
 

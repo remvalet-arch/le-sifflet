@@ -6,10 +6,10 @@ import { MatchLobby } from "@/components/lobby/MatchLobby";
 import { Onboarding } from "@/components/onboarding/Onboarding";
 import {
   fetchLobbyMatchesByRound,
-  fetchLobbyMatchesForParisDay,
+  fetchLobbyMatchesForParisDayWithFallback,
   parseLobbyRoundParams,
 } from "@/lib/lobby-queries";
-import { getLobbyCalendarDayYmd } from "@/lib/paris-day";
+import { formatParisYmdLongFr } from "@/lib/paris-day";
 
 export const metadata = { title: "Stade" };
 
@@ -24,10 +24,18 @@ async function MatchListFetcher({
 }) {
   const supabase = await createClient();
 
-  const { data, error } =
+  const roundFetch =
     viewMode === "round" && roundContext != null
       ? await fetchLobbyMatchesByRound(supabase, roundContext.leagueApiId, roundContext.roundShort)
-      : await fetchLobbyMatchesForParisDay(supabase);
+      : null;
+  const dayFetch =
+    viewMode === "round" && roundContext != null
+      ? null
+      : await fetchLobbyMatchesForParisDayWithFallback(supabase);
+
+  const data = roundFetch?.data ?? dayFetch?.data ?? [];
+  const error = roundFetch?.error ?? dayFetch?.error ?? null;
+  const dayMeta = dayFetch?.meta;
 
   if (error) {
     return (
@@ -37,29 +45,23 @@ async function MatchListFetcher({
     );
   }
 
-  if (data.length === 0) {
-    if (viewMode === "round" && roundContext != null) {
-      return (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
-          <CalendarX className="h-10 w-10 text-zinc-600" />
-          <p className="text-center text-sm font-semibold text-zinc-400">
-            Aucun match pour la journée{" "}
-            <span className="font-mono text-chalk">{roundContext.roundShort}</span> (ligue{" "}
-            {roundContext.leagueApiId}).
-          </p>
-        </div>
-      );
-    }
+  if (data.length === 0 && viewMode === "round" && roundContext != null) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
         <CalendarX className="h-10 w-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
-          Aucun match le <span className="font-mono text-chalk">{getLobbyCalendarDayYmd()}</span> (Paris).
-          Lance un import admin (Top 5) pour cette date si besoin.
+          Aucun match pour la journée{" "}
+          <span className="font-mono text-chalk">{roundContext.roundShort}</span> (ligue{" "}
+          {roundContext.leagueApiId}).
         </p>
       </div>
     );
   }
+
+  const dayFallbackBanner =
+    viewMode === "day" && dayMeta?.isFallback === true && data.length > 0
+      ? { shownDayLabelFr: formatParisYmdLongFr(dayMeta.shownParisDayYmd) }
+      : null;
 
   return (
     <MatchLobby
@@ -71,6 +73,7 @@ async function MatchListFetcher({
       initialMatches={data}
       viewMode={viewMode}
       roundContext={roundContext}
+      dayFallbackBanner={dayFallbackBanner}
     />
   );
 }

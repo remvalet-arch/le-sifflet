@@ -32,7 +32,7 @@
 
 ## 🗄️ Schéma de données (état des migrations)
 
-**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0042_lineups_shirt_number.sql`** (42 migrations versionnées).
+**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0044_squad_by_invite_code_rpc.sql`** (44 migrations versionnées).
 
 ### Tables & objets notables (post-0033)
 
@@ -47,12 +47,16 @@
 | **0038** | Parimutuel global + premier modèle braquage (`bets.room_id` → `rooms` par match). |
 | **0039** | Types `market_events` / `alert_signals` : ajout `free_kick`, `corner` (noms alignés `penalty_check`, `var_goal`, …). |
 | **0040** | `match_subscriptions` (PK `user_id`, `match_id`, `smart_mute`) — **aucune référence dans `src/` au moment de l’audit** (table prête, pas d’UI ni de cron push). |
-| **0041** | **Squads persistantes** : tables `squads` (`owner_id`, pas de `match_id`) + `squad_members` ; migration données `rooms` → `squads` ; `bets.room_id` → **`bets.squad_id`** ; **`place_bet(..., p_squad_id)`** (vérif membre) ; **`resolve_event_parimutuel`** : braquage par **`squad_id`** sur l’événement (pot perdants de la squad → gagnants de la même squad sur le même `event_id`). |
+| **0041** | **Squads persistantes** : tables `squads` (`owner_id`, pas de `match_id`) + `squad_members` ; migration données `rooms` → `squads` ; `bets.room_id` → **`bets.squad_id`** ; **`place_bet(..., p_squad_id)`** (vérif membre) ; **`resolve_event_parimutuel`** : braquage par **`squad_id`** sur l’événement (pot perdants de la squad → gagnants de la même squad sur le même `event_id`). RLS `squad_members` SELECT = **ligne du user uniquement** + RPC **`squad_members_for_my_squads`** + **`squad_by_invite_code`** (rejoindre par code). **Idempotente** (rejouable : `CREATE IF NOT EXISTS`, copie `rooms` / colonne `room_id` seulement si présentes). |
 | **0042** | `lineups.shirt_number` (texte, API-Football `player.number`) ; rempli par **`syncMatchLineups`** ; terrain [`MatchLineupsPitch`](src/components/match/MatchLineupsPitch.tsx) affiche le numéro dans la pastille (fallback initiales). |
+| **0043** | **Correctif RLS** : recréation de `squad_members_select_visible` (sans lecture de `squads`) + **`squad_members_for_my_squads()`** si la base a été migrée avec l’ancienne 0041 (récursion infinie). |
+| **0044** | RPC **`squad_by_invite_code(p_invite)`** — résout une ligue privée par code d’invitation (SECURITY DEFINER) : le SELECT direct sur `squads` est masqué par RLS pour un non-membre ; [`POST /api/squads/join`](src/app/api/squads/join/route.ts) utilise cette RPC. *(Également ajoutée en fin de bloc squads dans la 0041 pour les installs complètes.)* |
 
 ### RPC métier (SECURITY DEFINER) — présents dans `database.ts`
 
 - `place_bet(p_event_id, p_chosen_option, p_amount_staked, p_multiplier, p_squad_id)` — débit + insert ; `squad_id` optionnel (oblige à être membre de la squad si renseigné).
+- **`squad_members_for_my_squads()`** — liste `squad_id` / `user_id` des membres des squads dont l’utilisateur est membre ou propriétaire (appelée par [`GET /api/squads`](src/app/api/squads/route.ts), contourne la RLS restrictive sur `squad_members`).
+- **`squad_by_invite_code(p_invite)`** — retourne la ligne `squads` pour un code valide (rejoindre une ligue privée).
 - `get_event_odds(p_event_id)` — lecture parimutuel (exposé au client typé ; usage UI à consolider).
 - `place_prono(...)` — pronos gratuits.
 - `place_long_term_bet` / `resolve_long_term_bets` — **schéma + routes API** [`long-term-bet`](src/app/api/long-term-bet/route.ts), [`finish-match`](src/app/api/admin/finish-match/route.ts) ; **l’onglet match n’appelle plus ces routes** — l’UI avant match utilise **`pronos`** via `PolymarketTab`.
@@ -123,7 +127,7 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 
 ### Lobby
 
-- [`src/app/(app)/lobby/page.tsx`](src/app/(app)/lobby/page.tsx) — `searchParams` `league` + `round` → `fetchLobbyMatchesByRound` ; sinon jour Paris `fetchLobbyMatchesForParisDay`.
+- [`src/app/(app)/lobby/page.tsx`](src/app/(app)/lobby/page.tsx) — `searchParams` `league` + `round` → `fetchLobbyMatchesByRound` ; sinon **`fetchLobbyMatchesForParisDayWithFallback`** : **football day** (date Paris de `now − 4h`, voir [`paris-day.ts`](src/lib/paris-day.ts)) puis requête légère + jour civil Paris du prochain coup d’envoi si 0 match ; bandeau **« Aujourd’hui : repos »** dans [`MatchLobby`](src/components/lobby/MatchLobby.tsx).
 - [`src/components/lobby/MatchLobby.tsx`](src/components/lobby/MatchLobby.tsx) — onglets **Direct** (live ou upcoming avec compos), **Top 5**, **Europe** ; groupes par ligue ; lien « Toute la {round_short} → ».
 - [`src/components/lobby/MatchCard.tsx`](src/components/lobby/MatchCard.tsx) — layout MPG optionnel ; noms `line-clamp-2` ; minute live en badge rouge imposant ; ligne buteurs en scroll horizontal masqué.
 - Constantes ligues : [`src/lib/constants/top-leagues.ts`](src/lib/constants/top-leagues.ts) — **5 championnats + 3 coupes UEFA** (8 compétitions suivies au sens « IDs » ; onglet Europe = agrégé).
@@ -141,7 +145,7 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 
 ### Autres pages app notables
 
-- Profil, leaderboard, règles, admin resolve, login, landing `/`.
+- Profil, leaderboard, règles, admin resolve, login, landing `/` ([`src/app/page.tsx`](src/app/page.tsx)) — VAR Time, tutoiement, hero + 4 blocs gameplay + 3 étapes vestiaire / Sifflets / braquage, grades kop conservés.
 
 ---
 

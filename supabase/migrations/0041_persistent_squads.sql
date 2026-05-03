@@ -2,11 +2,15 @@
 -- =============================================================================
 -- Remplace rooms / room_members par squads / squad_members.
 -- bets.room_id → bets.squad_id ; place_bet(p_squad_id) ; braquage par squad sur l'événement.
+--
+-- Idempotence : rejouable si squads / squad_members existent déjà (CREATE IF NOT EXISTS,
+-- copie depuis rooms uniquement si les tables legacy existent, ON CONFLICT DO NOTHING,
+-- DROP POLICY IF EXISTS avant CREATE POLICY).
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. Tables squads + squad_members
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE TABLE public.squads (
+CREATE TABLE IF NOT EXISTS public.squads (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   is_private boolean NOT NULL DEFAULT true,
@@ -19,30 +23,38 @@ CREATE TABLE public.squads (
   )
 );
 
-CREATE UNIQUE INDEX squads_invite_code_unique ON public.squads (invite_code)
+CREATE UNIQUE INDEX IF NOT EXISTS squads_invite_code_unique ON public.squads (invite_code)
   WHERE invite_code IS NOT NULL;
 
-CREATE INDEX squads_owner_id_idx ON public.squads (owner_id);
+CREATE INDEX IF NOT EXISTS squads_owner_id_idx ON public.squads (owner_id);
 
-CREATE TABLE public.squad_members (
+CREATE TABLE IF NOT EXISTS public.squad_members (
   user_id uuid NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
   squad_id uuid NOT NULL REFERENCES public.squads (id) ON DELETE CASCADE,
   joined_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, squad_id)
 );
 
-CREATE INDEX squad_members_squad_id_idx ON public.squad_members (squad_id);
+CREATE INDEX IF NOT EXISTS squad_members_squad_id_idx ON public.squad_members (squad_id);
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 2. Données : rooms → squads, room_members → squad_members
+-- 2. Données : rooms → squads, room_members → squad_members (une seule fois si rooms existe)
 -- ─────────────────────────────────────────────────────────────────────────────
-INSERT INTO public.squads (id, name, is_private, invite_code, owner_id, created_at)
-SELECT id, name, is_private, invite_code, admin_id, created_at
-FROM public.rooms;
+DO $migrate_rooms$
+BEGIN
+  IF to_regclass('public.rooms') IS NOT NULL THEN
+    INSERT INTO public.squads (id, name, is_private, invite_code, owner_id, created_at)
+    SELECT id, name, is_private, invite_code, admin_id, created_at
+    FROM public.rooms
+    ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO public.squad_members (user_id, squad_id, joined_at)
-SELECT user_id, room_id, joined_at
-FROM public.room_members;
+    INSERT INTO public.squad_members (user_id, squad_id, joined_at)
+    SELECT user_id, room_id, joined_at
+    FROM public.room_members
+    ON CONFLICT (user_id, squad_id) DO NOTHING;
+  END IF;
+END;
+$migrate_rooms$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 3. Paris : squad_id (remplace room_id)
@@ -50,25 +62,38 @@ FROM public.room_members;
 ALTER TABLE public.bets
   ADD COLUMN IF NOT EXISTS squad_id uuid REFERENCES public.squads(id) ON DELETE SET NULL;
 
-UPDATE public.bets SET squad_id = room_id WHERE room_id IS NOT NULL;
-
-ALTER TABLE public.bets DROP CONSTRAINT IF EXISTS bets_room_id_fkey;
-
-DROP INDEX IF EXISTS idx_bets_room_id;
-
-ALTER TABLE public.bets DROP COLUMN IF EXISTS room_id;
+DO $bets_room_to_squad$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'bets' AND column_name = 'room_id'
+  ) THEN
+    UPDATE public.bets SET squad_id = room_id WHERE room_id IS NOT NULL;
+    ALTER TABLE public.bets DROP CONSTRAINT IF EXISTS bets_room_id_fkey;
+    DROP INDEX IF EXISTS idx_bets_room_id;
+    ALTER TABLE public.bets DROP COLUMN room_id;
+  END IF;
+END;
+$bets_room_to_squad$;
 
 CREATE INDEX IF NOT EXISTS idx_bets_squad_id
   ON public.bets (squad_id) WHERE squad_id IS NOT NULL;
 
--- Anciennes tables — supprimer les policies RLS d’abord (rooms_select_visible
--- référence room_members : sans ça, DROP room_members échoue avec 2BP01).
-DROP POLICY IF EXISTS "rooms_select_visible" ON public.rooms;
-DROP POLICY IF EXISTS "rooms_insert_as_admin" ON public.rooms;
-DROP POLICY IF EXISTS "rooms_update_own_admin" ON public.rooms;
-DROP POLICY IF EXISTS "room_members_select_visible" ON public.room_members;
-DROP POLICY IF EXISTS "room_members_insert_self" ON public.room_members;
-DROP POLICY IF EXISTS "room_members_delete_self" ON public.room_members;
+-- Anciennes tables — DROP POLICY ... ON public.rooms échoue (42P01) si rooms n’existe plus.
+DO $drop_legacy_rooms_rls$
+BEGIN
+  IF to_regclass('public.rooms') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "rooms_select_visible" ON public.rooms;
+    DROP POLICY IF EXISTS "rooms_insert_as_admin" ON public.rooms;
+    DROP POLICY IF EXISTS "rooms_update_own_admin" ON public.rooms;
+  END IF;
+  IF to_regclass('public.room_members') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "room_members_select_visible" ON public.room_members;
+    DROP POLICY IF EXISTS "room_members_insert_self" ON public.room_members;
+    DROP POLICY IF EXISTS "room_members_delete_self" ON public.room_members;
+  END IF;
+END;
+$drop_legacy_rooms_rls$;
 
 DROP TABLE IF EXISTS public.room_members;
 DROP TABLE IF EXISTS public.rooms;
@@ -78,6 +103,13 @@ DROP TABLE IF EXISTS public.rooms;
 -- ─────────────────────────────────────────────────────────────────────────────
 ALTER TABLE public.squads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.squad_members ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "squads_select_visible" ON public.squads;
+DROP POLICY IF EXISTS "squads_insert_as_owner" ON public.squads;
+DROP POLICY IF EXISTS "squads_update_own_owner" ON public.squads;
+DROP POLICY IF EXISTS "squad_members_select_visible" ON public.squad_members;
+DROP POLICY IF EXISTS "squad_members_insert_self" ON public.squad_members;
+DROP POLICY IF EXISTS "squad_members_delete_self" ON public.squad_members;
 
 CREATE POLICY "squads_select_visible"
   ON public.squads FOR SELECT
@@ -102,23 +134,12 @@ CREATE POLICY "squads_update_own_owner"
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
+-- SELECT : uniquement ses lignes (évite la récursion RLS avec squads_select_visible).
+-- Liste complète des co-membres : RPC squad_members_for_my_squads() (SECURITY DEFINER).
 CREATE POLICY "squad_members_select_visible"
   ON public.squad_members FOR SELECT
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.squads s
-      WHERE s.id = squad_members.squad_id
-        AND (
-          s.is_private = false
-          OR s.owner_id = auth.uid()
-          OR EXISTS (
-            SELECT 1 FROM public.squad_members sm2
-            WHERE sm2.squad_id = s.id AND sm2.user_id = auth.uid()
-          )
-        )
-    )
-  );
+  USING (user_id = auth.uid());
 
 CREATE POLICY "squad_members_insert_self"
   ON public.squad_members FOR INSERT
@@ -132,6 +153,46 @@ CREATE POLICY "squad_members_delete_self"
 
 GRANT SELECT, INSERT, UPDATE ON public.squads TO authenticated;
 GRANT SELECT, INSERT, DELETE ON public.squad_members TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.squad_members_for_my_squads()
+RETURNS TABLE (squad_id uuid, user_id uuid)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT sm.squad_id, sm.user_id
+  FROM public.squad_members sm
+  WHERE EXISTS (
+    SELECT 1 FROM public.squad_members me
+    WHERE me.squad_id = sm.squad_id AND me.user_id = auth.uid()
+  )
+  OR EXISTS (
+    SELECT 1 FROM public.squads s
+    WHERE s.id = sm.squad_id AND s.owner_id = auth.uid()
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.squad_members_for_my_squads() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.squad_members_for_my_squads() TO authenticated;
+
+-- Rejoindre par code : RLS « squads » cache les ligues privées aux non-membres.
+CREATE OR REPLACE FUNCTION public.squad_by_invite_code(p_invite text)
+RETURNS SETOF public.squads
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT s.*
+  FROM public.squads s
+  WHERE s.invite_code IS NOT NULL
+    AND upper(trim(s.invite_code)) = upper(trim(p_invite))
+  LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.squad_by_invite_code(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.squad_by_invite_code(text) TO authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 5. place_bet — p_squad_id optionnel + vérif membre

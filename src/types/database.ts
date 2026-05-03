@@ -702,6 +702,21 @@ export interface Database {
         };
         Returns: string;
       };
+      squad_members_for_my_squads: {
+        Args: Record<string, never>;
+        Returns: Array<{ squad_id: string; user_id: string }>;
+      };
+      squad_by_invite_code: {
+        Args: { p_invite: string };
+        Returns: Array<{
+          id: string;
+          name: string;
+          is_private: boolean;
+          invite_code: string | null;
+          owner_id: string;
+          created_at: string;
+        }>;
+      };
     };
   };
 }

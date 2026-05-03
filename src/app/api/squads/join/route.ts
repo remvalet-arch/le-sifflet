@@ -20,16 +20,17 @@ export async function POST(request: NextRequest) {
     const { invite_code } = body;
     if (!invite_code?.trim()) return errorResponse("Code requis", 400);
 
-    const { data: squad, error: squadErr } = await supabase
-      .from("squads")
-      .select("*")
-      .eq("invite_code", invite_code.trim().toUpperCase())
-      .maybeSingle();
+    // Ne pas SELECT sur squads : la RLS masque les ligues privées aux non-membres.
+    const { data: inviteRows, error: squadErr } = await supabase.rpc("squad_by_invite_code", {
+      p_invite: invite_code.trim(),
+    });
 
     if (squadErr) {
       console.error("Supabase Error:", squadErr);
       return errorResponse(squadErr.message, 500);
     }
+    const rows = inviteRows ?? [];
+    const squad = rows[0];
     if (!squad) return errorResponse("Code invalide — vérifie et réessaie", 404);
 
     const { data: existing, error: existingErr } = await supabase

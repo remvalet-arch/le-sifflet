@@ -27,6 +27,7 @@ export async function GET() {
     }
 
     const ids = [...new Set((memberRows ?? []).map((r) => r.squad_id))];
+    const squadIdSet = new Set(ids);
     if (ids.length === 0) return successResponse({ squads: [] });
 
     const { data: squads, error: sErr } = await supabase.from("squads").select("*").in("id", ids);
@@ -35,16 +36,14 @@ export async function GET() {
       return errorResponse(sErr.message, 500);
     }
 
-    const { data: allMembers, error: amErr } = await supabase
-      .from("squad_members")
-      .select("squad_id, user_id")
-      .in("squad_id", ids);
+    const { data: allMembers, error: amErr } = await supabase.rpc("squad_members_for_my_squads");
     if (amErr) {
       console.error("Supabase Error:", amErr);
       return errorResponse(amErr.message, 500);
     }
+    const membersInSquads = (allMembers ?? []).filter((m) => squadIdSet.has(m.squad_id));
 
-    const userIds = [...new Set((allMembers ?? []).map((m) => m.user_id))];
+    const userIds = [...new Set(membersInSquads.map((m) => m.user_id))];
     const { data: profiles, error: pErr } = await supabase
       .from("profiles")
       .select("id, username")
@@ -57,7 +56,7 @@ export async function GET() {
 
     const squadsPayload = (squads ?? []).map((s) => ({
       ...s,
-      members: (allMembers ?? [])
+      members: membersInSquads
         .filter((m) => m.squad_id === s.id)
         .map((m) => ({
           user_id: m.user_id,

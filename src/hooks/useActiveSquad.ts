@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   ACTIVE_SQUAD_STORAGE_KEY,
-  readActiveSquadFromStorage,
+  parseActiveSquad,
   writeActiveSquadToStorage,
   type ActiveSquadPayload,
 } from "@/lib/squads/active-squad-storage";
@@ -21,16 +21,19 @@ function subscribe(onStoreChange: () => void) {
   };
 }
 
-function getSnapshot(): ActiveSquadPayload | null {
-  return readActiveSquadFromStorage();
+/** Valeur primitive stable pour useSyncExternalStore (évite boucle si on renvoyait un nouvel objet à chaque getSnapshot). */
+function getSnapshot(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem(ACTIVE_SQUAD_STORAGE_KEY) ?? "";
 }
 
-function getServerSnapshot(): ActiveSquadPayload | null {
-  return null;
+function getServerSnapshot(): string {
+  return "";
 }
 
 export function useActiveSquad() {
-  const squad = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const squad = useMemo(() => (raw === "" ? null : parseActiveSquad(raw)), [raw]);
 
   const setActiveSquad = useCallback((payload: ActiveSquadPayload | null) => {
     writeActiveSquadToStorage(payload);

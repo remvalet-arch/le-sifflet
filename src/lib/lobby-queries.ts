@@ -1,11 +1,24 @@
 import { isLobbyTrackedLeagueApiId, LOBBY_TRACKED_LEAGUE_API_IDS } from "@/lib/constants/top-leagues";
-import { getLobbyCalendarDayYmd, parisDayUtcRangeIso } from "@/lib/paris-day";
+import {
+  getLobbyCalendarDayYmd,
+  parisCivilDayYmdFromInstant,
+  parisDayUtcRangeIso,
+} from "@/lib/paris-day";
 import type { LobbyMatchRow } from "@/types/lobby";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
+/** Métadonnées jour lobby (mode « jour » uniquement). */
+export type LobbyDayFetchMeta = {
+  /** Jour football demandé en premier (getLobbyCalendarDayYmd). */
+  primaryFootballDayYmd: string;
+  /** Jour civil Paris des matchs affichés (= primary si pas de fallback). */
+  shownParisDayYmd: string;
+  isFallback: boolean;
+};
+
 /**
- * Matchs du jour civil **Europe/Paris** (`getLobbyCalendarDayYmd`) + filtre Top 5 + coupes UEFA
+ * Matchs du **football day** Paris (`ymd` ou `getLobbyCalendarDayYmd()`) + filtre Top 5 + coupes UEFA
  * (`api_football_league_id` ∈ `LOBBY_TRACKED_LEAGUE_API_IDS`).
  */
 /** `match_timeline_events` : buteurs lobby filtrés côté UI sur `event_type === goal` (voir `MatchLobby`). */
@@ -65,12 +78,13 @@ export async function fetchLobbyMatchesByRound(
 
 export async function fetchLobbyMatchesForParisDay(
   supabase: SupabaseClient<Database>,
+  ymd?: string,
 ): Promise<{ data: LobbyMatchRow[]; error: Error | null }> {
-  const ymd = getLobbyCalendarDayYmd();
+  const dayYmd = ymd ?? getLobbyCalendarDayYmd();
   let startIso: string;
   let endExclusiveIso: string;
   try {
-    ({ startIso, endExclusiveIso } = parisDayUtcRangeIso(ymd));
+    ({ startIso, endExclusiveIso } = parisDayUtcRangeIso(dayYmd));
   } catch (e) {
     return {
       data: [],
@@ -91,4 +105,111 @@ export async function fetchLobbyMatchesForParisDay(
   }
 
   return { data: (data ?? []) as unknown as LobbyMatchRow[], error: null };
+}
+
+/**
+ * Jour football par défaut ; si 0 match, une requête légère (`start_time` seul) puis chargement
+ * du **jour civil Paris** du prochain coup d’envoi (tous les matchs de ce jour).
+ */
+export async function fetchLobbyMatchesForParisDayWithFallback(
+  supabase: SupabaseClient<Database>,
+): Promise<{ data: LobbyMatchRow[]; error: Error | null; meta: LobbyDayFetchMeta }> {
+  const primaryYmd = getLobbyCalendarDayYmd();
+  const first = await fetchLobbyMatchesForParisDay(supabase, primaryYmd);
+  if (first.error) {
+    return {
+      data: [],
+      error: first.error,
+      meta: {
+        primaryFootballDayYmd: primaryYmd,
+        shownParisDayYmd: primaryYmd,
+        isFallback: false,
+      },
+    };
+  }
+  if (first.data.length > 0) {
+    return {
+      data: first.data,
+      error: null,
+      meta: {
+        primaryFootballDayYmd: primaryYmd,
+        shownParisDayYmd: primaryYmd,
+        isFallback: false,
+      },
+    };
+  }
+
+  let endExclusiveIso: string;
+  try {
+    ({ endExclusiveIso } = parisDayUtcRangeIso(primaryYmd));
+  } catch (e) {
+    return {
+      data: [],
+      error: e instanceof Error ? e : new Error(String(e)),
+      meta: {
+        primaryFootballDayYmd: primaryYmd,
+        shownParisDayYmd: primaryYmd,
+        isFallback: false,
+      },
+    };
+  }
+
+  const { data: nextRows, error: nextErr } = await supabase
+    .from("matches")
+    .select(
+      "start_time, competition:competitions!matches_competition_id_fkey!inner(api_football_league_id)",
+    )
+    .gte("start_time", endExclusiveIso)
+    .in("competition.api_football_league_id", [...LOBBY_TRACKED_LEAGUE_API_IDS])
+    .order("start_time", { ascending: true })
+    .limit(1);
+
+  if (nextErr) {
+    return {
+      data: [],
+      error: new Error(nextErr.message),
+      meta: {
+        primaryFootballDayYmd: primaryYmd,
+        shownParisDayYmd: primaryYmd,
+        isFallback: false,
+      },
+    };
+  }
+
+  const firstStart = nextRows?.[0]?.start_time;
+  if (!firstStart) {
+    return {
+      data: [],
+      error: null,
+      meta: {
+        primaryFootballDayYmd: primaryYmd,
+        shownParisDayYmd: primaryYmd,
+        isFallback: false,
+      },
+    };
+  }
+
+  const shownParisDayYmd = parisCivilDayYmdFromInstant(new Date(firstStart));
+  const second = await fetchLobbyMatchesForParisDay(supabase, shownParisDayYmd);
+  if (second.error) {
+    return {
+      data: [],
+      error: second.error,
+      meta: {
+        primaryFootballDayYmd: primaryYmd,
+        shownParisDayYmd,
+        isFallback: true,
+      },
+    };
+  }
+
+  return {
+    data: second.data,
+    error: null,
+    meta: {
+      primaryFootballDayYmd: primaryYmd,
+      shownParisDayYmd,
+      isFallback: true,
+    },
+  };
 }

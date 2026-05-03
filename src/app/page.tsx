@@ -1,12 +1,23 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Monitor, Zap, Shield, QrCode, Target, Calendar } from "lucide-react";
+import {
+  CircleDollarSign,
+  DoorOpen,
+  Globe2,
+  QrCode,
+  Swords,
+  Target,
+  Calendar,
+  Users,
+  Warehouse,
+  Zap,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "VAR Time — L'arbitre, c'est toi",
+  title: "VAR Time — La VAR, mais en jeu",
   description:
-    "Lance l'alerte, prédis le verdict de la VAR en direct et prouve ton instinct au kop. 100% gratuit.",
+    "Parie en temps réel sur les décisions d'arbitre, grimpe au classement et braque tes potes dans tes ligues privées. 100% gratuit.",
 };
 
 export default async function LandingPage() {
@@ -17,10 +28,7 @@ export default async function LandingPage() {
   if (user) redirect("/lobby");
 
   return (
-    <main
-      className="min-h-screen overflow-x-hidden text-white"
-      style={{ background: "radial-gradient(ellipse at top, rgba(6,78,59,0.14) 0%, #09090b 60%)" }}
-    >
+    <main className="min-h-screen overflow-x-hidden bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_rgba(22,163,74,0.07)_0%,_transparent_55%)] text-white">
 
       {/* ── Nav ── */}
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-6 sm:px-8">
@@ -35,7 +43,7 @@ export default async function LandingPage() {
           href="/login"
           className="flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-2 text-xs font-black uppercase tracking-wide text-green-400 transition hover:bg-green-500/20 active:scale-95"
         >
-          Jouer →
+          Entrer en jeu →
         </Link>
       </nav>
 
@@ -60,11 +68,10 @@ export default async function LandingPage() {
         {/* ── Texte gauche ── */}
         <div className="relative z-10">
 
-          {/* Badge live */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
-              En direct pendant les matchs
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1.5">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-300/95">
+              La VAR, mais en jeu
             </span>
           </div>
 
@@ -96,19 +103,16 @@ export default async function LandingPage() {
           {/* Divider */}
           <div className="mb-6 h-px w-full bg-gradient-to-r from-amber-500/40 via-amber-500/20 to-transparent" />
 
-          {/* Copy principal */}
           <h1 className="text-[clamp(1.5rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight text-white">
-            Le ballon n&rsquo;est en jeu
-            <br />
-            que{" "}
+            Le ballon n&rsquo;est en jeu que{" "}
             <span className="text-amber-400">55% du temps</span>.
+            <br />
+            Et le reste&nbsp;? Prends les commandes de la VAR.
           </h1>
 
           <p className="mt-4 text-[clamp(1rem,2.5vw,1.2rem)] leading-relaxed text-zinc-400">
-            Et le reste&nbsp;?{" "}
-            <span className="font-black text-white">
-              Prenez les commandes de la VAR.
-            </span>
+            Parie en temps réel sur les décisions de l&rsquo;arbitre. Grimpe au classement mondial et braque tes potes
+            dans tes ligues privées.
           </p>
 
           {/* CTAs */}
@@ -117,7 +121,7 @@ export default async function LandingPage() {
               href="/login"
               className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition hover:bg-green-400 hover:shadow-[0_0_45px_rgba(34,197,94,0.55)] active:scale-[0.97]"
             >
-              Appeler la VAR →
+              Entrer en jeu →
             </Link>
             <a
               href="#comment"
@@ -128,14 +132,20 @@ export default async function LandingPage() {
           </div>
 
           <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-            100% gratuit · Aucun argent réel · PWA mobile
+            Gratuit · Monnaie fictive (Sifflets) · Aucun argent réel · PWA mobile
           </p>
         </div>
 
         {/* ── Téléphone droite ── */}
         <div className="relative z-10 mt-14 mb-32 flex justify-center pb-8 lg:mt-0 lg:mb-12 lg:justify-end lg:pb-4">
           <div className="relative lg:rotate-6">
-            <PhoneMockup />
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[min(520px,140%)] w-[min(420px,120%)] rounded-full bg-emerald-500/20 blur-[100px] shadow-[0_0_80px_rgba(34,197,94,0.22)]"
+              aria-hidden
+            />
+            <div className="relative">
+              <PhoneMockup />
+            </div>
 
             {/* Floating card 1 */}
             <div
@@ -167,42 +177,89 @@ export default async function LandingPage() {
           <div className="mb-2 flex items-center gap-3">
             <div className="h-px flex-1 bg-white/8" />
             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-              Mécaniques de jeu
+              Gameplay
             </span>
             <div className="h-px flex-1 bg-white/8" />
           </div>
 
           <h2 className="mt-4 text-center text-[clamp(1.8rem,5vw,2.8rem)] font-black uppercase leading-[0.95] tracking-tight text-white">
+            Quatre façons
+            <br />
+            <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
+              de jouer le match.
+            </span>
+          </h2>
+
+          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <GamePanel
+              step="01"
+              Icon={Zap}
+              color="green"
+              title="Live"
+              body="T'as sorti tes lunettes pour le hors-jeu ? La VAR de ton canapé, c'est toi. Le chrono tourne, assume."
+            />
+            <GamePanel
+              step="02"
+              Icon={Globe2}
+              color="blue"
+              title="Classement"
+              body="Le monde entier te regarde. Bats-toi pour le sommet du classement mondial."
+            />
+            <GamePanel
+              step="03"
+              Icon={Users}
+              color="yellow"
+              title="Squads"
+              body="Le vestiaire, c'est chez toi. Invite tes potes, et braque leur cagnotte à la 90ème."
+            />
+            <GamePanel
+              step="04"
+              Icon={Warehouse}
+              color="violet"
+              title="Bunker"
+              body="Pronos gratuits à gain fixe. Un match nul ? Réfugie-toi dans le Bunker 0-0."
+            />
+          </div>
+
+          <div className="mb-2 mt-20 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/8" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+              Comment ça marche
+            </span>
+            <div className="h-px flex-1 bg-white/8" />
+          </div>
+
+          <h3 className="mt-4 text-center text-[clamp(1.5rem,4vw,2.2rem)] font-black uppercase leading-[0.95] tracking-tight text-white">
             Trois étapes.
             <br />
             <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-              Zéro excuses.
+              Jusqu&apos;au braquage.
             </span>
-          </h2>
+          </h3>
 
           <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
             <GamePanel
               step="01"
-              Icon={Monitor}
+              Icon={DoorOpen}
               color="green"
-              title="Le Signalement"
-              body="Péno oublié ? Lance l'alerte. Si le canapé valide, les prédictions s'ouvrent."
+              title="Vestiaire"
+              body="Tu crées ton compte, tu ouvres ton vestiaire : tu rejoins une ligue privée ou tu lances la tienne avec un code d&apos;invitation."
             />
             <div className="md:-translate-y-4">
               <GamePanel
                 step="02"
-                Icon={Zap}
+                Icon={CircleDollarSign}
                 color="yellow"
-                title="Le Chrono"
-                body="60 secondes de pression. Engage tes points sur le verdict (OUI/NON). Plus tu es rapide, plus ça rapporte."
+                title="Sifflets"
+                body="Tu récupères des Sifflets : pronos gratuits, bons coups, progression. C&apos;est ta monnaie pour miser quand la VAR s&apos;ouvre."
               />
             </div>
             <GamePanel
               step="03"
-              Icon={Shield}
+              Icon={Swords}
               color="blue"
-              title="Le Karma"
-              body="Ton flair est légendaire ? Fais exploser ton Karma, débloque des trophées et deviens le boss du kop."
+              title="Braquage"
+              body="En direct, quand la modale tombe, tu paries avec ta ligue : le pot des perdants nourrit les gagnants — c&apos;est le braquage."
             />
           </div>
 
@@ -231,8 +288,8 @@ export default async function LandingPage() {
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-zinc-400 sm:text-base">
                   Fais tes pronos d&rsquo;avant-match (score, buteurs) pour gagner des{" "}
-                  <strong className="font-bold text-zinc-200">Pts</strong>. Ce sont tes munitions pour pouvoir
-                  faire &lsquo;Tapis&rsquo; sur la VAR en direct.
+                  <strong className="font-bold text-zinc-200">Sifflets</strong>. Ce sont tes munitions pour pouvoir
+                  faire tapis sur la VAR en direct — et viser le Bunker 0-0 si le match sent la naphtaline.
                 </p>
               </div>
             </div>
@@ -243,7 +300,7 @@ export default async function LandingPage() {
               href="/login"
               className="flex h-14 items-center justify-center rounded-2xl bg-green-500 px-10 font-black uppercase tracking-wide text-black shadow-[0_0_30px_rgba(34,197,94,0.4)] transition hover:bg-green-400 hover:shadow-[0_0_45px_rgba(34,197,94,0.55)] active:scale-[0.97]"
             >
-              Rejoindre le Kop →
+              Entrer en jeu →
             </Link>
           </div>
         </div>
@@ -263,7 +320,7 @@ export default async function LandingPage() {
             <span className="text-green-400">dans ta poche.</span>
           </h2>
           <p className="mt-3 max-w-xs text-center text-sm leading-relaxed text-zinc-500">
-            Installe VAR Time sur ton mobile. Chaque match devient un duel d&rsquo;instincts.
+            Installe VAR Time sur ton mobile. Chaque match devient ton terrain d&apos;instincts.
           </p>
 
           {/* Store buttons */}
@@ -310,12 +367,12 @@ export default async function LandingPage() {
       <section className="border-t border-white/8 py-16 md:py-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
-            Prouve ton expertise au kop.
+            Ton expertise au kop.
           </h2>
           <div className="mx-auto mt-10 max-w-2xl rounded-3xl border border-green-500/40 bg-zinc-900/50 p-6 shadow-[0_0_40px_rgba(34,197,94,0.15)] backdrop-blur-sm sm:p-8">
             <p className="text-center text-sm leading-relaxed text-zinc-400">
-              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss de la VAR en accumulant les bonnes
-              prédictions.
+              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss de la VAR en enchaînant les bons
+              verdicts.
             </p>
             <ol className="relative mt-8 list-none space-y-0 p-0">
               <KopRankStep
@@ -347,7 +404,7 @@ export default async function LandingPage() {
           <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">Jeu Responsable</a>
         </div>
         <p className="mx-auto mt-4 max-w-sm px-4 text-[9px] text-zinc-700">
-          VAR Time est un jeu gratuit de simulation. Aucun argent réel ne peut être engagé ou gagné.
+          VAR Time est un jeu gratuit de simulation. Tu ne mises aucun argent réel et tu n&apos;en gagnes pas.
         </p>
       </footer>
     </main>
@@ -374,6 +431,12 @@ const PANEL_STYLES = {
     glow:    "bg-blue-500/8",
     icon:    "text-blue-400",
     shadow:  "hover:shadow-[0_0_30px_rgba(59,130,246,0.07)]",
+  },
+  violet: {
+    border:  "border-zinc-800 hover:border-violet-500/40",
+    glow:    "bg-violet-500/8",
+    icon:    "text-violet-400",
+    shadow:  "hover:shadow-[0_0_30px_rgba(139,92,246,0.08)]",
   },
 } as const;
 
