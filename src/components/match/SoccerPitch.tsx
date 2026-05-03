@@ -4,6 +4,7 @@ import { memo, useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { LineupRow } from "@/types/database";
+import { startersForPitchRow } from "@/lib/pitch-lineups";
 
 const POS_ORDER: Record<string, number> = { G: 0, D: 1, M: 2, A: 3 };
 
@@ -209,12 +210,10 @@ export const SoccerPitch = memo(function SoccerPitch({
     const homeStarters = starters.filter((p) => p.team_side === "home");
     const awayStarters = starters.filter((p) => p.team_side === "away");
 
-    const byPosHome = (pos: string) =>
-      homeStarters.filter((p) => p.position === pos)
-        .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9));
-    const byPosAway = (pos: string) =>
-      awayStarters.filter((p) => p.position === pos)
-        .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9));
+    const byPosHome = (pos: "G" | "D" | "M" | "A") =>
+      startersForPitchRow(homeStarters, pos).sort((a, b) => a.player_name.localeCompare(b.player_name, "fr"));
+    const byPosAway = (pos: "G" | "D" | "M" | "A") =>
+      startersForPitchRow(awayStarters, pos).sort((a, b) => a.player_name.localeCompare(b.player_name, "fr"));
 
     // Titulaires incomplets → liste
     if (homeStarters.length < 11 || awayStarters.length < 11) {

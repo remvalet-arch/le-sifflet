@@ -95,6 +95,10 @@ export interface Database {
           color_primary: string | null;
           color_secondary: string | null;
           equipment_url: string | null;
+          team_color_1: string | null;
+          team_color_2: string | null;
+          stadium_name: string | null;
+          stadium_thumb: string | null;
           thesportsdb_team_id: string;
           created_at: string;
           updated_at: string;
@@ -108,6 +112,10 @@ export interface Database {
           color_primary?: string | null;
           color_secondary?: string | null;
           equipment_url?: string | null;
+          team_color_1?: string | null;
+          team_color_2?: string | null;
+          stadium_name?: string | null;
+          stadium_thumb?: string | null;
           thesportsdb_team_id: string;
           created_at?: string;
           updated_at?: string;
@@ -121,6 +129,10 @@ export interface Database {
           color_primary?: string | null;
           color_secondary?: string | null;
           equipment_url?: string | null;
+          team_color_1?: string | null;
+          team_color_2?: string | null;
+          stadium_name?: string | null;
+          stadium_thumb?: string | null;
           thesportsdb_team_id?: string;
           created_at?: string;
           updated_at?: string;
@@ -196,7 +208,7 @@ export interface Database {
           match_id: string;
           player_name: string;
           team_side: "home" | "away";
-          position: "G" | "D" | "M" | "A";
+          position: string;
           status: "starter" | "bench";
           created_at: string;
         };
@@ -205,7 +217,7 @@ export interface Database {
           match_id: string;
           player_name: string;
           team_side: "home" | "away";
-          position?: "G" | "D" | "M" | "A";
+          position?: string;
           status?: "starter" | "bench";
           created_at?: string;
         };
@@ -214,7 +226,7 @@ export interface Database {
           match_id?: string;
           player_name?: string;
           team_side?: "home" | "away";
-          position?: "G" | "D" | "M" | "A";
+          position?: string;
           status?: "starter" | "bench";
           created_at?: string;
         };
@@ -440,10 +452,11 @@ export interface Database {
           team_thesportsdb_id: string | null;
           team_name: string;
           player_name: string;
-          position: "G" | "D" | "M" | "A" | null;
+          position: string | null;
           synced_at: string;
           team_id: string | null;
           cutout_url: string | null;
+          image_url: string | null;
         };
         Insert: {
           id?: string;
@@ -451,10 +464,11 @@ export interface Database {
           team_thesportsdb_id?: string | null;
           team_name: string;
           player_name: string;
-          position?: "G" | "D" | "M" | "A" | null;
+          position?: string | null;
           synced_at?: string;
           team_id?: string | null;
           cutout_url?: string | null;
+          image_url?: string | null;
         };
         Update: {
           id?: string;
@@ -462,10 +476,11 @@ export interface Database {
           team_thesportsdb_id?: string | null;
           team_name?: string;
           player_name?: string;
-          position?: "G" | "D" | "M" | "A" | null;
+          position?: string | null;
           synced_at?: string;
           team_id?: string | null;
           cutout_url?: string | null;
+          image_url?: string | null;
         };
         Relationships: [];
       };

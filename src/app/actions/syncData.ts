@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEventDetails, getTeamRoster } from "@/lib/services/thesportsdb";
+import { mapPosition } from "@/lib/map-tsdb-position";
 import type { MatchStatus } from "@/types/database";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
@@ -22,16 +23,6 @@ function mapStatus(strStatus: string): MatchStatus {
     case "Extra Time":
     case "ET":             return "second_half";
     default:               return "upcoming";
-  }
-}
-
-function mapPosition(strPosition: string): "G" | "D" | "M" | "A" {
-  switch (strPosition) {
-    case "Goalkeeper": return "G";
-    case "Defender":   return "D";
-    case "Midfielder": return "M";
-    case "Forward":    return "A";
-    default:           return "M";
   }
 }
 

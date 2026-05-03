@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
-import { syncLiveMatches } from "@/services/sportsdb-sync";
+import { importLeagueAssets } from "@/services/sportsdb-assets-import";
 
 function verifyCronBearer(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
@@ -27,17 +27,23 @@ function verifyCronBearer(request: Request): boolean {
 }
 
 /**
- * GET /api/admin/sync-live
- * Scores + minute + statut (livescore v2 L1), timeline TSDB (v1) et compositions `lineups` (`lookuplineup` v1) pour chaque match traité (en jeu + à venir ≤ 5 min).
+ * GET /api/admin/import-assets?league=French+Ligue+1
+ * Import cosmétique TSDB (`search_all_teams` + effectifs) pour la ligue indiquée.
  *
- * Auth :
- * - **Modérateur** : session Supabase, `trust_score` ≥ `MODERATOR_THRESHOLD`.
- * - **Cron Vercel** : `Authorization: Bearer <CRON_SECRET>` (variable `CRON_SECRET` dans le projet Vercel / `.env.local`).
+ * Auth : modérateur (session) ou `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const league = searchParams.get("league")?.trim() ?? "";
+  if (league === "") {
+    return errorResponse("Paramètre requis : ?league=nom_de_la_ligue (ex. French+Ligue+1)", 400);
+  }
+
+  const run = async () => importLeagueAssets(league);
+
   if (verifyCronBearer(request)) {
     try {
-      const summary = await syncLiveMatches();
+      const summary = await run();
       return successResponse(summary);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur inconnue";
@@ -62,7 +68,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const summary = await syncLiveMatches();
+    const summary = await run();
     return successResponse(summary);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erreur inconnue";

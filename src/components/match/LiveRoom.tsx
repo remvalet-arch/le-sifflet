@@ -12,7 +12,7 @@ import type {
 import { VotingModal } from "./VotingModal";
 import { Scoreboard } from "./Scoreboard";
 import { MatchTimeline } from "./MatchTimeline";
-import { SoccerPitch } from "./SoccerPitch";
+import { MatchLineups } from "./MatchLineups";
 import { ActionDrawer } from "./ActionDrawer";
 import { PolymarketTab } from "./PolymarketTab";
 
@@ -240,15 +240,23 @@ export function LiveRoom({
 
       {/* Contenu de l'onglet */}
       {activeTab === "kop" && (
-        <MatchTimeline matchId={liveMatch.id} isModerator={isModerator} />
+        <MatchTimeline
+          matchId={liveMatch.id}
+          isModerator={isModerator}
+          matchStatus={liveMatch.status}
+        />
       )}
       {activeTab === "compo" && (
-        <SoccerPitch
+        <MatchLineups
           matchId={liveMatch.id}
           teamHome={liveMatch.team_home}
           teamAway={liveMatch.team_away}
-          homeTeamColor={liveMatch.home_team_color ?? undefined}
-          awayTeamColor={liveMatch.away_team_color ?? undefined}
+          homeTeamId={liveMatch.home_team_id}
+          awayTeamId={liveMatch.away_team_id}
+          homeTeamLogo={liveMatch.home_team_logo}
+          awayTeamLogo={liveMatch.away_team_logo}
+          homeTeamColor={liveMatch.home_team_color}
+          awayTeamColor={liveMatch.away_team_color}
         />
       )}
       {activeTab === "polymarket" && (

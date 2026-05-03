@@ -39,6 +39,15 @@ const POSITION_GROUPS: { key: string; label: string }[] = [
   { key: "D", label: "Défenseurs" },
 ];
 
+/** Même logique que le terrain : seuls A/D sont stricts ; M + libellés TSDB non mappés → groupe Milieux. */
+function playerInScorerPositionGroup(pos: string | null | undefined, key: string): boolean {
+  const p = (pos ?? "").trim();
+  if (key === "A") return p === "A";
+  if (key === "D") return p === "D";
+  if (key === "M") return p === "M" || (p !== "" && p !== "G" && p !== "D" && p !== "A");
+  return false;
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 type Props = {
@@ -539,7 +548,7 @@ export function PolymarketTab({
 
                   {/* Groups by position */}
                   {POSITION_GROUPS.map(({ key, label }) => {
-                    const group = teamPlayers.filter((p) => p.position === key);
+                    const group = teamPlayers.filter((p) => playerInScorerPositionGroup(p.position, key));
                     if (group.length === 0) return null;
                     return (
                       <div key={key} className="mb-3 last:mb-0">

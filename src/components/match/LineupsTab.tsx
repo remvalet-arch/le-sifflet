@@ -64,7 +64,10 @@ export function LineupsTab({ matchId, teamHome, teamAway }: Props) {
           <ul className="space-y-2">
             {homeStarters.map((p) => (
               <li key={p.id} className="flex items-center gap-2">
-                <span className="w-5 shrink-0 text-center text-[10px] font-bold uppercase text-zinc-500">
+                <span
+                  className="max-w-[38%] shrink-0 truncate text-left text-[10px] font-bold uppercase text-zinc-500"
+                  title={p.position}
+                >
                   {p.position}
                 </span>
                 <span className="text-sm font-semibold text-white">
@@ -82,7 +85,10 @@ export function LineupsTab({ matchId, teamHome, teamAway }: Props) {
           <ul className="space-y-2">
             {awayStarters.map((p) => (
               <li key={p.id} className="flex items-center gap-2">
-                <span className="w-5 shrink-0 text-center text-[10px] font-bold uppercase text-zinc-500">
+                <span
+                  className="max-w-[38%] shrink-0 truncate text-left text-[10px] font-bold uppercase text-zinc-500"
+                  title={p.position}
+                >
                   {p.position}
                 </span>
                 <span className="text-sm font-semibold text-white">

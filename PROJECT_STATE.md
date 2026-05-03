@@ -1,7 +1,7 @@
 # PROJECT_STATE — Le Sifflet
 
 > Documentation vivante de l'application. À mettre à jour à chaque évolution majeure (feature, schéma, bug critique).
-> Dernière mise à jour : 2026-05-02 — Sync live : [`syncLiveMatches()`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-live`](src/app/api/admin/sync-live/route.ts) (modérateur **ou** `Authorization: Bearer` + `CRON_SECRET` pour [Vercel Cron](vercel.json) toutes les 2 min). Colonne timeline [`0026`](supabase/migrations/0026_match_timeline_thesportsdb_event_id.sql). Ingestion TSDB : [`trigger-initial-sync`](src/app/api/admin/trigger-initial-sync/route.ts), `SPORTSDB_API_KEY` / `CRON_SECRET` (`.env.example`).
+> Dernière mise à jour : 2026-05-02 — Sync live : [`syncLiveMatches()`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-live`](src/app/api/admin/sync-live/route.ts) (modérateur **ou** `Authorization: Bearer` + `CRON_SECRET` pour [Vercel Cron](vercel.json) toutes les 2 min). **Compositions passées** : [`syncSpecificMatchLineups`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-past-lineups`](src/app/api/admin/sync-past-lineups/route.ts) (matchs `finished` sans lignes `lineups`, throttle 500 ms). Colonne timeline [`0026`](supabase/migrations/0026_match_timeline_thesportsdb_event_id.sql). **Logs diagnostic** (serveur) : réponse brute `lookuptimeline` + récap mapping timeline (`[DEBUG RAW TIMELINE]`, `[DEBUG MAPPING]`) ; compositions : `[DEBUG LINEUPS]` (`lookuplineup`). Résumé JSON sync-live inclut `lineupRowsInserted`. Ingestion TSDB : [`trigger-initial-sync`](src/app/api/admin/trigger-initial-sync/route.ts), `SPORTSDB_API_KEY` / `CRON_SECRET` (`.env.example`).
 
 ---
 
@@ -30,7 +30,7 @@ Les **quatre grades** affichés en bas de page (ex. « Boss de la VAR ») sont u
 | Toasts | `sonner` | Provider monté dans `src/app/layout.tsx`. |
 | Auth & DB | **Supabase** (`@supabase/ssr` 0.10) | OAuth Google PKCE, JWT rafraîchi par middleware. |
 | Realtime | Supabase Realtime | 6 tables en `REPLICA IDENTITY FULL` : `matches`, `market_events`, `bets`, `alert_signals`, `profiles`, `match_timeline_events`. |
-| Données externes | TheSportsDB API | `src/lib/services/thesportsdb.ts` (matchs / events). **Ingestion tampon** : [`src/services/sportsdb-sync.ts`](src/services/sportsdb-sync.ts) — Ligue 1 (4334) + VIP, upsert `competitions` / `teams` / `players` / `matches` ; throttle ~550 ms. **Live** : `syncLiveMatches()` — `GET /api/admin/sync-live` (modérateur ou **cron** `CRON_SECRET`). Cron planifié : [`vercel.json`](vercel.json). Déclencheur initial : `GET /api/admin/trigger-initial-sync` (`?rosters=1`). |
+| Données externes | TheSportsDB API | `src/lib/services/thesportsdb.ts` (matchs / events). **Ingestion tampon** : [`src/services/sportsdb-sync.ts`](src/services/sportsdb-sync.ts) — Ligue 1 (4334) + VIP, upsert `competitions` / `teams` / `players` / `matches` ; throttle ~550 ms. **Import cosmétique par ligue** : [`importLeagueAssets`](src/services/sportsdb-assets-import.ts) + [`GET /api/admin/import-assets?league=…`](src/app/api/admin/import-assets/route.ts) (modérateur ou cron `CRON_SECRET`). **Live** : `syncLiveMatches()` — `GET /api/admin/sync-live` (modérateur ou **cron** `CRON_SECRET`). Cron planifié : [`vercel.json`](vercel.json). Déclencheur initial : `GET /api/admin/trigger-initial-sync` (`?rosters=1`). |
 | Images TSDB | `next/image` prêt | [`next.config.ts`](next.config.ts) — `remotePatterns` `www.thesportsdb.com`, `r2.thesportsdb.com`. |
 | Sécurité serveur | `service_role` admin client | `src/lib/supabase/admin.ts` — bypass RLS pour les opérations sensibles. |
 | Réponses API | Helpers `successResponse` / `errorResponse` | `src/lib/api-response.ts` — shape `{ ok, data | error }`. |
@@ -150,7 +150,7 @@ erDiagram
         uuid match_id FK
         text player_name
         text team_side
-        text position "G, D, M, A"
+        text position "G D M A ou libellé TSDB brut"
         text status "starter, bench"
     }
     players {
@@ -170,7 +170,7 @@ erDiagram
 - `profiles.sifflets_balance >= 0` CHECK + UPDATE limité à `username` côté client.
 - `auth.users` → trigger `on_auth_user_created` → INSERT auto dans `profiles`.
 
-**Migrations appliquées** : `0001` à `0026` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE, dédup import TSDB). Ingestion TSDB hors migration (service TypeScript + routes admin).
+**Migrations appliquées** : `0001` à `0028` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE) — import sync : valeur = `idTimeline` TheSportsDB (`lookuptimeline`), upsert stable ; **`0027`** : `teams.team_color_1` / `team_color_2`, `stadium_name` / `stadium_thumb`, `players.image_url` (import cosmétique TSDB). **`0028`** : suppression des `CHECK` sur `lineups.position` et `players.position` pour accepter les libellés bruts TSDB non mappés (audit) ; mapping mots-clés dans [`src/lib/map-tsdb-position.ts`](src/lib/map-tsdb-position.ts), replis terrain milieu via [`src/lib/pitch-lineups.ts`](src/lib/pitch-lineups.ts). Ingestion TSDB hors migration (service TypeScript + routes admin).
 
 ---
 
@@ -180,8 +180,8 @@ erDiagram
 |---|---|---|
 | **Auth** | Google OAuth PKCE → callback → cookies sécurisés. | `src/app/auth/callback/route.ts`, `src/app/login/page.tsx`, `src/middleware.ts` |
 | **Onboarding** | Modal 3 étapes au premier login, flag `has_onboarded`. | `src/components/onboarding/Onboarding.tsx`, `src/app/actions/onboarding.ts` |
-| **Lobby** | Tri En Direct → À venir → Terminés, `MatchCard` aérée. Streaming Suspense : auth rapide → `<MatchListFetcher>` isolé, `loading.tsx` + `MatchCardSkeleton` réutilisable. | `src/app/(app)/lobby/page.tsx`, `src/components/lobby/MatchCard.tsx`, `src/components/lobby/MatchCardSkeleton.tsx`, `src/lib/matches.ts` |
-| **Live Room** | 4 abonnements Realtime (matches, market_events INSERT/UPDATE, bets UPDATE filtré user). | `src/components/match/LiveRoom.tsx` |
+| **Lobby** | Tri En Direct → À venir → Terminés, `MatchCard` avec blasons `home_team_logo` / `away_team_logo` (Next `Image` TSDB + fallback). Streaming Suspense : auth rapide → `<MatchListFetcher>` isolé, `loading.tsx` + `MatchCardSkeleton` réutilisable. | `src/app/(app)/lobby/page.tsx`, `src/components/lobby/MatchCard.tsx`, `src/components/lobby/MatchCardSkeleton.tsx`, `src/lib/matches.ts` |
+| **Live Room** | Monté sur **toute** fiche match (`upcoming` → `finished`) : onglets Temps forts / Compositions (`MatchLineups`) / Prédictions + 4 abonnements Realtime (matches, market_events INSERT/UPDATE, bets UPDATE filtré user). État vide timeline : message différent si terminé vs à venir / en cours. | `src/app/(app)/match/[id]/page.tsx`, `src/components/match/LiveRoom.tsx`, `src/components/match/MatchTimeline.tsx`, `src/components/match/MatchLineups.tsx` |
 | **Mécanique Waze** | Seuil 2 users distincts en 30 s → `market_event` OPEN + cooldown 3 min. | `src/app/api/alert/route.ts` |
 | **VotingModal** | Cotes dégressives (peak par type, decay 2.5 %/s après 10 s, floor 1.01). | `src/components/match/VotingModal.tsx`, `src/lib/constants/odds.ts` |
 | **Paris court terme** | RPC atomique `place_bet` v2 (vérif multiplier serveur, FOR UPDATE, UNIQUE). | `src/app/api/bet/route.ts`, migration `0011_place_bet_v2.sql` |
@@ -194,7 +194,7 @@ erDiagram
 | **Sync score via timeline** | Ajout d'un `goal` incrémente atomiquement `home_score`/`away_score` via RPC `increment_match_score`. CSC gère l'inversion d'équipe. | `src/app/api/timeline-event/route.ts`, migration `0021_score_and_resolve.sql` |
 | **Paris long terme — résolution** | RPC `resolve_long_term_bets(p_match_id)` lit score final + timeline pour payer gagnants et clore perdants. Endpoint `/api/admin/finish-match` déclenché par le bouton "Fin du match" de l'ActionDrawer. | `src/app/api/admin/finish-match/route.ts`, migration `0021_score_and_resolve.sql` |
 | **Timeline modérateur** | CRUD complet (POST/PATCH/DELETE) sur `match_timeline_events` avec sync Realtime. | `src/components/match/MatchTimeline.tsx`, `src/app/api/timeline-event/route.ts` |
-| **Pitch tactique** | Composition 11 v 11 avec couleurs équipe + contraste auto + bench. | `src/components/match/SoccerPitch.tsx` |
+| **Compositions (fiche match)** | Onglet « Compositions » : `MatchLineups` charge **`lineups`** / repli **`players`** ; avec lineups, terrain visuel **`MatchLineupsPitch`** (lignes G/D/A strictes, tout autre poste — dont libellés TSDB — sur la ligne milieu ; pastilles initiales + nom ; remplaçants). Repli effectif : photo `image_url` puis `cutout_url`, sinon initiales / icône `User`. Couleurs maillots : `home_team_color` / `away_team_color`. | `src/components/match/MatchLineups.tsx`, `src/components/match/MatchLineupsPitch.tsx`, `src/lib/map-tsdb-position.ts`, `src/lib/pitch-lineups.ts`, `src/types/database.ts` |
 | **ActionDrawer modérateur** | 3 onglets : Alertes / Feuille de match / Contrôle d'état + sync TheSportsDB inline. | `src/components/match/ActionDrawer.tsx`, `src/app/actions/syncData.ts` |
 | **Contrôle d'état match** | 5 boutons (coup d'envoi, mi-temps, reprise, interruption, fin), génère événement timeline `info`. | `src/app/api/match-state/route.ts`, migration `0020_timeline_info_events.sql` |
 | **Sync TheSportsDB** | Import match (Ligue 1 + UCL) + import effectif (4 équipes MVP) via Server Action modérateur. | `src/lib/services/thesportsdb.ts`, `src/app/actions/syncData.ts`, migration `0019_players_table.sql` |
@@ -213,7 +213,7 @@ erDiagram
 | 🟡 Modéré | Le profil n'affiche que les paris court terme — `long_term_bets` invisibles dans l'historique. | [`src/app/(app)/profile/page.tsx`](src/app/(app)/profile/page.tsx) |
 | 🟡 Modéré | `match_minute` jamais incrémentée automatiquement (toujours statique ou NULL). | n/a — feature manquante |
 | 🟡 Modéré | Couplage fragile via événements DOM customs (`sifflet:drawer-available`, `sifflet:open-drawer`). Risque de désynchro si statut match change pendant la session. | [`src/components/match/LiveRoom.tsx`](src/components/match/LiveRoom.tsx), [`src/components/layout/BottomNav.tsx`](src/components/layout/BottomNav.tsx) |
-| 🟢 Cosmétique | 4 fichiers orphelins jamais importés : [`src/components/layout/Header.tsx`](src/components/layout/Header.tsx) (remplacé par `TopBar`), [`src/components/match/AlertDrawer.tsx`](src/components/match/AlertDrawer.tsx) (remplacé par `ActionDrawer`), [`src/components/match/ModeratorDrawer.tsx`](src/components/match/ModeratorDrawer.tsx) (idem), [`src/components/match/LineupsTab.tsx`](src/components/match/LineupsTab.tsx) (remplacé par `SoccerPitch`). | — |
+| 🟢 Cosmétique | Fichiers peu / non utilisés : `Header.tsx` (→ `TopBar`), `AlertDrawer.tsx` / `ModeratorDrawer.tsx` (→ `ActionDrawer`), `LineupsTab.tsx` (doublon logique compositions), `SoccerPitch.tsx` (terrain tactique non monté depuis le passage à `MatchLineups` dans `LiveRoom`). | — |
 | 🟢 Cosmétique | `/settings` est un placeholder « Bientôt disponible ». | [`src/app/(app)/settings/page.tsx`](src/app/(app)/settings/page.tsx) |
 | 🟢 Cosmétique | Page Règles ne mentionne pas l'onglet « Prédictions » (paris long terme). | [`src/app/(app)/rules/page.tsx`](src/app/(app)/rules/page.tsx) |
 
@@ -258,7 +258,7 @@ erDiagram
 - Activer RLS write sur `market_events` au profit du service_role exclusivement (déjà le cas pour `bets`, à valider sur les autres tables admin).
 
 ### Performance
-- `PolymarketTab` non memoizé alors qu'il est rendu à côté de `SoccerPitch` et `MatchTimeline` qui le sont. À mémoiser pour éviter les re-renders sur changement de balance.
+- `PolymarketTab` non memoizé alors qu'il est rendu à côté de `MatchLineups` et `MatchTimeline` qui le sont. À mémoiser pour éviter les re-renders sur changement de balance.
 - Ajouter un `staleTime` sur les fetchs `lineups`/`players` (aujourd'hui re-fetch à chaque ouverture du drawer).
 - Préparer la migration vers `unstable_cache` Next.js pour les données statiques (`matches` à venir, `players`).
 

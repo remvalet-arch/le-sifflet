@@ -1,11 +1,14 @@
 /**
- * Ingestion TheSportsDB → Supabase (`competitions`, `teams`, `players`, `matches`, timeline live).
+ * Ingestion TheSportsDB → Supabase (`competitions`, `teams`, `players`, `matches`, timeline live, lineups).
  * Clé API : `SPORTSDB_API_KEY` (fallback `THESPORTSDB_API_KEY`) — v1 (URL) + v2 livescore (header `X-API-KEY`).
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { mapPosition } from "@/lib/map-tsdb-position";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, MatchStatus, TimelineEventType } from "@/types/database";
+
+export { mapPosition };
 
 type Admin = SupabaseClient<Database>;
 
@@ -78,6 +81,46 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Masque la clé API dans l’URL pour les logs. */
+function redactSportsdbUrlForLog(url: string): string {
+  return url.replace(/(\/api\/v1\/json\/)([^/]+)(\/)/, "$1***$3");
+}
+
+/**
+ * GET v1 `lookuptimeline.php` — log du JSON brut (diagnostic). Même auth que `apiFetch`.
+ */
+async function fetchTimelineEndpointWithRawLog(
+  pathRelative: string,
+  logPrefix: string,
+  idEvent: string,
+): Promise<unknown> {
+  const url = buildSportsdbUrl(pathRelative);
+  const res = await fetch(url, { cache: "no-store" });
+  const text = await res.text();
+  let parsed: unknown;
+  try {
+    parsed = text.length === 0 ? null : JSON.parse(text);
+  } catch {
+    parsed = { _jsonParseError: true as const, _bodyPreview: text.slice(0, 2000) };
+  }
+  const serialized =
+    typeof parsed === "object" && parsed !== null
+      ? JSON.stringify(parsed, null, 2)
+      : String(parsed);
+  const max = 16_000;
+  const body =
+    serialized.length > max
+      ? `${serialized.slice(0, max)}\n… [tronqué ${String(serialized.length - max)} caractères]`
+      : serialized;
+  console.log(
+    `${logPrefix} ${idEvent} (HTTP ${res.status}) URL=${redactSportsdbUrlForLog(url)} :\n${body}`,
+  );
+  if (!res.ok) {
+    throw new Error(`TheSportsDB HTTP ${res.status} sur ${pathRelative}`);
+  }
+  return parsed;
+}
+
 /** API v2 (Premium) — clé dans le header `X-API-KEY`. */
 async function apiFetchV2<T>(relativePath: string): Promise<T> {
   const key = getApiKey();
@@ -93,7 +136,7 @@ async function apiFetchV2<T>(relativePath: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-function delay(ms: number): Promise<void> {
+export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -131,21 +174,6 @@ function mapTeamColorSecondary(team: TsdbTeam | TsdbTeamSearchRow): string | nul
   );
 }
 
-function mapPosition(strPosition: string): "G" | "D" | "M" | "A" {
-  switch (strPosition) {
-    case "Goalkeeper":
-      return "G";
-    case "Defender":
-      return "D";
-    case "Midfielder":
-      return "M";
-    case "Forward":
-      return "A";
-    default:
-      return "M";
-  }
-}
-
 // ── Types bruts API ───────────────────────────────────────────────────────────
 
 type TsdbLeagueRow = {
@@ -155,7 +183,7 @@ type TsdbLeagueRow = {
 };
 
 /** Objet équipe TSDB — champs réels variables (US/UK, search vs lookupteam). */
-type TsdbTeam = {
+export type TsdbTeam = {
   idTeam: string;
   idLeague: string;
   strTeam: string;
@@ -169,13 +197,15 @@ type TsdbTeam = {
   strTeamColour2?: string | null;
   strColour2?: string | null;
   strEquipment?: string | null;
+  strStadium?: string | null;
+  strStadiumThumb?: string | null;
 };
 
 type TsdbTeamSearchRow = TsdbTeam & {
   strSport: string;
 };
 
-type TsdbPlayerRow = {
+export type TsdbPlayerRow = {
   idPlayer: string;
   idTeam: string;
   strPlayer: string;
@@ -212,7 +242,7 @@ type TsdbV2LivescoreRow = {
   strProgress: string | number | null;
 };
 
-/** Ligne `timeline` API v1 (`lookuptimeline.php` / `lookupeventtimer.php`). */
+/** Ligne `timeline` API v1 (`lookuptimeline.php`). */
 type TsdbTimelineRow = {
   idTimeline: string;
   idEvent?: string;
@@ -227,7 +257,16 @@ type TsdbTimelineRow = {
   intTime: string | null;
 };
 
-function pickCutout(p: TsdbPlayerRow): string | null {
+/** Ligne `lookuplineup.php` — champs variables selon contributions TSDB. */
+type TsdbLineupApiRow = {
+  strPlayer?: string | null;
+  idTeam?: string | number | null;
+  strPosition?: string | null;
+  strSubst?: string | null;
+  strSubstitute?: string | null;
+};
+
+export function pickCutout(p: TsdbPlayerRow): string | null {
   return emptyToNull(p.strCutout) ?? emptyToNull(p.strThumb);
 }
 
@@ -337,7 +376,7 @@ function mapTsdbStatusToMatchStatus(strStatus: string): MatchStatus {
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
 
-async function ensureCompetitionByLeagueId(admin: Admin, leagueId: string): Promise<string> {
+export async function ensureCompetitionByLeagueId(admin: Admin, leagueId: string): Promise<string> {
   const data = await apiFetch<{ leagues: TsdbLeagueRow[] | null }>(`lookupleague.php?id=${leagueId}`);
   const league = data.leagues?.[0];
   if (!league) {
@@ -363,23 +402,29 @@ async function ensureCompetitionByLeagueId(admin: Admin, leagueId: string): Prom
   return row.id;
 }
 
-function mapTeamUpsert(
+export function mapTeamUpsert(
   t: TsdbTeam | TsdbTeamSearchRow,
   competitionUuid: string,
 ): Database["public"]["Tables"]["teams"]["Insert"] {
+  const kit1 = mapTeamColorPrimary(t);
+  const kit2 = mapTeamColorSecondary(t);
   return {
     competition_id: competitionUuid,
     name: t.strTeam,
     short_name: emptyToNull(t.strTeamShort),
     logo_url: mapTeamLogoUrl(t),
-    color_primary: mapTeamColorPrimary(t),
-    color_secondary: mapTeamColorSecondary(t),
+    color_primary: kit1,
+    color_secondary: kit2,
     equipment_url: emptyToNull(t.strEquipment),
+    team_color_1: kit1,
+    team_color_2: kit2,
+    stadium_name: emptyToNull(pickTeamField(t, "strStadium", "strLocation")),
+    stadium_thumb: emptyToNull(pickTeamField(t, "strStadiumThumb")),
     thesportsdb_team_id: t.idTeam,
   };
 }
 
-async function lookupTeamById(idTeam: string): Promise<TsdbTeam> {
+export async function lookupTeamById(idTeam: string): Promise<TsdbTeam> {
   const data = await apiFetch<{ teams: TsdbTeam[] | null }>(`lookupteam.php?id=${encodeURIComponent(idTeam)}`);
   const t = data.teams?.[0];
   if (!t) {
@@ -516,16 +561,20 @@ export async function syncRosterForTeam(thesportsdbTeamId: string): Promise<Rost
   );
   const roster = data.player ?? [];
 
-  const rows: Database["public"]["Tables"]["players"]["Insert"][] = roster.map((p) => ({
-    thesportsdb_id: p.idPlayer,
-    team_id: teamRow.id,
-    team_thesportsdb_id: p.idTeam,
-    team_name: teamRow.name,
-    player_name: p.strPlayer,
-    position: mapPosition(p.strPosition ?? ""),
-    cutout_url: pickCutout(p),
-    synced_at: new Date().toISOString(),
-  }));
+  const rows: Database["public"]["Tables"]["players"]["Insert"][] = roster.map((p) => {
+    const img = pickCutout(p);
+    return {
+      thesportsdb_id: p.idPlayer,
+      team_id: teamRow.id,
+      team_thesportsdb_id: p.idTeam,
+      team_name: teamRow.name,
+      player_name: p.strPlayer,
+      position: mapPosition(p.strPosition ?? ""),
+      cutout_url: img,
+      image_url: img,
+      synced_at: new Date().toISOString(),
+    };
+  });
 
   if (rows.length === 0) {
     return { thesportsdbTeamId, supabaseTeamId: teamRow.id, playersUpserted: 0 };
@@ -805,64 +854,180 @@ async function fetchTeamsTsdbByUuid(
 }
 
 /**
- * Timeline buts / cartons / remplacements : essaie `lookupeventtimer.php` puis `lookuptimeline.php`.
+ * Timeline buts / cartons / remplacements : uniquement **`lookuptimeline.php`** (v1).
+ * (`lookupeventtimer.php` retourne 404 côté TheSportsDB — non utilisé.)
  */
 async function fetchTimelineRowsForEvent(tsdbEventId: string): Promise<TsdbTimelineRow[]> {
-  const paths = [
-    `lookupeventtimer.php?id=${encodeURIComponent(tsdbEventId)}`,
-    `lookuptimeline.php?id=${encodeURIComponent(tsdbEventId)}`,
-  ];
-  for (const path of paths) {
-    try {
-      const data = await apiFetch<{ timeline: TsdbTimelineRow[] | null }>(path);
-      await delay(THROTTLE_MS);
-      if (Array.isArray(data.timeline) && data.timeline.length > 0) {
-        return data.timeline;
-      }
-    } catch {
-      await delay(THROTTLE_MS);
-    }
+  const path = `lookuptimeline.php?id=${encodeURIComponent(tsdbEventId)}`;
+  const data = (await fetchTimelineEndpointWithRawLog(
+    path,
+    "[DEBUG RAW TIMELINE] API lookuptimeline pour le match",
+    tsdbEventId,
+  )) as { timeline: TsdbTimelineRow[] | null };
+  await delay(THROTTLE_MS);
+  return Array.isArray(data.timeline) ? data.timeline : [];
+}
+
+async function ingestMatchTimelineForSync(
+  admin: Admin,
+  matchId: string,
+  evId: string,
+  homeTsdb: string | null,
+  awayTsdb: string | null,
+): Promise<{ upserted: number; skippedUnmapped: number }> {
+  let skippedUnmapped = 0;
+  let upserted = 0;
+  const timelineRows = await fetchTimelineRowsForEvent(evId);
+  const inserts: Database["public"]["Tables"]["match_timeline_events"]["Insert"][] = [];
+
+  for (const row of timelineRows) {
+    const ins = mapTimelineRowToInsert(matchId, homeTsdb, awayTsdb, row);
+    if (ins) inserts.push(ins);
+    else skippedUnmapped += 1;
   }
+
+  console.log(
+    `[DEBUG MAPPING] Match ${matchId} (idEvent TSDB ${evId}) - Lignes brutes: ${timelineRows.length}, Lignes mappées avec succès: ${inserts.length}, Lignes rejetées: ${skippedUnmapped}`,
+  );
+
+  if (inserts.length === 0) {
+    return { upserted: 0, skippedUnmapped };
+  }
+
+  const chunkSize = 40;
+  for (let i = 0; i < inserts.length; i += chunkSize) {
+    const chunk = inserts.slice(i, i + chunkSize);
+    const { error: tlErr } = await admin
+      .from("match_timeline_events")
+      .upsert(chunk, { onConflict: "thesportsdb_event_id", ignoreDuplicates: true });
+    if (tlErr) {
+      throw new Error(`match_timeline_events upsert: ${tlErr.message}`);
+    }
+    upserted += chunk.length;
+  }
+  return { upserted, skippedUnmapped };
+}
+
+function extractLineupRows(data: unknown): TsdbLineupApiRow[] {
+  if (!data || typeof data !== "object") return [];
+  const d = data as Record<string, unknown>;
+  const lu = d.lineup;
+  if (Array.isArray(lu)) return lu as TsdbLineupApiRow[];
+  if (lu && typeof lu === "object") return [lu as TsdbLineupApiRow];
   return [];
 }
 
-/** Segment URL-safe pour clé de dédup (évite `idTimeline` instable côté TSDB). */
-function slugTimelineKeyPart(s: string, maxLen: number): string {
-  const t = s
-    .normalize("NFD")
-    .replace(/\u0300-\u036f/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, maxLen);
-  return t.length > 0 ? t : "x";
+function mapLineupStatusFromTsdb(row: TsdbLineupApiRow): "starter" | "bench" {
+  const r = row as Record<string, unknown>;
+  const subst = String(r.strSubst ?? r.strSubstitute ?? r.strSub ?? r.strBench ?? "").trim().toLowerCase();
+  if (subst === "yes" || subst === "y" || subst === "true" || subst === "1") return "bench";
+  const pos = String(row.strPosition ?? "").toLowerCase();
+  if (pos.includes("substitute") || pos.includes("substitution") || pos === "sub") return "bench";
+  return "starter";
+}
+
+/** Poste TSDB (libellés variables) → G/D/M/A ou libellé brut si inconnu. */
+function mapTsdbLineupPosition(strPosition: string | null | undefined): string {
+  return mapPosition(strPosition ?? "");
 }
 
 /**
- * Identifiant stable pour `match_timeline_events.thesportsdb_event_id` (upsert).
- * Basé sur match + minute + type + joueur(s) + détail — pas sur `idTimeline` seul.
+ * Compositions match : **`lookuplineup.php?id={idEvent}`** (v1).
+ * Logs `[DEBUG LINEUPS]` pour diagnostic.
+ * @returns `null` si la requête HTTP / JSON a échoué (ne pas vider la table).
  */
-function buildTimelineSyncDedupeId(
+async function fetchLineupRowsForEvent(tsdbEventId: string): Promise<TsdbLineupApiRow[] | null> {
+  console.log(`[DEBUG LINEUPS] Tentative de récup pour le match ${tsdbEventId}`);
+  try {
+    const data = await apiFetch<unknown>(`lookuplineup.php?id=${encodeURIComponent(tsdbEventId)}`);
+    await delay(THROTTLE_MS);
+    const d = data as Record<string, unknown>;
+    const rawLu = d.lineup;
+    const n = Array.isArray(rawLu) ? rawLu.length : rawLu && typeof rawLu === "object" ? 1 : 0;
+    console.log(`[DEBUG LINEUPS] Nombre de joueurs récupérés via API : ${n}`);
+    return extractLineupRows(data);
+  } catch (e) {
+    console.log(
+      `[DEBUG LINEUPS] Échec lookuplineup pour ${tsdbEventId}:`,
+      e instanceof Error ? e.message : String(e),
+    );
+    await delay(THROTTLE_MS);
+    return null;
+  }
+}
+
+/**
+ * Remplace les `lineups` du match par la réponse TSDB (delete + insert).
+ * Nécessite `homeTsdb` / `awayTsdb` pour rattacher chaque ligne à domicile / extérieur via `idTeam`.
+ */
+async function ingestMatchLineupsForSync(
+  admin: Admin,
   matchId: string,
-  minute: number,
-  eventType: TimelineEventType,
-  playerName: string,
-  row: TsdbTimelineRow,
-): string {
-  const matchPart = matchId.replace(/-/g, "").slice(0, 12);
-  const playerPart = slugTimelineKeyPart(playerName, 22);
-  const detailPart = slugTimelineKeyPart(row.strTimelineDetail ?? "", 18);
-  const assistPart = slugTimelineKeyPart(row.strAssist ?? "", 18);
-  const tag =
-    eventType === "goal"
-      ? "goal"
-      : eventType === "yellow_card"
-        ? "yc"
-        : eventType === "red_card"
-          ? "rc"
-          : "sub";
-  const base = `${tag}_${matchPart}_m${minute}_${playerPart}_${detailPart}_${assistPart}`;
-  return base.replace(/_+$/g, "").slice(0, 220);
+  evId: string,
+  homeTsdb: string | null,
+  awayTsdb: string | null,
+): Promise<{ inserted: number }> {
+  const homeKey = tsdbTeamKey(homeTsdb);
+  const awayKey = tsdbTeamKey(awayTsdb);
+  if (!homeKey || !awayKey) {
+    console.log(
+      `[DEBUG LINEUPS] Skip compositions match ${matchId} (idEvent ${evId}) — idTeam TSDB manquant (home=${homeTsdb ?? "null"}, away=${awayTsdb ?? "null"})`,
+    );
+    return { inserted: 0 };
+  }
+
+  const rows = await fetchLineupRowsForEvent(evId);
+  if (rows === null) {
+    return { inserted: 0 };
+  }
+
+  const inserts: Database["public"]["Tables"]["lineups"]["Insert"][] = [];
+
+  for (const row of rows) {
+    const name = (row.strPlayer ?? "").trim();
+    if (name === "") continue;
+    const tid = tsdbTeamKey(row.idTeam == null ? null : String(row.idTeam));
+    let team_side: "home" | "away" | null = null;
+    if (tid === homeKey) team_side = "home";
+    else if (tid === awayKey) team_side = "away";
+    if (team_side === null) continue;
+
+    inserts.push({
+      match_id: matchId,
+      player_name: name,
+      team_side,
+      position: mapTsdbLineupPosition(row.strPosition),
+      status: mapLineupStatusFromTsdb(row),
+    });
+  }
+
+  if (rows.length > 0 && inserts.length === 0) {
+    console.log(
+      `[DEBUG LINEUPS] Match ${matchId} : ${rows.length} ligne(s) API mais 0 mappées (idTeam ≠ domicile/extérieur) — lineups DB inchangées`,
+    );
+    return { inserted: 0 };
+  }
+
+  const { error: delErr } = await admin.from("lineups").delete().eq("match_id", matchId);
+  if (delErr) {
+    throw new Error(`lineups delete ${matchId}: ${delErr.message}`);
+  }
+
+  if (inserts.length === 0) {
+    return { inserted: 0 };
+  }
+
+  const chunkSize = 50;
+  let inserted = 0;
+  for (let i = 0; i < inserts.length; i += chunkSize) {
+    const chunk = inserts.slice(i, i + chunkSize);
+    const { error: insErr } = await admin.from("lineups").insert(chunk);
+    if (insErr) {
+      throw new Error(`lineups insert ${matchId}: ${insErr.message}`);
+    }
+    inserted += chunk.length;
+  }
+  return { inserted };
 }
 
 function mapTimelineRowToInsert(
@@ -871,6 +1036,9 @@ function mapTimelineRowToInsert(
   awayTsdb: string | null,
   row: TsdbTimelineRow,
 ): Database["public"]["Tables"]["match_timeline_events"]["Insert"] | null {
+  const idTimeline = row.idTimeline == null ? "" : String(row.idTimeline).trim();
+  if (idTimeline === "") return null;
+
   const rawMin = row.intTime?.trim() ?? "";
   let minute = parseInt(rawMin, 10);
   if (Number.isNaN(minute)) minute = 0;
@@ -914,14 +1082,6 @@ function mapTimelineRowToInsert(
   const player_name = name !== "" ? name : "—";
   const own = detail.includes("own goal") || detailFull.toLowerCase().includes("own goal");
 
-  const thesportsdb_event_id = buildTimelineSyncDedupeId(
-    matchId,
-    minute,
-    eventType,
-    player_name,
-    row,
-  );
-
   return {
     match_id: matchId,
     event_type: eventType,
@@ -930,7 +1090,7 @@ function mapTimelineRowToInsert(
     player_name,
     is_own_goal: own,
     details: detailFull.length > 0 ? detailFull : null,
-    thesportsdb_event_id,
+    thesportsdb_event_id: idTimeline,
   };
 }
 
@@ -940,11 +1100,12 @@ export type SyncLiveMatchesResult = {
   matchesUpdatedFromLivescore: number;
   timelineRowsUpserted: number;
   timelineRowsSkippedUnmapped: number;
+  lineupRowsInserted: number;
 };
 
 /**
  * Synchronise les matchs en base (en cours + **upcoming** dans les 5 prochaines minutes)
- * avec le flux livescore Ligue 1 (TheSportsDB **v2** `livescore/4334`) puis import timeline (**v1**).
+ * avec le flux livescore Ligue 1 (TheSportsDB **v2** `livescore/4334`) puis import timeline (**v1**) et compositions (**v1** `lookuplineup`).
  */
 export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
   const admin = createAdminClient();
@@ -989,6 +1150,7 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
       matchesUpdatedFromLivescore: 0,
       timelineRowsUpserted: 0,
       timelineRowsSkippedUnmapped: 0,
+      lineupRowsInserted: 0,
     };
   }
 
@@ -1014,11 +1176,20 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
   }
 
   let matchesUpdatedFromLivescore = 0;
+  let timelineRowsUpserted = 0;
+  let timelineRowsSkippedUnmapped = 0;
+  let lineupRowsInserted = 0;
+
   for (const m of matches) {
     const evId = tsdbEventIdFromApi(m.thesportsdb_event_id);
     if (!evId) continue;
+
+    const homeTsdb = m.home_team_id ? (teamTsdbByUuid.get(m.home_team_id) ?? null) : null;
+    const awayTsdb = m.away_team_id ? (teamTsdbByUuid.get(m.away_team_id) ?? null) : null;
+
     const nomMatch = `${m.team_home} — ${m.team_away}`;
     const live = byEventId.get(evId);
+
     if (!live) {
       console.log(
         `Sync live: aucune ligne livescore pour idEvent=${evId} (${nomMatch}) — ${byEventId.size} événements dans le flux`,
@@ -1036,94 +1207,64 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
       const isApiFinished =
         lookedUp != null && isLookupEventFinishedStatus(lookedUp.strStatus);
 
-      if (!(isTimeExpired || isApiFinished)) {
-        continue;
+      if (isTimeExpired || isApiFinished) {
+        const reason = isTimeExpired ? "Délai 150min dépassé" : "API Status";
+        console.log(`[CLÔTURE FORCÉE] Match ${m.team_home} terminé. Raison: ${reason}`);
+
+        const fbPatch: Database["public"]["Tables"]["matches"]["Update"] = {
+          status: "finished",
+          match_minute: null,
+        };
+        if (lookedUp) {
+          fbPatch.home_score = parseScore(lookedUp.intHomeScore);
+          fbPatch.away_score = parseScore(lookedUp.intAwayScore);
+        }
+
+        const { error: fbErr } = await admin.from("matches").update(fbPatch).eq("id", m.id);
+
+        if (fbErr) {
+          throw new Error(`matches update (fallback lookupevent) ${m.id}: ${fbErr.message}`);
+        }
+
+        matchesUpdatedFromLivescore += 1;
+      }
+    } else {
+      const homeScore = parseScore(live.intHomeScore);
+      const awayScore = parseScore(live.intAwayScore);
+      const minute = parseMatchMinute(live.strProgress);
+      let mappedStatus = mapTsdbStatusToMatchStatus(live.strStatus);
+
+      if (
+        (homeScore > 0 || awayScore > 0) &&
+        (mappedStatus === "upcoming" || m.status === "upcoming")
+      ) {
+        mappedStatus = "first_half";
       }
 
-      const reason = isTimeExpired ? "Délai 150min dépassé" : "API Status";
-      console.log(`[CLÔTURE FORCÉE] Match ${m.team_home} terminé. Raison: ${reason}`);
+      console.log(
+        `[DEBUG LIVE] Match: ${m.team_home}, API Status: "${live.strStatus}", Mapped to: "${mappedStatus}"`,
+      );
 
-      const fbPatch: Database["public"]["Tables"]["matches"]["Update"] = {
-        status: "finished",
-        match_minute: null,
+      const patch: Database["public"]["Tables"]["matches"]["Update"] = {
+        home_score: homeScore,
+        away_score: awayScore,
+        match_minute: minute,
+        status: mappedStatus,
       };
-      if (lookedUp) {
-        fbPatch.home_score = parseScore(lookedUp.intHomeScore);
-        fbPatch.away_score = parseScore(lookedUp.intAwayScore);
+
+      const { error: upErr } = await admin.from("matches").update(patch).eq("id", m.id);
+      if (upErr) {
+        throw new Error(`matches update ${m.id}: ${upErr.message}`);
       }
-
-      const { error: fbErr } = await admin.from("matches").update(fbPatch).eq("id", m.id);
-
-      if (fbErr) {
-        throw new Error(`matches update (fallback lookupevent) ${m.id}: ${fbErr.message}`);
-      }
-
       matchesUpdatedFromLivescore += 1;
-      continue;
     }
 
-    const homeScore = parseScore(live.intHomeScore);
-    const awayScore = parseScore(live.intAwayScore);
-    const minute = parseMatchMinute(live.strProgress);
-    let mappedStatus = mapTsdbStatusToMatchStatus(live.strStatus);
+    const tl = await ingestMatchTimelineForSync(admin, m.id, evId, homeTsdb, awayTsdb);
+    timelineRowsUpserted += tl.upserted;
+    timelineRowsSkippedUnmapped += tl.skippedUnmapped;
 
-    if (
-      (homeScore > 0 || awayScore > 0) &&
-      (mappedStatus === "upcoming" || m.status === "upcoming")
-    ) {
-      mappedStatus = "first_half";
-    }
-
-    console.log(
-      `[DEBUG LIVE] Match: ${m.team_home}, API Status: "${live.strStatus}", Mapped to: "${mappedStatus}"`,
-    );
-
-    const patch: Database["public"]["Tables"]["matches"]["Update"] = {
-      home_score: homeScore,
-      away_score: awayScore,
-      match_minute: minute,
-      status: mappedStatus,
-    };
-
-    const { error: upErr } = await admin.from("matches").update(patch).eq("id", m.id);
-    if (upErr) {
-      throw new Error(`matches update ${m.id}: ${upErr.message}`);
-    }
-    matchesUpdatedFromLivescore += 1;
-  }
-
-  let timelineRowsUpserted = 0;
-  let timelineRowsSkippedUnmapped = 0;
-
-  for (const m of matches) {
-    const evId = tsdbEventIdFromApi(m.thesportsdb_event_id);
-    if (!evId) continue;
-
-    const homeTsdb = m.home_team_id ? (teamTsdbByUuid.get(m.home_team_id) ?? null) : null;
-    const awayTsdb = m.away_team_id ? (teamTsdbByUuid.get(m.away_team_id) ?? null) : null;
-
-    const timeline = await fetchTimelineRowsForEvent(evId);
-    const inserts: Database["public"]["Tables"]["match_timeline_events"]["Insert"][] = [];
-
-    for (const row of timeline) {
-      const ins = mapTimelineRowToInsert(m.id, homeTsdb, awayTsdb, row);
-      if (ins) inserts.push(ins);
-      else timelineRowsSkippedUnmapped += 1;
-    }
-
-    if (inserts.length === 0) continue;
-
-    const chunkSize = 40;
-    for (let i = 0; i < inserts.length; i += chunkSize) {
-      const chunk = inserts.slice(i, i + chunkSize);
-      const { error: tlErr } = await admin
-        .from("match_timeline_events")
-        .upsert(chunk, { onConflict: "thesportsdb_event_id", ignoreDuplicates: true });
-      if (tlErr) {
-        throw new Error(`match_timeline_events upsert: ${tlErr.message}`);
-      }
-      timelineRowsUpserted += chunk.length;
-    }
+    const lp = await ingestMatchLineupsForSync(admin, m.id, evId, homeTsdb, awayTsdb);
+    lineupRowsInserted += lp.inserted;
   }
 
   return {
@@ -1132,6 +1273,63 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
     matchesUpdatedFromLivescore,
     timelineRowsUpserted,
     timelineRowsSkippedUnmapped,
+    lineupRowsInserted,
+  };
+}
+
+export type SyncSpecificMatchLineupsResult = {
+  matchId: string;
+  thesportsdb_event_id: string | null;
+  inserted: number;
+  skippedReason?: "match_not_found" | "no_thesportsdb_event_id";
+};
+
+/**
+ * Import TSDB `lookuplineup` pour **un** match (peu importe le statut : passé, live, à venir).
+ * Charge `thesportsdb_event_id` + FK équipes, résout les `thesportsdb_team_id`, puis `ingestMatchLineupsForSync`.
+ */
+export async function syncSpecificMatchLineups(matchId: string): Promise<SyncSpecificMatchLineupsResult> {
+  const admin = createAdminClient();
+  const { data: match, error } = await admin
+    .from("matches")
+    .select("id, thesportsdb_event_id, home_team_id, away_team_id")
+    .eq("id", matchId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`syncSpecificMatchLineups select: ${error.message}`);
+  }
+  if (!match) {
+    return {
+      matchId,
+      thesportsdb_event_id: null,
+      inserted: 0,
+      skippedReason: "match_not_found",
+    };
+  }
+
+  const evId = tsdbEventIdFromApi(match.thesportsdb_event_id);
+  if (!evId) {
+    return {
+      matchId,
+      thesportsdb_event_id: null,
+      inserted: 0,
+      skippedReason: "no_thesportsdb_event_id",
+    };
+  }
+
+  const teamUuids: string[] = [];
+  if (match.home_team_id) teamUuids.push(match.home_team_id);
+  if (match.away_team_id) teamUuids.push(match.away_team_id);
+  const teamTsdbByUuid = await fetchTeamsTsdbByUuid(admin, teamUuids);
+  const homeTsdb = match.home_team_id ? (teamTsdbByUuid.get(match.home_team_id) ?? null) : null;
+  const awayTsdb = match.away_team_id ? (teamTsdbByUuid.get(match.away_team_id) ?? null) : null;
+
+  const lp = await ingestMatchLineupsForSync(admin, matchId, evId, homeTsdb, awayTsdb);
+  return {
+    matchId,
+    thesportsdb_event_id: evId,
+    inserted: lp.inserted,
   };
 }
 

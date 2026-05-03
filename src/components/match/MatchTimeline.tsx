@@ -4,7 +4,7 @@ import { memo, useEffect, useState } from "react";
 import { Pencil, Trash2, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import type { MatchTimelineEventRow, TimelineEventType } from "@/types/database";
+import type { MatchStatus, MatchTimelineEventRow, TimelineEventType } from "@/types/database";
 
 const ICONS: Record<TimelineEventType, string> = {
   goal:         "⚽",
@@ -96,9 +96,20 @@ function EventCard({
   );
 }
 
-type Props = { matchId: string; isModerator: boolean };
+type Props = { matchId: string; isModerator: boolean; matchStatus: MatchStatus };
 
-export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator }: Props) {
+function timelineEmptyMessage(status: MatchStatus): string {
+  if (status === "finished") {
+    return "Aucun événement disponible pour ce match.";
+  }
+  return "En attente des premiers événements...";
+}
+
+export const MatchTimeline = memo(function MatchTimeline({
+  matchId,
+  isModerator,
+  matchStatus,
+}: Props) {
   const [events, setEvents]       = useState<MatchTimelineEventRow[]>([]);
   const [loading, setLoading]     = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -248,9 +259,7 @@ export const MatchTimeline = memo(function MatchTimeline({ matchId, isModerator 
 
   if (events.length === 0) {
     return (
-      <p className="py-10 text-center text-sm text-zinc-500">
-        Le match commence, en attente des premiers événements…
-      </p>
+      <p className="py-10 text-center text-sm text-zinc-500">{timelineEmptyMessage(matchStatus)}</p>
     );
   }
 
