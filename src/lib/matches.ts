@@ -47,7 +47,7 @@ const STATUS_ORDER: Record<MatchStatus, number> = {
 };
 
 /** Lobby : en cours d’abord, puis upcoming, puis finished ; puis start_time croissant. */
-export function sortMatchesForLobby(matches: MatchRow[]): MatchRow[] {
+export function sortMatchesForLobby<T extends Pick<MatchRow, "status" | "start_time">>(matches: T[]): T[] {
   return [...matches].sort((a, b) => {
     const oa = STATUS_ORDER[a.status] ?? 99;
     const ob = STATUS_ORDER[b.status] ?? 99;

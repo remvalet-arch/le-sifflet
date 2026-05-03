@@ -3,8 +3,9 @@ import Link from "next/link";
 import type { MatchRow } from "@/lib/matches";
 import { formatMatchStatus, isLobbyLiveStatus } from "@/lib/matches";
 import { LiveBadge } from "@/components/lobby/LiveBadge";
+import { formatMatchDateTimeParis, formatMatchTime } from "@/lib/format-match-time";
 
-const LOGO_HOSTS = new Set(["www.thesportsdb.com", "r2.thesportsdb.com"]);
+const LOGO_HOSTS = new Set(["www.thesportsdb.com", "r2.thesportsdb.com", "media.api-sports.io"]);
 
 function isNextImageRemoteLogo(url: string): boolean {
   try {
@@ -49,18 +50,61 @@ function LobbyTeamLogo({ url }: { url: string | null | undefined }) {
   );
 }
 
-export function MatchCard({ match }: { match: MatchRow }) {
+export type MatchGoalLine = {
+  minute: number;
+  player_name: string;
+  team_side: "home" | "away";
+};
+
+export function MatchCard({
+  match,
+  goalEvents,
+  mpgLayout = false,
+}: {
+  match: MatchRow;
+  goalEvents?: MatchGoalLine[];
+  mpgLayout?: boolean;
+}) {
   const href = `/match/${match.id}`;
   const isLive = isLobbyLiveStatus(match.status);
   const isFinished = match.status === "finished";
+  const isUpcoming = match.status === "upcoming";
 
-  const when = new Date(match.start_time).toLocaleString("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const when = formatMatchDateTimeParis(match.start_time);
+  const kickoffTime = formatMatchTime(match.start_time);
+
+  const scoreBlock =
+    isLive || isFinished ? (
+      <div className="flex shrink-0 flex-col items-center gap-0.5 px-0.5">
+        <span
+          className={`rounded-lg px-2.5 py-1 text-sm font-black tabular-nums text-white sm:px-3 ${
+            mpgLayout && isLive ? "bg-red-600 shadow-inner shadow-red-900/40" : "bg-zinc-800"
+          }`}
+        >
+          {match.home_score} — {match.away_score}
+        </span>
+        {isLive && match.match_minute !== null && (
+          <span
+            className={`text-[10px] font-bold ${mpgLayout && isLive ? "text-red-100" : "text-green-400"}`}
+          >
+            {match.match_minute}&apos;
+          </span>
+        )}
+        {goalEvents && goalEvents.length > 0 && (
+          <p className="max-w-[10rem] text-center text-[9px] font-medium leading-tight text-zinc-500">
+            {goalEvents
+              .slice()
+              .sort((a, b) => a.minute - b.minute)
+              .map((g) => `${String(g.minute)}′ ${g.player_name}`)
+              .join(" · ")}
+          </p>
+        )}
+      </div>
+    ) : (
+      <span className="shrink-0 rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-zinc-400 sm:px-3 sm:text-sm">
+        vs
+      </span>
+    );
 
   return (
     <Link
@@ -74,14 +118,18 @@ export function MatchCard({ match }: { match: MatchRow }) {
       {/* Status badge row */}
       <div className="flex items-center justify-between gap-2">
         {isLive ? (
-          <LiveBadge status={match.status} />
+          mpgLayout ? (
+            <span className="text-[11px] font-black uppercase tracking-widest text-red-400">DIRECT</span>
+          ) : (
+            <LiveBadge status={match.status} />
+          )
         ) : isFinished ? (
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
             {formatMatchStatus("finished")}
           </span>
         ) : (
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-            {when}
+            {mpgLayout && isUpcoming ? `À venir · ${kickoffTime}` : when}
           </span>
         )}
       </div>
@@ -92,22 +140,7 @@ export function MatchCard({ match }: { match: MatchRow }) {
           <LobbyTeamLogo url={match.home_team_logo} />
           <p className="min-w-0 truncate text-base font-black leading-tight text-white">{match.team_home}</p>
         </div>
-        {isLive || isFinished ? (
-          <div className="flex shrink-0 flex-col items-center gap-0.5 px-0.5">
-            <span className="rounded-lg bg-zinc-800 px-2.5 py-1 text-sm font-black tabular-nums text-white sm:px-3">
-              {match.home_score} — {match.away_score}
-            </span>
-            {isLive && match.match_minute !== null && (
-              <span className="text-[10px] font-bold text-green-400">
-                {match.match_minute}&apos;
-              </span>
-            )}
-          </div>
-        ) : (
-          <span className="shrink-0 rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-zinc-400 sm:px-3 sm:text-sm">
-            vs
-          </span>
-        )}
+        {scoreBlock}
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           <p className="min-w-0 truncate text-right text-base font-black leading-tight text-white">{match.team_away}</p>
           <LobbyTeamLogo url={match.away_team_logo} />
@@ -120,7 +153,7 @@ export function MatchCard({ match }: { match: MatchRow }) {
           isLive ? "text-green-500/80" : "text-zinc-600"
         }`}
       >
-        {isLive ? "Rejoindre le kop →" : isFinished ? "Voir le résumé →" : `Coup d'envoi : ${when}`}
+        {isLive ? "Rejoindre le kop →" : isFinished ? "Voir le résumé →" : `Coup d'envoi : ${kickoffTime}`}
       </p>
     </Link>
   );

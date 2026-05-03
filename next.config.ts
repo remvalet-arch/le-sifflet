@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         hostname: "r2.thesportsdb.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "media.api-sports.io",
+        pathname: "/**",
+      },
     ],
   },
 };

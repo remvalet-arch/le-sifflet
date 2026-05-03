@@ -64,6 +64,7 @@ export interface Database {
           name: string;
           badge_url: string | null;
           thesportsdb_league_id: string;
+          api_football_league_id: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -72,6 +73,7 @@ export interface Database {
           name: string;
           badge_url?: string | null;
           thesportsdb_league_id: string;
+          api_football_league_id?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -80,6 +82,7 @@ export interface Database {
           name?: string;
           badge_url?: string | null;
           thesportsdb_league_id?: string;
+          api_football_league_id?: number | null;
           created_at?: string;
           updated_at?: string;
         };

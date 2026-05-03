@@ -279,21 +279,45 @@ export async function ensureCompetitionByLeagueId(admin: Admin, leagueId: string
     throw new Error(`Ligue TheSportsDB ${leagueId} introuvable (lookupleague).`);
   }
 
-  const { data: row, error } = await admin
+  const { data: existing, error: exErr } = await admin
     .from("competitions")
-    .upsert(
-      {
+    .select("id, api_football_league_id")
+    .eq("thesportsdb_league_id", league.idLeague)
+    .maybeSingle();
+  if (exErr) throw new Error(exErr.message);
+
+  if (existing?.id) {
+    if (existing.api_football_league_id != null) {
+      const { error: uErr } = await admin
+        .from("competitions")
+        .update({ badge_url: emptyToNull(league.strBadge) })
+        .eq("id", existing.id);
+      if (uErr) throw new Error(uErr.message);
+      return existing.id;
+    }
+    const { error: uErr } = await admin
+      .from("competitions")
+      .update({
         name: league.strLeague,
         badge_url: emptyToNull(league.strBadge),
-        thesportsdb_league_id: league.idLeague,
-      },
-      { onConflict: "thesportsdb_league_id" },
-    )
+      })
+      .eq("id", existing.id);
+    if (uErr) throw new Error(uErr.message);
+    return existing.id;
+  }
+
+  const { data: row, error } = await admin
+    .from("competitions")
+    .insert({
+      name: league.strLeague,
+      badge_url: emptyToNull(league.strBadge),
+      thesportsdb_league_id: league.idLeague,
+    })
     .select("id")
     .single();
 
   if (error || !row) {
-    throw new Error(error?.message ?? "upsert competitions sans retour");
+    throw new Error(error?.message ?? "insert competitions sans retour");
   }
   return row.id;
 }
