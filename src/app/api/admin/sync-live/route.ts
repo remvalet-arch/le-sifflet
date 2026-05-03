@@ -28,7 +28,7 @@ function verifyCronBearer(request: Request): boolean {
 
 /**
  * GET /api/admin/sync-live
- * Scores + minute + statut (livescore v2 L1), timeline TSDB (v1) et compositions `lineups` (`lookuplineup` v1) pour chaque match traité (en jeu + à venir ≤ 5 min).
+ * Synchronise les matchs **en jeu** et **à venir ≤ 5 min** via **API-Football** (`syncLiveMatches` → `syncApiFootballMatch`) : fixture (scores, minute, statut), compositions `lineups`, événements `match_timeline_events`. Au plus **3** matchs par exécution ; throttle **6,5 s** entre appels API (`API_FOOTBALL_KEY`). Éligibles : équipes avec `api_football_id` renseigné.
  *
  * Auth :
  * - **Modérateur** : session Supabase, `trust_score` ≥ `MODERATOR_THRESHOLD`.

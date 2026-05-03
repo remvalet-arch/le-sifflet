@@ -100,6 +100,7 @@ export interface Database {
           stadium_name: string | null;
           stadium_thumb: string | null;
           thesportsdb_team_id: string;
+          api_football_id: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -117,6 +118,7 @@ export interface Database {
           stadium_name?: string | null;
           stadium_thumb?: string | null;
           thesportsdb_team_id: string;
+          api_football_id?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -134,6 +136,7 @@ export interface Database {
           stadium_name?: string | null;
           stadium_thumb?: string | null;
           thesportsdb_team_id?: string;
+          api_football_id?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -155,6 +158,7 @@ export interface Database {
           home_team_logo: string | null;
           away_team_logo: string | null;
           thesportsdb_event_id: string | null;
+          api_football_id: number | null;
           created_at: string;
           competition_id: string | null;
           home_team_id: string | null;
@@ -175,6 +179,7 @@ export interface Database {
           home_team_logo?: string | null;
           away_team_logo?: string | null;
           thesportsdb_event_id?: string | null;
+          api_football_id?: number | null;
           created_at?: string;
           competition_id?: string | null;
           home_team_id?: string | null;
@@ -195,6 +200,7 @@ export interface Database {
           home_team_logo?: string | null;
           away_team_logo?: string | null;
           thesportsdb_event_id?: string | null;
+          api_football_id?: number | null;
           created_at?: string;
           competition_id?: string | null;
           home_team_id?: string | null;
@@ -210,6 +216,7 @@ export interface Database {
           team_side: "home" | "away";
           position: string;
           status: "starter" | "bench";
+          player_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -219,6 +226,7 @@ export interface Database {
           team_side: "home" | "away";
           position?: string;
           status?: "starter" | "bench";
+          player_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -228,6 +236,7 @@ export interface Database {
           team_side?: "home" | "away";
           position?: string;
           status?: "starter" | "bench";
+          player_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -381,6 +390,7 @@ export interface Database {
           is_own_goal: boolean;
           details: string | null;
           thesportsdb_event_id: string | null;
+          api_football_event_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -393,6 +403,7 @@ export interface Database {
           is_own_goal?: boolean;
           details?: string | null;
           thesportsdb_event_id?: string | null;
+          api_football_event_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -405,6 +416,7 @@ export interface Database {
           is_own_goal?: boolean;
           details?: string | null;
           thesportsdb_event_id?: string | null;
+          api_football_event_id?: string | null;
           created_at?: string;
         };
         Relationships: [];

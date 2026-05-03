@@ -1,12 +1,13 @@
 /**
- * Ingestion TheSportsDB → Supabase (`competitions`, `teams`, `players`, `matches`, timeline live, lineups).
- * Clé API : `SPORTSDB_API_KEY` (fallback `THESPORTSDB_API_KEY`) — v1 (URL) + v2 livescore (header `X-API-KEY`).
+ * Ingestion TheSportsDB → Supabase (`competitions`, `teams`, `players`, `matches`, timeline TSDB hors live, lineups TSDB hors live).
+ * Clé API : `SPORTSDB_API_KEY` (fallback `THESPORTSDB_API_KEY`) — v1 (URL). Sync live : `syncLiveMatches` → API-Football (`API_FOOTBALL_KEY`).
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapPosition } from "@/lib/map-tsdb-position";
+import { SYNC_LIVE_MAX_MATCHES_PER_RUN, syncApiFootballMatch } from "@/services/api-football-sync";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, MatchStatus, TimelineEventType } from "@/types/database";
+import type { Database, MatchStatus } from "@/types/database";
 
 export { mapPosition };
 
@@ -77,61 +78,6 @@ async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`TheSportsDB HTTP ${res.status} sur ${path}`);
-  }
-  return res.json() as Promise<T>;
-}
-
-/** Masque la clé API dans l’URL pour les logs. */
-function redactSportsdbUrlForLog(url: string): string {
-  return url.replace(/(\/api\/v1\/json\/)([^/]+)(\/)/, "$1***$3");
-}
-
-/**
- * GET v1 `lookuptimeline.php` — log du JSON brut (diagnostic). Même auth que `apiFetch`.
- */
-async function fetchTimelineEndpointWithRawLog(
-  pathRelative: string,
-  logPrefix: string,
-  idEvent: string,
-): Promise<unknown> {
-  const url = buildSportsdbUrl(pathRelative);
-  const res = await fetch(url, { cache: "no-store" });
-  const text = await res.text();
-  let parsed: unknown;
-  try {
-    parsed = text.length === 0 ? null : JSON.parse(text);
-  } catch {
-    parsed = { _jsonParseError: true as const, _bodyPreview: text.slice(0, 2000) };
-  }
-  const serialized =
-    typeof parsed === "object" && parsed !== null
-      ? JSON.stringify(parsed, null, 2)
-      : String(parsed);
-  const max = 16_000;
-  const body =
-    serialized.length > max
-      ? `${serialized.slice(0, max)}\n… [tronqué ${String(serialized.length - max)} caractères]`
-      : serialized;
-  console.log(
-    `${logPrefix} ${idEvent} (HTTP ${res.status}) URL=${redactSportsdbUrlForLog(url)} :\n${body}`,
-  );
-  if (!res.ok) {
-    throw new Error(`TheSportsDB HTTP ${res.status} sur ${pathRelative}`);
-  }
-  return parsed;
-}
-
-/** API v2 (Premium) — clé dans le header `X-API-KEY`. */
-async function apiFetchV2<T>(relativePath: string): Promise<T> {
-  const key = getApiKey();
-  const path = relativePath.replace(/^\//, "");
-  const url = `https://www.thesportsdb.com/api/v2/json/${path}`;
-  const res = await fetch(url, {
-    headers: { "X-API-KEY": key },
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error(`TheSportsDB v2 HTTP ${res.status} sur ${path}`);
   }
   return res.json() as Promise<T>;
 }
@@ -232,40 +178,6 @@ type TsdbMatchEvent = {
   strAwayTeamBadge: string | null;
 };
 
-/** Ligne `livescore` API v2 (`/livescore/{idLeague}`) — `idEvent` peut être nombre JSON. */
-type TsdbV2LivescoreRow = {
-  idEvent: string | number;
-  idLeague?: string | number;
-  strStatus: string;
-  intHomeScore: string | number | null;
-  intAwayScore: string | number | null;
-  strProgress: string | number | null;
-};
-
-/** Ligne `timeline` API v1 (`lookuptimeline.php`). */
-type TsdbTimelineRow = {
-  idTimeline: string;
-  idEvent?: string;
-  strTimeline: string | null;
-  strTimelineDetail: string | null;
-  /** Variante API (debug substitutions). */
-  strEventDetail?: string | null;
-  strAssist?: string | null;
-  strHome: string | null;
-  idTeam: string | null;
-  strPlayer: string | null;
-  intTime: string | null;
-};
-
-/** Ligne `lookuplineup.php` — champs variables selon contributions TSDB. */
-type TsdbLineupApiRow = {
-  strPlayer?: string | null;
-  idTeam?: string | number | null;
-  strPosition?: string | null;
-  strSubst?: string | null;
-  strSubstitute?: string | null;
-};
-
 export function pickCutout(p: TsdbPlayerRow): string | null {
   return emptyToNull(p.strCutout) ?? emptyToNull(p.strThumb);
 }
@@ -282,22 +194,6 @@ function extractEventsPayload(data: unknown): TsdbMatchEvent[] {
 function tsdbTeamKey(id: string | undefined | null): string {
   if (id == null || String(id).trim() === "") return "";
   return String(id).trim();
-}
-
-/**
- * Identifiant d'événement TSDB canonique (aligne string DB, nombre JSON v2, zéros de tête).
- */
-function tsdbEventIdFromApi(v: unknown): string {
-  if (v == null) return "";
-  if (typeof v === "number" && Number.isFinite(v)) {
-    return String(Math.trunc(v));
-  }
-  const s = String(v).trim();
-  if (s === "") return "";
-  if (/^\d+$/.test(s)) {
-    return String(parseInt(s, 10));
-  }
-  return s;
 }
 
 function parseScore(s: string | number | null | undefined): number {
@@ -730,7 +626,7 @@ export async function syncUpcomingMatches(): Promise<SyncUpcomingMatchesResult> 
   };
 }
 
-// ── Live : scores + timeline (v2 livescore + v1 timeline) ───────────────────
+// ── Live : API-Football (fixtures, lineups, events) ───────────────────────────
 
 /** Statuts `matches` considérés « en jeu » (pas `live`, retiré en migration 0015). */
 const ACTIVE_LIVE_SYNC_STATUSES: MatchStatus[] = [
@@ -740,372 +636,49 @@ const ACTIVE_LIVE_SYNC_STATUSES: MatchStatus[] = [
   "paused",
 ];
 
-function parseMatchMinute(strProgress: string | number | null | undefined): number | null {
-  if (strProgress == null || String(strProgress).trim() === "") return null;
-  const m = /^(\d+)/.exec(String(strProgress).trim());
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  if (Number.isNaN(n)) return null;
-  return Math.min(120, Math.max(0, n));
-}
-
-function coerceLivescoreRow(row: unknown): TsdbV2LivescoreRow | null {
-  if (!row || typeof row !== "object") return null;
-  const r = row as Record<string, unknown>;
-  const idEvent = r.idEvent;
-  if (idEvent == null || String(idEvent).trim() === "") return null;
-  return {
-    idEvent: idEvent as string | number,
-    idLeague: r.idLeague as string | number | undefined,
-    strStatus: String(r.strStatus ?? ""),
-    intHomeScore: (r.intHomeScore ?? null) as string | number | null,
-    intAwayScore: (r.intAwayScore ?? null) as string | number | null,
-    strProgress: (r.strProgress ?? null) as string | number | null,
-  };
-}
-
-/** `true` si le coup d'envoi (`start_time`) remonte à au moins `minutes` par rapport à `Date.now()`. */
-function matchKickoffAtLeastMinutesAgo(startTimeIso: string, minutes: number): boolean {
-  const t = new Date(startTimeIso).getTime();
-  if (Number.isNaN(t)) return false;
-  return Date.now() - t >= minutes * 60 * 1000;
-}
-
-/** Détails événement v1 (`lookupevent.php`) — même forme que `events` / `event` dans le JSON. */
-async function fetchLookupEventForFallback(tsdbEventId: string): Promise<TsdbMatchEvent | null> {
-  try {
-    const data = await apiFetch<unknown>(`lookupevent.php?id=${encodeURIComponent(tsdbEventId)}`);
-    await delay(THROTTLE_MS);
-    const list = extractEventsPayload(data);
-    return list[0] ?? null;
-  } catch {
-    await delay(THROTTLE_MS);
-    return null;
-  }
-}
-
-/**
- * Statuts lookupevent considérés comme clôture (→ `finished` en base).
- * Inclut variantes API + cas limites (report / annulation / abandon). Pas `ns` (voir guillotine 150 min).
- */
-function isLookupEventFinishedStatus(strStatus: string): boolean {
-  const raw = (strStatus ?? "").trim();
-  if (raw === "") return false;
-
-  const k = raw.toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ").trim();
-  /** Pas `ns` : les « à venir » ne doivent pas passer `finished` via l’API ; la guillotine temporelle gère les blocages. */
-  const apiQuirks = new Set(["postponed", "cancelled", "canceled", "abandoned"]);
-  if (apiQuirks.has(k)) return true;
-
-  const u = raw.toUpperCase();
-  if (u === "MATCH FINISHED" || u === "FT" || u === "FINISHED") return true;
-  return mapTsdbStatusToMatchStatus(raw) === "finished";
-}
-
-/** Extrait le tableau livescore v2 (clés variables selon versions / wrappers). */
-function extractLivescoreRows(data: unknown): TsdbV2LivescoreRow[] {
-  if (!data || typeof data !== "object") return [];
-  const d = data as Record<string, unknown>;
-  const buckets: unknown[] = [d.livescore, d.events, d.results];
-  for (const b of buckets) {
-    if (!Array.isArray(b) || b.length === 0) continue;
-    const out: TsdbV2LivescoreRow[] = [];
-    for (const row of b) {
-      const coerced = coerceLivescoreRow(row);
-      if (coerced) out.push(coerced);
-    }
-    if (out.length > 0) return out;
-  }
-  return [];
-}
-
-type MatchRowLive = Pick<
+type MatchRowApiLive = Pick<
   Database["public"]["Tables"]["matches"]["Row"],
-  | "id"
-  | "thesportsdb_event_id"
-  | "home_team_id"
-  | "away_team_id"
-  | "team_home"
-  | "team_away"
-  | "status"
-  | "start_time"
+  "id" | "home_team_id" | "away_team_id" | "team_home" | "team_away" | "status" | "start_time"
 >;
 
-async function fetchTeamsTsdbByUuid(
+async function fetchTeamsApiFootballByUuid(
   admin: Admin,
   teamUuids: string[],
-): Promise<Map<string, string | null>> {
+): Promise<Map<string, number | null>> {
+  const map = new Map<string, number | null>();
   const unique = [...new Set(teamUuids.filter(Boolean))];
-  const map = new Map<string, string | null>();
   if (unique.length === 0) return map;
-
   const chunkSize = 100;
   for (let i = 0; i < unique.length; i += chunkSize) {
     const slice = unique.slice(i, i + chunkSize);
-    const { data, error } = await admin.from("teams").select("id, thesportsdb_team_id").in("id", slice);
-    if (error) {
-      throw new Error(`teams by id: ${error.message}`);
-    }
+    const { data, error } = await admin.from("teams").select("id, api_football_id").in("id", slice);
+    if (error) throw new Error(`teams api_football_id: ${error.message}`);
     for (const row of data ?? []) {
-      map.set(row.id, row.thesportsdb_team_id ?? null);
+      map.set(row.id, row.api_football_id);
     }
   }
   return map;
 }
 
-/**
- * Timeline buts / cartons / remplacements : uniquement **`lookuptimeline.php`** (v1).
- * (`lookupeventtimer.php` retourne 404 côté TheSportsDB — non utilisé.)
- */
-async function fetchTimelineRowsForEvent(tsdbEventId: string): Promise<TsdbTimelineRow[]> {
-  const path = `lookuptimeline.php?id=${encodeURIComponent(tsdbEventId)}`;
-  const data = (await fetchTimelineEndpointWithRawLog(
-    path,
-    "[DEBUG RAW TIMELINE] API lookuptimeline pour le match",
-    tsdbEventId,
-  )) as { timeline: TsdbTimelineRow[] | null };
-  await delay(THROTTLE_MS);
-  return Array.isArray(data.timeline) ? data.timeline : [];
-}
-
-async function ingestMatchTimelineForSync(
-  admin: Admin,
-  matchId: string,
-  evId: string,
-  homeTsdb: string | null,
-  awayTsdb: string | null,
-): Promise<{ upserted: number; skippedUnmapped: number }> {
-  let skippedUnmapped = 0;
-  let upserted = 0;
-  const timelineRows = await fetchTimelineRowsForEvent(evId);
-  const inserts: Database["public"]["Tables"]["match_timeline_events"]["Insert"][] = [];
-
-  for (const row of timelineRows) {
-    const ins = mapTimelineRowToInsert(matchId, homeTsdb, awayTsdb, row);
-    if (ins) inserts.push(ins);
-    else skippedUnmapped += 1;
-  }
-
-  console.log(
-    `[DEBUG MAPPING] Match ${matchId} (idEvent TSDB ${evId}) - Lignes brutes: ${timelineRows.length}, Lignes mappées avec succès: ${inserts.length}, Lignes rejetées: ${skippedUnmapped}`,
-  );
-
-  if (inserts.length === 0) {
-    return { upserted: 0, skippedUnmapped };
-  }
-
-  const chunkSize = 40;
-  for (let i = 0; i < inserts.length; i += chunkSize) {
-    const chunk = inserts.slice(i, i + chunkSize);
-    const { error: tlErr } = await admin
-      .from("match_timeline_events")
-      .upsert(chunk, { onConflict: "thesportsdb_event_id", ignoreDuplicates: true });
-    if (tlErr) {
-      throw new Error(`match_timeline_events upsert: ${tlErr.message}`);
-    }
-    upserted += chunk.length;
-  }
-  return { upserted, skippedUnmapped };
-}
-
-function extractLineupRows(data: unknown): TsdbLineupApiRow[] {
-  if (!data || typeof data !== "object") return [];
-  const d = data as Record<string, unknown>;
-  const lu = d.lineup;
-  if (Array.isArray(lu)) return lu as TsdbLineupApiRow[];
-  if (lu && typeof lu === "object") return [lu as TsdbLineupApiRow];
-  return [];
-}
-
-function mapLineupStatusFromTsdb(row: TsdbLineupApiRow): "starter" | "bench" {
-  const r = row as Record<string, unknown>;
-  const subst = String(r.strSubst ?? r.strSubstitute ?? r.strSub ?? r.strBench ?? "").trim().toLowerCase();
-  if (subst === "yes" || subst === "y" || subst === "true" || subst === "1") return "bench";
-  const pos = String(row.strPosition ?? "").toLowerCase();
-  if (pos.includes("substitute") || pos.includes("substitution") || pos === "sub") return "bench";
-  return "starter";
-}
-
-/** Poste TSDB (libellés variables) → G/D/M/A ou libellé brut si inconnu. */
-function mapTsdbLineupPosition(strPosition: string | null | undefined): string {
-  return mapPosition(strPosition ?? "");
-}
-
-/**
- * Compositions match : **`lookuplineup.php?id={idEvent}`** (v1).
- * Logs `[DEBUG LINEUPS]` pour diagnostic.
- * @returns `null` si la requête HTTP / JSON a échoué (ne pas vider la table).
- */
-async function fetchLineupRowsForEvent(tsdbEventId: string): Promise<TsdbLineupApiRow[] | null> {
-  console.log(`[DEBUG LINEUPS] Tentative de récup pour le match ${tsdbEventId}`);
-  try {
-    const data = await apiFetch<unknown>(`lookuplineup.php?id=${encodeURIComponent(tsdbEventId)}`);
-    await delay(THROTTLE_MS);
-    const d = data as Record<string, unknown>;
-    const rawLu = d.lineup;
-    const n = Array.isArray(rawLu) ? rawLu.length : rawLu && typeof rawLu === "object" ? 1 : 0;
-    console.log(`[DEBUG LINEUPS] Nombre de joueurs récupérés via API : ${n}`);
-    return extractLineupRows(data);
-  } catch (e) {
-    console.log(
-      `[DEBUG LINEUPS] Échec lookuplineup pour ${tsdbEventId}:`,
-      e instanceof Error ? e.message : String(e),
-    );
-    await delay(THROTTLE_MS);
-    return null;
-  }
-}
-
-/**
- * Remplace les `lineups` du match par la réponse TSDB (delete + insert).
- * Nécessite `homeTsdb` / `awayTsdb` pour rattacher chaque ligne à domicile / extérieur via `idTeam`.
- */
-async function ingestMatchLineupsForSync(
-  admin: Admin,
-  matchId: string,
-  evId: string,
-  homeTsdb: string | null,
-  awayTsdb: string | null,
-): Promise<{ inserted: number }> {
-  const homeKey = tsdbTeamKey(homeTsdb);
-  const awayKey = tsdbTeamKey(awayTsdb);
-  if (!homeKey || !awayKey) {
-    console.log(
-      `[DEBUG LINEUPS] Skip compositions match ${matchId} (idEvent ${evId}) — idTeam TSDB manquant (home=${homeTsdb ?? "null"}, away=${awayTsdb ?? "null"})`,
-    );
-    return { inserted: 0 };
-  }
-
-  const rows = await fetchLineupRowsForEvent(evId);
-  if (rows === null) {
-    return { inserted: 0 };
-  }
-
-  const inserts: Database["public"]["Tables"]["lineups"]["Insert"][] = [];
-
-  for (const row of rows) {
-    const name = (row.strPlayer ?? "").trim();
-    if (name === "") continue;
-    const tid = tsdbTeamKey(row.idTeam == null ? null : String(row.idTeam));
-    let team_side: "home" | "away" | null = null;
-    if (tid === homeKey) team_side = "home";
-    else if (tid === awayKey) team_side = "away";
-    if (team_side === null) continue;
-
-    inserts.push({
-      match_id: matchId,
-      player_name: name,
-      team_side,
-      position: mapTsdbLineupPosition(row.strPosition),
-      status: mapLineupStatusFromTsdb(row),
-    });
-  }
-
-  if (rows.length > 0 && inserts.length === 0) {
-    console.log(
-      `[DEBUG LINEUPS] Match ${matchId} : ${rows.length} ligne(s) API mais 0 mappées (idTeam ≠ domicile/extérieur) — lineups DB inchangées`,
-    );
-    return { inserted: 0 };
-  }
-
-  const { error: delErr } = await admin.from("lineups").delete().eq("match_id", matchId);
-  if (delErr) {
-    throw new Error(`lineups delete ${matchId}: ${delErr.message}`);
-  }
-
-  if (inserts.length === 0) {
-    return { inserted: 0 };
-  }
-
-  const chunkSize = 50;
-  let inserted = 0;
-  for (let i = 0; i < inserts.length; i += chunkSize) {
-    const chunk = inserts.slice(i, i + chunkSize);
-    const { error: insErr } = await admin.from("lineups").insert(chunk);
-    if (insErr) {
-      throw new Error(`lineups insert ${matchId}: ${insErr.message}`);
-    }
-    inserted += chunk.length;
-  }
-  return { inserted };
-}
-
-function mapTimelineRowToInsert(
-  matchId: string,
-  homeTsdb: string | null,
-  awayTsdb: string | null,
-  row: TsdbTimelineRow,
-): Database["public"]["Tables"]["match_timeline_events"]["Insert"] | null {
-  const idTimeline = row.idTimeline == null ? "" : String(row.idTimeline).trim();
-  if (idTimeline === "") return null;
-
-  const rawMin = row.intTime?.trim() ?? "";
-  let minute = parseInt(rawMin, 10);
-  if (Number.isNaN(minute)) minute = 0;
-  minute = Math.min(120, Math.max(0, minute));
-
-  const timeline = (row.strTimeline ?? "").trim().toLowerCase();
-  const detail = (row.strTimelineDetail ?? "").trim().toLowerCase();
-  const detailFull = (row.strTimelineDetail ?? "").trim();
-
-  let eventType: TimelineEventType | null = null;
-  if (timeline === "goal" || detail.includes("goal")) {
-    eventType = "goal";
-  } else if (timeline === "card") {
-    if (detail.includes("red")) eventType = "red_card";
-    else if (detail.includes("yellow")) eventType = "yellow_card";
-    else return null;
-  } else if (timeline === "subst" || timeline.includes("subst")) {
-    eventType = "substitution";
-  } else {
-    return null;
-  }
-
-  if (eventType === "substitution") {
-    const eventDetail =
-      row.strEventDetail != null && String(row.strEventDetail).trim() !== ""
-        ? row.strEventDetail
-        : row.strTimelineDetail;
-    console.log("Substitution détectée:", {
-      minute: row.intTime,
-      player: row.strPlayer,
-      details: eventDetail,
-    });
-  }
-
-  const idTeam = tsdbTeamKey(row.idTeam);
-  let team_side: "home" | "away" = row.strHome?.trim() === "Yes" ? "home" : "away";
-  if (homeTsdb && idTeam === homeTsdb) team_side = "home";
-  else if (awayTsdb && idTeam === awayTsdb) team_side = "away";
-
-  const name = (row.strPlayer ?? "").trim();
-  const player_name = name !== "" ? name : "—";
-  const own = detail.includes("own goal") || detailFull.toLowerCase().includes("own goal");
-
-  return {
-    match_id: matchId,
-    event_type: eventType,
-    minute,
-    team_side,
-    player_name,
-    is_own_goal: own,
-    details: detailFull.length > 0 ? detailFull : null,
-    thesportsdb_event_id: idTimeline,
-  };
-}
-
 export type SyncLiveMatchesResult = {
+  /** Nombre de matchs candidats (en jeu + à venir ≤ 5 min), avant filtre API-Football équipes. */
   activeMatchesLoaded: number;
+  /** Toujours 0 (champ conservé pour compat réponses JSON / monitoring). */
   livescoreRows: number;
+  /** Matchs effectivement passés à `syncApiFootballMatch` cette exécution (plafonné). */
+  matchesConsideredForSync: number;
+  /** Matchs synchronisés sans `skippedReason` côté API-Football. */
   matchesUpdatedFromLivescore: number;
   timelineRowsUpserted: number;
   timelineRowsSkippedUnmapped: number;
   lineupRowsInserted: number;
+  /** Candidats exclus : `home_team_id` / `away_team_id` ou `api_football_id` équipe manquant. */
+  matchesSkippedNoApiFootballTeams: number;
 };
 
 /**
  * Synchronise les matchs en base (en cours + **upcoming** dans les 5 prochaines minutes)
- * avec le flux livescore Ligue 1 (TheSportsDB **v2** `livescore/4334`) puis import timeline (**v1**) et compositions (**v1** `lookuplineup`).
+ * via **API-Football** : fixture, scores, `lineups`, `match_timeline_events` (`syncApiFootballMatch`).
  */
 export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
   const admin = createAdminClient();
@@ -1115,19 +688,13 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
   const [inPlayRes, upcomingRes] = await Promise.all([
     admin
       .from("matches")
-      .select(
-        "id, thesportsdb_event_id, home_team_id, away_team_id, team_home, team_away, status, start_time",
-      )
-      .in("status", ACTIVE_LIVE_SYNC_STATUSES)
-      .not("thesportsdb_event_id", "is", null),
+      .select("id, home_team_id, away_team_id, team_home, team_away, status, start_time")
+      .in("status", ACTIVE_LIVE_SYNC_STATUSES),
     admin
       .from("matches")
-      .select(
-        "id, thesportsdb_event_id, home_team_id, away_team_id, team_home, team_away, status, start_time",
-      )
+      .select("id, home_team_id, away_team_id, team_home, team_away, status, start_time")
       .eq("status", "upcoming")
-      .lte("start_time", thresholdIso)
-      .not("thesportsdb_event_id", "is", null),
+      .lte("start_time", thresholdIso),
   ]);
 
   if (inPlayRes.error) {
@@ -1137,199 +704,97 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
     throw new Error(upcomingRes.error.message);
   }
 
-  const byId = new Map<string, MatchRowLive>();
+  const byId = new Map<string, MatchRowApiLive>();
   for (const row of [...(inPlayRes.data ?? []), ...(upcomingRes.data ?? [])]) {
-    byId.set(row.id, row as MatchRowLive);
+    byId.set(row.id, row as MatchRowApiLive);
   }
-  const matches = [...byId.values()];
+  const candidates = [...byId.values()];
 
-  if (matches.length === 0) {
+  if (candidates.length === 0) {
     return {
       activeMatchesLoaded: 0,
       livescoreRows: 0,
+      matchesConsideredForSync: 0,
       matchesUpdatedFromLivescore: 0,
       timelineRowsUpserted: 0,
       timelineRowsSkippedUnmapped: 0,
       lineupRowsInserted: 0,
+      matchesSkippedNoApiFootballTeams: 0,
     };
   }
 
   const teamUuids: string[] = [];
-  for (const m of matches) {
+  for (const m of candidates) {
     if (m.home_team_id) teamUuids.push(m.home_team_id);
     if (m.away_team_id) teamUuids.push(m.away_team_id);
   }
-  const teamTsdbByUuid = await fetchTeamsTsdbByUuid(admin, teamUuids);
+  const apiByTeam = await fetchTeamsApiFootballByUuid(admin, teamUuids);
 
-  const v2 = await apiFetchV2<unknown>(`livescore/${LIGUE1_LEAGUE_ID}`);
-  await delay(THROTTLE_MS);
-  const livescoreList = extractLivescoreRows(v2);
-  const byEventId = new Map<string, TsdbV2LivescoreRow>();
-  for (const row of livescoreList) {
-    const id = tsdbEventIdFromApi(row.idEvent);
-    if (!id) continue;
-    const leagueOk =
-      row.idLeague == null ||
-      tsdbEventIdFromApi(row.idLeague) === tsdbEventIdFromApi(LIGUE1_LEAGUE_ID);
-    if (!leagueOk) continue;
-    byEventId.set(id, row);
-  }
+  const eligible = candidates.filter((m) => {
+    if (!m.home_team_id || !m.away_team_id) return false;
+    return apiByTeam.get(m.home_team_id) != null && apiByTeam.get(m.away_team_id) != null;
+  });
+
+  const skippedNoApi = candidates.length - eligible.length;
+  const matches = eligible.slice(0, SYNC_LIVE_MAX_MATCHES_PER_RUN);
 
   let matchesUpdatedFromLivescore = 0;
   let timelineRowsUpserted = 0;
-  let timelineRowsSkippedUnmapped = 0;
+  const timelineRowsSkippedUnmapped = 0;
   let lineupRowsInserted = 0;
 
-  for (const m of matches) {
-    const evId = tsdbEventIdFromApi(m.thesportsdb_event_id);
-    if (!evId) continue;
-
-    const homeTsdb = m.home_team_id ? (teamTsdbByUuid.get(m.home_team_id) ?? null) : null;
-    const awayTsdb = m.away_team_id ? (teamTsdbByUuid.get(m.away_team_id) ?? null) : null;
-
-    const nomMatch = `${m.team_home} — ${m.team_away}`;
-    const live = byEventId.get(evId);
-
-    if (!live) {
-      console.log(
-        `Sync live: aucune ligne livescore pour idEvent=${evId} (${nomMatch}) — ${byEventId.size} événements dans le flux`,
-      );
-
-      const lookedUp = await fetchLookupEventForFallback(evId);
-      console.log(
-        "[DEBUG FALLBACK] API renvoie pour",
-        m.team_home,
-        "-> strStatus:",
-        lookedUp?.strStatus,
-      );
-
-      const isTimeExpired = matchKickoffAtLeastMinutesAgo(m.start_time, 150);
-      const isApiFinished =
-        lookedUp != null && isLookupEventFinishedStatus(lookedUp.strStatus);
-
-      if (isTimeExpired || isApiFinished) {
-        const reason = isTimeExpired ? "Délai 150min dépassé" : "API Status";
-        console.log(`[CLÔTURE FORCÉE] Match ${m.team_home} terminé. Raison: ${reason}`);
-
-        const fbPatch: Database["public"]["Tables"]["matches"]["Update"] = {
-          status: "finished",
-          match_minute: null,
-        };
-        if (lookedUp) {
-          fbPatch.home_score = parseScore(lookedUp.intHomeScore);
-          fbPatch.away_score = parseScore(lookedUp.intAwayScore);
-        }
-
-        const { error: fbErr } = await admin.from("matches").update(fbPatch).eq("id", m.id);
-
-        if (fbErr) {
-          throw new Error(`matches update (fallback lookupevent) ${m.id}: ${fbErr.message}`);
-        }
-
-        matchesUpdatedFromLivescore += 1;
-      }
-    } else {
-      const homeScore = parseScore(live.intHomeScore);
-      const awayScore = parseScore(live.intAwayScore);
-      const minute = parseMatchMinute(live.strProgress);
-      let mappedStatus = mapTsdbStatusToMatchStatus(live.strStatus);
-
-      if (
-        (homeScore > 0 || awayScore > 0) &&
-        (mappedStatus === "upcoming" || m.status === "upcoming")
-      ) {
-        mappedStatus = "first_half";
-      }
-
-      console.log(
-        `[DEBUG LIVE] Match: ${m.team_home}, API Status: "${live.strStatus}", Mapped to: "${mappedStatus}"`,
-      );
-
-      const patch: Database["public"]["Tables"]["matches"]["Update"] = {
-        home_score: homeScore,
-        away_score: awayScore,
-        match_minute: minute,
-        status: mappedStatus,
-      };
-
-      const { error: upErr } = await admin.from("matches").update(patch).eq("id", m.id);
-      if (upErr) {
-        throw new Error(`matches update ${m.id}: ${upErr.message}`);
-      }
+  for (let i = 0; i < matches.length; i += 1) {
+    const m = matches[i]!;
+    const r = await syncApiFootballMatch(m.id, { leadingDelayMs: i > 0 ? 6500 : 0 });
+    if (!r.skippedReason) {
       matchesUpdatedFromLivescore += 1;
+    } else {
+      console.log(
+        `[sync live API-Football] match ${m.id} (${m.team_home} — ${m.team_away}) skip: ${r.skippedReason}`,
+      );
     }
-
-    const tl = await ingestMatchTimelineForSync(admin, m.id, evId, homeTsdb, awayTsdb);
-    timelineRowsUpserted += tl.upserted;
-    timelineRowsSkippedUnmapped += tl.skippedUnmapped;
-
-    const lp = await ingestMatchLineupsForSync(admin, m.id, evId, homeTsdb, awayTsdb);
-    lineupRowsInserted += lp.inserted;
+    timelineRowsUpserted += r.timelineUpserted;
+    lineupRowsInserted += r.lineupsInserted;
   }
 
   return {
-    activeMatchesLoaded: matches.length,
-    livescoreRows: livescoreList.length,
+    activeMatchesLoaded: candidates.length,
+    livescoreRows: 0,
+    matchesConsideredForSync: matches.length,
     matchesUpdatedFromLivescore,
     timelineRowsUpserted,
     timelineRowsSkippedUnmapped,
     lineupRowsInserted,
+    matchesSkippedNoApiFootballTeams: skippedNoApi,
   };
 }
 
 export type SyncSpecificMatchLineupsResult = {
   matchId: string;
+  /** Conservé pour compat ; le live utilise `apiFootballFixtureId`. */
   thesportsdb_event_id: string | null;
   inserted: number;
-  skippedReason?: "match_not_found" | "no_thesportsdb_event_id";
+  skippedReason?:
+    | "match_not_found"
+    | "no_thesportsdb_event_id"
+    | "missing_home_or_away_team_id"
+    | "missing_api_football_team_id"
+    | "fixture_not_found"
+    | "fixture_ambiguous";
+  apiFootballFixtureId?: number | null;
 };
 
 /**
- * Import TSDB `lookuplineup` pour **un** match (peu importe le statut : passé, live, à venir).
- * Charge `thesportsdb_event_id` + FK équipes, résout les `thesportsdb_team_id`, puis `ingestMatchLineupsForSync`.
+ * Sync **un** match via API-Football (compositions + timeline + score), même interface que l’ancien import TSDB lineups.
  */
 export async function syncSpecificMatchLineups(matchId: string): Promise<SyncSpecificMatchLineupsResult> {
-  const admin = createAdminClient();
-  const { data: match, error } = await admin
-    .from("matches")
-    .select("id, thesportsdb_event_id, home_team_id, away_team_id")
-    .eq("id", matchId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`syncSpecificMatchLineups select: ${error.message}`);
-  }
-  if (!match) {
-    return {
-      matchId,
-      thesportsdb_event_id: null,
-      inserted: 0,
-      skippedReason: "match_not_found",
-    };
-  }
-
-  const evId = tsdbEventIdFromApi(match.thesportsdb_event_id);
-  if (!evId) {
-    return {
-      matchId,
-      thesportsdb_event_id: null,
-      inserted: 0,
-      skippedReason: "no_thesportsdb_event_id",
-    };
-  }
-
-  const teamUuids: string[] = [];
-  if (match.home_team_id) teamUuids.push(match.home_team_id);
-  if (match.away_team_id) teamUuids.push(match.away_team_id);
-  const teamTsdbByUuid = await fetchTeamsTsdbByUuid(admin, teamUuids);
-  const homeTsdb = match.home_team_id ? (teamTsdbByUuid.get(match.home_team_id) ?? null) : null;
-  const awayTsdb = match.away_team_id ? (teamTsdbByUuid.get(match.away_team_id) ?? null) : null;
-
-  const lp = await ingestMatchLineupsForSync(admin, matchId, evId, homeTsdb, awayTsdb);
+  const r = await syncApiFootballMatch(matchId);
   return {
-    matchId,
-    thesportsdb_event_id: evId,
-    inserted: lp.inserted,
+    matchId: r.matchId,
+    thesportsdb_event_id: null,
+    inserted: r.lineupsInserted,
+    skippedReason: r.skippedReason,
+    apiFootballFixtureId: r.fixtureId,
   };
 }
 

@@ -1,7 +1,7 @@
 # PROJECT_STATE — Le Sifflet
 
 > Documentation vivante de l'application. À mettre à jour à chaque évolution majeure (feature, schéma, bug critique).
-> Dernière mise à jour : 2026-05-02 — Sync live : [`syncLiveMatches()`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-live`](src/app/api/admin/sync-live/route.ts) (modérateur **ou** `Authorization: Bearer` + `CRON_SECRET` pour [Vercel Cron](vercel.json) toutes les 2 min). **Compositions passées** : [`syncSpecificMatchLineups`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-past-lineups`](src/app/api/admin/sync-past-lineups/route.ts) (matchs `finished` sans lignes `lineups`, throttle 500 ms). Colonne timeline [`0026`](supabase/migrations/0026_match_timeline_thesportsdb_event_id.sql). **Logs diagnostic** (serveur) : réponse brute `lookuptimeline` + récap mapping timeline (`[DEBUG RAW TIMELINE]`, `[DEBUG MAPPING]`) ; compositions : `[DEBUG LINEUPS]` (`lookuplineup`). Résumé JSON sync-live inclut `lineupRowsInserted`. Ingestion TSDB : [`trigger-initial-sync`](src/app/api/admin/trigger-initial-sync/route.ts), `SPORTSDB_API_KEY` / `CRON_SECRET` (`.env.example`).
+> Dernière mise à jour : 2026-05-02 — **Live API-Football** : [`syncApiFootballMatch`](src/services/api-football-sync.ts) (fixtures, lineups, events → `matches`, `lineups`, `match_timeline_events`), appelé par [`syncLiveMatches()`](src/services/sportsdb-sync.ts) + [`GET /api/admin/sync-live`](src/app/api/admin/sync-live/route.ts) (max 3 matchs/run, throttle 6,5 s entre requêtes API) ; [`GET /api/cron/match-monitor`](src/app/api/cron/match-monitor/route.ts) (cycle de vie : scores + minute, compos si besoin, sync timeline en fin de match — **Bearer `CRON_SECRET` uniquement**, `GET /fixtures?ids=…` par lots). Migrations [`0029`](supabase/migrations/0029_api_football_ids.sql) + [`0030`](supabase/migrations/0030_api_football_timeline_lineups.sql) + [`0031`](supabase/migrations/0031_match_timeline_api_football_unique_idx.sql). Client [`api-football-client.ts`](src/lib/api-football-client.ts), mapping équipes [`GET /api/admin/map-apifootball-teams`](src/app/api/admin/map-apifootball-teams/route.ts). Compositions passées : [`syncSpecificMatchLineups`](src/services/sportsdb-sync.ts) (API-Football) + [`GET /api/admin/sync-past-lineups`](src/app/api/admin/sync-past-lineups/route.ts). Ingestion statique TSDB : [`trigger-initial-sync`](src/app/api/admin/trigger-initial-sync/route.ts). `SPORTSDB_API_KEY` / `CRON_SECRET` / `API_FOOTBALL_KEY` (`.env.example`).
 
 ---
 
@@ -30,7 +30,7 @@ Les **quatre grades** affichés en bas de page (ex. « Boss de la VAR ») sont u
 | Toasts | `sonner` | Provider monté dans `src/app/layout.tsx`. |
 | Auth & DB | **Supabase** (`@supabase/ssr` 0.10) | OAuth Google PKCE, JWT rafraîchi par middleware. |
 | Realtime | Supabase Realtime | 6 tables en `REPLICA IDENTITY FULL` : `matches`, `market_events`, `bets`, `alert_signals`, `profiles`, `match_timeline_events`. |
-| Données externes | TheSportsDB API | `src/lib/services/thesportsdb.ts` (matchs / events). **Ingestion tampon** : [`src/services/sportsdb-sync.ts`](src/services/sportsdb-sync.ts) — Ligue 1 (4334) + VIP, upsert `competitions` / `teams` / `players` / `matches` ; throttle ~550 ms. **Import cosmétique par ligue** : [`importLeagueAssets`](src/services/sportsdb-assets-import.ts) + [`GET /api/admin/import-assets?league=…`](src/app/api/admin/import-assets/route.ts) (modérateur ou cron `CRON_SECRET`). **Live** : `syncLiveMatches()` — `GET /api/admin/sync-live` (modérateur ou **cron** `CRON_SECRET`). Cron planifié : [`vercel.json`](vercel.json). Déclencheur initial : `GET /api/admin/trigger-initial-sync` (`?rosters=1`). |
+| Données externes | **TheSportsDB** (cosmétique / calendrier statique) + **API-Football** (api-sports.io v3, **live** : scores, compos, timeline) | TSDB : `src/lib/services/thesportsdb.ts`, [`sportsdb-sync.ts`](src/services/sportsdb-sync.ts) (hors live TSDB), [`sportsdb-assets-import.ts`](src/services/sportsdb-assets-import.ts), [`GET /api/admin/import-assets`](src/app/api/admin/import-assets/route.ts). API-Football : [`api-football-client.ts`](src/lib/api-football-client.ts), [`api-football-sync.ts`](src/services/api-football-sync.ts), colonnes `api_football_id`, migrations [`0030`](supabase/migrations/0030_api_football_timeline_lineups.sql) / [`0031`](supabase/migrations/0031_match_timeline_api_football_unique_idx.sql), mapping [`GET /api/admin/map-apifootball-teams`](src/app/api/admin/map-apifootball-teams/route.ts). **Live** : `syncLiveMatches` → `GET /api/admin/sync-live` (modérateur ou cron `CRON_SECRET`) ; `GET /api/cron/match-monitor` (cron dédié, Bearer `CRON_SECRET` uniquement). Déclencheur initial TSDB : `GET /api/admin/trigger-initial-sync` (`?rosters=1`). |
 | Images TSDB | `next/image` prêt | [`next.config.ts`](next.config.ts) — `remotePatterns` `www.thesportsdb.com`, `r2.thesportsdb.com`. |
 | Sécurité serveur | `service_role` admin client | `src/lib/supabase/admin.ts` — bypass RLS pour les opérations sensibles. |
 | Réponses API | Helpers `successResponse` / `errorResponse` | `src/lib/api-response.ts` — shape `{ ok, data | error }`. |
@@ -86,6 +86,7 @@ erDiagram
         uuid id PK
         uuid competition_id FK
         text thesportsdb_team_id "UNIQUE"
+        int api_football_id "UNIQUE si non null"
         text equipment_url
     }
     matches {
@@ -97,6 +98,7 @@ erDiagram
         int away_score
         int match_minute
         text thesportsdb_event_id "UNIQUE"
+        int api_football_id "UNIQUE si non null"
         timestamptz alert_cooldown_until
         uuid competition_id
         uuid home_team_id
@@ -144,6 +146,8 @@ erDiagram
         text player_name
         bool is_own_goal
         text details "for info events"
+        text thesportsdb_event_id "UNIQUE si non null TSDB"
+        text api_football_event_id "UNIQUE si non null live AF"
     }
     lineups {
         uuid id PK
@@ -152,6 +156,7 @@ erDiagram
         text team_side
         text position "G D M A ou libellé TSDB brut"
         text status "starter, bench"
+        uuid player_id "FK players nullable"
     }
     players {
         uuid id PK
@@ -170,7 +175,7 @@ erDiagram
 - `profiles.sifflets_balance >= 0` CHECK + UPDATE limité à `username` côté client.
 - `auth.users` → trigger `on_auth_user_created` → INSERT auto dans `profiles`.
 
-**Migrations appliquées** : `0001` à `0028` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE) — import sync : valeur = `idTimeline` TheSportsDB (`lookuptimeline`), upsert stable ; **`0027`** : `teams.team_color_1` / `team_color_2`, `stadium_name` / `stadium_thumb`, `players.image_url` (import cosmétique TSDB). **`0028`** : suppression des `CHECK` sur `lineups.position` et `players.position` pour accepter les libellés bruts TSDB non mappés (audit) ; mapping mots-clés dans [`src/lib/map-tsdb-position.ts`](src/lib/map-tsdb-position.ts), replis terrain milieu via [`src/lib/pitch-lineups.ts`](src/lib/pitch-lineups.ts). Ingestion TSDB hors migration (service TypeScript + routes admin).
+**Migrations appliquées** : `0001` à `0031` — `0023` : tables `competitions` / `teams`, FK nullable sur `players` / `matches`, `set_updated_at` ; `0024` : `teams.equipment_url` ; **`0025`** : `matches.home_team_logo` / `away_team_logo` / `home_team_color` / `away_team_color` en **`text`** ; **`0026`** : `match_timeline_events.thesportsdb_event_id` (UNIQUE) — TSDB `lookuptimeline` ; **`0027`** : `teams.team_color_1` / `team_color_2`, `stadium_name` / `stadium_thumb`, `players.image_url` (import cosmétique TSDB). **`0028`** : suppression des `CHECK` sur `lineups.position` et `players.position` ; [`map-tsdb-position.ts`](src/lib/map-tsdb-position.ts), [`pitch-lineups.ts`](src/lib/pitch-lineups.ts). **`0029`** : `teams.api_football_id` / `matches.api_football_id`. **`0030`** : colonne `match_timeline_events.api_football_event_id`, `lineups.player_id` → `players`. **`0031`** : index UNIQUE partiel `idx_unique_api_football_event_id` sur `api_football_event_id` (upsert PostgREST) ; retrait de l’index homonyme `0030` si présent. **Live** : [`api-football-sync.ts`](src/services/api-football-sync.ts) + [`api-football-client.ts`](src/lib/api-football-client.ts), `GET /api/admin/map-apifootball-teams`. Ingestion TSDB hors migration (calendrier / cosmétique).
 
 ---
 

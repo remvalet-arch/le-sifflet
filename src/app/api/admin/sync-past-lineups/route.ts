@@ -33,8 +33,8 @@ export type PastLineupSyncItem = Awaited<ReturnType<typeof syncSpecificMatchLine
 
 /**
  * GET /api/admin/sync-past-lineups *(temporaire)*  
- * Matchs **`finished`** avec `thesportsdb_event_id` renseigné et **aucune** ligne dans `lineups` :
- * appelle `syncSpecificMatchLineups` pour chacun, avec **500 ms** entre chaque requête TSDB.
+ * Matchs **`finished`** à rattraper : **sans** `lineups` **ou** **sans** lignes `match_timeline_events` (compos OK mais timeline vide, etc.).  
+ * Appelle `syncSpecificMatchLineups` (API-Football) pour chaque candidat. **6,5 s** entre chaque match (quota 10 req/min).
  *
  * Auth : identique à `/api/admin/sync-live` (modérateur ou `Authorization: Bearer` + `CRON_SECRET`).
  */
@@ -42,11 +42,7 @@ export async function GET(request: Request) {
   const run = async () => {
     const admin = createAdminClient();
 
-    const { data: finishedRows, error: finErr } = await admin
-      .from("matches")
-      .select("id")
-      .eq("status", "finished")
-      .not("thesportsdb_event_id", "is", null);
+    const { data: finishedRows, error: finErr } = await admin.from("matches").select("id").eq("status", "finished");
 
     if (finErr) {
       throw new Error(finErr.message);
@@ -55,13 +51,14 @@ export async function GET(request: Request) {
     const allIds = (finishedRows ?? []).map((r) => r.id);
     if (allIds.length === 0) {
       return {
-        finishedWithEventId: 0,
-        candidatesWithoutLineups: 0,
+        finishedMatchCount: 0,
+        candidatesMissingLineupsOrTimeline: 0,
         results: [] as PastLineupSyncItem[],
       };
     }
 
     const withLineups = new Set<string>();
+    const withTimeline = new Set<string>();
     const idChunk = 150;
     for (let i = 0; i < allIds.length; i += idChunk) {
       const slice = allIds.slice(i, i + idChunk);
@@ -72,9 +69,20 @@ export async function GET(request: Request) {
       for (const row of luRows ?? []) {
         withLineups.add(row.match_id);
       }
+
+      const { data: tlRows, error: tlErr } = await admin
+        .from("match_timeline_events")
+        .select("match_id")
+        .in("match_id", slice);
+      if (tlErr) {
+        throw new Error(tlErr.message);
+      }
+      for (const row of tlRows ?? []) {
+        withTimeline.add(row.match_id);
+      }
     }
 
-    const candidateIds = allIds.filter((id) => !withLineups.has(id));
+    const candidateIds = allIds.filter((id) => !withLineups.has(id) || !withTimeline.has(id));
     const results: PastLineupSyncItem[] = [];
 
     for (let i = 0; i < candidateIds.length; i += 1) {
@@ -92,13 +100,13 @@ export async function GET(request: Request) {
         });
       }
       if (i < candidateIds.length - 1) {
-        await delay(500);
+        await delay(6500);
       }
     }
 
     return {
-      finishedWithEventId: allIds.length,
-      candidatesWithoutLineups: candidateIds.length,
+      finishedMatchCount: allIds.length,
+      candidatesMissingLineupsOrTimeline: candidateIds.length,
       results,
     };
   };
