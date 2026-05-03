@@ -64,6 +64,11 @@ export async function POST(request: NextRequest) {
 
   if (rpcErr) return errorResponse(`Résolution échouée : ${rpcErr.message}`);
 
+  const { error: pronoErr } = await admin.rpc("resolve_match_pronos", { p_match_id: match_id });
+  if (pronoErr) {
+    console.warn(`[finish-match] resolve_match_pronos: ${pronoErr.message}`);
+  }
+
   return successResponse({
     finished: true,
     score: `${match.home_score}-${match.away_score}`,

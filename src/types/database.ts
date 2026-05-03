@@ -320,6 +320,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      match_subscriptions: {
+        Row: {
+          user_id: string;
+          match_id: string;
+          smart_mute: boolean;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          match_id: string;
+          smart_mute?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          match_id?: string;
+          smart_mute?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       market_events: {
         Row: {
           id: string;
@@ -717,6 +738,14 @@ export interface Database {
           created_at: string;
         }>;
       };
+      resolve_match_pronos: {
+        Args: { p_match_id: string };
+        Returns: Record<string, unknown>;
+      };
+      profile_rank_from_xp: {
+        Args: { p_xp: number };
+        Returns: string;
+      };
     };
   };
 }
@@ -725,6 +754,8 @@ export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type MatchRow = Database["public"]["Tables"]["matches"]["Row"];
 export type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
 export type SquadMemberRow = Database["public"]["Tables"]["squad_members"]["Row"];
+export type MatchSubscriptionRow =
+  Database["public"]["Tables"]["match_subscriptions"]["Row"];
 export type MarketEventRow =
   Database["public"]["Tables"]["market_events"]["Row"];
 export type LineupRow = Database["public"]["Tables"]["lineups"]["Row"];

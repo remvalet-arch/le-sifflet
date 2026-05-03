@@ -17,7 +17,7 @@ export default async function AppLayout({
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("username, sifflets_balance, rank")
+    .select("username, sifflets_balance, rank, xp")
     .eq("id", user.id)
     .single();
 
@@ -29,6 +29,7 @@ export default async function AppLayout({
         username={profile.username}
         siffletsBalance={profile.sifflets_balance}
         rank={profile.rank}
+        xp={profile.xp ?? 0}
         userId={user.id}
       />
 

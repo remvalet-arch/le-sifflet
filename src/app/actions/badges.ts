@@ -11,7 +11,7 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
     { data: userBadgesData },
     { data: profile },
     { data: shortBets },
-    { data: longBets },
+    { data: pronos },
   ] = await Promise.all([
     supabase.from("badges").select("*"),
     supabase.from("user_badges").select("badge_id").eq("user_id", userId),
@@ -22,8 +22,8 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
       .eq("user_id", userId)
       .order("placed_at", { ascending: false }),
     supabase
-      .from("long_term_bets")
-      .select("id, bet_type, status, match_id")
+      .from("pronos")
+      .select("id, prono_type, status, match_id")
       .eq("user_id", userId),
   ]);
 
@@ -32,7 +32,6 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
   const unlockedIds = new Set((userBadgesData ?? []).map((ub) => ub.badge_id));
   const newlyUnlocked: string[] = [];
 
-  // Check var_loss_5_same_match: need match_id for each short bet
   const eventIds = [...new Set((shortBets ?? []).map((b) => b.event_id))];
   const lostMatchCounts: Record<string, number> = {};
   if (eventIds.length > 0) {
@@ -62,8 +61,8 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
         break;
       }
       case "exact_score_win":
-        shouldUnlock = (longBets ?? []).some(
-          (b) => b.bet_type === "exact_score" && b.status === "won",
+        shouldUnlock = (pronos ?? []).some(
+          (p) => p.prono_type === "exact_score" && p.status === "won",
         );
         break;
       case "moderator_status":
@@ -73,12 +72,11 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
         shouldUnlock = Object.values(lostMatchCounts).some((count) => count >= 5);
         break;
       case "scorer_win":
-        shouldUnlock = (longBets ?? []).some(
-          (b) => b.bet_type === "scorer" && b.status === "won",
+        shouldUnlock = (pronos ?? []).some(
+          (p) => p.prono_type === "scorer" && p.status === "won",
         );
         break;
       case "login_streak_3":
-        // Requires login history tracking — not yet implemented
         break;
     }
 

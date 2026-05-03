@@ -11,16 +11,25 @@
 
 import { test, expect } from "@playwright/test";
 
+// ── 0. PWA ────────────────────────────────────────────────────────────────────
+
+test.describe("PWA", () => {
+  test("sw.js est servi (200)", async ({ request }) => {
+    const res = await request.get("/sw.js");
+    expect(res.status()).toBe(200);
+    const text = await res.text();
+    expect(text).toContain("skipWaiting");
+  });
+});
+
 // ── 1. LOBBY ──────────────────────────────────────────────────────────────────
 
 test.describe("Lobby", () => {
   test("affiche au moins une MatchCard", async ({ page }) => {
     await page.goto("/lobby");
 
-    // Attendre que le contenu soit chargé (fin du skeleton animate-pulse)
     await page.waitForSelector("main", { state: "visible" });
 
-    // Chercher un lien vers /match/ (chaque MatchCard est un <a href="/match/...">)
     const matchLinks = page.locator('a[href^="/match/"]');
     await expect(matchLinks.first()).toBeVisible({ timeout: 10_000 });
 
@@ -37,17 +46,12 @@ test.describe("LiveRoom", () => {
     await page.goto("/lobby");
     await page.waitForSelector('a[href^="/match/"]', { state: "visible" });
 
-    // Cliquer sur le premier match disponible
     const firstMatch = page.locator('a[href^="/match/"]').first();
     await firstMatch.click();
 
-    // Attendre que la LiveRoom se charge (présence des onglets)
     await page.waitForURL(/\/match\//);
     await page.waitForSelector("main", { state: "visible" });
 
-    // Le Super-Bouton (FAB) est présent uniquement sur les matchs En Direct
-    // Il est rendu dans BottomNav avec aria-label="Ouvrir le tiroir d'action"
-    // On vérifie sa présence — s'il n'est pas visible c'est que le match est upcoming/finished
     const superButton = page.locator('button[aria-label="Ouvrir le tiroir d\'action"]');
     const matchIsLive = await superButton.isVisible().catch(() => false);
 
@@ -55,7 +59,6 @@ test.describe("LiveRoom", () => {
       console.log("[liveroom] ✓ Super-Bouton FAB visible sur un match En Direct");
       await expect(superButton).toBeVisible();
     } else {
-      // Match upcoming ou terminé — vérifier quand même que la page est bien chargée
       console.log("[liveroom] ℹ Match non En Direct — Super-Bouton attendu absent");
       const kopTab = page.getByRole("button", { name: "Kop", exact: true });
       await expect(kopTab).toBeVisible({ timeout: 8_000 });
@@ -71,7 +74,6 @@ test.describe("LiveRoom", () => {
     await expect(page.getByRole("button", { name: "Kop", exact: true })).toBeVisible({ timeout: 8_000 });
     await expect(page.getByRole("button", { name: "Compo", exact: true })).toBeVisible({ timeout: 8_000 });
 
-    // À venir → « Pronos » ; match commencé / terminé → « Stats »
     const pronosOrStats = page
       .getByRole("button", { name: "Pronos", exact: true })
       .or(page.getByRole("button", { name: "Stats", exact: true }));
@@ -120,7 +122,8 @@ test.describe("Pronos (score exact)", () => {
     await homeInput.fill("0");
     await awayInput.fill("0");
 
-    await expect(page.getByRole("status")).toBeVisible({ timeout: 5_000 });
+    const bunker = page.getByRole("status");
+    await expect(bunker).toBeVisible({ timeout: 8_000 });
     await expect(page.getByText(/AUCUN BUTEUR/i)).toBeVisible();
     console.log("[pronos] ✓ Bunker 0-0 affiché");
   });
@@ -129,15 +132,12 @@ test.describe("Pronos (score exact)", () => {
 // ── 4. PROFIL ────────────────────────────────────────────────────────────────
 
 test.describe("Profil", () => {
-  test("affiche le solde et le badge karma", async ({ page }) => {
+  test("affiche le solde, le badge karma et l'onglet Paris VAR", async ({ page }) => {
     await page.goto("/profile");
     await page.waitForSelector("main", { state: "visible" });
 
-    // Vérifier l'affichage du solde
-    const balanceLabel = page.locator("text=Solde actuel");
-    await expect(balanceLabel).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText("Confiance", { exact: true })).toBeVisible({ timeout: 8_000 });
 
-    // Vérifier le badge karma (l'un des trois)
     const badgeTexts = ["Modérateur", "Supporteur", "Carton Jaune"];
     let badgeFound = false;
     for (const badge of badgeTexts) {
@@ -149,9 +149,8 @@ test.describe("Profil", () => {
     }
     expect(badgeFound).toBeTruthy();
 
-    // Vérifier l'onglet "Mes Paris"
-    const betSection = page.locator("text=Mes Paris");
-    await expect(betSection).toBeVisible({ timeout: 5_000 });
-    console.log("[profile] ✓ Section 'Mes Paris' visible");
+    const parisVarTab = page.getByRole("button", { name: /Paris VAR/i });
+    await expect(parisVarTab).toBeVisible({ timeout: 5_000 });
+    console.log("[profile] ✓ Onglet Paris VAR visible");
   });
 });

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { verifyEventWithAPI } from "@/lib/sports/sportsProvider";
+import { verifyMarketEventWithApiFootball } from "@/lib/sports/sportsProvider";
 import { resolveEvent } from "@/lib/resolve-event";
 
 const MIN_AGE_SECONDS = 3 * 60;
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   const { data: event } = await supabase
     .from("market_events")
-    .select("*")
+    .select("id, type, match_id, created_at, status")
     .eq("id", body.event_id)
     .eq("status", "open")
     .single();
@@ -35,7 +35,23 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const apiResult = await verifyEventWithAPI();
+  const { data: matchRow } = await supabase
+    .from("matches")
+    .select("api_football_id")
+    .eq("id", event.match_id)
+    .maybeSingle();
+
+  if (!matchRow?.api_football_id) {
+    return successResponse({
+      status: "waiting",
+      hint: "no_api_football",
+    });
+  }
+
+  const apiResult = await verifyMarketEventWithApiFootball({
+    matchId: event.match_id,
+    marketType: event.type,
+  });
 
   if (apiResult === "WAIT") {
     return successResponse({ status: "waiting" });

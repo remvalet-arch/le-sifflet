@@ -49,7 +49,7 @@ export function BottomNav() {
             <span className="py-2.5 text-[10px] opacity-0 select-none" aria-hidden>·</span>
           </div>
         ) : (
-          <TabLink href="/squads" Icon={Users} label="Ligues" pathname={pathname} />
+          <TabLink href="/ligues" Icon={Users} label="LIGUES" pathname={pathname} />
         )}
 
         <TabLink href="/profile" Icon={User} label="Profil" pathname={pathname} />

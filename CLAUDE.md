@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Le Sifflet** is a mobile-first PWA "second screen" app for live football matches, targeting the 2026 World Cup. Users play the role of referee and bet virtual points ("Sifflets") on contentious in-game actions in real time.
 
 - **Tone & design:** Immersive and tongue-in-cheek (think MPG — Mon Petit Gazon), tutoiement throughout, mobile-first UI with large tap targets.
-- **Current MVP state:** Étapes 1–6 complete — Google OAuth, middleware, auto-generated profiles, sorted match lobby, live room with community alerts (Waze mechanic), real-time sync via Supabase Realtime, VotingModal with degressive odds, full bet resolution loop (auto + manual admin), Realtime win/loss notifications, and bet history profile page.
+- **Current MVP state:** Étapes 1–6 complete — Google OAuth, middleware, auto-generated profiles, sorted match lobby, live room with community alerts (Waze mechanic), real-time sync via Supabase Realtime, VotingModal with **parimutuel** odds (`get_event_odds`), full bet resolution loop (auto + manual admin), Realtime win/loss notifications, and bet history profile page.
 
 ## Commands
 
@@ -69,7 +69,7 @@ Any async action (API call) that succeeds or fails must trigger a toast via `imp
 - `/(app)/profile` — profil joueur : solde, stats win/loss, historique des paris
 - `/api/alert` — POST: inserts an `alert_signal`; if ≥ threshold signals of the same type in 15 s → creates a `market_event` + 3-min cooldown on the match (uses `service_role` admin client for INSERT/UPDATE)
 - `/api/bet` — POST: validates and calls `place_bet` RPC (atomic debit + bet insert; enforces one bet per user/event via UNIQUE constraint)
-- `/api/verify-event` — POST: checks event age (> 3 min), calls mock sports API (`src/lib/sports/sportsProvider.ts`), auto-resolves if result available
+- `/api/verify-event` — POST: checks event age (> 3 min), appelle **API-Football** via `sportsProvider` pour **`var_goal`** / **`penalty_check`** (sinon `WAIT`), auto-résout si verdict disponible
 - `/api/admin/resolve-event` — POST: manual override to force OUI/NON on any open event
 - `/admin/resolve` — admin UI listing open events with FORCER OUI / FORCER NON / Auto buttons
 
@@ -110,6 +110,6 @@ Realtime is enabled on `market_events`, `bets`, and `alert_signals`.
 
 **Admin client (`src/lib/supabase/admin.ts`):** `createAdminClient()` uses `SUPABASE_SERVICE_ROLE_KEY` (never `NEXT_PUBLIC`_). Required for operations that bypass RLS: market_event INSERT in `/api/alert`, matches UPDATE for cooldown, `resolve_event` RPC call.
 
-**Degressive odds in `place_bet`:** 0–10 s → ×2.0 · 11–45 s → ×1.5 · 46–90 s → ×1.1. Event expires after 90 s.
+**Cotes parimutuel :** affichage et validation via la RPC **`get_event_odds`** (masse des mises) ; la fenêtre de vote côté UI reste **90 s** (`LIVE_BETTING_WINDOW_SECONDS`).
 
 Seed data: run `supabase/seed.sql` in the Supabase SQL Editor to populate demo matches.

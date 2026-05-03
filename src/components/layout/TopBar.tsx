@@ -8,12 +8,13 @@ import { createClient } from "@/lib/supabase/client";
 import { useLocale } from "@/lib/i18n/useLocale";
 import type { ProfileRow } from "@/types/database";
 
-type Props = { siffletsBalance: number; username: string; userId: string; rank: string };
+type Props = { siffletsBalance: number; username: string; userId: string; rank: string; xp: number };
 
-export function TopBar({ siffletsBalance, username, userId, rank }: Props) {
+export function TopBar({ siffletsBalance, username, userId, rank, xp: initialXp }: Props) {
   const [open, setOpen] = useState(false);
   const [balance, setBalance] = useState(siffletsBalance);
   const [liveRank, setLiveRank] = useState(rank);
+  const [liveXp, setLiveXp] = useState(initialXp);
   const [flash, setFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, setLocale, t } = useLocale();
@@ -40,6 +41,7 @@ export function TopBar({ siffletsBalance, username, userId, rank }: Props) {
           }
           setBalance(updated.sifflets_balance);
           setLiveRank(updated.rank);
+          if (typeof updated.xp === "number") setLiveXp(updated.xp);
         },
       )
       .subscribe();
@@ -118,6 +120,9 @@ export function TopBar({ siffletsBalance, username, userId, rank }: Props) {
             </p>
             <p className="mt-0.5 text-base font-black text-white">{username}</p>
             <p className="mt-0.5 text-[11px] font-semibold text-zinc-500">{liveRank}</p>
+            <p className="mt-0.5 text-[10px] font-bold tabular-nums text-zinc-600">
+              {liveXp.toLocaleString("fr-FR")} XP
+            </p>
           </div>
           <button
             onClick={() => setOpen(false)}

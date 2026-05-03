@@ -11,6 +11,7 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { applyApiFootballSignalsToMarkets } from "@/lib/sports/api-football-market-bridge";
 import {
   API_FOOTBALL_BASE_URL,
   fetchApiFootball,
@@ -38,6 +39,14 @@ export type SyncEventsResult = {
   fixtureId: number | null;
   skippedReason?: string;
   timelineUpserted: number;
+  /** Ouverture / résolution auto `market_events` (VAR / pénalty) depuis les incidents API. */
+  apiMarketSync?: {
+    var_goal_opened: boolean;
+    var_goal_resolved: boolean;
+    penalty_check_opened: boolean;
+    penalty_check_resolved: boolean;
+    errors: string[];
+  };
 };
 
 export type SyncStatsResult = {
@@ -481,9 +490,41 @@ export async function syncMatchEvents(matchId: string): Promise<SyncEventsResult
     .update({ last_events_sync_at: new Date().toISOString() })
     .eq("id", matchId);
 
+  let apiMarketSync: SyncEventsResult["apiMarketSync"];
+  try {
+    apiMarketSync = await applyApiFootballSignalsToMarkets(admin, matchId, events);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[api-football-market] match ${matchId}:`, msg);
+    apiMarketSync = {
+      var_goal_opened: false,
+      var_goal_resolved: false,
+      penalty_check_opened: false,
+      penalty_check_resolved: false,
+      errors: [msg],
+    };
+  }
+
   console.log(`⚡ Fast-Sync Events: Match ${matchId} — ${events.length} events (${timelineUpserted} upserted)`);
 
-  return { matchId, fixtureId: ctx.fixtureId, timelineUpserted };
+  return { matchId, fixtureId: ctx.fixtureId, timelineUpserted, apiMarketSync };
+}
+
+/**
+ * Un seul appel `fixtures/events` — pour `/api/verify-event` ou scripts.
+ * Retourne `null` si le match n'a pas de contexte API-Football.
+ */
+export async function fetchFixtureEventsRaw(
+  matchId: string,
+): Promise<{ fixtureId: number; events: unknown[] } | null> {
+  const admin = createAdminClient();
+  const ctx = await resolveMatchContext(admin, matchId);
+  if (!ctx) return null;
+  const eventsPayload = await fetchApiFootball<unknown>("fixtures/events", {
+    fixture: String(ctx.fixtureId),
+  });
+  const events = extractFixtureList(eventsPayload);
+  return { fixtureId: ctx.fixtureId, events };
 }
 
 /**
@@ -733,6 +774,14 @@ export async function syncApiFootballMatch(
       return { matchId, fixtureId, skippedReason: "error", statisticsUpserted: 0 } as SyncStatsResult;
     }),
   ]);
+
+  const { data: afterMatch } = await admin.from("matches").select("status").eq("id", matchId).maybeSingle();
+  if (afterMatch?.status === "finished") {
+    const { error: pronoResErr } = await admin.rpc("resolve_match_pronos", { p_match_id: matchId });
+    if (pronoResErr) {
+      console.warn(`[syncApiFootballMatch] resolve_match_pronos: ${pronoResErr.message}`);
+    }
+  }
 
   return {
     matchId,

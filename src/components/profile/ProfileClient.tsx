@@ -18,13 +18,12 @@ export type ShortBetEntry = {
   teamAway?: string;
 };
 
-export type LongBetEntry = {
+export type PronoEntry = {
   id: string;
   status: "pending" | "won" | "lost";
-  bet_type: "scorer" | "exact_score";
-  bet_value: string;
-  amount_staked: number;
-  potential_reward: number;
+  prono_type: "exact_score" | "scorer";
+  prono_value: string;
+  reward_amount: number;
   placed_at: string;
   teamHome?: string;
   teamAway?: string;
@@ -32,7 +31,7 @@ export type LongBetEntry = {
 
 type Props = {
   shortBets: ShortBetEntry[];
-  longBets: LongBetEntry[];
+  pronos: PronoEntry[];
   allBadges: BadgeRow[];
   unlockedBadgeIds: string[];
 };
@@ -45,25 +44,27 @@ const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
   var_goal:        { label: "Hors-jeu / But",  emoji: "🚩" },
   red_card:        { label: "Carton rouge",    emoji: "🟥" },
   injury_sub:      { label: "Changement",      emoji: "🔄" },
+  free_kick:       { label: "Coup franc",      emoji: "🎯" },
+  corner:          { label: "Corner",          emoji: "🏁" },
 };
 
 const STATUS_BADGE = {
   won:  "bg-green-500/20 text-green-400 border-green-500/30",
   lost: "bg-red-500/20 text-red-400 border-red-500/30",
   pending_short: "bg-orange-500/15 text-orange-400 border-orange-500/25",
-  pending_long:  "bg-blue-500/15 text-blue-400 border-blue-500/25",
+  pending_prono: "bg-blue-500/15 text-blue-400 border-blue-500/25",
 } as const;
 
-function statusCls(status: string, kind: "short" | "long") {
+function statusCls(status: string, kind: "short" | "prono") {
   if (status === "won")  return STATUS_BADGE.won;
   if (status === "lost") return STATUS_BADGE.lost;
-  return kind === "short" ? STATUS_BADGE.pending_short : STATUS_BADGE.pending_long;
+  return kind === "short" ? STATUS_BADGE.pending_short : STATUS_BADGE.pending_prono;
 }
 
-function statusLabel(status: string, kind: "short" | "long") {
+function statusLabel(status: string, kind: "short" | "prono") {
   if (status === "won")  return "Gagné";
   if (status === "lost") return "Perdu";
-  return kind === "short" ? "⏳ VAR en cours" : "⏳ Fin du match";
+  return kind === "short" ? "⏳ VAR en cours" : "⏳ En attente du match";
 }
 
 function fmtDate(iso: string) {
@@ -74,37 +75,37 @@ function fmtDate(iso: string) {
 
 // ── Tab bar ───────────────────────────────────────────────────────────────────
 
-type Tab = "var" | "pred" | "trophees";
+type Tab = "var" | "pronos" | "trophees";
 
-const TABS: { id: Tab; label: string; count?: number }[] = [
-  { id: "var",      label: "Paris VAR"    },
-  { id: "pred",     label: "Prédictions"  },
-  { id: "trophees", label: "Trophées"     },
+const TABS: { id: Tab; label: string }[] = [
+  { id: "var",      label: "Paris VAR"   },
+  { id: "pronos",   label: "Pronos"      },
+  { id: "trophees", label: "Trophées"    },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ProfileClient({
   shortBets,
-  longBets,
+  pronos,
   allBadges,
   unlockedBadgeIds,
 }: Props) {
   const [tab, setTab] = useState<Tab>("var");
 
   const varCount  = shortBets.length;
-  const predCount = longBets.length;
+  const pronoCount = pronos.length;
   const trophyCount = unlockedBadgeIds.length;
 
   return (
     <div className="mt-4">
-      {/* Tab bar */}
       <div className="flex border-b border-white/8">
         {TABS.map(({ id, label }) => {
-          const count = id === "var" ? varCount : id === "pred" ? predCount : trophyCount;
+          const count = id === "var" ? varCount : id === "pronos" ? pronoCount : trophyCount;
           return (
             <button
               key={id}
+              type="button"
               onClick={() => setTab(id)}
               className={`relative flex flex-1 min-h-[44px] items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wide transition-colors ${
                 tab === id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
@@ -124,10 +125,8 @@ export function ProfileClient({
         })}
       </div>
 
-      {/* Tab content */}
       <div className="mt-3">
 
-        {/* ── Paris VAR ── */}
         {tab === "var" && (
           shortBets.length === 0 ? (
             <EmptyState emoji="📢" text="Aucun pari VAR pour l'instant." />
@@ -172,42 +171,37 @@ export function ProfileClient({
           )
         )}
 
-        {/* ── Prédictions ── */}
-        {tab === "pred" && (
-          longBets.length === 0 ? (
-            <EmptyState emoji="🎯" text="Aucune prédiction long terme pour l'instant." />
+        {tab === "pronos" && (
+          pronos.length === 0 ? (
+            <EmptyState emoji="🎯" text="Aucun prono enregistré pour l'instant." />
           ) : (
             <div className="flex flex-col gap-2">
-              {longBets.map((ltb) => {
-                const cls = statusCls(ltb.status, "long");
-                const lbl = statusLabel(ltb.status, "long");
-                const reward = Math.round(Number(ltb.potential_reward));
-                const betLabel =
-                  ltb.bet_type === "scorer"
-                    ? `⚽ Buteur : ${ltb.bet_value}`
-                    : `🎯 Score : ${ltb.bet_value}`;
+              {pronos.map((p) => {
+                const cls = statusCls(p.status, "prono");
+                const lbl = statusLabel(p.status, "prono");
+                const line =
+                  p.prono_type === "scorer"
+                    ? `⚽ Buteur : ${p.prono_value}`
+                    : `🎯 Score exact : ${p.prono_value}`;
                 return (
-                  <div key={ltb.id} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
+                  <div key={p.id} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-[10px] text-zinc-600">{fmtDate(ltb.placed_at)}</p>
-                        {ltb.teamHome && (
+                        <p className="text-[10px] text-zinc-600">{fmtDate(p.placed_at)}</p>
+                        {p.teamHome && (
                           <p className="truncate text-sm font-bold text-white">
-                            {ltb.teamHome} — {ltb.teamAway}
+                            {p.teamHome} — {p.teamAway}
                           </p>
                         )}
-                        <p className="mt-0.5 text-xs text-zinc-500">{betLabel}</p>
+                        <p className="mt-0.5 text-xs text-zinc-500">{line}</p>
                       </div>
                       <span className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}>
                         {lbl}
-                        {ltb.status === "won"  && ` +${reward.toLocaleString("fr-FR")}`}
-                        {ltb.status === "lost" && ` −${ltb.amount_staked}`}
+                        {p.status === "won" && ` +${p.reward_amount.toLocaleString("fr-FR")} Pts`}
                       </span>
                     </div>
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
-                      <span>Mise <strong className="text-zinc-300">{ltb.amount_staked} pts</strong></span>
-                      <span>·</span>
-                      <span>Pot. <strong className="text-zinc-300">{reward} pts</strong></span>
+                    <div className="mt-1.5 text-[10px] text-zinc-600">
+                      Gratuit · gain potentiel <strong className="text-zinc-300">{p.reward_amount.toLocaleString("fr-FR")} Pts</strong>
                     </div>
                   </div>
                 );
@@ -216,7 +210,6 @@ export function ProfileClient({
           )
         )}
 
-        {/* ── Trophées ── */}
         {tab === "trophees" && (
           allBadges.length === 0 ? (
             <EmptyState emoji="🏅" text="Les trophées arrivent bientôt…" />

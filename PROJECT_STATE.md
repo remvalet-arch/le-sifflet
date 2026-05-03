@@ -2,7 +2,7 @@
 
 > Documentation vivante. Ne documente que le **code et le schéma présents** dans ce dépôt (pas la roadmap produit seule).
 >
-> **Dernière mise à jour : squads persistantes (0041) + UI « Mes ligues » / braquage.**
+> **Dernière mise à jour : sprint Clean-up — purge `long_term_bets` côté app, PWA `sw.js`, Realtime `alert_signals` (0047), E2E (Kop / Pronos / Bunker).**
 
 ---
 
@@ -20,7 +20,7 @@
 | UI | **React 19** + **Tailwind v4** + `lucide-react` | Tokens : `pitch-*`, `chalk`, `whistle`. |
 | Toasts | `sonner` | Monté dans le layout racine. |
 | Auth & DB | **Supabase** (`@supabase/ssr`) | Google OAuth PKCE ; middleware refresh JWT. |
-| Realtime | Supabase | Tables publiées avec **`REPLICA IDENTITY FULL`** là où nécessaire : `matches`, `market_events`, `bets`, `match_timeline_events`, `profiles`, `match_statistics`, `user_badges` (voir migrations `0004`–`0006`, `0012`–`0013`, `0035`, `0022`). `alert_signals` en publication sans garantie FULL dans ce repo — à valider en prod. |
+| Realtime | Supabase | Tables avec **`REPLICA IDENTITY FULL`** + publication : `matches`, `market_events`, `bets`, `match_timeline_events`, `profiles`, `match_statistics`, `user_badges`, **`alert_signals`** (voir `0004`–`0006`, `0012`–`0013`, `0035`, `0022`, **`0047`**). |
 | Données live | **API-Football** (v3 api-sports.io) | Client [`src/lib/api-football-client.ts`](src/lib/api-football-client.ts), sync [`src/services/api-football-sync.ts`](src/services/api-football-sync.ts), import calendrier [`src/services/api-football-fixtures-import.ts`](src/services/api-football-fixtures-import.ts). |
 | Données cosmétique | **TheSportsDB** | Calendrier / assets ; ne doit pas écraser le nom compétition si `api_football_league_id` est posé ([`src/services/sportsdb-sync.ts`](src/services/sportsdb-sync.ts)). |
 | Admin | `service_role` | [`src/lib/supabase/admin.ts`](src/lib/supabase/admin.ts). |
@@ -32,7 +32,7 @@
 
 ## 🗄️ Schéma de données (état des migrations)
 
-**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0044_squad_by_invite_code_rpc.sql`** (44 migrations versionnées).
+**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0047_alert_signals_replica_full.sql`** (47 migrations versionnées).
 
 ### Tables & objets notables (post-0033)
 
@@ -46,20 +46,25 @@
 | **0037** | `pronos` + RLS + RPC **`place_prono`** (insert gratuit, pas de débit solde). |
 | **0038** | Parimutuel global + premier modèle braquage (`bets.room_id` → `rooms` par match). |
 | **0039** | Types `market_events` / `alert_signals` : ajout `free_kick`, `corner` (noms alignés `penalty_check`, `var_goal`, …). |
-| **0040** | `match_subscriptions` (PK `user_id`, `match_id`, `smart_mute`) — **aucune référence dans `src/` au moment de l’audit** (table prête, pas d’UI ni de cron push). |
+| **0040** | `match_subscriptions` (PK `user_id`, `match_id`, `smart_mute`) — RLS « own row » ; typée dans **`database.ts`** ; UI cloche **`MatchNotificationBell`** dans **`LiveRoom`** + **`POST /api/match-subscription`**. |
 | **0041** | **Squads persistantes** : tables `squads` (`owner_id`, pas de `match_id`) + `squad_members` ; migration données `rooms` → `squads` ; `bets.room_id` → **`bets.squad_id`** ; **`place_bet(..., p_squad_id)`** (vérif membre) ; **`resolve_event_parimutuel`** : braquage par **`squad_id`** sur l’événement (pot perdants de la squad → gagnants de la même squad sur le même `event_id`). RLS `squad_members` SELECT = **ligne du user uniquement** + RPC **`squad_members_for_my_squads`** + **`squad_by_invite_code`** (rejoindre par code). **Idempotente** (rejouable : `CREATE IF NOT EXISTS`, copie `rooms` / colonne `room_id` seulement si présentes). |
 | **0042** | `lineups.shirt_number` (texte, API-Football `player.number`) ; rempli par **`syncMatchLineups`** ; terrain [`MatchLineupsPitch`](src/components/match/MatchLineupsPitch.tsx) affiche le numéro dans la pastille (fallback initiales). |
 | **0043** | **Correctif RLS** : recréation de `squad_members_select_visible` (sans lecture de `squads`) + **`squad_members_for_my_squads()`** si la base a été migrée avec l’ancienne 0041 (récursion infinie). |
 | **0044** | RPC **`squad_by_invite_code(p_invite)`** — résout une ligue privée par code d’invitation (SECURITY DEFINER) : le SELECT direct sur `squads` est masqué par RLS pour un non-membre ; [`POST /api/squads/join`](src/app/api/squads/join/route.ts) utilise cette RPC. *(Également ajoutée en fin de bloc squads dans la 0041 pour les installs complètes.)* |
+| **0045** | **`resolve_match_pronos(match_id)`** (SECURITY DEFINER, `service_role` uniquement) : match `finished` + scores → pronos `pending` → `won`/`lost`, crédit **`reward_amount`** + **45 XP** + **`rank = profile_rank_from_xp(xp)`** ; idempotent. **`profile_rank_from_xp`** : seuils 500 / 2000 / 5000 XP. **`resolve_event_parimutuel`** : **30 XP** + rank par pari gagné ; **8 XP** + rank sur bonus braquage. Appel depuis [`syncApiFootballMatch`](src/services/api-football-sync.ts) (match `finished`) et [`finish-match`](src/app/api/admin/finish-match/route.ts). |
+| **0046** | **`place_prono`** : après insert `pronos`, **`INSERT … match_subscriptions` ON CONFLICT DO NOTHING** (auto-abonnement « smart notif » sans écraser un mute existant). |
+| **0047** | **`alert_signals`** : **`REPLICA IDENTITY FULL`** (événements Realtime complets pour clients filtrant hors PK). |
 
 ### RPC métier (SECURITY DEFINER) — présents dans `database.ts`
 
 - `place_bet(p_event_id, p_chosen_option, p_amount_staked, p_multiplier, p_squad_id)` — débit + insert ; `squad_id` optionnel (oblige à être membre de la squad si renseigné).
 - **`squad_members_for_my_squads()`** — liste `squad_id` / `user_id` des membres des squads dont l’utilisateur est membre ou propriétaire (appelée par [`GET /api/squads`](src/app/api/squads/route.ts), contourne la RLS restrictive sur `squad_members`).
 - **`squad_by_invite_code(p_invite)`** — retourne la ligne `squads` pour un code valide (rejoindre une ligue privée).
-- `get_event_odds(p_event_id)` — lecture parimutuel (exposé au client typé ; usage UI à consolider).
+- **`resolve_match_pronos(p_match_id)`** — résolution post-match des lignes `pronos` + crédit Sifflets / XP / `rank`.
+- **`profile_rank_from_xp(p_xp)`** — libellé de grade (aligné landing kop).
+- `get_event_odds(p_event_id)` — lecture parimutuel ; consommé par **`VotingModal`** (poll 2 s) et **`POST /api/bet`** (validation du multiplicateur).
 - `place_prono(...)` — pronos gratuits.
-- `place_long_term_bet` / `resolve_long_term_bets` — **schéma + routes API** [`long-term-bet`](src/app/api/long-term-bet/route.ts), [`finish-match`](src/app/api/admin/finish-match/route.ts) ; **l’onglet match n’appelle plus ces routes** — l’UI avant match utilise **`pronos`** via `PolymarketTab`.
+- `place_long_term_bet` / `resolve_long_term_bets` — **schéma SQL hérité (0017 / 0021)** ; **`resolve_long_term_bets`** encore appelée depuis [`finish-match`](src/app/api/admin/finish-match/route.ts) pour d’éventuelles lignes legacy. **Plus de routes** `/api/long-term-bet` ni `/api/long-term-odds` ; profil = **`pronos`** + paris VAR.
 - **`resolve_event_parimutuel`** — appelé depuis [`resolve-event.ts`](src/lib/resolve-event.ts) (admin) : parimutuel global + **braquage par squad** sur l’événement (0041). L’ancienne RPC `resolve_event` peut subsister en base pour compat ; le flux produit utilise le parimutuel.
 - Trigger auth → `profiles` + solde initial (cf. migrations init / extras).
 
@@ -90,7 +95,7 @@ erDiagram
 
 ### Fonctions serveur ([`api-football-sync.ts`](src/services/api-football-sync.ts))
 
-- **`syncMatchEvents(matchId)`** — `GET /fixtures/events` → upsert `match_timeline_events` ; met à jour **`last_events_sync_at`** sur `matches` en succès.
+- **`syncMatchEvents(matchId)`** — `GET /fixtures/events` → upsert `match_timeline_events` ; puis **[`applyApiFootballSignalsToMarkets`](src/lib/sports/api-football-market-bridge.ts)** (ouverture / résolution **`var_goal`** et **`penalty_check`** d’après les incidents `Var` / pénalty) ; met à jour **`last_events_sync_at`** sur `matches` en succès.
 - **`syncMatchStatistics(matchId)`** — `GET /fixtures/statistics` → upsert `match_statistics` ; met **`last_stats_sync_at`** sur `matches`.
 - **`syncMatchLineups(matchId)`** — `GET /fixtures/lineups` → `lineups` (dont **`shirt_number`** depuis `player.number`) + **`has_lineups`** / données équipe sur `matches`.
 - **`syncApiFootballMatch(matchId)`** — orchestrateur fin de match : fixture + lineups + events + stats en chaîne (délais internes) ; utilisé aussi par admin / `syncLiveMatches` (plafonné).
@@ -135,31 +140,34 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 ### Page match
 
 - [`src/app/(app)/match/[id]/page.tsx`](src/app/(app)/match/[id]/page.tsx) — `LiveRoom` + solde + modérateur.
-- [`src/components/match/LiveRoom.tsx`](src/components/match/LiveRoom.tsx) — onglets **Kop** / **Compo** / **Pronos** (si `upcoming`) ou **Stats** (sinon) ; Realtime `matches`, `market_events`, `bets` ; `VotingModal` si event ouvert ; **squad active** via [`useActiveSquad`](src/hooks/useActiveSquad.ts) (localStorage) → `squad_id` envoyé à [`/api/bet`](src/app/api/bet/route.ts).
+- [`src/components/match/LiveRoom.tsx`](src/components/match/LiveRoom.tsx) — onglets **Kop** / **Compo** / **Pronos** (si `upcoming`) ou **Stats** (sinon) ; Realtime `matches`, `market_events`, `bets` ; `VotingModal` si event ouvert ; **squad active** via [`useActiveSquad`](src/hooks/useActiveSquad.ts) (localStorage) → `squad_id` envoyé à [`/api/bet`](src/app/api/bet/route.ts) ; **cloche** [`MatchNotificationBell`](src/components/match/MatchNotificationBell.tsx) (`match_subscriptions` + [`POST /api/match-subscription`](src/app/api/match-subscription/route.ts)).
 - [`MatchTimeline.tsx`](src/components/match/MatchTimeline.tsx) — remplacements : entrant / sortant (`details` JSON `assist` + `player_name`) avec flèches **ArrowUpRight** / **ArrowDownRight**. [`MatchLineups.tsx`](src/components/match/MatchLineups.tsx) + [`MatchLineupsPitch.tsx`](src/components/match/MatchLineupsPitch.tsx) — pastilles terrain = **`shirt_number`** si présent (0042). [`MatchStats.tsx`](src/components/match/MatchStats.tsx) — stats Realtime ; couleurs club.
-- [`PolymarketTab.tsx`](src/components/match/PolymarketTab.tsx) — pronos gratuits RPC `place_prono` ; **Bunker 0-0** : bloc plein écran « drama » (masque la grille buteurs), récompense dédiée.
+- [`PolymarketTab.tsx`](src/components/match/PolymarketTab.tsx) — pronos gratuits RPC `place_prono` (côté DB **0046** : auto-ligne `match_subscriptions` si pas déjà abonné) ; **Bunker 0-0** : bloc plein écran « drama » (masque la grille buteurs), récompense dédiée.
 - Alignement vertical des contenus d’onglets **`mt-6`** ; shell **`bg-zinc-950`** (body + pages lobby / match).
-- [`VotingModal.tsx`](src/components/match/VotingModal.tsx) — timer 90 s, cotes dégressives, **slider + presets MIN/MOITIÉ/ALL IN**, **deux gros boutons** OUI/NON ; mention **« Braquage actif avec [nom] »** si squad sélectionnée.
+- [`VotingModal.tsx`](src/components/match/VotingModal.tsx) — timer 90 s, cotes **parimutuel** (`get_event_odds`), **slider + presets MIN/MOITIÉ/ALL IN**, **deux gros boutons** OUI/NON ; mention **« Braquage actif avec [nom] »** si squad sélectionnée.
 - [`ActionDrawer.tsx`](src/components/match/ActionDrawer.tsx) — alertes (types 0039), modération timeline, états match, sync TSDB.
-- **Squads** : page [`/(app)/squads`](src/app/(app)/squads/page.tsx) + [`SquadsPageClient`](src/components/squads/SquadsPageClient.tsx) ; API [`/api/squads`](src/app/api/squads/route.ts), [`join`](src/app/api/squads/join/route.ts), [`leave`](src/app/api/squads/leave/route.ts) — en cas d’échec Supabase ou d’exception, les handlers loggent `console.error("Supabase Error:", …)` côté serveur pour diagnostic terminal ; onglet **Ligues** dans [`BottomNav`](src/components/layout/BottomNav.tsx) (remplacé par le Super-Bouton uniquement sur une page match en direct).
+- **Ligues (squads)** : page [`/(app)/ligues`](src/app/(app)/ligues/page.tsx) + onglets **Mes ligues / Créer / Rejoindre** [`LiguesPageClient`](src/components/ligues/LiguesPageClient.tsx) ; détail [`/ligues/[squadId]`](src/app/(app)/ligues/[squadId]/page.tsx) + [`SquadDetailClient`](src/components/ligues/SquadDetailClient.tsx) (classement XP + Pts, pot commun). API [`GET/POST /api/squads`](src/app/api/squads/route.ts), [`GET /api/squads/[squadId]`](src/app/api/squads/[squadId]/route.ts), [`join`](src/app/api/squads/join/route.ts), [`leave`](src/app/api/squads/leave/route.ts). Ancienne URL **`/squads`** → redirect **`/ligues`**. [`BottomNav`](src/components/layout/BottomNav.tsx) : lien **Ligues** → `/ligues` (remplacé par le Super-Bouton sur match en direct).
 
 ### Autres pages app notables
 
-- Profil, leaderboard, règles, admin resolve, login, landing `/` ([`src/app/page.tsx`](src/app/page.tsx)) — VAR Time, tutoiement, hero + 4 blocs gameplay + 3 étapes vestiaire / Sifflets / braquage, grades kop conservés.
+- **Profil** [`(app)/profile`](src/app/(app)/profile/page.tsx) — onglets **Paris VAR** / **Pronos** / **Trophées** ; badges [`badges.ts`](src/app/actions/badges.ts) alignés sur **`pronos`** pour score exact / buteur gagnants.
+- **Admin résolution** [`admin/resolve`](src/app/admin/resolve/page.tsx) — événements **`market_events`** ouverts uniquement (plus de panneau paris long terme).
+- Leaderboard, règles, login, landing `/` ([`src/app/page.tsx`](src/app/page.tsx)) — VAR Time, tutoiement, hero + blocs gameplay, grades kop conservés.
 
 ---
 
 ## ✅ Ce qui est implémenté et branché (résumé « prod code »)
 
-- Auth Google + garde middleware `/lobby`, `/match/*`, `/squads`, `/profile`, `/leaderboard`.
+- Auth Google + garde middleware `/lobby`, `/match/*`, `/squads`, `/ligues`, `/profile`, `/leaderboard`.
 - Lobby **8 ligues** (IDs Top 5 + UEFA), jour Paris, vue **`?league=&round=`** + `round_short` / `has_lineups`.
 - Cron **`match-monitor`** : fixtures batch + events live + heartbeat stats 5 min + backfill lineups + sync full FT.
 - **Stats match** en direct : table + UI + Realtime après sync.
 - **Timeline** + lineups API-Football ; terrain **`MatchLineupsPitch`**.
-- **Paris court terme** `place_bet` avec **`squad_id`** optionnel (membre vérifié en RPC) ; **`VotingModal`** (slider + one-tap) ; résolution + **braquage par squad** via **`resolve_event_parimutuel`** (0041).
-- **Pronos** avant match (`pronos` + `place_prono`) dans **`PolymarketTab`** (score exact + buteur, variante Bunker 0-0).
-- **Squads persistantes** : création / rejoindre / quitter sur **`/squads`** ; squad active en local → paris match avec braquage intra-squad sur l’événement.
-- **Profil** : solde **`sifflets_balance`**, historique **Paris court + long terme**, refill, badges, `rank` DB dans la topbar.
+- **Paris court terme** `place_bet` avec **`squad_id`** optionnel (membre vérifié en RPC) ; **`VotingModal`** (slider + one-tap, cotes **parimutuel** via RPC **`get_event_odds`**, piège à focus + `role="dialog"` / ARIA) ; résolution + **braquage par squad** via **`resolve_event_parimutuel`** (0041).
+- **Pronos** avant match (`pronos` + `place_prono`) dans **`PolymarketTab`** (score exact + buteur, variante Bunker 0-0) ; **résolution** : RPC **`resolve_match_pronos`** à la fin du match (`syncApiFootballMatch` / admin **finish-match**), crédit **`reward_amount`** + XP + grade.
+- **Squads persistantes** : création / rejoindre / quitter sur **`/ligues`** (onglets + pot commun + lien classement) ; squad active en local → paris match avec braquage intra-squad sur l’événement.
+- **Profil** : solde **`sifflets_balance`**, historique **Paris VAR + Pronos** ([`ProfileClient`](src/components/profile/ProfileClient.tsx)), refill, badges, `rank` DB dans la topbar.
+- **PWA** : fichier statique [`public/sw.js`](public/sw.js) + enregistrement client [`ServiceWorkerRegister`](src/components/providers/ServiceWorkerRegister.tsx) dans le layout racine ; `manifest.webmanifest` inchangé.
 - **Types d’alertes** étendus (`free_kick`, `corner`) alignés `market_events` / `alert_signals` (0039) — **à vérifier** cohérence avec libellés UI du drawer vs contraintes SQL historiques si anciennes données.
 
 ---
@@ -168,12 +176,12 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 
 | Sujet | État réel |
 |--------|-----------|
-| **`match_subscriptions`** (0040) | Table + RLS ; **aucun** code app / cron notifications. |
-| **`get_event_odds`** | Exposé en types ; **pas** de consommation visible dans les composants de cote affichée parimutuel temps réel. |
-| **Résolution automatique des `pronos`** | Insert + `status`/`reward` : **pas** de job / RPC de résolution trouvé dans le repo pour passer `won`/`lost` et créditer les Pts. |
-| **`long_term_bets` payants** | Migrations + API + profil ; **plus** de flux création depuis `PolymarketTab` (remplacé par `pronos`). |
-| **Vérification auto résolution event** | [`sportsProvider.ts`](src/lib/sports/sportsProvider.ts) reste un **mock** probabiliste. |
-| **Déclencheur VAR 100 % auto** | Seuil communautaire sur **`/api/alert`** (signaux utilisateurs) — pas d’auto-déclencheur sans signal. |
+| **`match_subscriptions`** (0040) | **Branché** : auto via **`place_prono` (0046)** ; cloche **`LiveRoom`** + **`POST /api/match-subscription`** (subscribe / mute / unmute). **Pas** de worker push dans ce repo. |
+| **`get_event_odds`** | **Branché** : `VotingModal` + validation côté **`/api/bet`**. |
+| **Résolution des `pronos`** | **Fait (0045)** : `resolve_match_pronos` + appel sync fin de match ; buteur = événement timeline `goal` (nom normalisé). |
+| **`long_term_bets` (legacy)** | Table + RPC encore en base ; **plus** d’API ni d’UI profil — remplacé par **`pronos`**. |
+| **Vérification auto résolution event** | [`sportsProvider.ts`](src/lib/sports/sportsProvider.ts) interroge **API-Football** (`fetchFixtureEventsRaw`) pour **`var_goal`** / **`penalty_check`** ; sinon `WAIT` (admin / autre flux). |
+| **Déclencheur VAR / pénalty auto** | **Fait** : heuristiques sur incidents `fixtures/events` dans **`applyApiFootballSignalsToMarkets`** (appelée depuis **`syncMatchEvents`**) + signaux communautaires **`/api/alert`** inchangés. |
 | **Tests E2E** | [`tests/e2e/user-journey.spec.ts`](tests/e2e/user-journey.spec.ts) aligné sur **Kop / Compo / Pronos \| Stats / Ligue** + parcours **Pronos** (score exact, bunker 0-0). |
 | **`match_minute`** | Alimentée via sync API-Football sur `matches` ; pas de « chronomètre » autonome côté app hors données fournisseur. |
 
@@ -195,13 +203,10 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 
 ## 📌 Next Steps (priorité produit / tech — **VAR TIME economy**)
 
-Implémentation explicite demandée pour la suite :
-
-1. **Économie Pts cohérente** — Finaliser le cycle **`pronos`** : RPC ou job post-match qui résout `pronos` (score final + timeline buteurs), met à jour `status`, crédite **`profiles.sifflets_balance`** selon `reward_amount`, idempotence par match.
-2. **Profils** — Exposer progressivement **`xp`**, **`avatar_url`**, progression liée aux paris / pronos résolus ; aligner le **grade affiché** (`getRank` local vs `profiles.rank` DB) si une seule source de vérité est requise.
-3. **Modale One-Tap (paris live)** — Déjà présente (`VotingModal` : slider + gros boutons) : **QA mobile**, accessibilité (focus trap, `aria-*`), et **affichage des cotes parimutuel** via `get_event_odds` si le produit veut remplacer / compléter les cotes dégressives fixes.
-4. **Nettoyage / dette** — Retirer ou réactiver **`long_term_bets`** côté UI ; brancher **`match_subscriptions`** (création à la première interaction match + préférences mute) ; corriger les **E2E** sur les libellés d’onglets.
+1. **Modale One-Tap (paris live)** — QA mobile continue ; enrichir les **libellés API-Football** (détails `Var` / pénalty) si le terrain remonte d’autres variantes que celles gérées dans **`api-football-market-bridge.ts`**.
+2. **Profils** — **`avatar_url`** en UI ; affinage des seuils **`profile_rank_from_xp`** / copy si besoin.
+3. **Produit** — **push / cron** sur `match_subscriptions` si besoin ; option DROP **`long_term_bets`** en base si plus aucune ligne legacy.
 
 ---
 
-*Fin du document — audit codebase au 2026-05-03 22:31 CEST.*
+*Fin du document — audit codebase au 2026-05-03 (sprint Clean-up).*

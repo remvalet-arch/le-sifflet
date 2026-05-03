@@ -1,16 +1,16 @@
 /**
  * simulate-match-scenario.ts
  *
- * Script de simulation du moteur de résolution des paris long terme.
+ * Script de simulation du moteur de résolution des **pronos** (gratuits).
  * Lance avec : npm run test:backend
  *
  * Scénario :
- *   Joueur A parie sur le buteur "Mbappé" (×3.5, mise 100)  → doit GAGNER (but en timeline)
- *   Joueur B parie sur le score exact "0-0"  (×8.0, mise 100) → doit PERDRE (score final 2-1)
+ *   Joueur A — prono buteur "Mbappé" (reward 350) → GAGNE (but en timeline)
+ *   Joueur B — prono score exact "0-0" (reward 800) → PERD (score final 2-1)
  *
- * Solde attendu après résolution :
- *   Joueur A : 1000 - 100 + 350 = 1250  ✓
- *   Joueur B : 1000 - 100       =  900  ✓
+ * Soldes après `resolve_match_pronos` (pas de débit à la prise de prono) :
+ *   Joueur A : 1000 + 350 = 1350
+ *   Joueur B : 1000
  */
 
 import { config } from "dotenv";
@@ -99,7 +99,7 @@ async function resetProfile(userId: string, username: string, trustScore: number
 async function cleanupTestData(matchId: string | null, userIds: string[]) {
   if (matchId) {
     await admin.from("match_timeline_events").delete().eq("match_id", matchId);
-    await admin.from("long_term_bets").delete().eq("match_id", matchId);
+    await admin.from("pronos").delete().eq("match_id", matchId);
     await admin.from("matches").delete().eq("id", matchId);
   }
   for (const id of userIds) {
@@ -110,7 +110,7 @@ async function cleanupTestData(matchId: string | null, userIds: string[]) {
 // ── Scénario principal ────────────────────────────────────────────────────────
 
 async function run() {
-  console.log(`\n${C.bold}Le Sifflet — Simulation du moteur de résolution${C.reset}`);
+  console.log(`\n${C.bold}VAR Time — Simulation resolve_match_pronos${C.reset}`);
   console.log(`${C.gray}Supabase : ${SUPABASE_URL}${C.reset}\n`);
 
   const userIds: string[] = [];
@@ -150,36 +150,29 @@ async function run() {
     matchId = match.id;
     info(`Match créé : PSG vs OL (${matchId.slice(0, 8)}…)`);
 
-    // Joueur A — buteur "Mbappé" (doit gagner)
-    const { error: betAErr } = await admin.from("long_term_bets").insert({
-      match_id:         matchId,
-      user_id:          aId,
-      bet_type:         "scorer",
-      bet_value:        "Mbappé",
-      amount_staked:    100,
-      potential_reward: 350,   // 100 × 3.5
-      status:           "pending",
+    const { error: pronoAErr } = await admin.from("pronos").insert({
+      match_id:       matchId,
+      user_id:        aId,
+      prono_type:     "scorer",
+      prono_value:    "Mbappé",
+      reward_amount:  350,
+      status:         "pending",
     });
-    if (betAErr) throw new Error(`betA: ${betAErr.message}`);
-    // Débit manuel (simulation du RPC place_long_term_bet)
-    await admin.from("profiles").update({ sifflets_balance: 900 }).eq("id", aId);
-    info("Joueur A : ⚽ Buteur Mbappé — mise 100, gain potentiel 350");
+    if (pronoAErr) throw new Error(`pronoA: ${pronoAErr.message}`);
+    info("Joueur A : ⚽ Prono buteur Mbappé — +350 Pts si gagné");
 
-    // Joueur B — score exact "0-0" (doit perdre)
-    const { error: betBErr } = await admin.from("long_term_bets").insert({
-      match_id:         matchId,
-      user_id:          bId,
-      bet_type:         "exact_score",
-      bet_value:        "0-0",
-      amount_staked:    100,
-      potential_reward: 800,   // 100 × 8.0
-      status:           "pending",
+    const { error: pronoBErr } = await admin.from("pronos").insert({
+      match_id:       matchId,
+      user_id:        bId,
+      prono_type:     "exact_score",
+      prono_value:    "0-0",
+      reward_amount:  800,
+      status:         "pending",
     });
-    if (betBErr) throw new Error(`betB: ${betBErr.message}`);
-    await admin.from("profiles").update({ sifflets_balance: 900 }).eq("id", bId);
-    info("Joueur B : 🎯 Score Exact 0-0 — mise 100, gain potentiel 800");
+    if (pronoBErr) throw new Error(`pronoB: ${pronoBErr.message}`);
+    info("Joueur B : 🎯 Prono score 0-0 — +800 Pts si gagné");
 
-    ok("2 paris long terme enregistrés");
+    ok("2 pronos enregistrés (gratuits, solde inchangé avant résolution)");
 
     // ── 3. Résolution : but + clôture ────────────────────────────────────────
     title("3 · RÉSOLUTION — But + Fin de match");
@@ -225,12 +218,11 @@ async function run() {
     if (scoreErr) throw new Error(`updateScore: ${scoreErr.message}`);
     info("Score final : PSG 2 — 1 OL");
 
-    // Appel RPC résolution
-    const { error: rpcErr } = await admin.rpc("resolve_long_term_bets", {
+    const { error: rpcErr } = await admin.rpc("resolve_match_pronos", {
       p_match_id: matchId,
     });
-    if (rpcErr) throw new Error(`resolve_long_term_bets: ${rpcErr.message}`);
-    info("RPC resolve_long_term_bets exécuté");
+    if (rpcErr) throw new Error(`resolve_match_pronos: ${rpcErr.message}`);
+    info("RPC resolve_match_pronos exécuté");
 
     // ── 4. Assertions ────────────────────────────────────────────────────────
     title("4 · ASSERTIONS");
@@ -242,24 +234,24 @@ async function run() {
       .eq("id", aId)
       .single();
 
-    if (profA?.sifflets_balance === 1250) {
-      ok(`Joueur A — solde : 1250 Sifflets (900 + 350) ✓`);
+    if (profA?.sifflets_balance === 1350) {
+      ok(`Joueur A — solde : 1350 Pts (1000 + 350 récompense prono) ✓`);
     } else {
-      fail(`Joueur A — solde attendu 1250, reçu : ${profA?.sifflets_balance}`);
+      fail(`Joueur A — solde attendu 1350, reçu : ${profA?.sifflets_balance}`);
     }
 
-    // Pari Joueur A
-    const { data: betA } = await admin
-      .from("long_term_bets")
+    const { data: pronoA } = await admin
+      .from("pronos")
       .select("status")
       .eq("user_id", aId)
       .eq("match_id", matchId)
+      .eq("prono_type", "scorer")
       .single();
 
-    if (betA?.status === "won") {
-      ok("Joueur A — statut pari : 'won' ✓");
+    if (pronoA?.status === "won") {
+      ok("Joueur A — prono : 'won' ✓");
     } else {
-      fail(`Joueur A — statut attendu 'won', reçu : '${betA?.status}'`);
+      fail(`Joueur A — statut attendu 'won', reçu : '${pronoA?.status}'`);
     }
 
     // Profil Joueur B
@@ -269,24 +261,24 @@ async function run() {
       .eq("id", bId)
       .single();
 
-    if (profB?.sifflets_balance === 900) {
-      ok(`Joueur B — solde : 900 Sifflets (1000 - 100, pari perdu) ✓`);
+    if (profB?.sifflets_balance === 1000) {
+      ok(`Joueur B — solde : 1000 Pts (prono perdu, pas de débit initial) ✓`);
     } else {
-      fail(`Joueur B — solde attendu 900, reçu : ${profB?.sifflets_balance}`);
+      fail(`Joueur B — solde attendu 1000, reçu : ${profB?.sifflets_balance}`);
     }
 
-    // Pari Joueur B
-    const { data: betB } = await admin
-      .from("long_term_bets")
+    const { data: pronoB } = await admin
+      .from("pronos")
       .select("status")
       .eq("user_id", bId)
       .eq("match_id", matchId)
+      .eq("prono_type", "exact_score")
       .single();
 
-    if (betB?.status === "lost") {
-      ok("Joueur B — statut pari : 'lost' ✓");
+    if (pronoB?.status === "lost") {
+      ok("Joueur B — prono : 'lost' ✓");
     } else {
-      fail(`Joueur B — statut attendu 'lost', reçu : '${betB?.status}'`);
+      fail(`Joueur B — statut attendu 'lost', reçu : '${pronoB?.status}'`);
     }
 
   } finally {

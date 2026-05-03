@@ -147,6 +147,8 @@ export async function GET(request: Request) {
     fixtureApiCalls: 0,
     matchesPatchedFromFixture: 0,
     eventsSyncCount: 0,
+    apiMarketEventsOpened: 0,
+    apiMarketEventsResolved: 0,
     statsSyncCount: 0,
     lineupBackfillCount: 0,
     fullSyncOnEndCount: 0,
@@ -217,6 +219,14 @@ export async function GET(request: Request) {
         summary.errors.push(`events ${m.id}: ${r.skippedReason}`);
       } else {
         summary.eventsSyncCount += 1;
+        const ms = r.apiMarketSync;
+        if (ms) {
+          if (ms.var_goal_opened) summary.apiMarketEventsOpened += 1;
+          if (ms.penalty_check_opened) summary.apiMarketEventsOpened += 1;
+          if (ms.var_goal_resolved) summary.apiMarketEventsResolved += 1;
+          if (ms.penalty_check_resolved) summary.apiMarketEventsResolved += 1;
+          for (const err of ms.errors) summary.errors.push(`api-markets ${m.id}: ${err}`);
+        }
       }
     } catch (err) {
       summary.errors.push(`events ${m.id}: ${err instanceof Error ? err.message : String(err)}`);

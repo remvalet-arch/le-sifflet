@@ -46,23 +46,42 @@ export async function GET() {
     const userIds = [...new Set(membersInSquads.map((m) => m.user_id))];
     const { data: profiles, error: pErr } = await supabase
       .from("profiles")
-      .select("id, username")
+      .select("id, username, xp, sifflets_balance")
       .in("id", userIds);
     if (pErr) {
       console.error("Supabase Error:", pErr);
       return errorResponse(pErr.message, 500);
     }
-    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.username]));
+    const profileMap = new Map(
+      (profiles ?? []).map((p) => [
+        p.id,
+        {
+          username: p.username,
+          xp: p.xp ?? 0,
+          sifflets_balance: p.sifflets_balance ?? 0,
+        },
+      ]),
+    );
 
-    const squadsPayload = (squads ?? []).map((s) => ({
-      ...s,
-      members: membersInSquads
+    const squadsPayload = (squads ?? []).map((s) => {
+      const members = membersInSquads
         .filter((m) => m.squad_id === s.id)
-        .map((m) => ({
-          user_id: m.user_id,
-          username: profileMap.get(m.user_id) ?? "?",
-        })),
-    }));
+        .map((m) => {
+          const p = profileMap.get(m.user_id);
+          return {
+            user_id: m.user_id,
+            username: p?.username ?? "?",
+            xp: p?.xp ?? 0,
+            sifflets_balance: p?.sifflets_balance ?? 0,
+          };
+        });
+      const pot_commun = members.reduce((sum, m) => sum + m.sifflets_balance, 0);
+      return {
+        ...s,
+        members,
+        pot_commun,
+      };
+    });
 
     return successResponse({ squads: squadsPayload });
   } catch (error) {

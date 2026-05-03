@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { maxAllowedMultiplier } from "@/lib/constants/odds";
+
+/** Tolérance sur la cote implicite (arrondis + léger décalage réseau). */
+const IMPLIED_ODDS_TOLERANCE = 0.03;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const { data: event } = await supabase
     .from("market_events")
-    .select("type, created_at, status")
+    .select("status")
     .eq("id", event_id)
     .maybeSingle();
 
@@ -51,19 +53,25 @@ export async function POST(request: NextRequest) {
     return errorResponse("Les prédictions sont closes", 400);
   }
 
-  const maxMulti = maxAllowedMultiplier(
-    event.type,
-    event.created_at,
-    chosen_option as "oui" | "non",
-  );
+  const { data: oddsRows, error: oddsErr } = await supabase.rpc("get_event_odds", {
+    p_event_id: event_id,
+  });
 
-  // Reject if client claimed a multiplier more than 0.01 above server max
-  // (the 5s tolerance in maxAllowedMultiplier already covers network latency)
-  if (multiplier > maxMulti + 0.01) {
-    return errorResponse("Multiplicateur invalide — cote expirée", 400);
+  if (oddsErr || !oddsRows?.length) {
+    return errorResponse("Impossible de lire les cotes du marché", 500);
   }
 
-  const validatedMultiplier = Math.min(multiplier, maxMulti);
+  const row = oddsRows.find((r) => r.option === chosen_option);
+  const implied = Number(row?.implied_multiplier ?? 0);
+  if (!Number.isFinite(implied) || implied < 1) {
+    return errorResponse("Cote marché invalide", 500);
+  }
+
+  if (multiplier > implied + IMPLIED_ODDS_TOLERANCE) {
+    return errorResponse("Multiplicateur invalide — la cote a bougé, réessaie", 400);
+  }
+
+  const validatedMultiplier = Math.min(multiplier, implied);
 
   const { data: betId, error } = await supabase.rpc("place_bet", {
     p_event_id: event_id,

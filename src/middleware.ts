@@ -45,6 +45,7 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/lobby") ||
     path.startsWith("/match") ||
     path.startsWith("/squads") ||
+    path.startsWith("/ligues") ||
     path.startsWith("/profile") ||
     path.startsWith("/leaderboard");
   if (isProtected && !user) {
@@ -60,6 +61,6 @@ export const config = {
      * Skip static assets and image optimization; run on everything else
      * so auth cookies stay fresh on navigations.
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

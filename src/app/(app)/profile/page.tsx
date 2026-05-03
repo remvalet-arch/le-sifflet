@@ -3,10 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
 import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
 import { ProfileClient } from "@/components/profile/ProfileClient";
-import type { ShortBetEntry, LongBetEntry } from "@/components/profile/ProfileClient";
+import type { ShortBetEntry, PronoEntry } from "@/components/profile/ProfileClient";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
-import type { BetRow, LongTermBetRow, MarketEventRow, MatchRow } from "@/types/database";
+import type { BetRow, MarketEventRow, MatchRow, PronoRow } from "@/types/database";
 
 export const metadata = { title: "Mon Profil" };
 
@@ -27,10 +27,13 @@ function getKarmaBadge(score: number) {
   return   { emoji: "🟨", label: "Carton Jaune", cls: "border border-orange-500/30 text-orange-400 bg-orange-500/10" };
 }
 
-function getRank(balance: number) {
-  if (balance >= 5000) return { label: "Légende du Kop", emoji: "👑" };
-  if (balance >= 1000) return { label: "Titulaire",       emoji: "⚽" };
-  return                      { label: "Remplaçant",      emoji: "🪑" };
+/** Emoji d'accroche — le libellé officiel vient de `profiles.rank` (XP en base). */
+function rankDisplayFromDb(rankLabel: string): { emoji: string; label: string } {
+  const t = rankLabel.toLowerCase();
+  if (t.includes("boss")) return { emoji: "👑", label: rankLabel };
+  if (t.includes("argent")) return { emoji: "🥈", label: rankLabel };
+  if (t.includes("bronze")) return { emoji: "🥉", label: rankLabel };
+  return { emoji: "🪑", label: rankLabel };
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -43,47 +46,45 @@ export default async function ProfilePage() {
   const [
     { data: profile },
     { data: rawShortBets },
-    { data: rawLongBets },
+    { data: rawPronos },
     { data: allBadges },
     { data: userBadgesData },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("bets").select("*").eq("user_id", user.id).order("placed_at", { ascending: false }).limit(30),
-    supabase.from("long_term_bets").select("*").eq("user_id", user.id).order("placed_at", { ascending: false }).limit(30),
+    supabase.from("pronos").select("*").eq("user_id", user.id).order("placed_at", { ascending: false }).limit(30),
     supabase.from("badges").select("*").order("created_at"),
     supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
   ]);
 
   void checkAndUnlockBadges(user.id);
 
-  const shortBets: BetRow[]         = rawShortBets ?? [];
-  const longBets:  LongTermBetRow[] = rawLongBets  ?? [];
+  const shortBets: BetRow[] = rawShortBets ?? [];
+  const pronos: PronoRow[] = rawPronos ?? [];
   const balance    = profile?.sifflets_balance ?? 0;
   const trustScore = profile?.trust_score      ?? 100;
 
-  // Enrich short bets
   const eventIds = [...new Set(shortBets.map((b) => b.event_id))];
   const eventMap = new Map<string, MarketEventRow>();
   const matchMap = new Map<string, Pick<MatchRow, "id" | "team_home" | "team_away">>();
+
+  const pronoMatchIds = [...new Set(pronos.map((p) => p.match_id))];
 
   if (eventIds.length > 0) {
     const { data: events } = await supabase.from("market_events").select("*").in("id", eventIds);
     (events ?? []).forEach((e) => eventMap.set(e.id, e));
 
     const fromShortMatchIds = [...new Set((events ?? []).map((e) => e.match_id))];
-    const fromLongMatchIds  = [...new Set(longBets.map((b) => b.match_id))];
-    const allMatchIds = [...new Set([...fromShortMatchIds, ...fromLongMatchIds])];
+    const allMatchIds = [...new Set([...fromShortMatchIds, ...pronoMatchIds])];
     if (allMatchIds.length > 0) {
       const { data: matches } = await supabase.from("matches").select("id, team_home, team_away").in("id", allMatchIds);
       (matches ?? []).forEach((m) => matchMap.set(m.id, m));
     }
-  } else if (longBets.length > 0) {
-    const longMatchIds = [...new Set(longBets.map((b) => b.match_id))];
-    const { data: matches } = await supabase.from("matches").select("id, team_home, team_away").in("id", longMatchIds);
+  } else if (pronoMatchIds.length > 0) {
+    const { data: matches } = await supabase.from("matches").select("id, team_home, team_away").in("id", pronoMatchIds);
     (matches ?? []).forEach((m) => matchMap.set(m.id, m));
   }
 
-  // Build flat serializable entries for ProfileClient
   const shortEntries: ShortBetEntry[] = shortBets.map((b) => {
     const event = eventMap.get(b.event_id);
     const match = event ? matchMap.get(event.match_id) : undefined;
@@ -100,30 +101,28 @@ export default async function ProfilePage() {
     };
   });
 
-  const longEntries: LongBetEntry[] = longBets.map((b) => {
-    const match = matchMap.get(b.match_id);
+  const pronoEntries: PronoEntry[] = pronos.map((p) => {
+    const match = matchMap.get(p.match_id);
     return {
-      id: b.id,
-      status: b.status,
-      bet_type: b.bet_type,
-      bet_value: b.bet_value,
-      amount_staked: b.amount_staked,
-      potential_reward: Number(b.potential_reward),
-      placed_at: b.placed_at,
+      id: p.id,
+      status: p.status,
+      prono_type: p.prono_type,
+      prono_value: p.prono_value,
+      reward_amount: p.reward_amount,
+      placed_at: p.placed_at,
       teamHome: match?.team_home,
       teamAway: match?.team_away,
     };
   });
 
-  // Stats (all bets)
-  const allStatuses  = [...shortBets.map((b) => b.status), ...longBets.map((b) => b.status)];
+  const allStatuses = [...shortBets.map((b) => b.status), ...pronos.map((p) => p.status)];
   const totalBets    = allStatuses.length;
   const wonCount     = allStatuses.filter((s) => s === "won").length;
   const resolvedCount = allStatuses.filter((s) => s !== "pending").length;
   const winRate      = resolvedCount > 0 ? Math.round((wonCount / resolvedCount) * 100) : 0;
   const totalEarned  =
     shortBets.filter((b) => b.status === "won").reduce((s, b) => s + Math.round(Number(b.potential_reward)), 0) +
-    longBets.filter((b)  => b.status === "won").reduce((s, b) => s + Math.round(Number(b.potential_reward)), 0);
+    pronos.filter((p) => p.status === "won").reduce((s, p) => s + p.reward_amount, 0);
 
   const REFILL_THRESHOLD = 500;
   // eslint-disable-next-line react-hooks/purity
@@ -138,21 +137,19 @@ export default async function ProfilePage() {
 
   const grade  = getTrustGrade(trustScore);
   const karma  = getKarmaBadge(trustScore);
-  const rank   = getRank(balance);
+  const rank   = rankDisplayFromDb(profile?.rank ?? "Arbitre de District");
+  const xpTotal  = profile?.xp ?? 0;
   const unlockedBadgeIds = (userBadgesData ?? []).map((ub) => ub.badge_id);
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
 
-      {/* ── Hero compact ── */}
       <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
         <div className="flex items-center gap-4 px-5 py-4">
-          {/* Avatar */}
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
             🎽
           </div>
-          {/* Info */}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-black text-white">{profile?.username ?? "Joueur"}</p>
@@ -163,8 +160,10 @@ export default async function ProfilePage() {
             <p className="mt-0.5 text-xs text-zinc-500">
               {rank.emoji} {rank.label}
             </p>
+            <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
+              {xpTotal.toLocaleString("fr-FR")} XP
+            </p>
           </div>
-          {/* Balance */}
           <div className="text-right">
             <p className="text-2xl font-black tabular-nums text-white">
               {balance.toLocaleString("fr-FR")}
@@ -175,7 +174,6 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        {/* Trust bar (compact) */}
         <div className="border-t border-white/8 px-5 py-3">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
@@ -194,19 +192,16 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      {/* Refill */}
       {balance < REFILL_THRESHOLD && (
         <RefillButton isEligible={isRefillEligible} nextRefillAt={nextRefillAt} />
       )}
 
-      {/* Stats */}
       <div className="mt-3 grid grid-cols-3 gap-2">
         <StatCard Icon={Target}    label="Réussite" value={`${winRate}%`}                           />
         <StatCard Icon={TrendingUp} label="Gagnés"  value={totalEarned.toLocaleString("fr-FR")}      />
         <StatCard Icon={Trophy}    label="Paris"    value={String(totalBets)}                        />
       </div>
 
-      {/* Trust score bouton modérateur */}
       {trustScore >= MODERATOR_THRESHOLD && (
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
           <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
@@ -216,10 +211,9 @@ export default async function ProfilePage() {
         </div>
       )}
 
-      {/* Tabs : Paris VAR / Prédictions / Trophées */}
       <ProfileClient
         shortBets={shortEntries}
-        longBets={longEntries}
+        pronos={pronoEntries}
         allBadges={allBadges ?? []}
         unlockedBadgeIds={unlockedBadgeIds}
       />

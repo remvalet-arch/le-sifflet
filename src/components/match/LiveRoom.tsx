@@ -16,6 +16,7 @@ import { MatchLineups } from "./MatchLineups";
 import { ActionDrawer } from "./ActionDrawer";
 import { MatchStats } from "./MatchStats";
 import { PolymarketTab } from "./PolymarketTab";
+import { MatchNotificationBell } from "./MatchNotificationBell";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 
 type Tab = "kop" | "compo" | "stats" | "pronos";
@@ -224,10 +225,15 @@ export function LiveRoom({
         className="sticky z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md"
         style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
-        <Scoreboard
-          key={`${liveMatch.status}-${liveMatch.match_minute ?? ""}-${liveMatch.home_score}-${liveMatch.away_score}`}
-          match={liveMatch}
-        />
+        <div className="relative px-6 pt-2">
+          <div className="absolute right-4 top-2 z-10">
+            <MatchNotificationBell matchId={liveMatch.id} />
+          </div>
+          <Scoreboard
+            key={`${liveMatch.status}-${liveMatch.match_minute ?? ""}-${liveMatch.home_score}-${liveMatch.away_score}`}
+            match={liveMatch}
+          />
+        </div>
 
         {/* Onglets style Google — underline indicator */}
         <div className="flex border-b border-white/8">
@@ -312,6 +318,7 @@ export function LiveRoom({
       {/* VotingModal paris */}
       {activeEvent && (
         <VotingModal
+          key={activeEvent.id}
           event={activeEvent}
           siffletsBalance={localBalance}
           squadId={squadId}
