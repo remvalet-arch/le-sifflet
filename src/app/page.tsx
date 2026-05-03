@@ -40,37 +40,78 @@ export default async function LandingPage() {
       </nav>
 
       {/* ═══════════════════════════════════════════
-          HERO — split screen asymétrique
+          HERO — stat 55% + split écran
       ═══════════════════════════════════════════ */}
-      <section className="relative mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-20 lg:pb-16">
+      <section className="relative mx-auto max-w-6xl px-5 pb-20 pt-6 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-16">
 
-        {/* Deco pitch */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
-          <div className="h-[min(70vw,520px)] w-[min(70vw,520px)] rounded-full border border-white/[0.03]" />
-          <div className="absolute h-3 w-3 rounded-full bg-white/[0.04]" />
-        </div>
+        {/* ── Scan-lines deco ── */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 5px)" }}
+          aria-hidden
+        />
+
+        {/* ── Halo ambre ── */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[420px] rounded-full bg-amber-500/5 blur-[80px]"
+          aria-hidden
+        />
 
         {/* ── Texte gauche ── */}
         <div className="relative z-10">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5">
+
+          {/* Badge live */}
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
             <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
               En direct pendant les matchs
             </span>
           </div>
 
-          <h1 className="text-[clamp(2.4rem,8vw,4.5rem)] font-black uppercase leading-[0.88] tracking-[-0.04em] text-white">
-            T&rsquo;as sorti tes lunettes pour le hors-jeu&nbsp;?
+          {/* ── Stat hero : 55% dans un cadre VAR ── */}
+          <div className="relative mb-6 inline-block">
+            {/* Corner brackets — geste de l'arbitre VAR */}
+            <div className="pointer-events-none absolute -inset-4" aria-hidden>
+              <div className="absolute left-0 top-0 h-6 w-6 border-l-2 border-t-2 border-amber-400/50" />
+              <div className="absolute right-0 top-0 h-6 w-6 border-r-2 border-t-2 border-amber-400/50" />
+              <div className="absolute bottom-0 left-0 h-6 w-6 border-b-2 border-l-2 border-amber-400/50" />
+              <div className="absolute bottom-0 right-0 h-6 w-6 border-b-2 border-r-2 border-amber-400/50" />
+            </div>
+            {/* Label au-dessus */}
+            <p className="mb-1 text-[9px] font-black uppercase tracking-[0.3em] text-amber-400/80">
+              Temps de jeu effectif
+            </p>
+            {/* Chiffre */}
+            <p
+              className="font-black leading-none tracking-tight text-white"
+              style={{
+                fontSize: "clamp(5rem,18vw,9rem)",
+                textShadow: "0 0 80px rgba(251,191,36,0.35), 0 0 30px rgba(251,191,36,0.15)",
+              }}
+            >
+              55<span className="text-amber-400">%</span>
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="mb-6 h-px w-full bg-gradient-to-r from-amber-500/40 via-amber-500/20 to-transparent" />
+
+          {/* Copy principal */}
+          <h1 className="text-[clamp(1.5rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight text-white">
+            Le ballon n&rsquo;est en jeu
+            <br />
+            que{" "}
+            <span className="text-amber-400">55% du temps</span>.
           </h1>
 
-          <div className="mt-5 h-1 w-24 rounded-full bg-gradient-to-r from-green-500 to-emerald-300" />
-
-          <p className="mt-6 max-w-md text-base leading-relaxed text-zinc-400">
-            L&rsquo;arbitre est aveugle&nbsp;? Appelle la VAR. Lance l&rsquo;alerte,
-            prédis le verdict en direct et prouve ton instinct au kop.{" "}
-            <em className="not-italic font-bold text-zinc-200">100% gratuit.</em>
+          <p className="mt-4 text-[clamp(1rem,2.5vw,1.2rem)] leading-relaxed text-zinc-400">
+            Et le reste&nbsp;?{" "}
+            <span className="font-black text-white">
+              Prenez les commandes de la VAR.
+            </span>
           </p>
 
+          {/* CTAs */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/login"

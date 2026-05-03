@@ -16,9 +16,10 @@ export async function POST(request: NextRequest) {
     chosen_option?: string;
     amount_staked?: unknown;
     multiplier?: unknown;
+    room_id?: string | null;
   };
 
-  const { event_id, chosen_option, amount_staked, multiplier } = body;
+  const { event_id, chosen_option, amount_staked, multiplier, room_id } = body;
 
   if (!event_id || !chosen_option) {
     return errorResponse("Paramètres manquants", 400);
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     return errorResponse("Mise invalide (min. 10 Pts)", 400);
   }
 
-  if (typeof multiplier !== "number" || multiplier < 1.01) {
+  if (typeof multiplier !== "number" || multiplier < 1.0) {
     return errorResponse("Multiplicateur invalide", 400);
   }
 
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
     p_chosen_option: chosen_option,
     p_amount_staked: amount_staked,
     p_multiplier: validatedMultiplier,
+    p_room_id: room_id ?? null,
   });
 
   if (error) {

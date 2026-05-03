@@ -11,10 +11,12 @@ import { syncMatchData, syncTeamRoster } from "@/app/actions/syncData";
 // ── Alertes communautaires ────────────────────────────────────────────────────
 
 const ALERTS: { type: AlertActionType; emoji: string; label: string }[] = [
-  { type: "penalty_check",   emoji: "🔎", label: "VAR : Y'A PÉNALTY ?"     },
-  { type: "var_goal",        emoji: "🔎", label: "VAR : BUT OU HORS-JEU ?" },
-  { type: "red_card",        emoji: "🔎", label: "VAR : CARTON ROUGE ?"     },
-  { type: "penalty_outcome", emoji: "⚡️", label: "PÉNO : AU FOND OU RATÉ ?" },
+  { type: "penalty_check",   emoji: "📢", label: "VAR PÉNO ?"           },
+  { type: "var_goal",        emoji: "🚩", label: "VAR BUT ?"            },
+  { type: "red_card",        emoji: "🟥", label: "VILAINE SEMELLE ?"   },
+  { type: "free_kick",       emoji: "🎯", label: "COUP FRANC !"        },
+  { type: "corner",          emoji: "🏁", label: "CORNER CHAUD !"      },
+  { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND ?"    },
 ];
 
 // ── Panneau de contrôle des états ─────────────────────────────────────────────

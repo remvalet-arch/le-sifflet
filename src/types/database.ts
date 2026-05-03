@@ -12,7 +12,9 @@ export type MarketEventType =
   | "penalty_outcome"
   | "var_goal"
   | "red_card"
-  | "injury_sub";
+  | "injury_sub"
+  | "free_kick"
+  | "corner";
 export type MarketEventStatus = "open" | "locked" | "resolved";
 export type BetStatus = "pending" | "won" | "lost";
 export type AlertActionType =
@@ -20,7 +22,9 @@ export type AlertActionType =
   | "penalty_outcome"
   | "var_goal"
   | "red_card"
-  | "injury_sub";
+  | "injury_sub"
+  | "free_kick"
+  | "corner";
 
 export interface Database {
   public: {
@@ -35,6 +39,10 @@ export interface Database {
           last_refill_date: string | null;
           has_onboarded: boolean;
           created_at: string;
+          xp: number;
+          avatar_url: string | null;
+          rank: string;
+          updated_at: string | null;
         };
         Insert: {
           id: string;
@@ -45,6 +53,10 @@ export interface Database {
           last_refill_date?: string | null;
           has_onboarded?: boolean;
           created_at?: string;
+          xp?: number;
+          avatar_url?: string | null;
+          rank?: string;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
@@ -55,6 +67,10 @@ export interface Database {
           last_refill_date?: string | null;
           has_onboarded?: boolean;
           created_at?: string;
+          xp?: number;
+          avatar_url?: string | null;
+          rank?: string;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
@@ -347,6 +363,7 @@ export interface Database {
           potential_reward: number;
           placed_at: string;
           status: BetStatus;
+          room_id: string | null;
         };
         Insert: {
           id?: string;
@@ -357,6 +374,7 @@ export interface Database {
           potential_reward: number;
           placed_at?: string;
           status?: BetStatus;
+          room_id?: string | null;
         };
         Update: {
           id?: string;
@@ -367,6 +385,7 @@ export interface Database {
           potential_reward?: number;
           placed_at?: string;
           status?: BetStatus;
+          room_id?: string | null;
         };
         Relationships: [];
       };
@@ -559,6 +578,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      pronos: {
+        Row: {
+          id: string;
+          match_id: string;
+          user_id: string;
+          prono_type: "exact_score" | "scorer";
+          prono_value: string;
+          reward_amount: number;
+          placed_at: string;
+          status: "pending" | "won" | "lost";
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          user_id: string;
+          prono_type: "exact_score" | "scorer";
+          prono_value: string;
+          reward_amount: number;
+          placed_at?: string;
+          status?: "pending" | "won" | "lost";
+        };
+        Update: {
+          id?: string;
+          match_id?: string;
+          user_id?: string;
+          prono_type?: "exact_score" | "scorer";
+          prono_value?: string;
+          reward_amount?: number;
+          placed_at?: string;
+          status?: "pending" | "won" | "lost";
+        };
+        Relationships: [];
+      };
       match_statistics: {
         Row: {
           id: string;
@@ -597,6 +649,7 @@ export interface Database {
           p_chosen_option: string;
           p_amount_staked: number;
           p_multiplier?: number;
+          p_room_id?: string | null;
         };
         Returns: string;
       };
@@ -606,6 +659,17 @@ export interface Database {
           p_result: string;
         };
         Returns: undefined;
+      };
+      resolve_event_parimutuel: {
+        Args: {
+          p_event_id: string;
+          p_result: string;
+        };
+        Returns: { winners: number; total_paid: number; multiplier: number; braquage_rooms: number };
+      };
+      get_event_odds: {
+        Args: { p_event_id: string };
+        Returns: Array<{ option: string; pool_staked: number; total_pool: number; implied_multiplier: number }>;
       };
       place_long_term_bet: {
         Args: {
@@ -628,6 +692,15 @@ export interface Database {
       resolve_long_term_bets: {
         Args: { p_match_id: string };
         Returns: undefined;
+      };
+      place_prono: {
+        Args: {
+          p_match_id: string;
+          p_prono_type: string;
+          p_prono_value: string;
+          p_reward_amount: number;
+        };
+        Returns: string;
       };
     };
   };
@@ -653,3 +726,4 @@ export type TeamRow = Database["public"]["Tables"]["teams"]["Row"];
 export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
 export type UserBadgeRow = Database["public"]["Tables"]["user_badges"]["Row"];
 export type MatchStatisticsRow = Database["public"]["Tables"]["match_statistics"]["Row"];
+export type PronoRow = Database["public"]["Tables"]["pronos"]["Row"];

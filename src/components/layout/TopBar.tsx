@@ -2,18 +2,21 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Menu, X, BookOpen, Settings, LogOut } from "lucide-react";
+import { Menu, X, BookOpen, Settings, LogOut, Scale } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/lib/i18n/useLocale";
 import type { ProfileRow } from "@/types/database";
 
-type Props = { siffletsBalance: number; username: string; userId: string };
+type Props = { siffletsBalance: number; username: string; userId: string; rank: string };
 
-export function TopBar({ siffletsBalance, username, userId }: Props) {
+export function TopBar({ siffletsBalance, username, userId, rank }: Props) {
   const [open, setOpen] = useState(false);
   const [balance, setBalance] = useState(siffletsBalance);
+  const [liveRank, setLiveRank] = useState(rank);
   const [flash, setFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { locale, setLocale, t } = useLocale();
 
   // Realtime : met à jour le solde dès qu'un pari est résolu
   useEffect(() => {
@@ -36,6 +39,7 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
             flashTimer.current = setTimeout(() => setFlash(false), 2000);
           }
           setBalance(updated.sifflets_balance);
+          setLiveRank(updated.rank);
         },
       )
       .subscribe();
@@ -106,12 +110,14 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
         }`}
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
+        {/* Profile header */}
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-              Connecté
+              {t.topbar.connected}
             </p>
             <p className="mt-0.5 text-base font-black text-white">{username}</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-zinc-500">{liveRank}</p>
           </div>
           <button
             onClick={() => setOpen(false)}
@@ -122,21 +128,50 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
           </button>
         </div>
 
+        {/* Nav links */}
         <nav className="flex flex-col gap-1 p-3">
           <SheetLink
             href="/rules"
             icon={<BookOpen className="h-4 w-4" />}
-            label="Règles du jeu"
+            label={t.topbar.rules}
             onClick={() => setOpen(false)}
+          />
+          <SheetLink
+            href="/laws"
+            icon={<Scale className="h-4 w-4" />}
+            label={t.topbar.laws}
+            onClick={() => setOpen(false)}
+            badge="IFAB"
           />
           <SheetLink
             href="/settings"
             icon={<Settings className="h-4 w-4" />}
-            label="Paramètres"
+            label={t.topbar.settings}
             onClick={() => setOpen(false)}
           />
         </nav>
 
+        {/* Language switcher */}
+        <div className="mx-3 mt-1 flex items-center justify-between rounded-xl border border-white/8 bg-white/3 px-4 py-3">
+          <span className="text-sm font-semibold text-zinc-400">{t.topbar.language}</span>
+          <div className="flex overflow-hidden rounded-lg border border-white/10">
+            {(["fr", "en"] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLocale(l)}
+                className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
+                  locale === l
+                    ? "bg-green-500 text-zinc-950"
+                    : "text-zinc-500 hover:text-white"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Logout */}
         <div className="mt-auto border-t border-white/8 p-3">
           <form action={signOut}>
             <button
@@ -144,7 +179,7 @@ export function TopBar({ siffletsBalance, username, userId }: Props) {
               className="flex w-full items-center gap-3 rounded-xl border border-red-500/20 bg-red-950/20 px-4 py-3 text-sm font-bold text-red-400 transition hover:bg-red-950/40 active:scale-[0.98]"
             >
               <LogOut className="h-4 w-4" />
-              Déconnexion
+              {t.topbar.logout}
             </button>
           </form>
         </div>
@@ -158,11 +193,13 @@ function SheetLink({
   icon,
   label,
   onClick,
+  badge,
 }: {
   href: string;
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
+  badge?: string;
 }) {
   return (
     <Link
@@ -171,7 +208,12 @@ function SheetLink({
       className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-zinc-400 transition hover:bg-white/5 hover:text-white"
     >
       {icon}
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge && (
+        <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }

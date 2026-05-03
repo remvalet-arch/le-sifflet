@@ -7,6 +7,9 @@ export const PEAK_ODDS: Record<MarketEventType, { oui: number; non: number }> =
     var_goal:        { oui: 1.40, non: 2.50 },
     red_card:        { oui: 1.15, non: 4.00 },
     injury_sub:      { oui: 1.20, non: 3.50 },
+    // Coups de pied arrêtés — fenêtre temporelle de 3 min → probabilité modérée
+    free_kick:       { oui: 1.80, non: 1.50 },
+    corner:          { oui: 2.00, non: 1.30 },
   };
 
 const TOTAL_SECONDS = 90;

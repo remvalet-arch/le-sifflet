@@ -38,9 +38,12 @@ export function BottomNav() {
               aria-label="Ouvrir le tiroir d'action"
               className="absolute -top-6 left-1/2 -translate-x-1/2 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 shadow-lg shadow-green-500/40 transition hover:bg-green-400 active:scale-95"
             >
-              <svg width={22} height={22} viewBox="0 0 24 24" fill="white" aria-hidden>
-                <circle cx="8" cy="12" r="8" />
-                <rect x="14" y="8" width="10" height="8" rx="4" />
+              {/* Geste VAR — quatre coins d'un rectangle */}
+              <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
+                <path d="M3 9V3h6" />
+                <path d="M21 9V3h-6" />
+                <path d="M3 15v6h6" />
+                <path d="M21 15v6h-6" />
               </svg>
             </button>
             <span className="py-2.5 text-[10px] opacity-0 select-none" aria-hidden>·</span>

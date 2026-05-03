@@ -1,0 +1,5 @@
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS xp          INT          NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS avatar_url  TEXT         DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS rank        TEXT         NOT NULL DEFAULT 'Arbitre de District',
+  ADD COLUMN IF NOT EXISTS updated_at  TIMESTAMPTZ  DEFAULT NULL;

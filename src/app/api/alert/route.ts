@@ -10,6 +10,8 @@ const VALID_TYPES: AlertActionType[] = [
   "var_goal",
   "red_card",
   "injury_sub",
+  "free_kick",
+  "corner",
 ];
 const ALERT_THRESHOLD = 2;
 const ALERT_WINDOW_SECONDS = 30;
