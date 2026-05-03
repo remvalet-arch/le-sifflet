@@ -16,10 +16,10 @@ export async function POST(request: NextRequest) {
     chosen_option?: string;
     amount_staked?: unknown;
     multiplier?: unknown;
-    room_id?: string | null;
+    squad_id?: string | null;
   };
 
-  const { event_id, chosen_option, amount_staked, multiplier, room_id } = body;
+  const { event_id, chosen_option, amount_staked, multiplier, squad_id } = body;
 
   if (!event_id || !chosen_option) {
     return errorResponse("Paramètres manquants", 400);
@@ -70,11 +70,13 @@ export async function POST(request: NextRequest) {
     p_chosen_option: chosen_option,
     p_amount_staked: amount_staked,
     p_multiplier: validatedMultiplier,
-    p_room_id: room_id ?? null,
+    p_squad_id: squad_id ?? null,
   });
 
   if (error) {
     const msg = error.message ?? "";
+    if (msg.includes("not_squad_member"))
+      return errorResponse("Tu n’es pas membre de cette ligue", 403);
     if (msg.includes("event_not_open"))
       return errorResponse("Les prédictions sont closes", 400);
     if (msg.includes("event_expired"))

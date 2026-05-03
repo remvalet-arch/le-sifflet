@@ -21,10 +21,18 @@ type Props = {
   siffletsBalance: number;
   onClose: () => void;
   onBetSuccess: (amountStaked: number) => void;
-  roomId?: string | null;
+  squadId?: string | null;
+  squadName?: string | null;
 };
 
-export function VotingModal({ event, siffletsBalance, onClose, onBetSuccess, roomId }: Props) {
+export function VotingModal({
+  event,
+  siffletsBalance,
+  onClose,
+  onBetSuccess,
+  squadId,
+  squadName,
+}: Props) {
   // ── Timer & cotes ──────────────────────────────────────────────────────────
   const [odds, setOdds] = useState(() => computeCurrentOdds(event.type, event.created_at));
   const [flash, setFlash] = useState(false);
@@ -74,7 +82,7 @@ export function VotingModal({ event, siffletsBalance, onClose, onBetSuccess, roo
           chosen_option: v,
           amount_staked: staked,
           multiplier,
-          room_id: roomId ?? null,
+          squad_id: squadId ?? null,
         }),
       });
       const json = (await res.json()) as { ok: boolean; data?: unknown; error?: string };
@@ -101,15 +109,16 @@ export function VotingModal({ event, siffletsBalance, onClose, onBetSuccess, roo
             <div className="flex items-center gap-3">
               <span className="text-2xl">{cfg.emoji}</span>
               <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Décision en cours</p>
-                  {roomId && (
-                    <span className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-400">
-                      <Swords className="h-2.5 w-2.5" />
-                      Braquage
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Décision en cours</p>
+                {squadId && squadName && (
+                  <p className="mt-1.5 flex items-start gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[10px] leading-snug text-amber-100/90">
+                    <Swords className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/90" aria-hidden />
+                    <span className="line-clamp-2 min-w-0 font-medium">
+                      Braquage actif avec{" "}
+                      <span className="font-black text-amber-50">{squadName}</span>
                     </span>
-                  )}
-                </div>
+                  </p>
+                )}
                 <p className="text-lg font-black text-white">{cfg.question}</p>
               </div>
             </div>

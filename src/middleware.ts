@@ -42,7 +42,11 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isProtected =
-    path.startsWith("/lobby") || path.startsWith("/match");
+    path.startsWith("/lobby") ||
+    path.startsWith("/match") ||
+    path.startsWith("/squads") ||
+    path.startsWith("/profile") ||
+    path.startsWith("/leaderboard");
   if (isProtected && !user) {
     return NextResponse.redirect(new URL("/", request.url));
   }

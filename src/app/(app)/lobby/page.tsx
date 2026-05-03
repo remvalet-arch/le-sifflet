@@ -99,7 +99,7 @@ export default async function LobbyPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
         <Suspense
           key={viewMode === "round" && roundContext ? `${roundContext.leagueApiId}-${roundContext.roundShort}` : "day"}
           fallback={<MatchListSkeleton />}

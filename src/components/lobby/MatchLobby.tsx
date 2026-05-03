@@ -158,7 +158,9 @@ function LeagueSectionHeader({
     <div className="flex items-center justify-between gap-3 border-b-2 border-white/15 pb-3">
       <div className="flex min-w-0 items-center gap-2">
         <LeagueBadge url={group.badge} name={group.displayName} />
-        <h2 className="truncate text-sm font-black uppercase tracking-wide text-chalk">{group.displayName}</h2>
+        <h2 className="line-clamp-2 min-w-0 flex-1 text-sm font-black uppercase leading-tight tracking-wide text-chalk">
+          {group.displayName}
+        </h2>
       </div>
       {showRoundLink && !roundView && apiId != null && rs != null && (
         <Link

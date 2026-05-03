@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  /* Nuit stade — aligné zinc-950 (app shell) */
   --background: #09090b;
-  --foreground: #f8fafc;
+  --foreground: #fafafa;
 }
 
 /* ── Animations globales ───────────────────────────────────────────────────── */

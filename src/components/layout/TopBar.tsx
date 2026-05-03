@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Menu, X, BookOpen, Settings, LogOut, Scale } from "lucide-react";
+import { Menu, X, BookOpen, Settings, LogOut, Scale, Trophy } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/client";
 import { useLocale } from "@/lib/i18n/useLocale";
@@ -130,6 +130,12 @@ export function TopBar({ siffletsBalance, username, userId, rank }: Props) {
 
         {/* Nav links */}
         <nav className="flex flex-col gap-1 p-3">
+          <SheetLink
+            href="/leaderboard"
+            icon={<Trophy className="h-4 w-4" />}
+            label="Classement"
+            onClick={() => setOpen(false)}
+          />
           <SheetLink
             href="/rules"
             icon={<BookOpen className="h-4 w-4" />}

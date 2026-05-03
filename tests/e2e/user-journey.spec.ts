@@ -1,5 +1,5 @@
 /**
- * Parcours utilisateur complet — Le Sifflet
+ * Parcours utilisateur complet — VAR Time
  *
  * Prérequis :
  *   - App en cours d'exécution sur localhost:3000 (ou PLAYWRIGHT_BASE_URL)
@@ -57,75 +57,72 @@ test.describe("LiveRoom", () => {
     } else {
       // Match upcoming ou terminé — vérifier quand même que la page est bien chargée
       console.log("[liveroom] ℹ Match non En Direct — Super-Bouton attendu absent");
-      const tabs = page.locator("button").filter({ hasText: "Temps forts" });
-      await expect(tabs.first()).toBeVisible({ timeout: 8_000 });
+      const kopTab = page.getByRole("button", { name: "Kop", exact: true });
+      await expect(kopTab).toBeVisible({ timeout: 8_000 });
     }
   });
 
-  test("les onglets Temps forts, Compositions, Prédictions sont présents", async ({ page }) => {
+  test("les onglets Kop, Compo et Pronos ou Stats sont présents", async ({ page }) => {
     await page.goto("/lobby");
     await page.waitForSelector('a[href^="/match/"]');
     await page.locator('a[href^="/match/"]').first().click();
     await page.waitForURL(/\/match\//);
 
-    const tabLabels = ["Temps forts", "Compositions", "Prédictions"];
-    for (const label of tabLabels) {
-      const tab = page.locator("button").filter({ hasText: label });
-      await expect(tab.first()).toBeVisible({ timeout: 8_000 });
-    }
-    console.log("[liveroom] ✓ Les 3 onglets sont présents");
+    await expect(page.getByRole("button", { name: "Kop", exact: true })).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByRole("button", { name: "Compo", exact: true })).toBeVisible({ timeout: 8_000 });
+
+    // À venir → « Pronos » ; match commencé / terminé → « Stats »
+    const pronosOrStats = page
+      .getByRole("button", { name: "Pronos", exact: true })
+      .or(page.getByRole("button", { name: "Stats", exact: true }));
+    await expect(pronosOrStats).toBeVisible({ timeout: 8_000 });
+
+    console.log("[liveroom] ✓ Onglets LiveRoom (Kop, Compo, Pronos|Stats) visibles");
   });
 });
 
-// ── 3. PRÉDICTIONS — Paris long terme ────────────────────────────────────────
+// ── 3. PRONOS — score exact (PolymarketTab) ───────────────────────────────────
 
-test.describe("Prédictions (Paris long terme)", () => {
-  test("ouvrir un score et afficher le formulaire de mise", async ({ page }) => {
+test.describe("Pronos (score exact)", () => {
+  test("onglet Pronos affiche le bloc Score Exact sur match à venir", async ({ page }) => {
     await page.goto("/lobby");
     await page.waitForSelector('a[href^="/match/"]');
     await page.locator('a[href^="/match/"]').first().click();
     await page.waitForURL(/\/match\//);
 
-    // Cliquer sur l'onglet "Prédictions"
-    const predictionsTab = page.locator("button").filter({ hasText: "Prédictions" });
-    await predictionsTab.first().click();
-
-    // Attendre que le contenu de l'onglet soit rendu
-    await page.waitForSelector("text=Paris long terme", { timeout: 8_000 }).catch(() => {
-      // L'onglet peut afficher un spinner — on attend quand même
-    });
-
-    // L'accordéon "Score Exact" est peut-être fermé — chercher un bouton avec une cote (ex. "× 5.0")
-    // L'accordéon Score exact s'ouvre automatiquement (scorerOpen = true par défaut)
-    // Chercher un bouton de score dans la grille (contient "1-0", "0-0", etc.)
-    const scoreButtons = page.locator("button").filter({ hasText: /^\d-\d$/ });
-    const hasScoreButtons = await scoreButtons.first().isVisible({ timeout: 5_000 }).catch(() => false);
-
-    if (!hasScoreButtons) {
-      // L'accordéon est peut-être replié — chercher et cliquer sur "Score Exact"
-      const scoreAccordion = page.locator("button").filter({ hasText: /Score Exact/i });
-      if (await scoreAccordion.first().isVisible()) {
-        await scoreAccordion.first().click();
-        await page.waitForTimeout(300);
-      }
+    const pronosTab = page.getByRole("button", { name: "Pronos", exact: true });
+    const hasPronos = await pronosTab.isVisible().catch(() => false);
+    if (!hasPronos) {
+      test.skip(true, "Premier match du lobby n'est pas à venir — pas d'onglet Pronos");
     }
 
-    // Cliquer sur le premier bouton de score disponible (non déjà parié)
-    const availableScore = page.locator("button").filter({ hasText: /^\d-\d$/ }).first();
+    await pronosTab.click();
+    await expect(page.getByText(/Score Exact/i)).toBeVisible({ timeout: 8_000 });
+    console.log("[pronos] ✓ Formulaire score exact visible");
+  });
 
-    if (await availableScore.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await availableScore.click();
+  test("score 0-0 affiche le design Bunker", async ({ page }) => {
+    await page.goto("/lobby");
+    await page.waitForSelector('a[href^="/match/"]');
+    await page.locator('a[href^="/match/"]').first().click();
+    await page.waitForURL(/\/match\//);
 
-      // Vérifier que le formulaire de mise apparaît
-      const betForm = page.locator("text=Mise (min. 10 Sifflets)");
-      await expect(betForm).toBeVisible({ timeout: 5_000 });
-      console.log("[predictions] ✓ Formulaire de mise affiché après clic sur un score");
-    } else {
-      // Pas de données joueurs — vérifier que le message d'état vide est affiché
-      const emptyMsg = page.locator("text=Paris long terme");
-      await expect(emptyMsg).toBeVisible({ timeout: 5_000 });
-      console.log("[predictions] ℹ Aucun score disponible — vérification du contenu de l'onglet OK");
+    const pronosTab = page.getByRole("button", { name: "Pronos", exact: true });
+    if (!(await pronosTab.isVisible().catch(() => false))) {
+      test.skip(true, "Match non à venir — pas d'onglet Pronos");
     }
+
+    await pronosTab.click();
+    await expect(page.getByText(/Score Exact/i)).toBeVisible({ timeout: 8_000 });
+
+    const homeInput = page.locator('input[type="number"]').nth(0);
+    const awayInput = page.locator('input[type="number"]').nth(1);
+    await homeInput.fill("0");
+    await awayInput.fill("0");
+
+    await expect(page.getByRole("status")).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/AUCUN BUTEUR/i)).toBeVisible();
+    console.log("[pronos] ✓ Bunker 0-0 affiché");
   });
 });
 

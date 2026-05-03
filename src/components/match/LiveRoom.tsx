@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type {
@@ -16,9 +16,9 @@ import { MatchLineups } from "./MatchLineups";
 import { ActionDrawer } from "./ActionDrawer";
 import { MatchStats } from "./MatchStats";
 import { PolymarketTab } from "./PolymarketTab";
-import { LeaguePanel } from "./LeaguePanel";
+import { useActiveSquad } from "@/hooks/useActiveSquad";
 
-type Tab = "kop" | "compo" | "stats" | "pronos" | "ligue";
+type Tab = "kop" | "compo" | "stats" | "pronos";
 type Props = {
   match: MatchRow;
   siffletsBalance: number;
@@ -60,11 +60,7 @@ export function LiveRoom({
   const [activeEvent, setActiveEvent] = useState<MarketEventRow | null>(null);
   const [localBalance, setLocalBalance] = useState(siffletsBalance);
 
-  // Room active pour ce match (Braquage)
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const handleRoomChange = useCallback((roomId: string | null) => {
-    setActiveRoomId(roomId);
-  }, []);
+  const { squadId, squadName } = useActiveSquad();
 
   // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -215,11 +211,10 @@ export function LiveRoom({
   const cooldownMins    = Math.floor(cooldownSecs / 60);
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
 
-  const TABS: { id: Tab; label: string; badge?: boolean }[] = [
-    { id: "kop",   label: "Kop"   },
+  const TABS: { id: Tab; label: string }[] = [
+    { id: "kop", label: "Kop" },
     { id: "compo", label: "Compo" },
     { id: isUpcoming ? "pronos" : "stats", label: isUpcoming ? "Pronos" : "Stats" },
-    { id: "ligue", label: "Ligue", badge: !!activeRoomId },
   ];
 
   return (
@@ -245,9 +240,6 @@ export function LiveRoom({
               }`}
             >
               {tab.label}
-              {tab.badge && (
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              )}
               {displayedTab === tab.id && (
                 <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-t-full bg-green-500" />
               )}
@@ -286,6 +278,8 @@ export function LiveRoom({
           teamAway={liveMatch.team_away}
           homeTeamLogo={liveMatch.home_team_logo}
           awayTeamLogo={liveMatch.away_team_logo}
+          homeTeamColor={liveMatch.home_team_color}
+          awayTeamColor={liveMatch.away_team_color}
           matchStatus={liveMatch.status}
         />
       )}
@@ -298,14 +292,6 @@ export function LiveRoom({
           awayTeamLogo={liveMatch.away_team_logo}
         />
       )}
-      {displayedTab === "ligue" && (
-        <LeaguePanel
-          matchId={liveMatch.id}
-          userId={userId}
-          onRoomChange={handleRoomChange}
-        />
-      )}
-
       {/* Drawer d'action */}
       <ActionDrawer
         open={drawerOpen}
@@ -328,7 +314,8 @@ export function LiveRoom({
         <VotingModal
           event={activeEvent}
           siffletsBalance={localBalance}
-          roomId={activeRoomId}
+          squadId={squadId}
+          squadName={squadName}
           onClose={() => setActiveEvent(null)}
           onBetSuccess={(amount) => setLocalBalance((b) => b - amount)}
         />

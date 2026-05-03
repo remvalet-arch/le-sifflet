@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, Trophy, User } from "lucide-react";
+import { Landmark, User, Users } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -49,7 +49,7 @@ export function BottomNav() {
             <span className="py-2.5 text-[10px] opacity-0 select-none" aria-hidden>·</span>
           </div>
         ) : (
-          <TabLink href="/leaderboard" Icon={Trophy} label="Kop" pathname={pathname} />
+          <TabLink href="/squads" Icon={Users} label="Ligues" pathname={pathname} />
         )}
 
         <TabLink href="/profile" Icon={User} label="Profil" pathname={pathname} />

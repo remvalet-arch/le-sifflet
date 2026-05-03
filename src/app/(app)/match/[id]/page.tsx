@@ -40,7 +40,7 @@ export default async function MatchPage({ params }: Props) {
   const isModerator = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
+    <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
       <Link
         href="/lobby"
         className="inline-flex items-center gap-1.5 text-sm font-bold text-whistle transition-opacity hover:opacity-70"

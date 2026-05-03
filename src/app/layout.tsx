@@ -44,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
+      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50 font-sans">
         {children}
         <ToasterProvider />
       </body>

@@ -9,7 +9,7 @@ const CHAIN_MAP: Partial<Record<MarketEventType, MarketEventType>> = {
 export async function resolveEvent(
   eventId: string,
   result: "oui" | "non",
-): Promise<{ winners: number; total_paid: number; multiplier: number; braquage_rooms: number }> {
+): Promise<{ winners: number; total_paid: number; multiplier: number; braquage_squads: number }> {
   const admin = createAdminClient();
 
   // Récupère le type et le match avant résolution (pour le chaining)
@@ -49,5 +49,5 @@ export async function resolveEvent(
     }
   }
 
-  return data as { winners: number; total_paid: number; multiplier: number; braquage_rooms: number };
+  return data as { winners: number; total_paid: number; multiplier: number; braquage_squads: number };
 }

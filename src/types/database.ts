@@ -248,6 +248,7 @@ export interface Database {
           position: string;
           status: "starter" | "bench";
           player_id: string | null;
+          shirt_number: string | null;
           created_at: string;
         };
         Insert: {
@@ -258,6 +259,7 @@ export interface Database {
           position?: string;
           status?: "starter" | "bench";
           player_id?: string | null;
+          shirt_number?: string | null;
           created_at?: string;
         };
         Update: {
@@ -268,54 +270,52 @@ export interface Database {
           position?: string;
           status?: "starter" | "bench";
           player_id?: string | null;
+          shirt_number?: string | null;
           created_at?: string;
         };
         Relationships: [];
       };
-      rooms: {
+      squads: {
         Row: {
           id: string;
-          match_id: string;
           name: string;
           is_private: boolean;
           invite_code: string | null;
-          admin_id: string;
+          owner_id: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          match_id: string;
           name: string;
           is_private?: boolean;
           invite_code?: string | null;
-          admin_id: string;
+          owner_id: string;
           created_at?: string;
         };
         Update: {
           id?: string;
-          match_id?: string;
           name?: string;
           is_private?: boolean;
           invite_code?: string | null;
-          admin_id?: string;
+          owner_id?: string;
           created_at?: string;
         };
         Relationships: [];
       };
-      room_members: {
+      squad_members: {
         Row: {
           user_id: string;
-          room_id: string;
+          squad_id: string;
           joined_at: string;
         };
         Insert: {
           user_id: string;
-          room_id: string;
+          squad_id: string;
           joined_at?: string;
         };
         Update: {
           user_id?: string;
-          room_id?: string;
+          squad_id?: string;
           joined_at?: string;
         };
         Relationships: [];
@@ -363,7 +363,7 @@ export interface Database {
           potential_reward: number;
           placed_at: string;
           status: BetStatus;
-          room_id: string | null;
+          squad_id: string | null;
         };
         Insert: {
           id?: string;
@@ -374,7 +374,7 @@ export interface Database {
           potential_reward: number;
           placed_at?: string;
           status?: BetStatus;
-          room_id?: string | null;
+          squad_id?: string | null;
         };
         Update: {
           id?: string;
@@ -385,7 +385,7 @@ export interface Database {
           potential_reward?: number;
           placed_at?: string;
           status?: BetStatus;
-          room_id?: string | null;
+          squad_id?: string | null;
         };
         Relationships: [];
       };
@@ -649,7 +649,7 @@ export interface Database {
           p_chosen_option: string;
           p_amount_staked: number;
           p_multiplier?: number;
-          p_room_id?: string | null;
+          p_squad_id?: string | null;
         };
         Returns: string;
       };
@@ -665,7 +665,7 @@ export interface Database {
           p_event_id: string;
           p_result: string;
         };
-        Returns: { winners: number; total_paid: number; multiplier: number; braquage_rooms: number };
+        Returns: { winners: number; total_paid: number; multiplier: number; braquage_squads: number };
       };
       get_event_odds: {
         Args: { p_event_id: string };
@@ -708,8 +708,8 @@ export interface Database {
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type MatchRow = Database["public"]["Tables"]["matches"]["Row"];
-export type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
-export type RoomMemberRow = Database["public"]["Tables"]["room_members"]["Row"];
+export type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
+export type SquadMemberRow = Database["public"]["Tables"]["squad_members"]["Row"];
 export type MarketEventRow =
   Database["public"]["Tables"]["market_events"]["Row"];
 export type LineupRow = Database["public"]["Tables"]["lineups"]["Row"];

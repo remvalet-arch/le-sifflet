@@ -83,21 +83,31 @@ function PitchMarkings() {
 
 function PlayerOnPitch({
   name,
+  shirtNumber,
   bgColor,
 }: {
   name: string;
+  shirtNumber?: string | null;
   bgColor?: string | null;
 }) {
   const textIsWhite = contrastText(bgColor ?? undefined) === "white";
+  const num = (shirtNumber ?? "").trim();
+  const showNumber = num.length > 0;
+  const sizeClass = showNumber
+    ? num.length >= 2
+      ? "text-[9px] leading-none tracking-tight"
+      : "text-[11px] leading-none"
+    : "text-[10px] leading-none";
+
   return (
     <div className="flex max-w-[64px] flex-col items-center gap-0.5">
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[10px] font-black shadow-sm ${
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border font-black tabular-nums shadow-sm ${sizeClass} ${
           textIsWhite ? "border-white/35 text-white" : "border-black/25 text-zinc-900"
         }`}
         style={bgColor ? { backgroundColor: bgColor } : { backgroundColor: "rgba(0,0,0,0.35)" }}
       >
-        {initials(name)}
+        {showNumber ? num : initials(name)}
       </div>
       <span className="w-full truncate text-center text-[9px] font-semibold leading-tight text-white drop-shadow-sm">
         {lastName(name)}
@@ -117,7 +127,7 @@ function PositionRow({
   return (
     <div className="relative z-10 flex flex-wrap items-end justify-center gap-2 px-1 py-1.5">
       {players.map((p) => (
-        <PlayerOnPitch key={p.id} name={p.player_name} bgColor={bgColor} />
+        <PlayerOnPitch key={p.id} name={p.player_name} shirtNumber={p.shirt_number} bgColor={bgColor} />
       ))}
     </div>
   );
@@ -155,7 +165,7 @@ export const MatchLineupsPitch = memo(function MatchLineupsPitch({
   const awayOrder = ["A", "M", "D", "G"] as const;
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-6 space-y-4">
       <div
         className="relative overflow-hidden rounded-2xl border border-emerald-950/60 shadow-lg"
         style={{

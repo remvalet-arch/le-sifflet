@@ -255,7 +255,7 @@ export const MatchLineups = memo(function MatchLineups({
 
   if (loading) {
     return (
-      <div className="mt-4 grid animate-pulse gap-3 md:grid-cols-2">
+      <div className="mt-6 grid animate-pulse gap-3 md:grid-cols-2">
         {[0, 1].map((i) => (
           <div key={i} className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
             <div className="mb-4 flex items-center gap-2">
@@ -282,7 +282,7 @@ export const MatchLineups = memo(function MatchLineups({
 
   if (!hasAny) {
     return (
-      <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
+      <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
         <Users className="h-10 w-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
           Les compos ne sont pas encore tombées. Le coach fait durer le suspense.
@@ -300,7 +300,9 @@ export const MatchLineups = memo(function MatchLineups({
       <section className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4">
         <header className="mb-4 flex items-center gap-2 border-b border-white/8 pb-3">
           <TeamLogo url={logo} label={team} />
-          <h3 className="min-w-0 truncate text-sm font-black uppercase tracking-wide text-white">{team}</h3>
+          <h3 className="line-clamp-2 min-w-0 flex-1 text-sm font-black uppercase leading-tight tracking-wide text-white">
+            {team}
+          </h3>
         </header>
         {rows.length === 0 ? (
           <p className="text-xs text-zinc-600">Aucun joueur en base pour cette équipe.</p>
@@ -340,7 +342,7 @@ export const MatchLineups = memo(function MatchLineups({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-4 md:flex-row md:gap-4">
+    <div className="mt-6 flex flex-col gap-4 md:flex-row md:gap-4">
       <div className="min-w-0 flex-1">{teamBlockRoster("home")}</div>
       <div className="min-w-0 flex-1">{teamBlockRoster("away")}</div>
     </div>

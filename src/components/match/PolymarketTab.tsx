@@ -210,7 +210,7 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
   const awayPlayers = players.filter((p) => teamsMatch(p.team_name, teamAway));
 
   return (
-    <div className="mt-4 flex flex-col gap-3 pb-4">
+    <div className="mt-6 flex flex-col gap-3 pb-4">
       <p className="text-center text-xs text-zinc-500">
         Pronos gratuits — gagne des Pts si tu as raison
       </p>
@@ -249,7 +249,7 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
 
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${
-            scoreInputsValid ? "mt-4 max-h-[200px] opacity-100" : "max-h-0 opacity-0"
+            scoreInputsValid ? "mt-4 max-h-[min(90vh,560px)] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           {alreadyBetScore ? (
@@ -259,10 +259,12 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
           ) : (
             <>
               {isBunker ? (
-                <div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center">
-                  <p className="text-xs font-bold uppercase tracking-wide text-amber-400">⚡ BUNKER 0-0</p>
-                  <p className="mt-0.5 text-lg font-black text-amber-300">
-                    +{BUNKER_REWARD.toLocaleString("fr-FR")} Pts
+                <div
+                  className="mb-4 flex min-h-[148px] flex-col items-center justify-center rounded-2xl bg-slate-950 px-4 py-8 text-center ring-2 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                  role="status"
+                >
+                  <p className="text-balance text-xl font-black tracking-tight text-amber-50 sm:text-2xl">
+                    🛡️ AUCUN BUTEUR (+{BUNKER_REWARD.toLocaleString("fr-FR")} Pts)
                   </p>
                 </div>
               ) : (

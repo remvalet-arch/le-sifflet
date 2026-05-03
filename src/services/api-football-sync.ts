@@ -588,6 +588,11 @@ export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResu
         if (name === "") continue;
         const apiPid = num(pl?.id) ?? 0;
         const pos = mapLineupPositionApi(typeof pl?.pos === "string" ? pl.pos : null);
+        const numRaw = pl?.number;
+        const shirt_number =
+          numRaw != null && String(numRaw).trim() !== ""
+            ? String(numRaw).trim().slice(0, 4)
+            : null;
         let player_id: string | null = null;
         try {
           player_id = await resolvePlayerOrGhost(admin, {
@@ -599,7 +604,15 @@ export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResu
             fixtureId: ctx.fixtureId,
           });
         } catch { player_id = null; }
-        lineupInserts.push({ match_id: matchId, player_name: name, team_side, position: pos, status, player_id });
+        lineupInserts.push({
+          match_id: matchId,
+          player_name: name,
+          team_side,
+          position: pos,
+          status,
+          player_id,
+          shirt_number,
+        });
       }
     };
 

@@ -27,8 +27,17 @@ type Props = {
   teamAway: string;
   homeTeamLogo: string | null;
   awayTeamLogo: string | null;
+  homeTeamColor?: string | null;
+  awayTeamColor?: string | null;
   matchStatus: MatchStatus;
 };
+
+const FALLBACK_HOME_BAR = "#166534";
+const FALLBACK_AWAY_BAR = "#14532d";
+
+function isHexColor(v: string | null | undefined): v is string {
+  return !!v && /^#[0-9A-Fa-f]{6}$/.test(v.trim());
+}
 
 function parseStatValue(v: string | null): number {
   if (!v || v === "null") return 0;
@@ -40,10 +49,14 @@ function StatRow({
   label,
   homeRaw,
   awayRaw,
+  homeTeamColor,
+  awayTeamColor,
 }: {
   label: string;
   homeRaw: string | null;
   awayRaw: string | null;
+  homeTeamColor: string | null;
+  awayTeamColor: string | null;
 }) {
   const h = parseStatValue(homeRaw);
   const a = parseStatValue(awayRaw);
@@ -53,28 +66,43 @@ function StatRow({
 
   const homeWins = h > a;
   const awayWins = a > h;
+  const tie = h === a;
+
+  const homeHex = isHexColor(homeTeamColor) ? homeTeamColor.trim() : FALLBACK_HOME_BAR;
+  const awayHex = isHexColor(awayTeamColor) ? awayTeamColor.trim() : FALLBACK_AWAY_BAR;
+
+  const homeBarOpacity = tie ? 0.88 : homeWins ? 1 : 0.38;
+  const awayBarOpacity = tie ? 0.88 : awayWins ? 1 : 0.38;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
-        <span className={homeWins ? "font-bold text-white" : "text-zinc-500"}>
+        <span className={homeWins || tie ? "font-bold text-white" : "text-zinc-500"}>
           {homeRaw ?? "—"}
         </span>
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
           {label}
         </span>
-        <span className={awayWins ? "font-bold text-white" : "text-zinc-500"}>
+        <span className={awayWins || tie ? "font-bold text-white" : "text-zinc-500"}>
           {awayRaw ?? "—"}
         </span>
       </div>
-      <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-800">
+      <div className="flex h-2.5 overflow-hidden rounded-full bg-zinc-800/90">
         <div
-          className={`h-full rounded-l-full transition-all duration-700 ${homeWins ? "bg-green-500" : "bg-zinc-600"}`}
-          style={{ width: `${homePct}%` }}
+          className="h-full rounded-l-full transition-all duration-700"
+          style={{
+            width: `${homePct}%`,
+            backgroundColor: homeHex,
+            opacity: homeBarOpacity,
+          }}
         />
         <div
-          className={`h-full rounded-r-full transition-all duration-700 ${awayWins ? "bg-blue-500" : "bg-zinc-700"}`}
-          style={{ width: `${awayPct}%` }}
+          className="h-full rounded-r-full transition-all duration-700"
+          style={{
+            width: `${awayPct}%`,
+            backgroundColor: awayHex,
+            opacity: awayBarOpacity,
+          }}
         />
       </div>
     </div>
@@ -89,6 +117,8 @@ export const MatchStats = memo(function MatchStats({
   teamAway,
   homeTeamLogo,
   awayTeamLogo,
+  homeTeamColor,
+  awayTeamColor,
   matchStatus,
 }: Props) {
   const [rows, setRows] = useState<MatchStatisticsRow[]>([]);
@@ -145,15 +175,15 @@ export const MatchStats = memo(function MatchStats({
 
   if (loading) {
     return (
-      <div className="px-4 py-10 text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+      <div className="mt-6 px-4 pb-10 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-whistle" />
       </div>
     );
   }
 
   if (!hasStats) {
     return (
-      <div className="flex flex-col items-center gap-3 px-4 py-16 text-center">
+      <div className="mt-6 flex flex-col items-center gap-3 px-4 pb-16 text-center">
         <BarChart2 className="h-10 w-10 text-zinc-700" strokeWidth={1.5} />
         <p className="text-sm font-bold text-zinc-500">
           {isUpcoming
@@ -165,7 +195,7 @@ export const MatchStats = memo(function MatchStats({
   }
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="mt-6 space-y-6 px-4 pb-6">
       {/* En-tête équipes */}
       <div className="flex items-center justify-between">
         <TeamHeader name={teamHome} logo={homeTeamLogo} align="left" />
@@ -183,6 +213,8 @@ export const MatchStats = memo(function MatchStats({
               label={s.label}
               homeRaw={entry.home}
               awayRaw={entry.away}
+              homeTeamColor={homeTeamColor ?? null}
+              awayTeamColor={awayTeamColor ?? null}
             />
           );
         })}
@@ -208,7 +240,7 @@ function TeamHeader({
       ) : (
         <div className="h-6 w-6 rounded-full bg-zinc-800" />
       )}
-      <span className="max-w-[80px] truncate text-xs font-bold text-zinc-300">{name}</span>
+      <span className="line-clamp-2 max-w-[88px] text-xs font-bold leading-tight text-zinc-300">{name}</span>
     </div>
   );
 }

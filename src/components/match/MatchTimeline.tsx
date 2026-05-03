@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
-import { Pencil, Trash2, X, Check } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Pencil, Trash2, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { MatchStatus, MatchTimelineEventRow, TimelineEventType } from "@/types/database";
@@ -23,6 +23,18 @@ const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
 
 const SELECT_CLS =
   "w-full rounded-lg border border-white/10 bg-zinc-800 px-2.5 py-1.5 text-xs font-semibold text-white focus:border-green-500/50 focus:outline-none";
+
+/** API-Football subst : joueur sortant = player_name ; entrant stocké dans details JSON (assist). */
+function parseSubstitutionPlayerIn(details: string | null): string | null {
+  if (!details?.trim()) return null;
+  try {
+    const o = JSON.parse(details) as { assist?: unknown };
+    const a = o.assist;
+    return typeof a === "string" && a.trim() !== "" ? a.trim() : null;
+  } catch {
+    return null;
+  }
+}
 
 type EditState = {
   event_type: Exclude<TimelineEventType, "info">;
@@ -48,31 +60,47 @@ function EventCard({
   const isGoal = ev.event_type === "goal";
   const isSub  = ev.event_type === "substitution";
   const isRight = side === "away";
+  const subPlayerIn = isSub ? parseSubstitutionPlayerIn(ev.details) : null;
 
   return (
     <div className="flex flex-col gap-1">
       <div
-        className={`flex max-w-[150px] items-center gap-2 rounded-xl border px-3 py-2.5 ${
+        className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${
           isGoal
             ? "border-green-700/40 bg-green-900/30"
             : "border-white/8 bg-zinc-800/60"
-        } ${isRight ? "flex-row-reverse" : ""}`}
+        } ${isSub ? "max-w-[min(100%,11rem)] min-w-[7.5rem]" : "max-w-[150px]"} ${isRight ? "flex-row-reverse" : ""}`}
       >
         <span className="text-xl leading-none">{icon}</span>
-        <div className={`flex flex-col ${isRight ? "items-end" : ""}`}>
+        <div className={`flex min-w-0 flex-1 flex-col ${isRight ? "items-end text-right" : ""}`}>
           <span className="text-xs font-black text-white">{ev.minute}&apos;</span>
-          <span
-            className={`mt-0.5 text-[11px] leading-tight text-zinc-400 ${
-              isSub ? "max-w-[90px]" : "max-w-[90px] truncate"
-            }`}
-          >
-            {ev.player_name}
-            {isGoal && ev.is_own_goal && (
-              <span className="ml-1 rounded bg-orange-900/60 px-1 text-[9px] font-black text-orange-300">
-                CSC
+          {isSub ? (
+            <div className="mt-1 flex w-full min-w-0 flex-col gap-1.5 text-[11px] leading-snug">
+              {subPlayerIn && (
+                <span className={`flex items-start gap-1 font-semibold text-emerald-400 ${isRight ? "flex-row-reverse" : ""}`}>
+                  <ArrowUpRight className="mt-0.5 h-3 w-3 shrink-0 opacity-90" aria-hidden />
+                  <span className="min-w-0 break-words">{subPlayerIn}</span>
+                </span>
+              )}
+              <span
+                className={`flex items-start gap-1 font-medium ${isRight ? "flex-row-reverse" : ""} ${
+                  subPlayerIn ? "text-rose-300/90" : "text-zinc-200"
+                }`}
+              >
+                <ArrowDownRight className="mt-0.5 h-3 w-3 shrink-0 opacity-90" aria-hidden />
+                <span className="min-w-0 break-words">{ev.player_name}</span>
               </span>
-            )}
-          </span>
+            </div>
+          ) : (
+            <span className="mt-0.5 max-w-[90px] truncate text-[11px] leading-tight text-zinc-400">
+              {ev.player_name}
+              {isGoal && ev.is_own_goal && (
+                <span className="ml-1 rounded bg-orange-900/60 px-1 text-[9px] font-black text-orange-300">
+                  CSC
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </div>
 
@@ -259,7 +287,7 @@ export const MatchTimeline = memo(function MatchTimeline({
 
   if (events.length === 0) {
     return (
-      <p className="py-10 text-center text-sm text-zinc-500">{timelineEmptyMessage(matchStatus)}</p>
+      <p className="mt-6 py-10 text-center text-sm text-zinc-500">{timelineEmptyMessage(matchStatus)}</p>
     );
   }
 
