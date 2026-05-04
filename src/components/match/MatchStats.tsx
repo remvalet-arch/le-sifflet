@@ -34,11 +34,12 @@ type Props = {
   matchStatus: MatchStatus;
 };
 
-const FALLBACK_HOME_BAR = "#166534";
-const FALLBACK_AWAY_BAR = "#14532d";
+/** Fallbacks distincts quand aucune couleur d'équipe n'est disponible. */
+const FALLBACK_HOME = "#3b82f6"; // blue-500
+const FALLBACK_AWAY = "#f97316"; // orange-500
 
-function isHexColor(v: string | null | undefined): v is string {
-  return !!v && /^#[0-9A-Fa-f]{6}$/.test(v.trim());
+export function isHexColor(v: string | null | undefined): v is string {
+  return !!v && /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/.test(v.trim());
 }
 
 function parseStatValue(v: string | null): number {
@@ -51,14 +52,14 @@ function StatRow({
   label,
   homeRaw,
   awayRaw,
-  homeTeamColor,
-  awayTeamColor,
+  homeColor,
+  awayColor,
 }: {
   label: string;
   homeRaw: string | null;
   awayRaw: string | null;
-  homeTeamColor: string | null;
-  awayTeamColor: string | null;
+  homeColor: string;
+  awayColor: string;
 }) {
   const h = parseStatValue(homeRaw);
   const a = parseStatValue(awayRaw);
@@ -70,41 +71,30 @@ function StatRow({
   const awayWins = a > h;
   const tie = h === a;
 
-  const homeHex = isHexColor(homeTeamColor) ? homeTeamColor.trim() : FALLBACK_HOME_BAR;
-  const awayHex = isHexColor(awayTeamColor) ? awayTeamColor.trim() : FALLBACK_AWAY_BAR;
-
-  const homeBarOpacity = tie ? 0.88 : homeWins ? 1 : 0.38;
-  const awayBarOpacity = tie ? 0.88 : awayWins ? 1 : 0.38;
+  const homeOpacity = tie ? 0.9 : homeWins ? 1 : 0.45;
+  const awayOpacity = tie ? 0.9 : awayWins ? 1 : 0.45;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
-        <span className={homeWins || tie ? "font-bold text-white" : "text-zinc-500"}>
+        <span className={homeWins || tie ? "font-bold text-white" : "text-zinc-400"}>
           {homeRaw ?? "—"}
         </span>
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
           {label}
         </span>
-        <span className={awayWins || tie ? "font-bold text-white" : "text-zinc-500"}>
+        <span className={awayWins || tie ? "font-bold text-white" : "text-zinc-400"}>
           {awayRaw ?? "—"}
         </span>
       </div>
       <div className="flex h-2.5 overflow-hidden rounded-full bg-zinc-800/90">
         <div
           className="h-full rounded-l-full transition-all duration-700"
-          style={{
-            width: `${homePct}%`,
-            backgroundColor: homeHex,
-            opacity: homeBarOpacity,
-          }}
+          style={{ width: `${homePct}%`, backgroundColor: homeColor, opacity: homeOpacity }}
         />
         <div
           className="h-full rounded-r-full transition-all duration-700"
-          style={{
-            width: `${awayPct}%`,
-            backgroundColor: awayHex,
-            opacity: awayBarOpacity,
-          }}
+          style={{ width: `${awayPct}%`, backgroundColor: awayColor, opacity: awayOpacity }}
         />
       </div>
     </div>
@@ -127,6 +117,42 @@ export const MatchStats = memo(function MatchStats({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const forceSyncTriggered = useRef(false);
+
+  // Couleurs résolues : props en premier, sinon chargées depuis la table teams
+  const [resolvedHomeColor, setResolvedHomeColor] = useState<string | null>(
+    isHexColor(homeTeamColor) ? homeTeamColor : null,
+  );
+  const [resolvedAwayColor, setResolvedAwayColor] = useState<string | null>(
+    isHexColor(awayTeamColor) ? awayTeamColor : null,
+  );
+
+  // Charge les couleurs manquantes depuis la table `teams`
+  useEffect(() => {
+    const needsHome = !isHexColor(homeTeamColor) && homeTeamId != null;
+    const needsAway = !isHexColor(awayTeamColor) && awayTeamId != null;
+    if (!needsHome && !needsAway) return;
+
+    const ids = [
+      ...(needsHome ? [homeTeamId!] : []),
+      ...(needsAway ? [awayTeamId!] : []),
+    ];
+
+    const supabase = createClient();
+    void supabase
+      .from("teams")
+      .select("id, color_primary, color_secondary")
+      .in("id", ids)
+      .then(({ data }) => {
+        for (const team of data ?? []) {
+          const best =
+            isHexColor(team.color_primary) ? team.color_primary
+            : isHexColor(team.color_secondary) ? team.color_secondary
+            : null;
+          if (needsHome && team.id === homeTeamId) setResolvedHomeColor(best);
+          if (needsAway && team.id === awayTeamId) setResolvedAwayColor(best);
+        }
+      });
+  }, [homeTeamId, awayTeamId, homeTeamColor, awayTeamColor]);
 
   const fetchStats = useCallback((supabase: ReturnType<typeof createClient>) => {
     return supabase
@@ -167,9 +193,7 @@ export const MatchStats = memo(function MatchStats({
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "match_statistics", filter: `match_id=eq.${matchId}` },
-        () => {
-          void fetchStats(supabase).then((data) => setRows(data));
-        },
+        () => { void fetchStats(supabase).then((data) => setRows(data)); },
       )
       .subscribe();
 
@@ -183,7 +207,6 @@ export const MatchStats = memo(function MatchStats({
     }
   }, [loading, rows.length, matchStatus, triggerForceSync]);
 
-  // Construit un index { type → { home?: string, away?: string } }
   const statsMap = new Map<string, { home: string | null; away: string | null }>();
   for (const row of rows) {
     const isHome = row.team_id === homeTeamId;
@@ -197,8 +220,10 @@ export const MatchStats = memo(function MatchStats({
 
   const hasStats = statsMap.size > 0;
   const visibleStats = FEATURED_STATS.filter((s) => statsMap.has(s.type));
-
   const isUpcoming = matchStatus === "upcoming";
+
+  const homeColor = resolvedHomeColor ?? FALLBACK_HOME;
+  const awayColor = resolvedAwayColor ?? FALLBACK_AWAY;
 
   if (loading || syncing) {
     return (
@@ -228,11 +253,11 @@ export const MatchStats = memo(function MatchStats({
 
   return (
     <div className="mt-6 space-y-6 px-4 pb-6">
-      {/* En-tête équipes */}
+      {/* En-tête équipes avec swatch couleur */}
       <div className="flex items-center justify-between">
-        <TeamHeader name={teamHome} logo={homeTeamLogo} align="left" />
+        <TeamHeader name={teamHome} logo={homeTeamLogo} color={homeColor} align="left" />
         <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Stats</span>
-        <TeamHeader name={teamAway} logo={awayTeamLogo} align="right" />
+        <TeamHeader name={teamAway} logo={awayTeamLogo} color={awayColor} align="right" />
       </div>
 
       {/* Barres de stats */}
@@ -245,8 +270,8 @@ export const MatchStats = memo(function MatchStats({
               label={s.label}
               homeRaw={entry.home}
               awayRaw={entry.away}
-              homeTeamColor={homeTeamColor ?? null}
-              awayTeamColor={awayTeamColor ?? null}
+              homeColor={homeColor}
+              awayColor={awayColor}
             />
           );
         })}
@@ -258,20 +283,33 @@ export const MatchStats = memo(function MatchStats({
 function TeamHeader({
   name,
   logo,
+  color,
   align,
 }: {
   name: string;
   logo: string | null;
+  color: string;
   align: "left" | "right";
 }) {
   return (
     <div className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}>
-      {logo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={logo} alt={name} className="h-6 w-6 object-contain" />
-      ) : (
-        <div className="h-6 w-6 rounded-full bg-zinc-800" />
-      )}
+      <div className="relative shrink-0">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt={name} className="h-7 w-7 object-contain" />
+        ) : (
+          <div
+            className="h-7 w-7 rounded-full"
+            style={{ backgroundColor: color, opacity: 0.85 }}
+          />
+        )}
+        {/* Swatch couleur maillot sous le logo */}
+        <span
+          className="absolute -bottom-1 left-1/2 h-1.5 w-5 -translate-x-1/2 rounded-full"
+          style={{ backgroundColor: color }}
+          aria-hidden
+        />
+      </div>
       <span className="line-clamp-2 max-w-[88px] text-xs font-bold leading-tight text-zinc-300">{name}</span>
     </div>
   );

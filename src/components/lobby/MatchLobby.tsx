@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -171,6 +171,80 @@ function LeagueSectionHeader({
   );
 }
 
+// ── Vue "Europe" : matchs du jour + Hub par coupe ────────────────────────────
+
+type EuropeHubViewProps = {
+  europeGrouped: LeagueGroup[];
+  europeRows: LobbyMatchRow[];
+  roundView: boolean;
+  roundContext: { leagueApiId: number; roundShort: string } | null;
+};
+
+function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: EuropeHubViewProps) {
+  const [selectedCupId, setSelectedCupId] = useState<number>(EUROPEAN_CUPS[0].apiFootballLeagueId);
+  const selectCup = useCallback((id: number) => setSelectedCupId(id), []);
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Matchs Europe du jour (si présents) */}
+      {europeRows.length > 0 && (
+        <div className="flex flex-col gap-10">
+          {europeGrouped.map((group) => (
+            <section key={group.groupKey} className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4">
+              <LeagueSectionHeader group={group} showRoundLink roundView={roundView} />
+              <ul className="mt-4 flex flex-col gap-3">
+                {group.rows.map((m) => (
+                  <li key={m.id}>
+                    <MatchCard
+                      match={toMatchRow(m)}
+                      goalEvents={goalsFromTimeline(m)}
+                      mpgLayout
+                      hasLineups={m.has_lineups}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {/* Séparateur + sous-sélecteur de coupe */}
+      <div>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
+            Explorer par compétition
+          </span>
+          <div className="h-px flex-1 bg-white/8" />
+        </div>
+        <nav className="flex gap-1.5" aria-label="Compétition européenne">
+          {EUROPEAN_CUPS.map((cup) => (
+            <button
+              key={cup.apiFootballLeagueId}
+              type="button"
+              onClick={() => selectCup(cup.apiFootballLeagueId)}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+                selectedCupId === cup.apiFootballLeagueId
+                  ? "bg-zinc-700 text-white"
+                  : "bg-zinc-900/60 text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {cup.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Hub de la coupe sélectionnée */}
+      <LeagueHub
+        key={selectedCupId}
+        leagueApiId={selectedCupId}
+        initialRound={roundContext?.leagueApiId === selectedCupId ? roundContext.roundShort : null}
+      />
+    </div>
+  );
+}
+
 export function MatchLobby({
   initialMatches,
   viewMode = "day",
@@ -294,31 +368,12 @@ export function MatchLobby({
           </div>
         )
       ) : tab === "europe" ? (
-        europeRows.length === 0 ? (
-          <p className="rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-8 text-center text-sm text-zinc-500">
-            Aucun match Europe (C1, C3, Conference) {roundView ? "pour ce tour" : "pour cette journée"}.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-10">
-            {europeGrouped.map((group) => (
-              <section key={group.groupKey} className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4">
-                <LeagueSectionHeader group={group} showRoundLink roundView={roundView} />
-                <ul className="mt-4 flex flex-col gap-3">
-                  {group.rows.map((m) => (
-                    <li key={m.id}>
-                      <MatchCard
-                        match={toMatchRow(m)}
-                        goalEvents={goalsFromTimeline(m)}
-                        mpgLayout
-                        hasLineups={m.has_lineups}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        )
+        <EuropeHubView
+          europeGrouped={europeGrouped}
+          europeRows={europeRows}
+          roundView={roundView}
+          roundContext={roundContext}
+        />
       ) : (() => {
           const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
           if (!league) return null;
