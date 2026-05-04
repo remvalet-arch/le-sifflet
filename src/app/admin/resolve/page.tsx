@@ -28,7 +28,10 @@ export default async function AdminResolvePage() {
     .order("created_at", { ascending: false });
 
   const varMatchIds = [...new Set((events ?? []).map((e) => e.match_id))];
-  const varMatchMap = new Map<string, Pick<MatchRow, "team_home" | "team_away">>();
+  const varMatchMap = new Map<
+    string,
+    Pick<MatchRow, "team_home" | "team_away">
+  >();
 
   if (varMatchIds.length > 0) {
     const { data: matches } = await supabase
@@ -83,7 +86,8 @@ export default async function AdminResolvePage() {
         </section>
 
         <p className="text-center text-xs text-white/35">
-          Les pronos gratuits sont résolus automatiquement à la fin du match (sync API-Football / admin fin de match).
+          Les pronos gratuits sont résolus automatiquement à la fin du match
+          (sync API-Football / admin fin de match).
         </p>
       </div>
     </main>

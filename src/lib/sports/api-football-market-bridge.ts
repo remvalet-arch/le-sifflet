@@ -12,8 +12,12 @@ type Admin = SupabaseClient<Database>;
 
 function norm(ev: unknown): { typeStr: string; detailLower: string } {
   const raw = ev as Record<string, unknown>;
-  const typeStr = String(raw.type ?? "").toLowerCase().trim();
-  const detailLower = String(raw.detail ?? "").toLowerCase().trim();
+  const typeStr = String(raw.type ?? "")
+    .toLowerCase()
+    .trim();
+  const detailLower = String(raw.detail ?? "")
+    .toLowerCase()
+    .trim();
   return { typeStr, detailLower };
 }
 
@@ -58,7 +62,10 @@ export function penaltyCheckResultFromApi(
   detailLower: string,
 ): "oui" | "non" | null {
   if (typeStr !== "var") return null;
-  if (detailLower.includes("penalty confirmed") || detailLower.includes("penalty awarded")) {
+  if (
+    detailLower.includes("penalty confirmed") ||
+    detailLower.includes("penalty awarded")
+  ) {
     return "oui";
   }
   if (
@@ -104,7 +111,11 @@ async function hasOpenEvent(
   return Boolean(data?.id);
 }
 
-async function openEvent(admin: Admin, matchId: string, type: "var_goal" | "penalty_check") {
+async function openEvent(
+  admin: Admin,
+  matchId: string,
+  type: "var_goal" | "penalty_check",
+) {
   if (await hasOpenEvent(admin, matchId, type)) return false;
   const { error } = await admin.from("market_events").insert({
     match_id: matchId,
@@ -183,7 +194,10 @@ export async function applyApiFootballSignalsToMarkets(
       if (ok) summary.var_goal_opened = true;
     }
 
-    if (penaltyCheckShouldOpen(typeStr, detailLower) || isPenaltyIncidentType(typeStr)) {
+    if (
+      penaltyCheckShouldOpen(typeStr, detailLower) ||
+      isPenaltyIncidentType(typeStr)
+    ) {
       const ok = await openEvent(admin, matchId, "penalty_check");
       if (ok) summary.penalty_check_opened = true;
     }
@@ -204,7 +218,8 @@ export function latestMarketVerdictFromFixtureEvents(
   for (let i = list.length - 1; i >= 0; i--) {
     const { typeStr, detailLower } = norm(list[i]);
     if (marketType === "var_goal") {
-      const r = typeStr === "var" ? varGoalResultFromApiDetail(detailLower) : null;
+      const r =
+        typeStr === "var" ? varGoalResultFromApiDetail(detailLower) : null;
       if (r) return r;
     } else {
       const r = penaltyCheckResultFromApi(typeStr, detailLower);

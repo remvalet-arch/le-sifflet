@@ -34,7 +34,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const date = url.searchParams.get("date")?.trim() ?? "";
   if (!YMD.test(date)) {
-    return errorResponse("Paramètre date obligatoire (YYYY-MM-DD), ex. ?date=2026-05-03", 400);
+    return errorResponse(
+      "Paramètre date obligatoire (YYYY-MM-DD), ex. ?date=2026-05-03",
+      400,
+    );
   }
 
   try {

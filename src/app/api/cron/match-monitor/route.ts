@@ -1,7 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { fetchApiFootball } from "@/lib/api-football-client";
+import {
+  fetchApiFootball,
+  getApiFootballSeasonYear,
+} from "@/lib/api-football-client";
 import {
   extractFixtureList,
   fixtureApiStatusShortFromRow,
@@ -12,6 +15,7 @@ import {
   syncMatchStatistics,
   syncMatchLineups,
 } from "@/services/api-football-sync";
+import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import type { MatchStatus } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -94,7 +98,9 @@ function needsLineupBackfill(m: MonitorRow, now: Date): boolean {
 
 function needsStatsHeartbeat(m: MonitorRow): boolean {
   if (m.last_stats_sync_at == null) return true;
-  return Date.now() - new Date(m.last_stats_sync_at).getTime() > STATS_HEARTBEAT_MS;
+  return (
+    Date.now() - new Date(m.last_stats_sync_at).getTime() > STATS_HEARTBEAT_MS
+  );
 }
 
 /**
@@ -122,25 +128,29 @@ export async function GET(request: Request) {
   const selectCols =
     "id, start_time, status, api_football_id, home_score, away_score, has_lineups, last_stats_sync_at";
 
-  const [{ data: upcomingSoon, error: e1 }, { data: inPlay, error: e2 }] = await Promise.all([
-    admin
-      .from("matches")
-      .select(selectCols)
-      .eq("status", "upcoming")
-      .not("api_football_id", "is", null)
-      .lte("start_time", soon.toISOString())
-      .gte("start_time", upcomingSkew.toISOString()),
-    admin
-      .from("matches")
-      .select(selectCols)
-      .in("status", ["first_half", "half_time", "second_half", "paused"])
-      .not("api_football_id", "is", null),
-  ]);
+  const [{ data: upcomingSoon, error: e1 }, { data: inPlay, error: e2 }] =
+    await Promise.all([
+      admin
+        .from("matches")
+        .select(selectCols)
+        .eq("status", "upcoming")
+        .not("api_football_id", "is", null)
+        .lte("start_time", soon.toISOString())
+        .gte("start_time", upcomingSkew.toISOString()),
+      admin
+        .from("matches")
+        .select(selectCols)
+        .in("status", ["first_half", "half_time", "second_half", "paused"])
+        .not("api_football_id", "is", null),
+    ]);
 
   if (e1) return errorResponse(`matches (à venir): ${e1.message}`, 500);
   if (e2) return errorResponse(`matches (en jeu): ${e2.message}`, 500);
 
-  const active = mergeById([...(upcomingSoon ?? []), ...(inPlay ?? [])] as MonitorRow[]);
+  const active = mergeById([
+    ...(upcomingSoon ?? []),
+    ...(inPlay ?? []),
+  ] as MonitorRow[]);
 
   const summary = {
     activeMatchCount: active.length,
@@ -157,7 +167,9 @@ export async function GET(request: Request) {
 
   if (active.length === 0) return successResponse(summary);
 
-  const withFixture = active.filter((m) => m.api_football_id != null) as (MonitorRow & {
+  const withFixture = active.filter(
+    (m) => m.api_football_id != null,
+  ) as (MonitorRow & {
     api_football_id: number;
   })[];
 
@@ -165,7 +177,11 @@ export async function GET(request: Request) {
   for (const m of withFixture) fixtureIdToMatchId.set(m.api_football_id, m.id);
 
   const scoreByMatchId = new Map<string, { home: number; away: number }>();
-  for (const m of active) scoreByMatchId.set(m.id, { home: m.home_score ?? 0, away: m.away_score ?? 0 });
+  for (const m of active)
+    scoreByMatchId.set(m.id, {
+      home: m.home_score ?? 0,
+      away: m.away_score ?? 0,
+    });
 
   // ── 1. Fixture batch : mise à jour score / statut / minute ────────────────
   const shortByMatchId = new Map<string, string>();
@@ -178,7 +194,9 @@ export async function GET(request: Request) {
     try {
       payload = await fetchApiFootball<unknown>("fixtures", { ids: idsParam });
     } catch (err) {
-      summary.errors.push(`fixtures ids=${idsParam}: ${err instanceof Error ? err.message : String(err)}`);
+      summary.errors.push(
+        `fixtures ids=${idsParam}: ${err instanceof Error ? err.message : String(err)}`,
+      );
       continue;
     }
     summary.fixtureApiCalls += 1;
@@ -195,9 +213,18 @@ export async function GET(request: Request) {
       shortByMatchId.set(matchId, short);
 
       const patch = patchMatchFromFixtureRow(row);
-      const { error: upErr } = await admin.from("matches").update(patch).eq("id", matchId);
-      if (upErr) { summary.errors.push(`update match ${matchId}: ${upErr.message}`); continue; }
-      scoreByMatchId.set(matchId, { home: patch.home_score ?? 0, away: patch.away_score ?? 0 });
+      const { error: upErr } = await admin
+        .from("matches")
+        .update(patch)
+        .eq("id", matchId);
+      if (upErr) {
+        summary.errors.push(`update match ${matchId}: ${upErr.message}`);
+        continue;
+      }
+      scoreByMatchId.set(matchId, {
+        home: patch.home_score ?? 0,
+        away: patch.away_score ?? 0,
+      });
       summary.matchesPatchedFromFixture += 1;
     }
   }
@@ -225,11 +252,14 @@ export async function GET(request: Request) {
           if (ms.penalty_check_opened) summary.apiMarketEventsOpened += 1;
           if (ms.var_goal_resolved) summary.apiMarketEventsResolved += 1;
           if (ms.penalty_check_resolved) summary.apiMarketEventsResolved += 1;
-          for (const err of ms.errors) summary.errors.push(`api-markets ${m.id}: ${err}`);
+          for (const err of ms.errors)
+            summary.errors.push(`api-markets ${m.id}: ${err}`);
         }
       }
     } catch (err) {
-      summary.errors.push(`events ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      summary.errors.push(
+        `events ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -244,7 +274,9 @@ export async function GET(request: Request) {
         summary.statsSyncCount += 1;
       }
     } catch (err) {
-      summary.errors.push(`stats ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      summary.errors.push(
+        `stats ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -259,7 +291,9 @@ export async function GET(request: Request) {
         summary.lineupBackfillCount += 1;
       }
     } catch (err) {
-      summary.errors.push(`lineups ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      summary.errors.push(
+        `lineups ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -274,9 +308,30 @@ export async function GET(request: Request) {
         summary.errors.push(`fullSync ${m.id}: ${r.skippedReason}`);
       } else {
         summary.fullSyncOnEndCount += 1;
+        // Async hub stats sync — fire-and-forget, ne bloque pas le cron
+        void (async () => {
+          const { data: matchComp } = await admin
+            .from("matches")
+            .select("competition_id")
+            .eq("id", m.id)
+            .single();
+          if (!matchComp?.competition_id) return;
+          const { data: league } = await admin
+            .from("competitions")
+            .select("api_football_league_id")
+            .eq("id", matchComp.competition_id)
+            .single();
+          if (!league?.api_football_league_id) return;
+          await syncLeagueHubData(
+            league.api_football_league_id,
+            getApiFootballSeasonYear(),
+          );
+        })();
       }
     } catch (err) {
-      summary.errors.push(`fullSync ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      summary.errors.push(
+        `fullSync ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 

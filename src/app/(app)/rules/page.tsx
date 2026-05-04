@@ -34,9 +34,7 @@ export default function RulesPage() {
       <h1 className="text-2xl font-black uppercase tracking-tight text-white">
         Règles du jeu
       </h1>
-      <p className="mt-1 text-sm text-zinc-400">
-        Simple, rapide, fair-play.
-      </p>
+      <p className="mt-1 text-sm text-zinc-400">Simple, rapide, fair-play.</p>
 
       <div className="mt-6 flex flex-col gap-4">
         {RULES.map((rule) => (

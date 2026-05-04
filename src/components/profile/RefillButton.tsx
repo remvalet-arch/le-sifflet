@@ -12,13 +12,19 @@ type Props = {
 function useCountdown(targetIso: string | null) {
   const [seconds, setSeconds] = useState(() => {
     if (!targetIso) return 0;
-    return Math.max(0, Math.ceil((new Date(targetIso).getTime() - Date.now()) / 1000));
+    return Math.max(
+      0,
+      Math.ceil((new Date(targetIso).getTime() - Date.now()) / 1000),
+    );
   });
 
   useEffect(() => {
     if (!targetIso) return;
     const id = setInterval(() => {
-      const s = Math.max(0, Math.ceil((new Date(targetIso).getTime() - Date.now()) / 1000));
+      const s = Math.max(
+        0,
+        Math.ceil((new Date(targetIso).getTime() - Date.now()) / 1000),
+      );
       setSeconds(s);
       if (s === 0) clearInterval(id);
     }, 1000);
@@ -41,12 +47,18 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
     setLoading(true);
     try {
       const res = await fetch("/api/refill", { method: "POST" });
-      const json = (await res.json()) as { ok: boolean; data?: { new_balance: number }; error?: string };
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: { new_balance: number };
+        error?: string;
+      };
       if (!res.ok) {
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
-      toast.success(`+500 Pts ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} pts 🎉`);
+      toast.success(
+        `+500 Pts ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} pts 🎉`,
+      );
       router.refresh();
     } catch {
       toast.error("Connexion perdue, réessaie !");

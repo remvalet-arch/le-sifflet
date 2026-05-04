@@ -4,7 +4,10 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return Array.from(
+    { length: 6 },
+    () => chars[Math.floor(Math.random() * chars.length)],
+  ).join("");
 }
 
 /** GET — toutes les squads dont l'utilisateur est membre (+ membres + username). */
@@ -30,18 +33,25 @@ export async function GET() {
     const squadIdSet = new Set(ids);
     if (ids.length === 0) return successResponse({ squads: [] });
 
-    const { data: squads, error: sErr } = await supabase.from("squads").select("*").in("id", ids);
+    const { data: squads, error: sErr } = await supabase
+      .from("squads")
+      .select("*")
+      .in("id", ids);
     if (sErr) {
       console.error("Supabase Error:", sErr);
       return errorResponse(sErr.message, 500);
     }
 
-    const { data: allMembers, error: amErr } = await supabase.rpc("squad_members_for_my_squads");
+    const { data: allMembers, error: amErr } = await supabase.rpc(
+      "squad_members_for_my_squads",
+    );
     if (amErr) {
       console.error("Supabase Error:", amErr);
       return errorResponse(amErr.message, 500);
     }
-    const membersInSquads = (allMembers ?? []).filter((m) => squadIdSet.has(m.squad_id));
+    const membersInSquads = (allMembers ?? []).filter((m) =>
+      squadIdSet.has(m.squad_id),
+    );
 
     const userIds = [...new Set(membersInSquads.map((m) => m.user_id))];
     const { data: profiles, error: pErr } = await supabase
@@ -75,7 +85,10 @@ export async function GET() {
             sifflets_balance: p?.sifflets_balance ?? 0,
           };
         });
-      const pot_commun = members.reduce((sum, m) => sum + m.sifflets_balance, 0);
+      const pot_commun = members.reduce(
+        (sum, m) => sum + m.sifflets_balance,
+        0,
+      );
       return {
         ...s,
         members,
@@ -109,7 +122,8 @@ export async function POST(request: NextRequest) {
     const { name, is_private = true } = body;
 
     if (!name?.trim()) return errorResponse("Paramètres manquants", 400);
-    if (name.trim().length > 30) return errorResponse("Nom trop long (30 car. max)", 400);
+    if (name.trim().length > 30)
+      return errorResponse("Nom trop long (30 car. max)", 400);
 
     const invite_code = is_private ? generateCode() : null;
 
@@ -121,7 +135,10 @@ export async function POST(request: NextRequest) {
 
     if (squadErr ?? !squad) {
       if (squadErr) console.error("Supabase Error:", squadErr);
-      return errorResponse(squadErr?.message ?? "Erreur lors de la création", 500);
+      return errorResponse(
+        squadErr?.message ?? "Erreur lors de la création",
+        500,
+      );
     }
 
     const { error: memberErr } = await supabase

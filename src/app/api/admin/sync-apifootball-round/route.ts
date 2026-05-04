@@ -35,10 +35,16 @@ export async function GET(request: Request) {
   const roundRaw = url.searchParams.get("roundName")?.trim() ?? "";
   const leagueId = parseInt(leagueRaw, 10);
   if (Number.isNaN(leagueId) || leagueId <= 0) {
-    return errorResponse("Paramètre leagueId obligatoire (nombre), ex. ?leagueId=61", 400);
+    return errorResponse(
+      "Paramètre leagueId obligatoire (nombre), ex. ?leagueId=61",
+      400,
+    );
   }
   if (!isLobbyTrackedLeagueApiId(leagueId)) {
-    return errorResponse("leagueId doit être une ligue suivie au lobby (Top 5 + coupes UEFA).", 400);
+    return errorResponse(
+      "leagueId doit être une ligue suivie au lobby (Top 5 + coupes UEFA).",
+      400,
+    );
   }
   if (roundRaw === "") {
     return errorResponse(

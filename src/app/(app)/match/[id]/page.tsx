@@ -22,7 +22,12 @@ export default async function MatchPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: match, error }, { data: { user } }] = await Promise.all([
+  const [
+    { data: match, error },
+    {
+      data: { user },
+    },
+  ] = await Promise.all([
     supabase.from("matches").select("*").eq("id", id).maybeSingle(),
     supabase.auth.getUser(),
   ]);

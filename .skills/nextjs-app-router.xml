@@ -1,0 +1,13 @@
+<skill>
+  <name>Next.js 16 App Router Server Actions</name>
+  <description>Implémenter la logique backend, les mutations de données, et le routage avec Next.js 16 App Router.</description>
+  <architecture_rules>
+    <rule>Server Actions : Pour les soumissions de formulaires ou les clics modifiant la DB, utiliser des actions asynchrones avec `"use server"` dans `src/app/actions/` plutôt que `app/api/`.</rule>
+    <rule>Revalidation : Après une mutation réussie, utiliser `revalidatePath('/chemin')` ou `revalidateTag()` pour purger le cache et rafraîchir l'UI.</rule>
+    <rule>Gestion des Erreurs : Les Server Actions doivent retourner des objets structurés `{ success: true, data: ... }` ou `{ success: false, error: "..." }` pour un traitement propre par le client, jamais lancer d'exceptions brutes non catchées.</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Vérifier que la Server Action est appelée correctement depuis le client (Network tab ou logs serveur).</verification_step>
+    <verification_step>Vérifier que l'UI se met à jour immédiatement après la mutation sans rechargement manuel de la page (grâce à revalidatePath).</verification_step>
+  </harness>
+</skill>

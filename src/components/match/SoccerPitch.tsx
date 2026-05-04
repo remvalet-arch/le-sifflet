@@ -21,7 +21,6 @@ function contrastText(hex: string): "white" | "black" {
   return lum > 0.5 ? "black" : "white";
 }
 
-
 function PlayerDot({
   name,
   bgColor,
@@ -109,14 +108,22 @@ function RosterList({
         { label: teamHome, players: homePlayers },
         { label: teamAway, players: awayPlayers },
       ].map(({ label, players }) => (
-        <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
-          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">{label}</p>
+        <div
+          key={label}
+          className="rounded-2xl border border-white/10 bg-zinc-900 p-4"
+        >
+          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">
+            {label}
+          </p>
           {players.length === 0 ? (
             <p className="text-xs text-zinc-600">Aucun joueur renseigné</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {players
-                .sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9))
+                .sort(
+                  (a, b) =>
+                    (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9),
+                )
                 .map((p) => (
                   <span
                     key={p.id}
@@ -132,10 +139,15 @@ function RosterList({
       ))}
       {bench.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
-          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">Remplaçants</p>
+          <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">
+            Remplaçants
+          </p>
           <div className="flex flex-wrap gap-2">
             {bench.map((p) => (
-              <span key={p.id} className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400">
+              <span
+                key={p.id}
+                className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400"
+              >
                 {p.player_name}
               </span>
             ))}
@@ -181,11 +193,16 @@ export const SoccerPitch = memo(function SoccerPitch({
   if (loading) {
     return (
       <div className="mt-4 animate-pulse overflow-hidden rounded-2xl border border-green-700/40 bg-green-800/30 py-6">
-        {([
-          [1, 4, 3, 4, 1],
-          [1, 4, 3, 4, 1],
-        ] as number[][]).map((rows, half) => (
-          <div key={half} className={`flex flex-col gap-3 ${half === 1 ? "mt-4" : ""}`}>
+        {(
+          [
+            [1, 4, 3, 4, 1],
+            [1, 4, 3, 4, 1],
+          ] as number[][]
+        ).map((rows, half) => (
+          <div
+            key={half}
+            className={`flex flex-col gap-3 ${half === 1 ? "mt-4" : ""}`}
+          >
             {rows.map((count, rowIdx) => (
               <div key={rowIdx} className="flex justify-center gap-3">
                 {Array.from({ length: count }).map((_, i) => (
@@ -205,15 +222,19 @@ export const SoccerPitch = memo(function SoccerPitch({
   // ── Cas 1 : lineups spécifiques au match ──────────────────────────────────
 
   if (lineups.length > 0) {
-    const starters     = lineups.filter((p) => p.status === "starter");
-    const bench        = lineups.filter((p) => p.status === "bench");
+    const starters = lineups.filter((p) => p.status === "starter");
+    const bench = lineups.filter((p) => p.status === "bench");
     const homeStarters = starters.filter((p) => p.team_side === "home");
     const awayStarters = starters.filter((p) => p.team_side === "away");
 
     const byPosHome = (pos: "G" | "D" | "M" | "A") =>
-      startersForPitchRow(homeStarters, pos).sort((a, b) => a.player_name.localeCompare(b.player_name, "fr"));
+      startersForPitchRow(homeStarters, pos).sort((a, b) =>
+        a.player_name.localeCompare(b.player_name, "fr"),
+      );
     const byPosAway = (pos: "G" | "D" | "M" | "A") =>
-      startersForPitchRow(awayStarters, pos).sort((a, b) => a.player_name.localeCompare(b.player_name, "fr"));
+      startersForPitchRow(awayStarters, pos).sort((a, b) =>
+        a.player_name.localeCompare(b.player_name, "fr"),
+      );
 
     // Titulaires incomplets → liste
     if (homeStarters.length < 11 || awayStarters.length < 11) {
@@ -230,8 +251,8 @@ export const SoccerPitch = memo(function SoccerPitch({
     }
 
     // Titulaires complets → terrain tactique
-    const homeBg        = homeTeamColor ?? "#166534";
-    const awayBg        = awayTeamColor ?? "#3f3f46";
+    const homeBg = homeTeamColor ?? "#166534";
+    const awayBg = awayTeamColor ?? "#3f3f46";
     const homeTextWhite = contrastText(homeBg) === "white";
     const awayTextWhite = contrastText(awayBg) === "white";
 
@@ -252,19 +273,51 @@ export const SoccerPitch = memo(function SoccerPitch({
             <p className="mb-0 text-center text-[9px] font-black uppercase tracking-widest text-white/40">
               {teamAway}
             </p>
-            <LineupRow players={byPosAway("G")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-            <LineupRow players={byPosAway("D")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-            <LineupRow players={byPosAway("M")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
-            <LineupRow players={byPosAway("A")} bgColor={awayTeamColor} textIsWhite={awayTextWhite} />
+            <LineupRow
+              players={byPosAway("G")}
+              bgColor={awayTeamColor}
+              textIsWhite={awayTextWhite}
+            />
+            <LineupRow
+              players={byPosAway("D")}
+              bgColor={awayTeamColor}
+              textIsWhite={awayTextWhite}
+            />
+            <LineupRow
+              players={byPosAway("M")}
+              bgColor={awayTeamColor}
+              textIsWhite={awayTextWhite}
+            />
+            <LineupRow
+              players={byPosAway("A")}
+              bgColor={awayTeamColor}
+              textIsWhite={awayTextWhite}
+            />
           </div>
 
           <div className="h-8" />
 
           <div className="pb-3">
-            <LineupRow players={byPosHome("A")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-            <LineupRow players={byPosHome("M")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-            <LineupRow players={byPosHome("D")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
-            <LineupRow players={byPosHome("G")} bgColor={homeTeamColor} textIsWhite={homeTextWhite} />
+            <LineupRow
+              players={byPosHome("A")}
+              bgColor={homeTeamColor}
+              textIsWhite={homeTextWhite}
+            />
+            <LineupRow
+              players={byPosHome("M")}
+              bgColor={homeTeamColor}
+              textIsWhite={homeTextWhite}
+            />
+            <LineupRow
+              players={byPosHome("D")}
+              bgColor={homeTeamColor}
+              textIsWhite={homeTextWhite}
+            />
+            <LineupRow
+              players={byPosHome("G")}
+              bgColor={homeTeamColor}
+              textIsWhite={homeTextWhite}
+            />
             <p className="mt-0 text-center text-[9px] font-black uppercase tracking-widest text-white/40">
               {teamHome}
             </p>
@@ -278,7 +331,10 @@ export const SoccerPitch = memo(function SoccerPitch({
             </p>
             <div className="flex flex-wrap gap-2">
               {bench.map((p) => (
-                <span key={p.id} className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400">
+                <span
+                  key={p.id}
+                  className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-400"
+                >
                   {p.player_name}
                 </span>
               ))}

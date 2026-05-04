@@ -9,8 +9,11 @@ const VALID_TYPES = ["goal", "yellow_card", "red_card", "substitution"];
 
 async function getModerator() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { user: null, error: errorResponse("Non authentifié", 401) };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return { user: null, error: errorResponse("Non authentifié", 401) };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -19,7 +22,10 @@ async function getModerator() {
     .single();
 
   if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return { user: null, error: errorResponse("Accès réservé aux modérateurs (score ≥ 150)", 403) };
+    return {
+      user: null,
+      error: errorResponse("Accès réservé aux modérateurs (score ≥ 150)", 403),
+    };
   }
   return { user, error: null };
 }
@@ -39,7 +45,8 @@ export async function POST(request: NextRequest) {
     is_own_goal?: boolean;
   };
 
-  const { match_id, event_type, minute, team_side, player_name, is_own_goal } = body;
+  const { match_id, event_type, minute, team_side, player_name, is_own_goal } =
+    body;
 
   if (!match_id || !event_type || !team_side || !player_name) {
     return errorResponse("Paramètres manquants", 400);
@@ -50,7 +57,12 @@ export async function POST(request: NextRequest) {
   if (!["home", "away"].includes(team_side)) {
     return errorResponse("Équipe invalide", 400);
   }
-  if (typeof minute !== "number" || !Number.isInteger(minute) || minute < 0 || minute > 120) {
+  if (
+    typeof minute !== "number" ||
+    !Number.isInteger(minute) ||
+    minute < 0 ||
+    minute > 120
+  ) {
     return errorResponse("Minute invalide (0–120)", 400);
   }
   if (typeof player_name !== "string" || player_name.trim().length === 0) {
@@ -79,10 +91,10 @@ export async function POST(request: NextRequest) {
   // But contre son camp : le point va à l'équipe adverse
   if (event_type === "goal") {
     const scoringTeamIsHome = ownGoal
-      ? team_side === "away"   // CSC domicile → point extérieur
-      : team_side === "home";  // But normal domicile → point domicile
+      ? team_side === "away" // CSC domicile → point extérieur
+      : team_side === "home"; // But normal domicile → point domicile
     void admin.rpc("increment_match_score", {
-      p_match_id:   match_id,
+      p_match_id: match_id,
       p_home_delta: scoringTeamIsHome ? 1 : 0,
       p_away_delta: scoringTeamIsHome ? 0 : 1,
     });
@@ -113,7 +125,10 @@ export async function PATCH(request: NextRequest) {
   }
   if (
     minute !== undefined &&
-    (typeof minute !== "number" || !Number.isInteger(minute) || minute < 0 || minute > 120)
+    (typeof minute !== "number" ||
+      !Number.isInteger(minute) ||
+      minute < 0 ||
+      minute > 120)
   ) {
     return errorResponse("Minute invalide (0–120)", 400);
   }
@@ -125,14 +140,16 @@ export async function PATCH(request: NextRequest) {
     is_own_goal?: boolean;
   };
   const updates: TimelineUpdate = {};
-  if (event_type)       updates.event_type  = event_type as TimelineEventType;
-  if (minute !== undefined) updates.minute  = minute as number;
-  if (player_name)      updates.player_name = player_name.trim();
+  if (event_type) updates.event_type = event_type as TimelineEventType;
+  if (minute !== undefined) updates.minute = minute as number;
+  if (player_name) updates.player_name = player_name.trim();
   if (is_own_goal !== undefined) {
-    updates.is_own_goal = (event_type ?? "goal") === "goal" ? is_own_goal : false;
+    updates.is_own_goal =
+      (event_type ?? "goal") === "goal" ? is_own_goal : false;
   }
 
-  if (Object.keys(updates).length === 0) return errorResponse("Aucune modification", 400);
+  if (Object.keys(updates).length === 0)
+    return errorResponse("Aucune modification", 400);
 
   const admin = createAdminClient();
   const { data, error: dbError } = await admin

@@ -1,0 +1,14 @@
+<skill>
+  <name>Playwright E2E Harness</name>
+  <description>Rédiger un test End-to-End pour vérifier un flux utilisateur critique, particulièrement les flux temps réel multi-joueurs.</description>
+  <architecture_rules>
+    <rule>Multi-Navigateurs : Pour tester le Realtime, le test doit instancier deux contextes isolés (`browser.newContext()`) représentant UserA et UserB.</rule>
+    <rule>Mocking Auth : Mocker ou contourner le login (ex: Google OAuth) pour accélérer le test, via cookies ou variables d'environnement.</rule>
+    <rule>Assertions Asynchrones : Ne jamais utiliser `waitForTimeout(X)`. Le Realtime ayant une latence variable, utiliser les auto-retrying assertions (`await expect(locator).toBeVisible()`).</rule>
+    <rule>Viewport Mobile : Définir le viewport du test E2E pour correspondre à un mobile (ex: width: 375, height: 667).</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Exécuter le test via `npm run test:e2e`.</verification_step>
+    <verification_step>S'assurer qu'il passe au moins 3 fois d'affilée localement pour prouver qu'il n'est pas "flaky" (instable).</verification_step>
+  </harness>
+</skill>

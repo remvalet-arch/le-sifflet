@@ -29,7 +29,6 @@ export default async function LandingPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_rgba(22,163,74,0.07)_0%,_transparent_55%)] text-white">
-
       {/* ── Nav ── */}
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-6 sm:px-8">
         {/* VAR TIME logo — geste carré VAR */}
@@ -37,7 +36,9 @@ export default async function LandingPage() {
           <span className="rounded border border-white/25 px-1.5 py-0.5 text-[11px] font-black tracking-widest text-white">
             VAR
           </span>
-          <span className="text-sm font-black uppercase tracking-widest text-white">TIME</span>
+          <span className="text-sm font-black uppercase tracking-widest text-white">
+            TIME
+          </span>
         </div>
         <Link
           href="/login"
@@ -51,11 +52,13 @@ export default async function LandingPage() {
           HERO — stat 55% + split écran
       ═══════════════════════════════════════════ */}
       <section className="relative mx-auto max-w-6xl px-5 pb-20 pt-6 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-16">
-
         {/* ── Scan-lines deco ── */}
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
-          style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 5px)" }}
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 5px)",
+          }}
           aria-hidden
         />
 
@@ -67,7 +70,6 @@ export default async function LandingPage() {
 
         {/* ── Texte gauche ── */}
         <div className="relative z-10">
-
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1.5">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-300/95">
@@ -93,7 +95,8 @@ export default async function LandingPage() {
               className="font-black leading-none tracking-tight text-white"
               style={{
                 fontSize: "clamp(5rem,18vw,9rem)",
-                textShadow: "0 0 80px rgba(251,191,36,0.35), 0 0 30px rgba(251,191,36,0.15)",
+                textShadow:
+                  "0 0 80px rgba(251,191,36,0.35), 0 0 30px rgba(251,191,36,0.15)",
               }}
             >
               55<span className="text-amber-400">%</span>
@@ -111,8 +114,8 @@ export default async function LandingPage() {
           </h1>
 
           <p className="mt-4 text-[clamp(1rem,2.5vw,1.2rem)] leading-relaxed text-zinc-400">
-            Parie en temps réel sur les décisions de l&rsquo;arbitre. Grimpe au classement mondial et braque tes potes
-            dans tes ligues privées.
+            Parie en temps réel sur les décisions de l&rsquo;arbitre. Grimpe au
+            classement mondial et braque tes potes dans tes ligues privées.
           </p>
 
           {/* CTAs */}
@@ -132,7 +135,8 @@ export default async function LandingPage() {
           </div>
 
           <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-            Gratuit · Monnaie fictive (Sifflets) · Aucun argent réel · PWA mobile
+            Gratuit · Monnaie fictive (Sifflets) · Aucun argent réel · PWA
+            mobile
           </p>
         </div>
 
@@ -152,8 +156,12 @@ export default async function LandingPage() {
               className="absolute -left-12 top-14 hidden rounded-xl border border-white/10 bg-zinc-900/95 px-3 py-2.5 backdrop-blur-sm shadow-[0_0_20px_rgba(34,197,94,0.12)] lg:block"
               style={{ animation: "float 4s ease-in-out infinite" }}
             >
-              <p className="text-[9px] font-bold text-zinc-500">Alerte communauté</p>
-              <p className="text-[12px] font-black text-white">Penalty&nbsp;?</p>
+              <p className="text-[9px] font-bold text-zinc-500">
+                Alerte communauté
+              </p>
+              <p className="text-[12px] font-black text-white">
+                Penalty&nbsp;?
+              </p>
             </div>
 
             {/* Floating card 2 */}
@@ -161,7 +169,9 @@ export default async function LandingPage() {
               className="absolute -right-10 bottom-28 hidden rounded-xl border border-green-500/20 bg-zinc-900/95 px-3 py-2.5 backdrop-blur-sm shadow-[0_0_20px_rgba(34,197,94,0.2)] lg:block"
               style={{ animation: "float 5s ease-in-out 1s infinite" }}
             >
-              <p className="text-[9px] font-bold text-zinc-500">Prédiction juste</p>
+              <p className="text-[9px] font-bold text-zinc-500">
+                Prédiction juste
+              </p>
               <p className="text-[13px] font-black text-green-400">+500 Pts</p>
             </div>
           </div>
@@ -173,7 +183,6 @@ export default async function LandingPage() {
       ═══════════════════════════════════════════ */}
       <section id="comment" className="scroll-mt-8 py-20 lg:py-24">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
-
           <div className="mb-2 flex items-center gap-3">
             <div className="h-px flex-1 bg-white/8" />
             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
@@ -243,7 +252,7 @@ export default async function LandingPage() {
               Icon={DoorOpen}
               color="green"
               title="Vestiaire"
-              body="Tu crées ton compte, tu ouvres ton vestiaire : tu rejoins une ligue privée ou tu lances la tienne avec un code d&apos;invitation."
+              body="Tu crées ton compte, tu ouvres ton vestiaire : tu rejoins une ligue privée ou tu lances la tienne avec un code d'invitation."
             />
             <div className="md:-translate-y-4">
               <GamePanel
@@ -251,7 +260,7 @@ export default async function LandingPage() {
                 Icon={CircleDollarSign}
                 color="yellow"
                 title="Sifflets"
-                body="Tu récupères des Sifflets : pronos gratuits, bons coups, progression. C&apos;est ta monnaie pour miser quand la VAR s&apos;ouvre."
+                body="Tu récupères des Sifflets : pronos gratuits, bons coups, progression. C'est ta monnaie pour miser quand la VAR s'ouvre."
               />
             </div>
             <GamePanel
@@ -259,7 +268,7 @@ export default async function LandingPage() {
               Icon={Swords}
               color="blue"
               title="Braquage"
-              body="En direct, quand la modale tombe, tu paries avec ta ligue : le pot des perdants nourrit les gagnants — c&apos;est le braquage."
+              body="En direct, quand la modale tombe, tu paries avec ta ligue : le pot des perdants nourrit les gagnants — c'est le braquage."
             />
           </div>
 
@@ -287,9 +296,12 @@ export default async function LandingPage() {
                   Pas qu&rsquo;un excité du direct.
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-zinc-400 sm:text-base">
-                  Fais tes pronos d&rsquo;avant-match (score, buteurs) pour gagner des{" "}
-                  <strong className="font-bold text-zinc-200">Sifflets</strong>. Ce sont tes munitions pour pouvoir
-                  faire tapis sur la VAR en direct — et viser le Bunker 0-0 si le match sent la naphtaline.
+                  Fais tes pronos d&rsquo;avant-match (score, buteurs) pour
+                  gagner des{" "}
+                  <strong className="font-bold text-zinc-200">Sifflets</strong>.
+                  Ce sont tes munitions pour pouvoir faire tapis sur la VAR en
+                  direct — et viser le Bunker 0-0 si le match sent la
+                  naphtaline.
                 </p>
               </div>
             </div>
@@ -320,7 +332,8 @@ export default async function LandingPage() {
             <span className="text-green-400">dans ta poche.</span>
           </h2>
           <p className="mt-3 max-w-xs text-center text-sm leading-relaxed text-zinc-500">
-            Installe VAR Time sur ton mobile. Chaque match devient ton terrain d&apos;instincts.
+            Installe VAR Time sur ton mobile. Chaque match devient ton terrain
+            d&apos;instincts.
           </p>
 
           {/* Store buttons */}
@@ -352,7 +365,10 @@ export default async function LandingPage() {
           {/* QR */}
           <div className="mt-8 flex h-40 w-40 items-center justify-center rounded-2xl border-2 border-green-500/40 bg-zinc-900 shadow-[0_0_40px_rgba(34,197,94,0.18)]">
             <div className="flex flex-col items-center gap-2">
-              <QrCode className="h-16 w-16 text-green-400/60" strokeWidth={1.5} />
+              <QrCode
+                className="h-16 w-16 text-green-400/60"
+                strokeWidth={1.5}
+              />
               <span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">
                 bientôt disponible
               </span>
@@ -371,8 +387,8 @@ export default async function LandingPage() {
           </h2>
           <div className="mx-auto mt-10 max-w-2xl rounded-3xl border border-green-500/40 bg-zinc-900/50 p-6 shadow-[0_0_40px_rgba(34,197,94,0.15)] backdrop-blur-sm sm:p-8">
             <p className="text-center text-sm leading-relaxed text-zinc-400">
-              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss de la VAR en enchaînant les bons
-              verdicts.
+              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss
+              de la VAR en enchaînant les bons verdicts.
             </p>
             <ol className="relative mt-8 list-none space-y-0 p-0">
               <KopRankStep
@@ -381,9 +397,24 @@ export default async function LandingPage() {
                 variant="muted"
                 isLast={false}
               />
-              <KopRankStep step={2} label="Sifflet de Bronze" variant="bronze" isLast={false} />
-              <KopRankStep step={3} label="Sifflet d&rsquo;Argent" variant="silver" isLast={false} />
-              <KopRankStep step={4} label="Boss de la VAR" variant="gold" isLast />
+              <KopRankStep
+                step={2}
+                label="Sifflet de Bronze"
+                variant="bronze"
+                isLast={false}
+              />
+              <KopRankStep
+                step={3}
+                label="Sifflet d&rsquo;Argent"
+                variant="silver"
+                isLast={false}
+              />
+              <KopRankStep
+                step={4}
+                label="Boss de la VAR"
+                variant="gold"
+                isLast
+              />
             </ol>
           </div>
         </div>
@@ -397,14 +428,30 @@ export default async function LandingPage() {
           © 2026 VAR Time.
         </p>
         <div className="mt-3 flex items-center justify-center gap-4">
-          <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">CGU</a>
+          <a
+            href="#"
+            className="text-[10px] text-zinc-700 transition hover:text-zinc-500"
+          >
+            CGU
+          </a>
           <span className="text-zinc-800">•</span>
-          <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">Mentions Légales</a>
+          <a
+            href="#"
+            className="text-[10px] text-zinc-700 transition hover:text-zinc-500"
+          >
+            Mentions Légales
+          </a>
           <span className="text-zinc-800">•</span>
-          <a href="#" className="text-[10px] text-zinc-700 transition hover:text-zinc-500">Jeu Responsable</a>
+          <a
+            href="#"
+            className="text-[10px] text-zinc-700 transition hover:text-zinc-500"
+          >
+            Jeu Responsable
+          </a>
         </div>
         <p className="mx-auto mt-4 max-w-sm px-4 text-[9px] text-zinc-700">
-          VAR Time est un jeu gratuit de simulation. Tu ne mises aucun argent réel et tu n&apos;en gagnes pas.
+          VAR Time est un jeu gratuit de simulation. Tu ne mises aucun argent
+          réel et tu n&apos;en gagnes pas.
         </p>
       </footer>
     </main>
@@ -415,28 +462,28 @@ export default async function LandingPage() {
 
 const PANEL_STYLES = {
   green: {
-    border:  "border-zinc-800 hover:border-green-500/40",
-    glow:    "bg-green-500/8",
-    icon:    "text-green-400",
-    shadow:  "hover:shadow-[0_0_30px_rgba(34,197,94,0.07)]",
+    border: "border-zinc-800 hover:border-green-500/40",
+    glow: "bg-green-500/8",
+    icon: "text-green-400",
+    shadow: "hover:shadow-[0_0_30px_rgba(34,197,94,0.07)]",
   },
   yellow: {
-    border:  "border-zinc-800 hover:border-yellow-500/40",
-    glow:    "bg-yellow-500/8",
-    icon:    "text-yellow-400",
-    shadow:  "hover:shadow-[0_0_30px_rgba(250,204,21,0.07)]",
+    border: "border-zinc-800 hover:border-yellow-500/40",
+    glow: "bg-yellow-500/8",
+    icon: "text-yellow-400",
+    shadow: "hover:shadow-[0_0_30px_rgba(250,204,21,0.07)]",
   },
   blue: {
-    border:  "border-zinc-800 hover:border-blue-500/40",
-    glow:    "bg-blue-500/8",
-    icon:    "text-blue-400",
-    shadow:  "hover:shadow-[0_0_30px_rgba(59,130,246,0.07)]",
+    border: "border-zinc-800 hover:border-blue-500/40",
+    glow: "bg-blue-500/8",
+    icon: "text-blue-400",
+    shadow: "hover:shadow-[0_0_30px_rgba(59,130,246,0.07)]",
   },
   violet: {
-    border:  "border-zinc-800 hover:border-violet-500/40",
-    glow:    "bg-violet-500/8",
-    icon:    "text-violet-400",
-    shadow:  "hover:shadow-[0_0_30px_rgba(139,92,246,0.08)]",
+    border: "border-zinc-800 hover:border-violet-500/40",
+    glow: "bg-violet-500/8",
+    icon: "text-violet-400",
+    shadow: "hover:shadow-[0_0_30px_rgba(139,92,246,0.08)]",
   },
 } as const;
 
@@ -463,7 +510,9 @@ function GamePanel({
         aria-hidden
       />
       <Icon className={`relative mb-5 h-10 w-10 ${s.icon}`} strokeWidth={1.5} />
-      <p className={`mb-2 text-[9px] font-black uppercase tracking-widest ${s.icon}`}>
+      <p
+        className={`mb-2 text-[9px] font-black uppercase tracking-widest ${s.icon}`}
+      >
         {step} — {title}
       </p>
       <p className="text-sm leading-relaxed text-zinc-400">{body}</p>
@@ -514,7 +563,11 @@ function KopRankStep({
         {step}
       </div>
       <div className="min-w-0 pt-0.5">
-        <p className={`text-sm font-bold tracking-tight sm:text-base ${labelClass}`}>{label}</p>
+        <p
+          className={`text-sm font-bold tracking-tight sm:text-base ${labelClass}`}
+        >
+          {label}
+        </p>
       </div>
     </li>
   );
@@ -549,7 +602,9 @@ function PhoneMockup() {
                 <span className="text-[9px] font-black text-white">OL</span>
               </div>
               <div className="bg-green-500/10 px-2.5 py-0.5 text-center">
-                <span className="text-[8px] font-black text-green-400">47&rsquo; EN DIRECT</span>
+                <span className="text-[8px] font-black text-green-400">
+                  47&rsquo; EN DIRECT
+                </span>
               </div>
             </div>
 
@@ -558,7 +613,9 @@ function PhoneMockup() {
               <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">
                 Décision en cours
               </p>
-              <p className="text-[0.8rem] font-black leading-tight text-white">Il y a péno là&nbsp;?!</p>
+              <p className="text-[0.8rem] font-black leading-tight text-white">
+                Il y a péno là&nbsp;?!
+              </p>
             </div>
 
             {/* Timer */}
@@ -577,11 +634,15 @@ function PhoneMockup() {
             {/* OUI / NON */}
             <div className="grid grid-cols-2 gap-1.5">
               <div className="flex min-h-0 flex-col items-center justify-center rounded-xl border-2 border-green-500 bg-green-500/15 py-2">
-                <span className="text-[8px] font-black uppercase text-green-400">OUI</span>
+                <span className="text-[8px] font-black uppercase text-green-400">
+                  OUI
+                </span>
                 <span className="text-xs font-black text-green-400">×2.00</span>
               </div>
               <div className="flex min-h-0 flex-col items-center justify-center rounded-xl border-2 border-zinc-600 bg-zinc-800 py-2">
-                <span className="text-[8px] font-black uppercase text-zinc-300">NON</span>
+                <span className="text-[8px] font-black uppercase text-zinc-300">
+                  NON
+                </span>
                 <span className="text-xs font-black text-zinc-400">×1.80</span>
               </div>
             </div>
@@ -589,7 +650,9 @@ function PhoneMockup() {
             {/* Engagement */}
             <div className="flex items-center rounded-lg bg-zinc-800/80 px-2 py-1.5">
               <span className="text-[8px] text-zinc-500">Engagement</span>
-              <span className="ml-auto text-[10px] font-black text-white">50 pts</span>
+              <span className="ml-auto text-[10px] font-black text-white">
+                50 pts
+              </span>
               <span className="ml-1 text-[8px] text-green-400">→ +100</span>
             </div>
 

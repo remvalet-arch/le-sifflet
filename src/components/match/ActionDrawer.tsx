@@ -5,56 +5,92 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoaderCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import type { AlertActionType, LineupRow, MatchStatus, PlayerRow, TimelineEventType } from "@/types/database";
+import type {
+  AlertActionType,
+  LineupRow,
+  MatchStatus,
+  PlayerRow,
+  TimelineEventType,
+} from "@/types/database";
 import { syncMatchData, syncTeamRoster } from "@/app/actions/syncData";
 
 // ── Alertes communautaires ────────────────────────────────────────────────────
 
 const ALERTS: { type: AlertActionType; emoji: string; label: string }[] = [
-  { type: "penalty_check",   emoji: "📢", label: "VAR PÉNO ?"           },
-  { type: "var_goal",        emoji: "🚩", label: "VAR BUT ?"            },
-  { type: "red_card",        emoji: "🟥", label: "VILAINE SEMELLE ?"   },
-  { type: "free_kick",       emoji: "🎯", label: "COUP FRANC !"        },
-  { type: "corner",          emoji: "🏁", label: "CORNER CHAUD !"      },
-  { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND ?"    },
+  { type: "penalty_check", emoji: "📢", label: "VAR PÉNO ?" },
+  { type: "var_goal", emoji: "🚩", label: "VAR BUT ?" },
+  { type: "red_card", emoji: "🟥", label: "VILAINE SEMELLE ?" },
+  { type: "free_kick", emoji: "🎯", label: "COUP FRANC !" },
+  { type: "corner", emoji: "🏁", label: "CORNER CHAUD !" },
+  { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND ?" },
 ];
 
 // ── Panneau de contrôle des états ─────────────────────────────────────────────
 
-type StatusAction = { label: string; emoji: string; status: MatchStatus; color: string };
+type StatusAction = {
+  label: string;
+  emoji: string;
+  status: MatchStatus;
+  color: string;
+};
 
 const STATUS_ACTIONS: StatusAction[] = [
-  { label: "Coup d'envoi",  emoji: "⚽", status: "first_half",  color: "bg-green-600 hover:bg-green-500"   },
-  { label: "Mi-temps",      emoji: "🟨", status: "half_time",   color: "bg-yellow-600 hover:bg-yellow-500" },
-  { label: "Reprise",       emoji: "▶️", status: "second_half", color: "bg-green-600 hover:bg-green-500"   },
-  { label: "Interruption",  emoji: "⏸️", status: "paused",      color: "bg-orange-600 hover:bg-orange-500" },
-  { label: "Fin du match",  emoji: "🏁", status: "finished",    color: "bg-red-700 hover:bg-red-600"       },
+  {
+    label: "Coup d'envoi",
+    emoji: "⚽",
+    status: "first_half",
+    color: "bg-green-600 hover:bg-green-500",
+  },
+  {
+    label: "Mi-temps",
+    emoji: "🟨",
+    status: "half_time",
+    color: "bg-yellow-600 hover:bg-yellow-500",
+  },
+  {
+    label: "Reprise",
+    emoji: "▶️",
+    status: "second_half",
+    color: "bg-green-600 hover:bg-green-500",
+  },
+  {
+    label: "Interruption",
+    emoji: "⏸️",
+    status: "paused",
+    color: "bg-orange-600 hover:bg-orange-500",
+  },
+  {
+    label: "Fin du match",
+    emoji: "🏁",
+    status: "finished",
+    color: "bg-red-700 hover:bg-red-600",
+  },
 ];
 
 const STATUS_LABELS: Record<MatchStatus, string> = {
-  upcoming:    "À venir",
-  first_half:  "1ère mi-temps",
-  half_time:   "Mi-temps",
+  upcoming: "À venir",
+  first_half: "1ère mi-temps",
+  half_time: "Mi-temps",
   second_half: "2ème mi-temps",
-  paused:      "Interruption",
-  finished:    "Terminé",
+  paused: "Interruption",
+  finished: "Terminé",
 };
 
 // ── Équipes MVP pour l'import rapide ─────────────────────────────────────────
 
 const MVP_TEAMS = [
-  { id: "133714", name: "Paris Saint-Germain",    label: "Paris SG"         },
-  { id: "133664", name: "Bayern Munich",           label: "Bayern Munich"    },
-  { id: "133604", name: "Arsenal",                 label: "Arsenal"          },
-  { id: "133738", name: "Atletico Madrid",         label: "Atlético Madrid"  },
+  { id: "133714", name: "Paris Saint-Germain", label: "Paris SG" },
+  { id: "133664", name: "Bayern Munich", label: "Bayern Munich" },
+  { id: "133604", name: "Arsenal", label: "Arsenal" },
+  { id: "133738", name: "Atletico Madrid", label: "Atlético Madrid" },
 ] as const;
 
 // ── Feuille de match ──────────────────────────────────────────────────────────
 
 const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
-  goal:         "⚽ But",
-  yellow_card:  "🟨 Carton jaune",
-  red_card:     "🟥 Carton rouge",
+  goal: "⚽ But",
+  yellow_card: "🟨 Carton jaune",
+  red_card: "🟥 Carton rouge",
   substitution: "🔄 Changement",
 };
 
@@ -97,19 +133,21 @@ export function ActionDrawer({
   teamAway,
 }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"alert" | "match" | "control">("alert");
+  const [activeTab, setActiveTab] = useState<"alert" | "match" | "control">(
+    "alert",
+  );
 
   // Feuille de match
-  const [lineups, setLineups]       = useState<LineupRow[]>([]);
+  const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [globalPlayers, setGlobalPlayers] = useState<PlayerRow[]>([]);
   const [playersFetchKey, setPlayersFetchKey] = useState(0);
-  const [eventType, setEventType]   = useState<TimelineEventType>("goal");
-  const [minute, setMinute]         = useState("");
-  const [teamSide, setTeamSide]     = useState<"home" | "away">("home");
+  const [eventType, setEventType] = useState<TimelineEventType>("goal");
+  const [minute, setMinute] = useState("");
+  const [teamSide, setTeamSide] = useState<"home" | "away">("home");
   const [playerName, setPlayerName] = useState("");
-  const [playerOut, setPlayerOut]   = useState("");
-  const [playerIn, setPlayerIn]     = useState("");
-  const [isOwnGoal, setIsOwnGoal]   = useState(false);
+  const [playerOut, setPlayerOut] = useState("");
+  const [playerIn, setPlayerIn] = useState("");
+  const [isOwnGoal, setIsOwnGoal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Contrôle match
@@ -118,8 +156,8 @@ export function ActionDrawer({
   // Sync TheSportsDB
   const [syncEventId, setSyncEventId] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>(MVP_TEAMS[0].id);
-  const [syncDbOpen, setSyncDbOpen]   = useState(false);
-  const [isSyncingMatch, startSyncMatch]   = useTransition();
+  const [syncDbOpen, setSyncDbOpen] = useState(false);
+  const [isSyncingMatch, startSyncMatch] = useTransition();
   const [isSyncingRoster, startSyncRoster] = useTransition();
 
   // Fetch lineups (match-specific)
@@ -161,21 +199,28 @@ export function ActionDrawer({
       .then(({ data }) => {
         const all = data ?? [];
         const filtered = all.filter(
-          (p) => teamsMatch(p.team_name, teamHome) || teamsMatch(p.team_name, teamAway),
+          (p) =>
+            teamsMatch(p.team_name, teamHome) ||
+            teamsMatch(p.team_name, teamAway),
         );
         setGlobalPlayers(filtered);
       });
   }, [isModerator, teamHome, teamAway, playersFetchKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetPlayers = useCallback(() => {
-    setPlayerName(""); setPlayerOut(""); setPlayerIn(""); setIsOwnGoal(false);
+    setPlayerName("");
+    setPlayerOut("");
+    setPlayerIn("");
+    setIsOwnGoal(false);
   }, []);
 
   // Starters/bench depuis lineups, sinon depuis la table players (fallback)
   const lineupsForSide = lineups.filter((p) => p.team_side === teamSide);
   const currentTeamName = teamSide === "home" ? teamHome : teamAway;
   // Comparaison floue pour absorber les variantes de noms
-  const globalForSide   = globalPlayers.filter((p) => teamsMatch(p.team_name, currentTeamName));
+  const globalForSide = globalPlayers.filter((p) =>
+    teamsMatch(p.team_name, currentTeamName),
+  );
 
   const hasLineups = lineupsForSide.length > 0;
   const starters: { id: string; player_name: string }[] = hasLineups
@@ -189,14 +234,21 @@ export function ActionDrawer({
   async function handleModSubmit(e: React.FormEvent) {
     e.preventDefault();
     const min = parseInt(minute);
-    if (isNaN(min) || min < 0 || min > 120) { toast.error("Minute invalide (0–120)"); return; }
+    if (isNaN(min) || min < 0 || min > 120) {
+      toast.error("Minute invalide (0–120)");
+      return;
+    }
 
     const finalPlayerName = isSub
-      ? (playerOut && playerIn ? `${playerOut} → ${playerIn}` : "")
+      ? playerOut && playerIn
+        ? `${playerOut} → ${playerIn}`
+        : ""
       : playerName;
 
     if (!finalPlayerName) {
-      toast.error(isSub ? "Sélectionne les deux joueurs" : "Sélectionne un joueur");
+      toast.error(
+        isSub ? "Sélectionne les deux joueurs" : "Sélectionne un joueur",
+      );
       return;
     }
 
@@ -206,18 +258,25 @@ export function ActionDrawer({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          match_id:    matchId,
-          event_type:  eventType,
-          minute:      min,
-          team_side:   teamSide,
+          match_id: matchId,
+          event_type: eventType,
+          minute: min,
+          team_side: teamSide,
           player_name: finalPlayerName,
           is_own_goal: eventType === "goal" ? isOwnGoal : false,
         }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok) { toast.error(json.error ?? "Erreur"); return; }
+      if (!res.ok) {
+        toast.error(json.error ?? "Erreur");
+        return;
+      }
       toast.success("Événement ajouté à la timeline !");
-      setMinute(""); setPlayerName(""); setPlayerOut(""); setPlayerIn(""); setIsOwnGoal(false);
+      setMinute("");
+      setPlayerName("");
+      setPlayerOut("");
+      setPlayerIn("");
+      setIsOwnGoal(false);
       onClose();
     } catch {
       toast.error("Connexion perdue");
@@ -229,9 +288,8 @@ export function ActionDrawer({
   async function handleStatusChange(newStatus: MatchStatus) {
     setChangingStatus(true);
     // "Fin du match" → endpoint dédié qui résout aussi les paris long terme
-    const endpoint = newStatus === "finished"
-      ? "/api/admin/finish-match"
-      : "/api/match-state";
+    const endpoint =
+      newStatus === "finished" ? "/api/admin/finish-match" : "/api/match-state";
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -239,7 +297,10 @@ export function ActionDrawer({
         body: JSON.stringify({ match_id: matchId, status: newStatus }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok) { toast.error(json.error ?? "Erreur"); return; }
+      if (!res.ok) {
+        toast.error(json.error ?? "Erreur");
+        return;
+      }
       toast.success(
         newStatus === "finished"
           ? "Match terminé — Paris long terme résolus !"
@@ -254,11 +315,16 @@ export function ActionDrawer({
   }
 
   function handleSyncMatch() {
-    if (!syncEventId.trim()) { toast.error("Saisis un ID d'événement"); return; }
+    if (!syncEventId.trim()) {
+      toast.error("Saisis un ID d'événement");
+      return;
+    }
     startSyncMatch(async () => {
       try {
         const data = await syncMatchData(syncEventId);
-        toast.success(`Match synchronisé : ${data.team_home} — ${data.team_away}`);
+        toast.success(
+          `Match synchronisé : ${data.team_home} — ${data.team_away}`,
+        );
         setSyncEventId("");
         router.refresh();
       } catch (err) {
@@ -273,7 +339,9 @@ export function ActionDrawer({
     startSyncRoster(async () => {
       try {
         const result = await syncTeamRoster(team.id, team.name);
-        toast.success(`${result.synced} joueurs synchronisés pour ${team.label} !`);
+        toast.success(
+          `${result.synced} joueurs synchronisés pour ${team.label} !`,
+        );
         setPlayersFetchKey((k) => k + 1);
         router.refresh();
       } catch (err) {
@@ -316,7 +384,11 @@ export function ActionDrawer({
                       : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
-                  {tab === "alert" ? "📢 Alertes" : tab === "match" ? "📋 Feuille" : "🎮 Contrôle"}
+                  {tab === "alert"
+                    ? "📢 Alertes"
+                    : tab === "match"
+                      ? "📋 Feuille"
+                      : "🎮 Contrôle"}
                 </button>
               ))}
             </div>
@@ -330,39 +402,69 @@ export function ActionDrawer({
                   cooldownSecs={cooldownSecs}
                   pendingType={pendingType}
                   signaledTypes={signaledTypes}
-                  onAlert={(type) => { onAlert(type); onClose(); }}
+                  onAlert={(type) => {
+                    onAlert(type);
+                    onClose();
+                  }}
                 />
               )}
 
               {activeTab === "match" && (
-                <form onSubmit={handleModSubmit} className="flex flex-col gap-3 px-4 pb-2">
+                <form
+                  onSubmit={handleModSubmit}
+                  className="flex flex-col gap-3 px-4 pb-2"
+                >
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold text-zinc-400">Type d&apos;événement</label>
+                    <label className="mb-1.5 block text-xs font-bold text-zinc-400">
+                      Type d&apos;événement
+                    </label>
                     <select
                       value={eventType}
-                      onChange={(e) => { setEventType(e.target.value as TimelineEventType); resetPlayers(); }}
+                      onChange={(e) => {
+                        setEventType(e.target.value as TimelineEventType);
+                        resetPlayers();
+                      }}
                       className={SELECT_CLS}
                     >
-                      {(Object.entries(EVENT_LABELS) as [TimelineEventType, string][]).map(
-                        ([val, label]) => <option key={val} value={val}>{label}</option>,
-                      )}
+                      {(
+                        Object.entries(EVENT_LABELS) as [
+                          TimelineEventType,
+                          string,
+                        ][]
+                      ).map(([val, label]) => (
+                        <option key={val} value={val}>
+                          {label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">Minute</label>
+                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">
+                        Minute
+                      </label>
                       <input
-                        type="number" inputMode="numeric" min={0} max={120} placeholder="74"
-                        value={minute} onChange={(e) => setMinute(e.target.value)}
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={120}
+                        placeholder="74"
+                        value={minute}
+                        onChange={(e) => setMinute(e.target.value)}
                         className={SELECT_CLS}
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">Équipe</label>
+                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">
+                        Équipe
+                      </label>
                       <select
                         value={teamSide}
-                        onChange={(e) => { setTeamSide(e.target.value as "home" | "away"); resetPlayers(); }}
+                        onChange={(e) => {
+                          setTeamSide(e.target.value as "home" | "away");
+                          resetPlayers();
+                        }}
                         className={SELECT_CLS}
                       >
                         <option value="home">{teamHome}</option>
@@ -375,29 +477,76 @@ export function ActionDrawer({
                     <>
                       <div>
                         <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-zinc-400">
-                          <span className="text-base leading-none text-red-400">↓</span>Joueur sortant
+                          <span className="text-base leading-none text-red-400">
+                            ↓
+                          </span>
+                          Joueur sortant
                         </label>
-                        <select value={playerOut} onChange={(e) => setPlayerOut(e.target.value)} className={SELECT_CLS} disabled={starters.length === 0}>
-                          <option value="">{starters.length === 0 ? "Aucun joueur disponible" : "Sélectionner…"}</option>
-                          {starters.map((p) => <option key={p.id} value={p.player_name}>{p.player_name}</option>)}
+                        <select
+                          value={playerOut}
+                          onChange={(e) => setPlayerOut(e.target.value)}
+                          className={SELECT_CLS}
+                          disabled={starters.length === 0}
+                        >
+                          <option value="">
+                            {starters.length === 0
+                              ? "Aucun joueur disponible"
+                              : "Sélectionner…"}
+                          </option>
+                          {starters.map((p) => (
+                            <option key={p.id} value={p.player_name}>
+                              {p.player_name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div>
                         <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-zinc-400">
-                          <span className="text-base leading-none text-green-400">↑</span>Joueur entrant
+                          <span className="text-base leading-none text-green-400">
+                            ↑
+                          </span>
+                          Joueur entrant
                         </label>
-                        <select value={playerIn} onChange={(e) => setPlayerIn(e.target.value)} className={SELECT_CLS} disabled={bench.length === 0}>
-                          <option value="">{bench.length === 0 ? "Aucun joueur disponible" : "Sélectionner…"}</option>
-                          {bench.map((p) => <option key={p.id} value={p.player_name}>{p.player_name}</option>)}
+                        <select
+                          value={playerIn}
+                          onChange={(e) => setPlayerIn(e.target.value)}
+                          className={SELECT_CLS}
+                          disabled={bench.length === 0}
+                        >
+                          <option value="">
+                            {bench.length === 0
+                              ? "Aucun joueur disponible"
+                              : "Sélectionner…"}
+                          </option>
+                          {bench.map((p) => (
+                            <option key={p.id} value={p.player_name}>
+                              {p.player_name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </>
                   ) : (
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">Joueur</label>
-                      <select value={playerName} onChange={(e) => setPlayerName(e.target.value)} className={SELECT_CLS} disabled={starters.length === 0}>
-                        <option value="">{starters.length === 0 ? "Aucun joueur disponible" : "Sélectionner…"}</option>
-                        {starters.map((p) => <option key={p.id} value={p.player_name}>{p.player_name}</option>)}
+                      <label className="mb-1.5 block text-xs font-bold text-zinc-400">
+                        Joueur
+                      </label>
+                      <select
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        className={SELECT_CLS}
+                        disabled={starters.length === 0}
+                      >
+                        <option value="">
+                          {starters.length === 0
+                            ? "Aucun joueur disponible"
+                            : "Sélectionner…"}
+                        </option>
+                        {starters.map((p) => (
+                          <option key={p.id} value={p.player_name}>
+                            {p.player_name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   )}
@@ -410,15 +559,24 @@ export function ActionDrawer({
                         onChange={(e) => setIsOwnGoal(e.target.checked)}
                         className="h-4 w-4 rounded accent-orange-500"
                       />
-                      <span className="font-semibold">Contre son camp (CSC)</span>
+                      <span className="font-semibold">
+                        Contre son camp (CSC)
+                      </span>
                     </label>
                   )}
 
                   <button
-                    type="submit" disabled={submitting}
+                    type="submit"
+                    disabled={submitting}
                     className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {submitting ? <LoaderCircle className="h-5 w-5 animate-spin" /> : isSub ? "Valider le changement" : "Valider l'événement"}
+                    {submitting ? (
+                      <LoaderCircle className="h-5 w-5 animate-spin" />
+                    ) : isSub ? (
+                      "Valider le changement"
+                    ) : (
+                      "Valider l'événement"
+                    )}
                   </button>
                 </form>
               )}
@@ -427,7 +585,9 @@ export function ActionDrawer({
                 <div className="flex flex-col gap-4 px-4 pb-2">
                   {/* État actuel */}
                   <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-zinc-800/40 px-4 py-3">
-                    <span className="text-xs font-bold uppercase tracking-wide text-zinc-500">État actuel</span>
+                    <span className="text-xs font-bold uppercase tracking-wide text-zinc-500">
+                      État actuel
+                    </span>
                     <span className="rounded-lg bg-zinc-700 px-3 py-1 text-xs font-black text-white">
                       {STATUS_LABELS[matchStatus]}
                     </span>
@@ -438,10 +598,14 @@ export function ActionDrawer({
                     {STATUS_ACTIONS.map(({ label, emoji, status, color }) => (
                       <button
                         key={status}
-                        onClick={() => { void handleStatusChange(status); }}
+                        onClick={() => {
+                          void handleStatusChange(status);
+                        }}
                         disabled={changingStatus || matchStatus === status}
                         className={`flex h-16 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-black uppercase tracking-wide text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
-                          matchStatus === status ? "border-2 border-white/30 bg-zinc-700" : color
+                          matchStatus === status
+                            ? "border-2 border-white/30 bg-zinc-700"
+                            : color
                         }`}
                       >
                         <span className="text-xl leading-none">{emoji}</span>
@@ -459,10 +623,11 @@ export function ActionDrawer({
                       <span className="text-xs font-black uppercase tracking-wide text-zinc-400">
                         📡 Base de données (TheSportsDB)
                       </span>
-                      {syncDbOpen
-                        ? <ChevronUp className="h-4 w-4 text-zinc-500" />
-                        : <ChevronDown className="h-4 w-4 text-zinc-500" />
-                      }
+                      {syncDbOpen ? (
+                        <ChevronUp className="h-4 w-4 text-zinc-500" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-zinc-500" />
+                      )}
                     </button>
 
                     {syncDbOpen && (
@@ -485,10 +650,14 @@ export function ActionDrawer({
                             disabled={isSyncingMatch || !syncEventId.trim()}
                             className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-xs font-black uppercase tracking-wide text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            {isSyncingMatch
-                              ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Synchronisation…</>
-                              : "📥 Synchroniser le Match"
-                            }
+                            {isSyncingMatch ? (
+                              <>
+                                <LoaderCircle className="h-4 w-4 animate-spin" />{" "}
+                                Synchronisation…
+                              </>
+                            ) : (
+                              "📥 Synchroniser le Match"
+                            )}
                           </button>
                         </div>
 
@@ -505,7 +674,9 @@ export function ActionDrawer({
                             className="mb-2 w-full rounded-xl border border-white/10 bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-white focus:border-green-500/50 focus:outline-none"
                           >
                             {MVP_TEAMS.map((t) => (
-                              <option key={t.id} value={t.id}>{t.label}</option>
+                              <option key={t.id} value={t.id}>
+                                {t.label}
+                              </option>
                             ))}
                           </select>
                           <button
@@ -513,10 +684,14 @@ export function ActionDrawer({
                             disabled={isSyncingRoster}
                             className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-purple-600 text-xs font-black uppercase tracking-wide text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            {isSyncingRoster
-                              ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Synchronisation…</>
-                              : "🔄 Mettre à jour l'effectif complet"
-                            }
+                            {isSyncingRoster ? (
+                              <>
+                                <LoaderCircle className="h-4 w-4 animate-spin" />{" "}
+                                Synchronisation…
+                              </>
+                            ) : (
+                              "🔄 Mettre à jour l'effectif complet"
+                            )}
                           </button>
                         </div>
                       </div>
@@ -537,7 +712,10 @@ export function ActionDrawer({
               cooldownSecs={cooldownSecs}
               pendingType={pendingType}
               signaledTypes={signaledTypes}
-              onAlert={(type) => { onAlert(type); onClose(); }}
+              onAlert={(type) => {
+                onAlert(type);
+                onClose();
+              }}
             />
           </>
         )}
@@ -567,10 +745,14 @@ function AlertGrid({
     return (
       <div className="mx-4 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-6 py-8 text-center">
         <LoaderCircle className="h-8 w-8 animate-spin text-yellow-400" />
-        <p className="font-black uppercase tracking-wide text-white">L&apos;arbitre consulte la VAR…</p>
+        <p className="font-black uppercase tracking-wide text-white">
+          L&apos;arbitre consulte la VAR…
+        </p>
         <p className="text-sm text-zinc-400">
           Retour dans{" "}
-          <span className="font-bold text-yellow-400">{cooldownMins}:{cooldownSecs}</span>
+          <span className="font-bold text-yellow-400">
+            {cooldownMins}:{cooldownSecs}
+          </span>
         </p>
       </div>
     );
@@ -579,9 +761,9 @@ function AlertGrid({
   return (
     <div className="grid grid-cols-2 gap-4 px-4">
       {ALERTS.map(({ type, emoji, label }) => {
-        const isPending  = pendingType === type;
+        const isPending = pendingType === type;
         const isSignaled = signaledTypes.has(type);
-        const disabled   = !!pendingType || isSignaled;
+        const disabled = !!pendingType || isSignaled;
 
         return (
           <button
@@ -600,9 +782,11 @@ function AlertGrid({
             {isPending ? (
               <LoaderCircle className="h-4 w-4 animate-spin text-zinc-400" />
             ) : (
-              <span className={`px-2 text-center text-[11px] font-black uppercase leading-tight ${
-                isSignaled ? "text-yellow-400" : "text-zinc-300"
-              }`}>
+              <span
+                className={`px-2 text-center text-[11px] font-black uppercase leading-tight ${
+                  isSignaled ? "text-yellow-400" : "text-zinc-300"
+                }`}
+              >
                 {isSignaled ? "En attente…" : label}
               </span>
             )}

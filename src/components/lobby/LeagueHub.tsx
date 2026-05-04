@@ -29,7 +29,12 @@ function roundEarliestDate(round: string, matches: MatchRow[]): number {
 }
 
 /** Statuts "en cours" pour déterminer la journée active. */
-const LIVE_STATUSES = new Set(["live", "first_half", "second_half", "half_time"] as const);
+const LIVE_STATUSES = new Set([
+  "live",
+  "first_half",
+  "second_half",
+  "half_time",
+] as const);
 
 export function LeagueHub({
   leagueApiId,
@@ -79,20 +84,30 @@ export function LeagueHub({
 
       if (!initialRound && rows.length > 0) {
         const uniqueRounds = [
-          ...new Set(rows.map((m) => m.round_short).filter((r): r is string => r !== null)),
-        ].sort((a, b) => roundEarliestDate(b, rows) - roundEarliestDate(a, rows));
+          ...new Set(
+            rows
+              .map((m) => m.round_short)
+              .filter((r): r is string => r !== null),
+          ),
+        ].sort(
+          (a, b) => roundEarliestDate(b, rows) - roundEarliestDate(a, rows),
+        );
 
         const now = Date.now();
         const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
         // 1. Priorité : journée avec un match en direct
-        const liveRound = rows.find((m) => LIVE_STATUSES.has(m.status as never))?.round_short ?? null;
+        const liveRound =
+          rows.find((m) => LIVE_STATUSES.has(m.status as never))?.round_short ??
+          null;
         if (liveRound) {
           setSelectedRound(liveRound);
         } else {
           // 2. Première journée dont le premier match est passé ou dans les 3 prochains jours
           const currentRound =
-            uniqueRounds.find((r) => roundEarliestDate(r, rows) <= now + THREE_DAYS_MS) ??
+            uniqueRounds.find(
+              (r) => roundEarliestDate(r, rows) <= now + THREE_DAYS_MS,
+            ) ??
             uniqueRounds[0] ??
             null;
           setSelectedRound(currentRound);
@@ -117,7 +132,9 @@ export function LeagueHub({
           .filter((r): r is string => r !== null),
       ),
     ];
-    return rs.sort((a, b) => roundEarliestDate(b, matches) - roundEarliestDate(a, matches));
+    return rs.sort(
+      (a, b) => roundEarliestDate(b, matches) - roundEarliestDate(a, matches),
+    );
   }, [matches]);
 
   const selectedRoundIndex = selectedRound ? rounds.indexOf(selectedRound) : 0;
@@ -212,7 +229,12 @@ export function LeagueHub({
             <ul className="flex flex-col gap-3">
               {roundMatches.map((m) => (
                 <li key={m.id}>
-                  <MatchCard match={m} goalEvents={[]} mpgLayout hasLineups={m.has_lineups} />
+                  <MatchCard
+                    match={m}
+                    goalEvents={[]}
+                    mpgLayout
+                    hasLineups={m.has_lineups}
+                  />
                 </li>
               ))}
             </ul>

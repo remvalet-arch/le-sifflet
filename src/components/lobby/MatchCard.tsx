@@ -3,7 +3,10 @@ import Link from "next/link";
 import type { MatchRow } from "@/lib/matches";
 import { formatMatchStatus, isLobbyLiveStatus } from "@/lib/matches";
 import { LiveBadge } from "@/components/lobby/LiveBadge";
-import { formatMatchDateTimeParis, formatMatchTime } from "@/lib/format-match-time";
+import {
+  formatMatchDateTimeParis,
+  formatMatchTime,
+} from "@/lib/format-match-time";
 import { isNextImageRemoteLogoUrl } from "@/lib/remote-logo-hosts";
 
 /** Blason équipe — taille MPG (40px) ou standard (32px). */
@@ -55,16 +58,29 @@ export type MatchGoalLine = {
 };
 
 /** Sous le score : uniquement des entrées exploitables (minute + nom) — le lobby ne passe que des buts. */
-function sortedGoalLinesForScore(events: MatchGoalLine[] | undefined): MatchGoalLine[] {
+function sortedGoalLinesForScore(
+  events: MatchGoalLine[] | undefined,
+): MatchGoalLine[] {
   return (events ?? [])
-    .filter((g) => typeof g.minute === "number" && (g.player_name ?? "").trim() !== "")
+    .filter(
+      (g) =>
+        typeof g.minute === "number" && (g.player_name ?? "").trim() !== "",
+    )
     .slice()
     .sort((a, b) => a.minute - b.minute);
 }
 
 /** Buteurs : scroll horizontal discret + masques pour ne pas déborder de la carte. */
-function GoalsScrollLine({ goals, fadeFromClass }: { goals: MatchGoalLine[]; fadeFromClass: string }) {
-  const text = goals.map((g) => `${String(g.minute)}′ ${g.player_name}`).join(" · ");
+function GoalsScrollLine({
+  goals,
+  fadeFromClass,
+}: {
+  goals: MatchGoalLine[];
+  fadeFromClass: string;
+}) {
+  const text = goals
+    .map((g) => `${String(g.minute)}′ ${g.player_name}`)
+    .join(" · ");
   return (
     <div className="relative mt-1 w-full min-w-0 max-w-[13rem]">
       <div
@@ -130,7 +146,9 @@ export function MatchCard({
     <div className="flex flex-col items-center justify-center gap-1">
       <span
         className={`rounded-lg px-3 py-1.5 text-base font-black tabular-nums text-white sm:px-4 sm:text-lg ${
-          mpgLayout && isLive ? "bg-red-600 shadow-inner shadow-red-900/40" : "bg-zinc-800"
+          mpgLayout && isLive
+            ? "bg-red-600 shadow-inner shadow-red-900/40"
+            : "bg-zinc-800"
         }`}
       >
         {match.home_score} — {match.away_score}
@@ -151,25 +169,30 @@ export function MatchCard({
 
   const scoreCenterBlock =
     isLive || isFinished ? (
-      mpgLayout ? scoreCenterMpg : scoreCenterClassic
+      mpgLayout ? (
+        scoreCenterMpg
+      ) : (
+        scoreCenterClassic
+      )
     ) : (
       <span className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm font-black uppercase tracking-wider text-zinc-400 sm:text-base">
         vs
       </span>
     );
 
-  const metaRowMpg =
-    isLive ? null : isFinished ? (
-      <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
-        {formatMatchStatus("finished")}
-      </span>
-    ) : lineupsFlag ? (
-      <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-400">
-        Compos dispos
-      </span>
-    ) : (
-      <span className="text-xs font-medium tabular-nums tracking-wide text-zinc-500">{kickoffTime}</span>
-    );
+  const metaRowMpg = isLive ? null : isFinished ? (
+    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+      {formatMatchStatus("finished")}
+    </span>
+  ) : lineupsFlag ? (
+    <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-400">
+      Compos dispos
+    </span>
+  ) : (
+    <span className="text-xs font-medium tabular-nums tracking-wide text-zinc-500">
+      {kickoffTime}
+    </span>
+  );
 
   const metaRowClassic = (
     <>
@@ -180,7 +203,9 @@ export function MatchCard({
           {formatMatchStatus("finished")}
         </span>
       ) : (
-        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{when}</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+          {when}
+        </span>
       )}
     </>
   );
@@ -204,7 +229,9 @@ export function MatchCard({
         </div>
       )}
 
-      <div className={`grid w-full min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-2 pt-2 ${teamsTopClass}`}>
+      <div
+        className={`grid w-full min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-2 pt-2 ${teamsTopClass}`}
+      >
         <div className="flex min-w-0 flex-col items-center justify-center gap-1.5 text-center">
           <div
             className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-900/80 shadow-sm ${
@@ -217,7 +244,9 @@ export function MatchCard({
             {match.team_home}
           </p>
         </div>
-        <div className="flex shrink-0 flex-col items-center justify-center px-3">{scoreCenterBlock}</div>
+        <div className="flex shrink-0 flex-col items-center justify-center px-3">
+          {scoreCenterBlock}
+        </div>
         <div className="flex min-w-0 flex-col items-center justify-center gap-1.5 text-center">
           <div
             className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-900/80 shadow-sm ${
@@ -232,7 +261,10 @@ export function MatchCard({
         </div>
         {goalsForScore.length > 0 && (isLive || isFinished) && (
           <div className="col-span-3 mt-2 flex w-full min-w-0 justify-center">
-            <GoalsScrollLine goals={goalsForScore} fadeFromClass="from-zinc-900" />
+            <GoalsScrollLine
+              goals={goalsForScore}
+              fadeFromClass="from-zinc-900"
+            />
           </div>
         )}
       </div>
@@ -242,7 +274,11 @@ export function MatchCard({
           isLive ? "text-green-500/80" : "text-zinc-600"
         }`}
       >
-        {isLive ? "Rejoindre le kop →" : isFinished ? "Voir le résumé →" : `Coup d'envoi : ${kickoffTime}`}
+        {isLive
+          ? "Rejoindre le kop →"
+          : isFinished
+            ? "Voir le résumé →"
+            : `Coup d'envoi : ${kickoffTime}`}
       </p>
     </Link>
   );

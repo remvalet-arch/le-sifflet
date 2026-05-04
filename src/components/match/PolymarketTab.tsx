@@ -15,16 +15,20 @@ function getScorerReward(pos: string | null | undefined): number {
 }
 
 function normalizeTeam(name: string): string {
-  return name.replace(/\b(F\.C\.|FC|AFC|RFC|SC|AC|AS|OGC|RC)\b\.?\s*/gi, "").trim().toLowerCase();
+  return name
+    .replace(/\b(F\.C\.|FC|AFC|RFC|SC|AC|AS|OGC|RC)\b\.?\s*/gi, "")
+    .trim()
+    .toLowerCase();
 }
 function teamsMatch(a: string, b: string): boolean {
-  const na = normalizeTeam(a); const nb = normalizeTeam(b);
+  const na = normalizeTeam(a);
+  const nb = normalizeTeam(b);
   return na.includes(nb) || nb.includes(na);
 }
 
 const POSITION_GROUPS: { key: string; label: string; reward: number }[] = [
   { key: "A", label: "Attaquants", reward: 500 },
-  { key: "M", label: "Milieux",    reward: 1000 },
+  { key: "M", label: "Milieux", reward: 1000 },
   { key: "D", label: "Défenseurs", reward: 2000 },
 ];
 
@@ -54,7 +58,9 @@ function TeamBadge({ name, logo }: { name: string; logo?: string | null }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logo!} alt={name} className="h-10 w-10 object-contain" />
         ) : (
-          <span className="text-lg font-black text-white">{name[0]?.toUpperCase() ?? "?"}</span>
+          <span className="text-lg font-black text-white">
+            {name[0]?.toUpperCase() ?? "?"}
+          </span>
         )}
       </div>
       <p className="line-clamp-2 text-center text-[10px] font-bold uppercase leading-tight tracking-wide text-zinc-400">
@@ -79,9 +85,18 @@ function Accordion({
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-zinc-900/60">
-      <button onClick={onToggle} className="flex w-full items-center justify-between px-4 py-3.5">
-        <span className="text-sm font-black uppercase tracking-wide text-white">{title}</span>
-        {open ? <ChevronUp className="h-4 w-4 text-zinc-400" /> : <ChevronDown className="h-4 w-4 text-zinc-400" />}
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-4 py-3.5"
+      >
+        <span className="text-sm font-black uppercase tracking-wide text-white">
+          {title}
+        </span>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-zinc-400" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-zinc-400" />
+        )}
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -90,23 +105,33 @@ function Accordion({
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayTeamLogo }: Props) {
-  const [players, setPlayers]               = useState<PlayerRow[]>([]);
+export function PolymarketTab({
+  matchId,
+  teamHome,
+  teamAway,
+  homeTeamLogo,
+  awayTeamLogo,
+}: Props) {
+  const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loadingLineups, setLoadingLineups] = useState(true);
-  const [existingPronos, setExistingPronos] = useState<{ prono_type: string; prono_value: string }[]>([]);
-  const [scorerOpen, setScorerOpen]         = useState(false);
+  const [existingPronos, setExistingPronos] = useState<
+    { prono_type: string; prono_value: string }[]
+  >([]);
+  const [scorerOpen, setScorerOpen] = useState(false);
 
   // Score exact
   const [homeScoreInput, setHomeScoreInput] = useState("");
   const [awayScoreInput, setAwayScoreInput] = useState("");
   const [scoreSubmitting, setScoreSubmitting] = useState(false);
-  const [scoreSuccess, setScoreSuccess]     = useState(false);
+  const [scoreSuccess, setScoreSuccess] = useState(false);
 
   // Buteur
-  const [selectedScorer, setSelectedScorer]     = useState<string | null>(null);
-  const [selectedScorerPos, setSelectedScorerPos] = useState<string | null>(null);
+  const [selectedScorer, setSelectedScorer] = useState<string | null>(null);
+  const [selectedScorerPos, setSelectedScorerPos] = useState<string | null>(
+    null,
+  );
   const [scorerSubmitting, setScorerSubmitting] = useState(false);
-  const [scorerSuccess, setScorerSuccess]       = useState(false);
+  const [scorerSuccess, setScorerSuccess] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -119,7 +144,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
       .order("player_name", { ascending: true })
       .then(({ data }) => {
         const filtered = (data ?? []).filter(
-          (p) => teamsMatch(p.team_name, teamHome) || teamsMatch(p.team_name, teamAway),
+          (p) =>
+            teamsMatch(p.team_name, teamHome) ||
+            teamsMatch(p.team_name, teamAway),
         );
         setPlayers(filtered);
         setLoadingLineups(false);
@@ -133,27 +160,38 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
   }, [matchId, teamHome, teamAway]);
 
   function hasProno(type: string, value: string): boolean {
-    return existingPronos.some((p) => p.prono_type === type && p.prono_value === value);
+    return existingPronos.some(
+      (p) => p.prono_type === type && p.prono_value === value,
+    );
   }
 
   const hNum = parseInt(homeScoreInput);
   const aNum = parseInt(awayScoreInput);
   const scoreInputsValid =
-    homeScoreInput !== "" && awayScoreInput !== "" &&
-    !isNaN(hNum) && !isNaN(aNum) && hNum >= 0 && aNum >= 0;
-  const derivedScore    = scoreInputsValid ? `${hNum}-${aNum}` : null;
-  const isBunker        = scoreInputsValid && hNum === 0 && aNum === 0;
-  const scoreReward     = isBunker ? BUNKER_REWARD : SCORE_EXACT_REWARD;
-  const alreadyBetScore = derivedScore ? hasProno("exact_score", derivedScore) : false;
+    homeScoreInput !== "" &&
+    awayScoreInput !== "" &&
+    !isNaN(hNum) &&
+    !isNaN(aNum) &&
+    hNum >= 0 &&
+    aNum >= 0;
+  const derivedScore = scoreInputsValid ? `${hNum}-${aNum}` : null;
+  const isBunker = scoreInputsValid && hNum === 0 && aNum === 0;
+  const scoreReward = isBunker ? BUNKER_REWARD : SCORE_EXACT_REWARD;
+  const alreadyBetScore = derivedScore
+    ? hasProno("exact_score", derivedScore)
+    : false;
 
   async function handleScoreProno() {
-    if (!derivedScore) { toast.error("Saisis les deux scores"); return; }
+    if (!derivedScore) {
+      toast.error("Saisis les deux scores");
+      return;
+    }
     setScoreSubmitting(true);
     const supabase = createClient();
     const { error } = await supabase.rpc("place_prono", {
-      p_match_id:      matchId,
-      p_prono_type:    "exact_score",
-      p_prono_value:   derivedScore,
+      p_match_id: matchId,
+      p_prono_type: "exact_score",
+      p_prono_value: derivedScore,
       p_reward_amount: scoreReward,
     });
     setScoreSubmitting(false);
@@ -165,9 +203,14 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
       );
       return;
     }
-    setExistingPronos((prev) => [...prev, { prono_type: "exact_score", prono_value: derivedScore }]);
+    setExistingPronos((prev) => [
+      ...prev,
+      { prono_type: "exact_score", prono_value: derivedScore },
+    ]);
     setScoreSuccess(true);
-    toast.success(`Prono enregistré ! +${scoreReward.toLocaleString("fr-FR")} Pts si tu as raison 🎯`);
+    toast.success(
+      `Prono enregistré ! +${scoreReward.toLocaleString("fr-FR")} Pts si tu as raison 🎯`,
+    );
     setTimeout(() => {
       setScoreSuccess(false);
       setHomeScoreInput("");
@@ -176,14 +219,17 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
   }
 
   async function handleScorerProno() {
-    if (!selectedScorer) { toast.error("Sélectionne un buteur"); return; }
+    if (!selectedScorer) {
+      toast.error("Sélectionne un buteur");
+      return;
+    }
     setScorerSubmitting(true);
     const reward = getScorerReward(selectedScorerPos);
     const supabase = createClient();
     const { error } = await supabase.rpc("place_prono", {
-      p_match_id:      matchId,
-      p_prono_type:    "scorer",
-      p_prono_value:   selectedScorer,
+      p_match_id: matchId,
+      p_prono_type: "scorer",
+      p_prono_value: selectedScorer,
       p_reward_amount: reward,
     });
     setScorerSubmitting(false);
@@ -196,9 +242,14 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
       return;
     }
     const name = selectedScorer;
-    setExistingPronos((prev) => [...prev, { prono_type: "scorer", prono_value: name }]);
+    setExistingPronos((prev) => [
+      ...prev,
+      { prono_type: "scorer", prono_value: name },
+    ]);
     setScorerSuccess(true);
-    toast.success(`Prono enregistré ! +${reward.toLocaleString("fr-FR")} Pts si ${name} marque 🎯`);
+    toast.success(
+      `Prono enregistré ! +${reward.toLocaleString("fr-FR")} Pts si ${name} marque 🎯`,
+    );
     setTimeout(() => {
       setScorerSuccess(false);
       setSelectedScorer(null);
@@ -217,7 +268,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
 
       {/* ── Score Exact ─────────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-4">
-        <p className="mb-4 text-sm font-black uppercase tracking-wide text-white">🎯 Score Exact</p>
+        <p className="mb-4 text-sm font-black uppercase tracking-wide text-white">
+          🎯 Score Exact
+        </p>
 
         <div className="flex items-center justify-between gap-3">
           <TeamBadge name={teamHome} logo={homeTeamLogo} />
@@ -249,7 +302,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
 
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${
-            scoreInputsValid ? "mt-4 max-h-[min(90vh,560px)] opacity-100" : "max-h-0 opacity-0"
+            scoreInputsValid
+              ? "mt-4 max-h-[min(90vh,560px)] opacity-100"
+              : "max-h-0 opacity-0"
           }`}
         >
           {alreadyBetScore ? (
@@ -264,17 +319,24 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                   role="status"
                 >
                   <p className="text-balance text-xl font-black tracking-tight text-amber-50 sm:text-2xl">
-                    🛡️ AUCUN BUTEUR (+{BUNKER_REWARD.toLocaleString("fr-FR")} Pts)
+                    🛡️ AUCUN BUTEUR (+{BUNKER_REWARD.toLocaleString("fr-FR")}{" "}
+                    Pts)
                   </p>
                 </div>
               ) : (
                 <div className="mb-3 flex items-center justify-between rounded-xl border border-white/8 bg-zinc-800/60 px-4 py-2.5">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">Score exact</p>
-                    <p className="text-base font-black text-white">{derivedScore}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                      Score exact
+                    </p>
+                    <p className="text-base font-black text-white">
+                      {derivedScore}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">Récompense</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                      Récompense
+                    </p>
                     <p className="text-2xl font-black text-green-400">
                       +{SCORE_EXACT_REWARD.toLocaleString("fr-FR")} Pts
                     </p>
@@ -283,7 +345,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
               )}
 
               <button
-                onClick={() => { void handleScoreProno(); }}
+                onClick={() => {
+                  void handleScoreProno();
+                }}
                 disabled={!scoreInputsValid || scoreSubmitting || scoreSuccess}
                 className={`flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-black uppercase tracking-wide transition-all ${
                   scoreSuccess
@@ -292,7 +356,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                 }`}
               >
                 {scoreSuccess ? (
-                  <><Check className="h-5 w-5" /> Prono enregistré ! 🎯</>
+                  <>
+                    <Check className="h-5 w-5" /> Prono enregistré ! 🎯
+                  </>
                 ) : scoreSubmitting ? (
                   <LoaderCircle className="h-5 w-5 animate-spin" />
                 ) : (
@@ -317,13 +383,22 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
             </div>
           ) : players.length === 0 ? (
             <p className="py-4 text-center text-xs text-zinc-500">
-              Effectif non synchronisé — importe l&apos;effectif via le panneau modérateur
+              Effectif non synchronisé — importe l&apos;effectif via le panneau
+              modérateur
             </p>
           ) : (
             <>
               {[
-                { teamName: teamHome, teamLogo: homeTeamLogo, teamPlayers: homePlayers },
-                { teamName: teamAway, teamLogo: awayTeamLogo, teamPlayers: awayPlayers },
+                {
+                  teamName: teamHome,
+                  teamLogo: homeTeamLogo,
+                  teamPlayers: homePlayers,
+                },
+                {
+                  teamName: teamAway,
+                  teamLogo: awayTeamLogo,
+                  teamPlayers: awayPlayers,
+                },
               ].map(({ teamName, teamLogo, teamPlayers }) => {
                 if (teamPlayers.length === 0) return null;
                 const isUrl = teamLogo?.startsWith("http");
@@ -333,9 +408,15 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                       <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-700">
                         {isUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={teamLogo!} alt={teamName} className="h-5 w-5 object-contain" />
+                          <img
+                            src={teamLogo!}
+                            alt={teamName}
+                            className="h-5 w-5 object-contain"
+                          />
                         ) : (
-                          <span className="text-[9px] font-black text-white">{teamName[0]}</span>
+                          <span className="text-[9px] font-black text-white">
+                            {teamName[0]}
+                          </span>
                         )}
                       </div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
@@ -344,7 +425,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                     </div>
 
                     {POSITION_GROUPS.map(({ key, label, reward }) => {
-                      const group = teamPlayers.filter((p) => playerInGroup(p.position, key));
+                      const group = teamPlayers.filter((p) =>
+                        playerInGroup(p.position, key),
+                      );
                       if (group.length === 0) return null;
                       return (
                         <div key={key} className="mb-3 last:mb-0">
@@ -365,8 +448,12 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                                   key={p.id}
                                   onClick={() => {
                                     if (!already) {
-                                      setSelectedScorer(sel ? null : p.player_name);
-                                      setSelectedScorerPos(sel ? null : p.position);
+                                      setSelectedScorer(
+                                        sel ? null : p.player_name,
+                                      );
+                                      setSelectedScorerPos(
+                                        sel ? null : p.position,
+                                      );
                                     }
                                   }}
                                   disabled={already}
@@ -380,25 +467,41 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                                 >
                                   <span
                                     className={`absolute right-2 top-1.5 text-[8px] font-black ${
-                                      already ? "text-green-600" : sel ? "text-green-500" : "text-zinc-600"
+                                      already
+                                        ? "text-green-600"
+                                        : sel
+                                          ? "text-green-500"
+                                          : "text-zinc-600"
                                     }`}
                                   >
                                     {p.position}
                                   </span>
-                                  {sel && <Check className="absolute bottom-1.5 right-2 h-3 w-3 text-green-400" />}
+                                  {sel && (
+                                    <Check className="absolute bottom-1.5 right-2 h-3 w-3 text-green-400" />
+                                  )}
                                   <span
                                     className={`pr-5 text-xs font-bold leading-tight ${
-                                      already ? "text-green-400 line-through" : sel ? "text-white" : "text-zinc-200"
+                                      already
+                                        ? "text-green-400 line-through"
+                                        : sel
+                                          ? "text-white"
+                                          : "text-zinc-200"
                                     }`}
                                   >
                                     {p.player_name}
                                   </span>
                                   <span
                                     className={`text-[10px] font-black ${
-                                      already ? "text-green-500" : sel ? "text-green-400" : "text-zinc-500"
+                                      already
+                                        ? "text-green-500"
+                                        : sel
+                                          ? "text-green-400"
+                                          : "text-zinc-500"
                                     }`}
                                   >
-                                    {already ? "✓ Prono" : `+${reward.toLocaleString("fr-FR")}`}
+                                    {already
+                                      ? "✓ Prono"
+                                      : `+${reward.toLocaleString("fr-FR")}`}
                                   </span>
                                 </button>
                               );
@@ -416,14 +519,22 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-bold text-zinc-300">
                       Buteur :{" "}
-                      <span className="font-black text-white">{selectedScorer}</span>
+                      <span className="font-black text-white">
+                        {selectedScorer}
+                      </span>
                     </p>
                     <p className="text-sm font-black text-green-400">
-                      +{getScorerReward(selectedScorerPos).toLocaleString("fr-FR")} Pts
+                      +
+                      {getScorerReward(selectedScorerPos).toLocaleString(
+                        "fr-FR",
+                      )}{" "}
+                      Pts
                     </p>
                   </div>
                   <button
-                    onClick={() => { void handleScorerProno(); }}
+                    onClick={() => {
+                      void handleScorerProno();
+                    }}
                     disabled={scorerSubmitting || scorerSuccess}
                     className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl font-black uppercase tracking-wide transition-all ${
                       scorerSuccess
@@ -432,7 +543,9 @@ export function PolymarketTab({ matchId, teamHome, teamAway, homeTeamLogo, awayT
                     }`}
                   >
                     {scorerSuccess ? (
-                      <><Check className="h-4 w-4" /> Prono enregistré ! ⚽</>
+                      <>
+                        <Check className="h-4 w-4" /> Prono enregistré ! ⚽
+                      </>
                     ) : scorerSubmitting ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />
                     ) : (

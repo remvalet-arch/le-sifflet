@@ -22,7 +22,13 @@ type ApiPayload = {
 
 type ApiResponse<T> = { ok: boolean; data?: T; error?: string };
 
-export function SquadDetailClient({ squadId, currentUserId }: { squadId: string; currentUserId: string }) {
+export function SquadDetailClient({
+  squadId,
+  currentUserId,
+}: {
+  squadId: string;
+  currentUserId: string;
+}) {
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -87,12 +93,16 @@ export function SquadDetailClient({ squadId, currentUserId }: { squadId: string;
         <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">
           {squad.is_private ? "Ligue privée" : "Publique"}
         </p>
-        <h1 className="text-2xl font-black tracking-tight text-white">{squad.name}</h1>
+        <h1 className="text-2xl font-black tracking-tight text-white">
+          {squad.name}
+        </h1>
         <p className="mt-3 flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
           <span className="inline-flex items-center gap-1.5">
             <Wallet className="h-4 w-4" aria-hidden />
             Pot commun :{" "}
-            <span className="font-black tabular-nums">{pot_commun.toLocaleString("fr-FR")} Pts</span>
+            <span className="font-black tabular-nums">
+              {pot_commun.toLocaleString("fr-FR")} Pts
+            </span>
           </span>
         </p>
       </div>
@@ -100,9 +110,13 @@ export function SquadDetailClient({ squadId, currentUserId }: { squadId: string;
       <div>
         <div className="mb-3 flex items-center gap-2">
           <Trophy className="h-4 w-4 text-amber-400" aria-hidden />
-          <h2 className="text-sm font-black uppercase tracking-wide text-white">Classement</h2>
+          <h2 className="text-sm font-black uppercase tracking-wide text-white">
+            Classement
+          </h2>
         </div>
-        <p className="mb-3 text-xs text-zinc-500">Tri par XP (puis pseudo). Solde Pts affiché pour le fun du vestiaire.</p>
+        <p className="mb-3 text-xs text-zinc-500">
+          Tri par XP (puis pseudo). Solde Pts affiché pour le fun du vestiaire.
+        </p>
         <ol className="flex flex-col gap-2">
           {leaderboard.map((row, idx) => (
             <li
@@ -116,7 +130,9 @@ export function SquadDetailClient({ squadId, currentUserId }: { squadId: string;
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                    idx === 0 ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-400"
+                    idx === 0
+                      ? "bg-amber-500 text-black"
+                      : "bg-zinc-800 text-zinc-400"
                   }`}
                 >
                   {idx + 1}
@@ -125,12 +141,18 @@ export function SquadDetailClient({ squadId, currentUserId }: { squadId: string;
                   <p className="truncate font-bold text-white">
                     {row.user_id === currentUserId ? "Toi" : row.username}
                   </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{row.rank}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                    {row.rank}
+                  </p>
                 </div>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-sm font-black tabular-nums text-amber-300">{row.xp.toLocaleString("fr-FR")} XP</p>
-                <p className="text-[10px] font-bold text-zinc-500">{row.sifflets_balance.toLocaleString("fr-FR")} Pts</p>
+                <p className="text-sm font-black tabular-nums text-amber-300">
+                  {row.xp.toLocaleString("fr-FR")} XP
+                </p>
+                <p className="text-[10px] font-bold text-zinc-500">
+                  {row.sifflets_balance.toLocaleString("fr-FR")} Pts
+                </p>
               </div>
             </li>
           ))}

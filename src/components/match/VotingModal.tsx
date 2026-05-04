@@ -7,14 +7,52 @@ import { createClient } from "@/lib/supabase/client";
 import { LIVE_BETTING_WINDOW_SECONDS } from "@/lib/constants/odds";
 import type { MarketEventRow, MarketEventType } from "@/types/database";
 
-const EVENT_CONFIG: Record<MarketEventType, { question: string; emoji: string; yes: string; no: string }> = {
-  penalty_check:   { question: "Y'a pénalty là ?!",               emoji: "📢", yes: "OUI",    no: "NON"    },
-  penalty_outcome: { question: "Péno accordé — il met au fond ?",  emoji: "🥅", yes: "AU FOND", no: "RATÉ"  },
-  var_goal:        { question: "But confirmé par la VAR ?",        emoji: "🚩", yes: "BUT",    no: "ANNULÉ" },
-  red_card:        { question: "Vilaine semelle — c'est rouge ?",  emoji: "🟥", yes: "ROUGE",  no: "JAUNE"  },
-  injury_sub:      { question: "Cinéma ou civière ?",              emoji: "🚑", yes: "CIVIÈRE", no: "CINÉMA" },
-  free_kick:       { question: "Coup franc à 20m — but dans 3 min ?", emoji: "🎯", yes: "OUI",  no: "NON"   },
-  corner:          { question: "Corner tendu — but dans 3 min ?",  emoji: "🏁", yes: "OUI",    no: "NON"   },
+const EVENT_CONFIG: Record<
+  MarketEventType,
+  { question: string; emoji: string; yes: string; no: string }
+> = {
+  penalty_check: {
+    question: "Y'a pénalty là ?!",
+    emoji: "📢",
+    yes: "OUI",
+    no: "NON",
+  },
+  penalty_outcome: {
+    question: "Péno accordé — il met au fond ?",
+    emoji: "🥅",
+    yes: "AU FOND",
+    no: "RATÉ",
+  },
+  var_goal: {
+    question: "But confirmé par la VAR ?",
+    emoji: "🚩",
+    yes: "BUT",
+    no: "ANNULÉ",
+  },
+  red_card: {
+    question: "Vilaine semelle — c'est rouge ?",
+    emoji: "🟥",
+    yes: "ROUGE",
+    no: "JAUNE",
+  },
+  injury_sub: {
+    question: "Cinéma ou civière ?",
+    emoji: "🚑",
+    yes: "CIVIÈRE",
+    no: "CINÉMA",
+  },
+  free_kick: {
+    question: "Coup franc à 20m — but dans 3 min ?",
+    emoji: "🎯",
+    yes: "OUI",
+    no: "NON",
+  },
+  corner: {
+    question: "Corner tendu — but dans 3 min ?",
+    emoji: "🏁",
+    yes: "OUI",
+    no: "NON",
+  },
 };
 
 type PoolOdds = { oui: number; non: number };
@@ -78,7 +116,9 @@ export function VotingModal({
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refreshOdds = useCallback(async () => {
-    const { data, error } = await supabase.rpc("get_event_odds", { p_event_id: event.id });
+    const { data, error } = await supabase.rpc("get_event_odds", {
+      p_event_id: event.id,
+    });
     if (error) {
       console.error("[VotingModal] get_event_odds", error.message);
       return;
@@ -106,7 +146,10 @@ export function VotingModal({
     };
   }, [refreshOdds]);
 
-  const createdMs = useMemo(() => new Date(event.created_at).getTime(), [event.created_at]);
+  const createdMs = useMemo(
+    () => new Date(event.created_at).getTime(),
+    [event.created_at],
+  );
   const [elapsed, setElapsed] = useState(() =>
     Math.max(0, Math.floor((Date.now() - createdMs) / 1000)),
   );
@@ -120,11 +163,19 @@ export function VotingModal({
   const secondsLeft = Math.max(0, LIVE_BETTING_WINDOW_SECONDS - elapsed);
   const expired = elapsed >= LIVE_BETTING_WINDOW_SECONDS;
   const timerPct = (secondsLeft / LIVE_BETTING_WINDOW_SECONDS) * 100;
-  const timerColor = secondsLeft > 45 ? "bg-green-500" : secondsLeft > 15 ? "bg-yellow-400" : "bg-red-500";
+  const timerColor =
+    secondsLeft > 45
+      ? "bg-green-500"
+      : secondsLeft > 15
+        ? "bg-yellow-400"
+        : "bg-red-500";
 
   const canBet = siffletsBalance >= 10;
   const half = Math.max(10, Math.floor(siffletsBalance / 2));
-  const defaultAmount = Math.min(Math.max(10, Math.floor(siffletsBalance * 0.1)), siffletsBalance);
+  const defaultAmount = Math.min(
+    Math.max(10, Math.floor(siffletsBalance * 0.1)),
+    siffletsBalance,
+  );
   const [amount, setAmount] = useState(defaultAmount);
 
   function clamp(v: number) {
@@ -132,12 +183,16 @@ export function VotingModal({
   }
 
   const [voteLoading, setVoteLoading] = useState<"oui" | "non" | null>(null);
+  const [optimisticVote, setOptimisticVote] = useState<"oui" | "non" | null>(
+    null,
+  );
 
   async function handleVote(v: "oui" | "non") {
     if (voteLoading || expired || !canBet || oddsLoading) return;
     const staked = clamp(amount);
     const multiplier = poolOdds[v];
     setVoteLoading(v);
+    setOptimisticVote(v);
     try {
       const res = await fetch("/api/bet", {
         method: "POST",
@@ -150,15 +205,21 @@ export function VotingModal({
           squad_id: squadId ?? null,
         }),
       });
-      const json = (await res.json()) as { ok: boolean; data?: unknown; error?: string };
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: unknown;
+        error?: string;
+      };
       if (!res.ok) {
+        setOptimisticVote(null);
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
       toast.success("Pari enregistré !");
       onBetSuccess(staked);
-      onClose();
+      setTimeout(() => onClose(), 600);
     } catch {
+      setOptimisticVote(null);
       toast.error("Connexion perdue, réessaie !");
     } finally {
       setVoteLoading(null);
@@ -224,8 +285,8 @@ export function VotingModal({
       >
         <div className="px-6 pb-6 pt-5">
           <p id={descId} className="sr-only">
-            Parie des Sifflets sur une option. Cotes parimutuel en temps réel selon les mises des
-            joueurs. Ferme avec Échap ou le bouton Passer.
+            Parie des Sifflets sur une option. Cotes parimutuel en temps réel
+            selon les mises des joueurs. Ferme avec Échap ou le bouton Passer.
           </p>
 
           {/* Header */}
@@ -240,10 +301,15 @@ export function VotingModal({
                 </p>
                 {squadId && squadName && (
                   <p className="mt-1.5 flex items-start gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[10px] leading-snug text-amber-100/90">
-                    <Swords className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/90" aria-hidden />
+                    <Swords
+                      className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/90"
+                      aria-hidden
+                    />
                     <span className="line-clamp-2 min-w-0 font-medium">
                       Braquage actif avec{" "}
-                      <span className="font-black text-amber-50">{squadName}</span>
+                      <span className="font-black text-amber-50">
+                        {squadName}
+                      </span>
                     </span>
                   </p>
                 )}
@@ -266,7 +332,9 @@ export function VotingModal({
           <div className="mb-5">
             <div className="mb-1.5 flex justify-between text-xs font-semibold">
               <span className="text-zinc-500">Temps restant</span>
-              <span className={expired ? "font-black text-red-400" : "text-white"}>
+              <span
+                className={expired ? "font-black text-red-400" : "text-white"}
+              >
                 {expired ? "Votes clos" : `${secondsLeft}s`}
               </span>
             </div>
@@ -288,11 +356,21 @@ export function VotingModal({
           {/* Amount */}
           <div className="mb-5">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-bold text-zinc-400">Engagement</span>
-              <span className="text-sm font-black text-white">{amount.toLocaleString("fr-FR")} pts</span>
+              <span className="text-sm font-bold text-zinc-400">
+                Engagement
+              </span>
+              <span className="text-sm font-black text-white">
+                {amount.toLocaleString("fr-FR")} pts
+              </span>
             </div>
             <div className="mb-3 grid grid-cols-3 gap-2">
-              {([["MIN", 10], ["MOITIÉ", half], ["ALL IN", siffletsBalance]] as const).map(([label, val]) => (
+              {(
+                [
+                  ["MIN", 10],
+                  ["MOITIÉ", half],
+                  ["ALL IN", siffletsBalance],
+                ] as const
+              ).map(([label, val]) => (
                 <button
                   type="button"
                   key={label}
@@ -322,52 +400,92 @@ export function VotingModal({
           </div>
 
           {/* OUI / NON — one-tap */}
-          <div className="grid grid-cols-2 gap-3" aria-busy={oddsLoading}>
-            {(["oui", "non"] as const).map((v) => {
-              const odd = poolOdds[v];
-              const gain = Math.floor(amount * odd);
-              const isLoading = voteLoading === v;
-              const label = v === "oui" ? cfg.yes : cfg.no;
-              return (
-                <button
-                  type="button"
-                  key={v}
-                  onClick={() => {
-                    void handleVote(v);
-                  }}
-                  disabled={!!voteLoading || expired || !canBet || oddsLoading}
-                  aria-label={`${label}, cote ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
-                  className={`flex h-24 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
-                    v === "oui"
-                      ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
-                      : "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20"
-                  }`}
-                >
-                  {isLoading ? (
-                    <LoaderCircle className="h-6 w-6 animate-spin text-white" aria-hidden />
-                  ) : (
-                    <>
-                      <span className="text-xl font-black uppercase tracking-wide text-white">{label}</span>
-                      <span
-                        className={`text-sm font-black tabular-nums transition-colors ${
-                          oddsFlash ? "text-yellow-400" : v === "oui" ? "text-green-400" : "text-blue-400"
-                        }`}
-                        aria-live="polite"
-                      >
-                        ×{odd.toFixed(2)}
-                      </span>
-                      <span className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}>
-                        +{gain.toLocaleString("fr-FR")} pts
-                      </span>
-                    </>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          {optimisticVote ? (
+            <div
+              className={`flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border-2 ${optimisticVote === "oui" ? "border-green-500/50 bg-green-500/10 text-green-400" : "border-blue-500/50 bg-blue-500/10 text-blue-400"}`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black uppercase tracking-wide">
+                  Pari Validé !
+                </span>
+                {voteLoading && (
+                  <LoaderCircle
+                    className="h-5 w-5 animate-spin opacity-50"
+                    aria-hidden
+                  />
+                )}
+              </div>
+              <span className="text-sm font-bold opacity-80">
+                Option : {optimisticVote === "oui" ? cfg.yes : cfg.no}
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3" aria-busy={oddsLoading}>
+              {(["oui", "non"] as const).map((v) => {
+                const odd = poolOdds[v];
+                const gain = Math.floor(amount * odd);
+                const isLoading = voteLoading === v;
+                const label = v === "oui" ? cfg.yes : cfg.no;
+                return (
+                  <button
+                    type="button"
+                    key={v}
+                    onClick={() => {
+                      void handleVote(v);
+                    }}
+                    disabled={
+                      !!voteLoading || expired || !canBet || oddsLoading
+                    }
+                    aria-label={`${label}, cote estimée ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
+                    className={`flex h-24 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+                      v === "oui"
+                        ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
+                        : "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20"
+                    }`}
+                  >
+                    {isLoading ? (
+                      <LoaderCircle
+                        className="h-6 w-6 animate-spin text-white"
+                        aria-hidden
+                      />
+                    ) : (
+                      <>
+                        <span className="text-xl font-black uppercase tracking-wide text-white">
+                          {label}
+                        </span>
+                        <span
+                          className={`text-sm font-black tabular-nums transition-colors ${
+                            oddsFlash
+                              ? "text-yellow-400"
+                              : v === "oui"
+                                ? "text-green-400"
+                                : "text-blue-400"
+                          }`}
+                          aria-live="polite"
+                        >
+                          ~×{odd.toFixed(2)}
+                        </span>
+                        <span
+                          className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}
+                        >
+                          +{gain.toLocaleString("fr-FR")} pts
+                        </span>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-            Cotes parimutuel (masse des mises)
+            <span
+              title="Cote parimutuelle : elle s'ajuste selon les mises de tous les joueurs jusqu'à la fin du chrono."
+              className="cursor-help underline decoration-dotted"
+            >
+              Cotes estimées
+            </span>{" "}
+            (masse des mises)
           </p>
 
           {!canBet && !expired && (

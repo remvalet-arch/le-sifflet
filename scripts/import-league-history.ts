@@ -201,7 +201,8 @@ async function importTopScorers(): Promise<void> {
     .from("league_top_players")
     .upsert(rows, { onConflict: "league_id,season,type,player_id" });
 
-  if (error) throw new Error(`league_top_players scorers upsert: ${error.message}`);
+  if (error)
+    throw new Error(`league_top_players scorers upsert: ${error.message}`);
   log.ok(`${rows.length} buteurs upsertés`);
 }
 
@@ -240,7 +241,8 @@ async function importTopAssists(): Promise<void> {
     .from("league_top_players")
     .upsert(rows, { onConflict: "league_id,season,type,player_id" });
 
-  if (error) throw new Error(`league_top_players assists upsert: ${error.message}`);
+  if (error)
+    throw new Error(`league_top_players assists upsert: ${error.message}`);
   log.ok(`${rows.length} passeurs upsertés`);
 }
 
@@ -259,7 +261,7 @@ async function importFixtures(): Promise<void> {
   if (!comp) {
     log.warn(
       `Compétition api_football_league_id=${leagueId} absente en base. ` +
-      "Lance d'abord l'import de fixtures via l'admin pour créer la compétition.",
+        "Lance d'abord l'import de fixtures via l'admin pour créer la compétition.",
     );
   }
   const competitionId = comp?.id ?? null;
@@ -282,7 +284,9 @@ async function importFixtures(): Promise<void> {
   // 4c. Résolution + auto-upsert des équipes manquantes
   const allTeamApiIds = Array.from(
     new Set(
-      allFixtures.flatMap((f) => [f.teams.home.id, f.teams.away.id]).filter((id) => id > 0),
+      allFixtures
+        .flatMap((f) => [f.teams.home.id, f.teams.away.id])
+        .filter((id) => id > 0),
     ),
   );
 
@@ -296,7 +300,8 @@ async function importFixtures(): Promise<void> {
         .select("id, api_football_id")
         .in("api_football_id", allTeamApiIds.slice(i, i + CHUNK));
       for (const row of data ?? []) {
-        if (row.api_football_id != null) teamMap.set(row.api_football_id, row.id);
+        if (row.api_football_id != null)
+          teamMap.set(row.api_football_id, row.id);
       }
     }
   }
@@ -306,8 +311,14 @@ async function importFixtures(): Promise<void> {
     const missingTeamIds = allTeamApiIds.filter((id) => !teamMap.has(id));
     const teamInfoMap = new Map<number, { name: string; logo: string }>();
     for (const f of allFixtures) {
-      teamInfoMap.set(f.teams.home.id, { name: f.teams.home.name, logo: f.teams.home.logo });
-      teamInfoMap.set(f.teams.away.id, { name: f.teams.away.name, logo: f.teams.away.logo });
+      teamInfoMap.set(f.teams.home.id, {
+        name: f.teams.home.name,
+        logo: f.teams.home.logo,
+      });
+      teamInfoMap.set(f.teams.away.id, {
+        name: f.teams.away.name,
+        logo: f.teams.away.logo,
+      });
     }
     let autoUpserted = 0;
     for (const apiId of missingTeamIds) {
@@ -348,7 +359,9 @@ async function importFixtures(): Promise<void> {
       home_score: f.goals.home ?? 0,
       away_score: f.goals.away ?? 0,
       status: mapApiFootballFixtureStatusShort(f.fixture.status.short),
-      round_short: roundShortFromFixtureRow(f as unknown as Record<string, unknown>),
+      round_short: roundShortFromFixtureRow(
+        f as unknown as Record<string, unknown>,
+      ),
       home_team_logo: f.teams.home.logo || null,
       away_team_logo: f.teams.away.logo || null,
       competition_id: competitionId,
@@ -364,7 +377,8 @@ async function importFixtures(): Promise<void> {
     const { error: upErr } = await db
       .from("matches")
       .upsert(batch, { onConflict: "api_football_id" });
-    if (upErr) throw new Error(`matches upsert batch ${String(i)}: ${upErr.message}`);
+    if (upErr)
+      throw new Error(`matches upsert batch ${String(i)}: ${upErr.message}`);
     upserted += batch.length;
     process.stdout.write(
       `${C.gray}  Upsert matches ${upserted}/${matchRows.length}…${C.reset}\r`,
@@ -378,7 +392,9 @@ async function importFixtures(): Promise<void> {
     .filter((f) => FINISHED_STATUSES.has(f.fixture.status.short))
     .map((f) => f.fixture.id);
 
-  log.info(`${finishedApiIds.length} matchs terminés parmi les ${allFixtures.length} fixtures`);
+  log.info(
+    `${finishedApiIds.length} matchs terminés parmi les ${allFixtures.length} fixtures`,
+  );
 
   if (finishedApiIds.length === 0) {
     log.warn("Aucun match terminé — rien à synchroniser (events/compos/stats)");
@@ -393,7 +409,9 @@ async function importFixtures(): Promise<void> {
   if (dbErr) throw new Error(`fetch matches terminés: ${dbErr.message}`);
 
   const toSync = dbMatches ?? [];
-  log.info(`${toSync.length} matchs terminés en base à synchroniser (events + compos + stats)`);
+  log.info(
+    `${toSync.length} matchs terminés en base à synchroniser (events + compos + stats)`,
+  );
 
   // 4f. syncApiFootballMatch sur chaque match terminé
   let successCount = 0;
@@ -417,14 +435,16 @@ async function importFixtures(): Promise<void> {
       if (result.skippedReason) {
         skipCount++;
         if (result.skippedReason !== "missing_api_football_team_id") {
-          log.warn(`Sync ${progress}  fixture #${m.api_football_id} — skipped: ${result.skippedReason}`);
+          log.warn(
+            `Sync ${progress}  fixture #${m.api_football_id} — skipped: ${result.skippedReason}`,
+          );
         }
       } else {
         successCount++;
         if ((i + 1) % 10 === 0 || i === total - 1) {
           log.ok(
             `Sync ${progress}  ` +
-            `compos:${result.lineupsInserted} events:${result.timelineUpserted} stats:${result.statisticsUpserted}`,
+              `compos:${result.lineupsInserted} events:${result.timelineUpserted} stats:${result.statisticsUpserted}`,
           );
         }
       }
@@ -437,7 +457,9 @@ async function importFixtures(): Promise<void> {
   }
 
   console.log("");
-  log.ok(`Terminé — ${successCount} sync / ${skipCount} skippés / ${errorCount} erreurs`);
+  log.ok(
+    `Terminé — ${successCount} sync / ${skipCount} skippés / ${errorCount} erreurs`,
+  );
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────

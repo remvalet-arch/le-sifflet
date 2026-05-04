@@ -23,7 +23,10 @@ export default function ProfileLoading() {
       {/* Stats */}
       <div className="mt-4 grid grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-4">
+          <div
+            key={i}
+            className="flex flex-col items-center gap-2 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-4"
+          >
             <div className="h-5 w-5 rounded-full bg-zinc-800" />
             <SkeletonLine w="w-10" h="h-5" />
             <SkeletonLine w="w-14" />
@@ -42,7 +45,10 @@ export default function ProfileLoading() {
       <SkeletonLine w="w-28 mt-6" />
       <div className="mt-3 flex flex-col gap-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
+          <div
+            key={i}
+            className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3"
+          >
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-col gap-2">
                 <SkeletonLine w="w-20" />

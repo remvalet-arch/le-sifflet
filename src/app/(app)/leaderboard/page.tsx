@@ -48,7 +48,9 @@ export default async function LeaderboardPage() {
               <div key={player.id} className="flex flex-col items-center gap-2">
                 <div
                   className={`relative flex flex-col items-center gap-1 rounded-t-2xl px-4 ${
-                    rank === 0 ? "bg-yellow-500/20 border border-yellow-500/30" : "bg-zinc-800"
+                    rank === 0
+                      ? "bg-yellow-500/20 border border-yellow-500/30"
+                      : "bg-zinc-800"
                   } ${heights[i]} w-28 justify-end pb-3`}
                 >
                   <span className="text-2xl">{MEDALS[rank]}</span>
@@ -125,7 +127,9 @@ export default async function LeaderboardPage() {
             <span className="text-lg font-black text-green-400">
               #{myRank + 1}
             </span>
-            <p className="flex-1 truncate font-bold text-white">{me.username}</p>
+            <p className="flex-1 truncate font-bold text-white">
+              {me.username}
+            </p>
             <span className="font-black text-green-400">
               {me.sifflets_balance.toLocaleString("fr-FR")} pts
             </span>

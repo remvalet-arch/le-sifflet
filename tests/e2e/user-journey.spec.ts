@@ -46,7 +46,9 @@ test.describe("Lobby", () => {
 // ── 2. LIVEROOM — Super-Bouton ────────────────────────────────────────────────
 
 test.describe("LiveRoom", () => {
-  test("affiche le Super-Bouton (FAB) sur un match en cours", async ({ page }) => {
+  test("affiche le Super-Bouton (FAB) sur un match en cours", async ({
+    page,
+  }) => {
     await page.goto("/lobby");
     await page.waitForSelector('a[href^="/match/"]', { state: "visible" });
 
@@ -56,41 +58,57 @@ test.describe("LiveRoom", () => {
     await page.waitForURL(/\/match\//);
     await page.waitForSelector("main", { state: "visible" });
 
-    const superButton = page.locator('button[aria-label="Ouvrir le tiroir d\'action"]');
+    const superButton = page.locator(
+      'button[aria-label="Ouvrir le tiroir d\'action"]',
+    );
     const matchIsLive = await superButton.isVisible().catch(() => false);
 
     if (matchIsLive) {
-      console.log("[liveroom] ✓ Super-Bouton FAB visible sur un match En Direct");
+      console.log(
+        "[liveroom] ✓ Super-Bouton FAB visible sur un match En Direct",
+      );
       await expect(superButton).toBeVisible();
     } else {
-      console.log("[liveroom] ℹ Match non En Direct — Super-Bouton attendu absent");
+      console.log(
+        "[liveroom] ℹ Match non En Direct — Super-Bouton attendu absent",
+      );
       const kopTab = page.getByRole("button", { name: "Kop", exact: true });
       await expect(kopTab).toBeVisible({ timeout: 8_000 });
     }
   });
 
-  test("les onglets Kop, Compo et Pronos ou Stats sont présents", async ({ page }) => {
+  test("les onglets Kop, Compo et Pronos ou Stats sont présents", async ({
+    page,
+  }) => {
     await page.goto("/lobby");
     await page.waitForSelector('a[href^="/match/"]');
     await page.locator('a[href^="/match/"]').first().click();
     await page.waitForURL(/\/match\//);
 
-    await expect(page.getByRole("button", { name: "Kop", exact: true })).toBeVisible({ timeout: 8_000 });
-    await expect(page.getByRole("button", { name: "Compo", exact: true })).toBeVisible({ timeout: 8_000 });
+    await expect(
+      page.getByRole("button", { name: "Kop", exact: true }),
+    ).toBeVisible({ timeout: 8_000 });
+    await expect(
+      page.getByRole("button", { name: "Compo", exact: true }),
+    ).toBeVisible({ timeout: 8_000 });
 
     const pronosOrStats = page
       .getByRole("button", { name: "Pronos", exact: true })
       .or(page.getByRole("button", { name: "Stats", exact: true }));
     await expect(pronosOrStats).toBeVisible({ timeout: 8_000 });
 
-    console.log("[liveroom] ✓ Onglets LiveRoom (Kop, Compo, Pronos|Stats) visibles");
+    console.log(
+      "[liveroom] ✓ Onglets LiveRoom (Kop, Compo, Pronos|Stats) visibles",
+    );
   });
 });
 
 // ── 3. PRONOS — score exact (PolymarketTab) ───────────────────────────────────
 
 test.describe("Pronos (score exact)", () => {
-  test("onglet Pronos affiche le bloc Score Exact sur match à venir", async ({ page }) => {
+  test("onglet Pronos affiche le bloc Score Exact sur match à venir", async ({
+    page,
+  }) => {
     await page.goto("/lobby");
     await page.waitForSelector('a[href^="/match/"]');
     await page.locator('a[href^="/match/"]').first().click();
@@ -99,11 +117,16 @@ test.describe("Pronos (score exact)", () => {
     const pronosTab = page.getByRole("button", { name: "Pronos", exact: true });
     const hasPronos = await pronosTab.isVisible().catch(() => false);
     if (!hasPronos) {
-      test.skip(true, "Premier match du lobby n'est pas à venir — pas d'onglet Pronos");
+      test.skip(
+        true,
+        "Premier match du lobby n'est pas à venir — pas d'onglet Pronos",
+      );
     }
 
     await pronosTab.click();
-    await expect(page.getByText(/Score Exact/i)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(/Score Exact/i)).toBeVisible({
+      timeout: 8_000,
+    });
     console.log("[pronos] ✓ Formulaire score exact visible");
   });
 
@@ -119,7 +142,9 @@ test.describe("Pronos (score exact)", () => {
     }
 
     await pronosTab.click();
-    await expect(page.getByText(/Score Exact/i)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(/Score Exact/i)).toBeVisible({
+      timeout: 8_000,
+    });
 
     const homeInput = page.locator('input[type="number"]').nth(0);
     const awayInput = page.locator('input[type="number"]').nth(1);
@@ -136,16 +161,26 @@ test.describe("Pronos (score exact)", () => {
 // ── 4. PROFIL ────────────────────────────────────────────────────────────────
 
 test.describe("Profil", () => {
-  test("affiche le solde, le badge karma et l'onglet Paris VAR", async ({ page }) => {
+  test("affiche le solde, le badge karma et l'onglet Paris VAR", async ({
+    page,
+  }) => {
     await page.goto("/profile");
     await page.waitForSelector("main", { state: "visible" });
 
-    await expect(page.getByText("Confiance", { exact: true })).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText("Confiance", { exact: true })).toBeVisible({
+      timeout: 8_000,
+    });
 
     const badgeTexts = ["Modérateur", "Supporteur", "Carton Jaune"];
     let badgeFound = false;
     for (const badge of badgeTexts) {
-      if (await page.locator(`text=${badge}`).first().isVisible().catch(() => false)) {
+      if (
+        await page
+          .locator(`text=${badge}`)
+          .first()
+          .isVisible()
+          .catch(() => false)
+      ) {
         console.log(`[profile] ✓ Badge karma visible : ${badge}`);
         badgeFound = true;
         break;

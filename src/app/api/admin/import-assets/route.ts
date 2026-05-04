@@ -36,7 +36,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const league = searchParams.get("league")?.trim() ?? "";
   if (league === "") {
-    return errorResponse("Paramètre requis : ?league=nom_de_la_ligue (ex. French+Ligue+1)", 400);
+    return errorResponse(
+      "Paramètre requis : ?league=nom_de_la_ligue (ex. French+Ligue+1)",
+      400,
+    );
   }
 
   const run = async () => importLeagueAssets(league);

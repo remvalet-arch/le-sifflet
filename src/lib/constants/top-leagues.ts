@@ -18,10 +18,14 @@ export const EUROPEAN_CUPS = [
 ] as const;
 
 /** IDs ligue API du Top 5 uniquement. */
-export const TOP_LEAGUE_API_IDS: readonly number[] = TOP_LEAGUES.map((l) => l.apiFootballLeagueId);
+export const TOP_LEAGUE_API_IDS: readonly number[] = TOP_LEAGUES.map(
+  (l) => l.apiFootballLeagueId,
+);
 
 /** IDs des coupes UEFA (lobby + sync). */
-export const EUROPEAN_CUP_API_IDS: readonly number[] = EUROPEAN_CUPS.map((c) => c.apiFootballLeagueId);
+export const EUROPEAN_CUP_API_IDS: readonly number[] = EUROPEAN_CUPS.map(
+  (c) => c.apiFootballLeagueId,
+);
 
 /** Toutes les compétitions suivies au lobby et en import admin (Top 5 + UEFA). */
 export const LOBBY_TRACKED_LEAGUE_API_IDS: readonly number[] = [
@@ -45,7 +49,9 @@ export function isTopLeagueApiId(id: number | null | undefined): boolean {
 }
 
 /** Top 5 ou coupe UEFA — filtre lobby / requête `fetchLobbyMatchesForParisDay`. */
-export function isLobbyTrackedLeagueApiId(id: number | null | undefined): boolean {
+export function isLobbyTrackedLeagueApiId(
+  id: number | null | undefined,
+): boolean {
   return id != null && LOBBY_TRACKED_LEAGUE_API_IDS.includes(id);
 }
 
@@ -60,7 +66,9 @@ export function europeanCupByApiId(id: number | null | undefined) {
 }
 
 /** Libellé stable (Top 5, coupe UEFA, ou repli). */
-export function lobbyTrackedLeagueLabel(apiLeagueId: number | null | undefined): string {
+export function lobbyTrackedLeagueLabel(
+  apiLeagueId: number | null | undefined,
+): string {
   const row = topLeagueByApiId(apiLeagueId) ?? europeanCupByApiId(apiLeagueId);
   if (row) return row.label;
   if (apiLeagueId != null) return `Compétition ${String(apiLeagueId)}`;
@@ -72,7 +80,8 @@ export function topLeagueDisplayLabel(
   apiLeagueId: number | null | undefined,
   fallbackCompetitionName?: string | null,
 ): string {
-  const tracked = topLeagueByApiId(apiLeagueId) ?? europeanCupByApiId(apiLeagueId);
+  const tracked =
+    topLeagueByApiId(apiLeagueId) ?? europeanCupByApiId(apiLeagueId);
   if (tracked) return tracked.label;
   const fb = (fallbackCompetitionName ?? "").trim();
   if (fb !== "") return fb;

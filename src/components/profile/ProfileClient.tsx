@@ -21,7 +21,7 @@ export type ShortBetEntry = {
 export type PronoEntry = {
   id: string;
   status: "pending" | "won" | "lost";
-  prono_type: "exact_score" | "scorer";
+  prono_type: "exact_score" | "scorer" | "scorer_allocation";
   prono_value: string;
   reward_amount: number;
   placed_at: string;
@@ -39,37 +39,42 @@ type Props = {
 // ── Config labels ─────────────────────────────────────────────────────────────
 
 const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
-  penalty_check:   { label: "Péno ?",          emoji: "📢" },
-  penalty_outcome: { label: "Résultat péno",   emoji: "🥅" },
-  var_goal:        { label: "Hors-jeu / But",  emoji: "🚩" },
-  red_card:        { label: "Carton rouge",    emoji: "🟥" },
-  injury_sub:      { label: "Changement",      emoji: "🔄" },
-  free_kick:       { label: "Coup franc",      emoji: "🎯" },
-  corner:          { label: "Corner",          emoji: "🏁" },
+  penalty_check: { label: "Péno ?", emoji: "📢" },
+  penalty_outcome: { label: "Résultat péno", emoji: "🥅" },
+  var_goal: { label: "Hors-jeu / But", emoji: "🚩" },
+  red_card: { label: "Carton rouge", emoji: "🟥" },
+  injury_sub: { label: "Changement", emoji: "🔄" },
+  free_kick: { label: "Coup franc", emoji: "🎯" },
+  corner: { label: "Corner", emoji: "🏁" },
 };
 
 const STATUS_BADGE = {
-  won:  "bg-green-500/20 text-green-400 border-green-500/30",
+  won: "bg-green-500/20 text-green-400 border-green-500/30",
   lost: "bg-red-500/20 text-red-400 border-red-500/30",
   pending_short: "bg-orange-500/15 text-orange-400 border-orange-500/25",
   pending_prono: "bg-blue-500/15 text-blue-400 border-blue-500/25",
 } as const;
 
 function statusCls(status: string, kind: "short" | "prono") {
-  if (status === "won")  return STATUS_BADGE.won;
+  if (status === "won") return STATUS_BADGE.won;
   if (status === "lost") return STATUS_BADGE.lost;
-  return kind === "short" ? STATUS_BADGE.pending_short : STATUS_BADGE.pending_prono;
+  return kind === "short"
+    ? STATUS_BADGE.pending_short
+    : STATUS_BADGE.pending_prono;
 }
 
 function statusLabel(status: string, kind: "short" | "prono") {
-  if (status === "won")  return "Gagné";
+  if (status === "won") return "Gagné";
   if (status === "lost") return "Perdu";
   return kind === "short" ? "⏳ VAR en cours" : "⏳ En attente du match";
 }
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("fr-FR", {
-    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -78,9 +83,9 @@ function fmtDate(iso: string) {
 type Tab = "var" | "pronos" | "trophees";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "var",      label: "Paris VAR"   },
-  { id: "pronos",   label: "Pronos"      },
-  { id: "trophees", label: "Trophées"    },
+  { id: "var", label: "Paris VAR" },
+  { id: "pronos", label: "Pronos" },
+  { id: "trophees", label: "Trophées" },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -93,7 +98,7 @@ export function ProfileClient({
 }: Props) {
   const [tab, setTab] = useState<Tab>("var");
 
-  const varCount  = shortBets.length;
+  const varCount = shortBets.length;
   const pronoCount = pronos.length;
   const trophyCount = unlockedBadgeIds.length;
 
@@ -101,7 +106,12 @@ export function ProfileClient({
     <div className="mt-4">
       <div className="flex border-b border-white/8">
         {TABS.map(({ id, label }) => {
-          const count = id === "var" ? varCount : id === "pronos" ? pronoCount : trophyCount;
+          const count =
+            id === "var"
+              ? varCount
+              : id === "pronos"
+                ? pronoCount
+                : trophyCount;
           return (
             <button
               key={id}
@@ -113,7 +123,9 @@ export function ProfileClient({
             >
               {label}
               {count > 0 && (
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${tab === id ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${tab === id ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"}`}
+                >
                   {count}
                 </span>
               )}
@@ -126,24 +138,31 @@ export function ProfileClient({
       </div>
 
       <div className="mt-3">
-
-        {tab === "var" && (
-          shortBets.length === 0 ? (
+        {tab === "var" &&
+          (shortBets.length === 0 ? (
             <EmptyState emoji="📢" text="Aucun pari VAR pour l'instant." />
           ) : (
             <div className="flex flex-col gap-2">
               {shortBets.map((bet) => {
                 const eCfg = bet.eventType
-                  ? (SHORT_LABELS[bet.eventType] ?? { label: bet.eventType, emoji: "⚡" })
+                  ? (SHORT_LABELS[bet.eventType] ?? {
+                      label: bet.eventType,
+                      emoji: "⚡",
+                    })
                   : { label: "—", emoji: "⚡" };
                 const cls = statusCls(bet.status, "short");
                 const lbl = statusLabel(bet.status, "short");
                 const reward = Math.round(Number(bet.potential_reward));
                 return (
-                  <div key={bet.id} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
+                  <div
+                    key={bet.id}
+                    className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-[10px] text-zinc-600">{fmtDate(bet.placed_at)}</p>
+                        <p className="text-[10px] text-zinc-600">
+                          {fmtDate(bet.placed_at)}
+                        </p>
                         {bet.teamHome && (
                           <p className="truncate text-sm font-bold text-white">
                             {bet.teamHome} — {bet.teamAway}
@@ -153,27 +172,46 @@ export function ProfileClient({
                           {eCfg.emoji} {eCfg.label}
                         </p>
                       </div>
-                      <span className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}>
-                        {lbl}{bet.status === "won" && ` +${reward.toLocaleString("fr-FR")}`}
+                      <span
+                        className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}
+                      >
+                        {lbl}
+                        {bet.status === "won" &&
+                          ` +${reward.toLocaleString("fr-FR")}`}
                       </span>
                     </div>
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
-                      <span>Choix <strong className="font-black uppercase text-white">{bet.chosen_option}</strong></span>
+                      <span>
+                        Choix{" "}
+                        <strong className="font-black uppercase text-white">
+                          {bet.chosen_option}
+                        </strong>
+                      </span>
                       <span>·</span>
-                      <span>Mise <strong className="text-zinc-300">{bet.amount_staked} pts</strong></span>
+                      <span>
+                        Mise{" "}
+                        <strong className="text-zinc-300">
+                          {bet.amount_staked} pts
+                        </strong>
+                      </span>
                       <span>·</span>
-                      <span>Pot. <strong className="text-zinc-300">{reward} pts</strong></span>
+                      <span>
+                        Pot.{" "}
+                        <strong className="text-zinc-300">{reward} pts</strong>
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          )
-        )}
+          ))}
 
-        {tab === "pronos" && (
-          pronos.length === 0 ? (
-            <EmptyState emoji="🎯" text="Aucun prono enregistré pour l'instant." />
+        {tab === "pronos" &&
+          (pronos.length === 0 ? (
+            <EmptyState
+              emoji="🎯"
+              text="Aucun prono enregistré pour l'instant."
+            />
           ) : (
             <div className="flex flex-col gap-2">
               {pronos.map((p) => {
@@ -184,10 +222,15 @@ export function ProfileClient({
                     ? `⚽ Buteur : ${p.prono_value}`
                     : `🎯 Score exact : ${p.prono_value}`;
                 return (
-                  <div key={p.id} className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3">
+                  <div
+                    key={p.id}
+                    className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-[10px] text-zinc-600">{fmtDate(p.placed_at)}</p>
+                        <p className="text-[10px] text-zinc-600">
+                          {fmtDate(p.placed_at)}
+                        </p>
                         {p.teamHome && (
                           <p className="truncate text-sm font-bold text-white">
                             {p.teamHome} — {p.teamAway}
@@ -195,28 +238,35 @@ export function ProfileClient({
                         )}
                         <p className="mt-0.5 text-xs text-zinc-500">{line}</p>
                       </div>
-                      <span className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}>
+                      <span
+                        className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}
+                      >
                         {lbl}
-                        {p.status === "won" && ` +${p.reward_amount.toLocaleString("fr-FR")} Pts`}
+                        {p.status === "won" &&
+                          ` +${p.reward_amount.toLocaleString("fr-FR")} Pts`}
                       </span>
                     </div>
                     <div className="mt-1.5 text-[10px] text-zinc-600">
-                      Gratuit · gain potentiel <strong className="text-zinc-300">{p.reward_amount.toLocaleString("fr-FR")} Pts</strong>
+                      Gratuit · gain potentiel{" "}
+                      <strong className="text-zinc-300">
+                        {p.reward_amount.toLocaleString("fr-FR")} Pts
+                      </strong>
                     </div>
                   </div>
                 );
               })}
             </div>
-          )
-        )}
+          ))}
 
-        {tab === "trophees" && (
-          allBadges.length === 0 ? (
+        {tab === "trophees" &&
+          (allBadges.length === 0 ? (
             <EmptyState emoji="🏅" text="Les trophées arrivent bientôt…" />
           ) : (
-            <TrophyWall badges={allBadges} unlockedBadgeIds={unlockedBadgeIds} />
-          )
-        )}
+            <TrophyWall
+              badges={allBadges}
+              unlockedBadgeIds={unlockedBadgeIds}
+            />
+          ))}
       </div>
     </div>
   );

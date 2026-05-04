@@ -9,11 +9,16 @@ const ALERTS: {
   label: string;
   featured?: boolean;
 }[] = [
-  { type: "penalty_check",   emoji: "📢", label: "Y'A PÉNO LÀ !!",          featured: true },
+  {
+    type: "penalty_check",
+    emoji: "📢",
+    label: "Y'A PÉNO LÀ !!",
+    featured: true,
+  },
   { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND OU PAS ?" },
-  { type: "var_goal",        emoji: "🚩", label: "HORS-JEU / BUT ANNULÉ ?"  },
-  { type: "red_card",        emoji: "🟥", label: "SORTEZ LE ROUGE !"         },
-  { type: "injury_sub",      emoji: "🚑", label: "CINÉMA OU CIVIÈRE ?"       },
+  { type: "var_goal", emoji: "🚩", label: "HORS-JEU / BUT ANNULÉ ?" },
+  { type: "red_card", emoji: "🟥", label: "SORTEZ LE ROUGE !" },
+  { type: "injury_sub", emoji: "🚑", label: "CINÉMA OU CIVIÈRE ?" },
 ];
 
 type Props = {
@@ -84,7 +89,10 @@ export function AlertDrawer({
                 return (
                   <button
                     key={type}
-                    onClick={() => { onAlert(type); onClose(); }}
+                    onClick={() => {
+                      onAlert(type);
+                      onClose();
+                    }}
                     disabled={disabled}
                     className={`col-span-2 flex h-20 items-center justify-center gap-3 rounded-2xl border-2 bg-zinc-800 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                       isSignaled
@@ -113,7 +121,10 @@ export function AlertDrawer({
               return (
                 <button
                   key={type}
-                  onClick={() => { onAlert(type); onClose(); }}
+                  onClick={() => {
+                    onAlert(type);
+                    onClose();
+                  }}
                   disabled={disabled}
                   className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border bg-zinc-800 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                     isSignaled

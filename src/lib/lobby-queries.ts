@@ -1,4 +1,7 @@
-import { isLobbyTrackedLeagueApiId, LOBBY_TRACKED_LEAGUE_API_IDS } from "@/lib/constants/top-leagues";
+import {
+  isLobbyTrackedLeagueApiId,
+  LOBBY_TRACKED_LEAGUE_API_IDS,
+} from "@/lib/constants/top-leagues";
 import {
   getLobbyCalendarDayYmd,
   parisCivilDayYmdFromInstant,
@@ -36,8 +39,10 @@ export function parseLobbyRoundParams(
 ): { leagueApiId: number; roundShort: string } | null {
   const leagueRaw = sp.league;
   const roundRaw = sp.round;
-  const leagueStr = (Array.isArray(leagueRaw) ? leagueRaw[0] : leagueRaw)?.trim() ?? "";
-  const roundEnc = (Array.isArray(roundRaw) ? roundRaw[0] : roundRaw)?.trim() ?? "";
+  const leagueStr =
+    (Array.isArray(leagueRaw) ? leagueRaw[0] : leagueRaw)?.trim() ?? "";
+  const roundEnc =
+    (Array.isArray(roundRaw) ? roundRaw[0] : roundRaw)?.trim() ?? "";
   if (leagueStr === "" || roundEnc === "") return null;
   const n = parseInt(leagueStr, 10);
   if (Number.isNaN(n) || !isLobbyTrackedLeagueApiId(n)) return null;
@@ -59,7 +64,10 @@ export async function fetchLobbyMatchesByRound(
 ): Promise<{ data: LobbyMatchRow[]; error: Error | null }> {
   const trimmed = roundShort.trim();
   if (trimmed === "" || !isLobbyTrackedLeagueApiId(apiFootballLeagueId)) {
-    return { data: [], error: new Error("Paramètres ligue ou round invalides.") };
+    return {
+      data: [],
+      error: new Error("Paramètres ligue ou round invalides."),
+    };
   }
 
   const { data, error } = await supabase
@@ -113,7 +121,11 @@ export async function fetchLobbyMatchesForParisDay(
  */
 export async function fetchLobbyMatchesForParisDayWithFallback(
   supabase: SupabaseClient<Database>,
-): Promise<{ data: LobbyMatchRow[]; error: Error | null; meta: LobbyDayFetchMeta }> {
+): Promise<{
+  data: LobbyMatchRow[];
+  error: Error | null;
+  meta: LobbyDayFetchMeta;
+}> {
   const primaryYmd = getLobbyCalendarDayYmd();
   const first = await fetchLobbyMatchesForParisDay(supabase, primaryYmd);
   if (first.error) {

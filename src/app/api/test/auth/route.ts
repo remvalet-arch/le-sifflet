@@ -18,13 +18,16 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   const { searchParams, origin } = new URL(request.url);
-  const email  = searchParams.get("email");
+  const email = searchParams.get("email");
   const secret = searchParams.get("secret");
 
   if (!email) {
     return NextResponse.json({ error: "email manquant" }, { status: 400 });
   }
-  if (!process.env.TEST_AUTH_SECRET || secret !== process.env.TEST_AUTH_SECRET) {
+  if (
+    !process.env.TEST_AUTH_SECRET ||
+    secret !== process.env.TEST_AUTH_SECRET
+  ) {
     return NextResponse.json({ error: "Secret invalide" }, { status: 401 });
   }
 

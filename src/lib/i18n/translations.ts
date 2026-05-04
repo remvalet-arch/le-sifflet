@@ -53,7 +53,11 @@ const fr: Translations = {
     secondHalf: "2ème Mi-Temps",
     paused: "Arrêt",
   },
-  lobby: { title: "Les Matchs", noMatches: "Aucun match disponible", today: "Aujourd'hui" },
+  lobby: {
+    title: "Les Matchs",
+    noMatches: "Aucun match disponible",
+    today: "Aujourd'hui",
+  },
   voting: {
     decision: "Décision en cours",
     timeLeft: "Temps restant",
@@ -87,7 +91,11 @@ const en: Translations = {
     secondHalf: "2nd Half",
     paused: "Stopped",
   },
-  lobby: { title: "Matches", noMatches: "No matches available", today: "Today" },
+  lobby: {
+    title: "Matches",
+    noMatches: "No matches available",
+    today: "Today",
+  },
   voting: {
     decision: "Decision in progress",
     timeLeft: "Time left",

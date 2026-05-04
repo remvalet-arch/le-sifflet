@@ -18,7 +18,11 @@ import {
   getApiFootballSeasonYear,
 } from "@/lib/api-football-client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, MatchStatus, TimelineEventType } from "@/types/database";
+import type {
+  Database,
+  MatchStatus,
+  TimelineEventType,
+} from "@/types/database";
 
 type Admin = SupabaseClient<Database>;
 
@@ -125,13 +129,19 @@ async function resolveMatchContext(
 ): Promise<MatchContext | null> {
   const { data: match } = await admin
     .from("matches")
-    .select("id, team_home, team_away, api_football_id, home_team_id, away_team_id")
+    .select(
+      "id, team_home, team_away, api_football_id, home_team_id, away_team_id",
+    )
     .eq("id", matchId)
     .maybeSingle();
 
-  if (!match?.api_football_id || !match.home_team_id || !match.away_team_id) return null;
+  if (!match?.api_football_id || !match.home_team_id || !match.away_team_id)
+    return null;
 
-  const teamMap = await fetchTeamsApiByUuid(admin, [match.home_team_id, match.away_team_id]);
+  const teamMap = await fetchTeamsApiByUuid(admin, [
+    match.home_team_id,
+    match.away_team_id,
+  ]);
   const homeTeam = teamMap.get(match.home_team_id);
   const awayTeam = teamMap.get(match.away_team_id);
   if (!homeTeam?.api_football_id || !awayTeam?.api_football_id) return null;
@@ -156,7 +166,8 @@ function matchCalendarDateFromStartTime(startTime: string): string {
   if (head?.[1]) {
     const [, ymd] = head;
     const [y, m, d] = ymd.split("-").map((x) => parseInt(x, 10));
-    if (y >= 1900 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31) return ymd;
+    if (y >= 1900 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31)
+      return ymd;
   }
   const parsed = new Date(s);
   if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
@@ -172,7 +183,9 @@ export function num(v: unknown): number | null {
   return null;
 }
 
-export function mapApiFootballFixtureStatusShort(short: string | undefined | null): MatchStatus {
+export function mapApiFootballFixtureStatusShort(
+  short: string | undefined | null,
+): MatchStatus {
   const s = (short ?? "").toUpperCase().trim();
   if (s === "") return "upcoming";
   const finished = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
@@ -265,7 +278,11 @@ async function resolvePlayerOrGhost(
   }
 
   const ghostId = `apifb:${String(opts.fixtureId)}:${String(opts.apiPlayerId)}`;
-  const { data: existing } = await admin.from("players").select("id").eq("thesportsdb_id", ghostId).maybeSingle();
+  const { data: existing } = await admin
+    .from("players")
+    .select("id")
+    .eq("thesportsdb_id", ghostId)
+    .maybeSingle();
   if (existing?.id) return existing.id;
 
   const { data: ins, error } = await admin
@@ -328,15 +345,23 @@ function mapEventToTimeline(
 
   const player = raw.player as Record<string, unknown> | undefined;
   const playerName =
-    typeof player?.name === "string" && player.name.trim() !== "" ? player.name.trim() : "—";
+    typeof player?.name === "string" && player.name.trim() !== ""
+      ? player.name.trim()
+      : "—";
 
   const assist = raw.assist as Record<string, unknown> | undefined;
-  const assistName = typeof assist?.name === "string" && assist.name.trim() !== "" ? assist.name.trim() : null;
+  const assistName =
+    typeof assist?.name === "string" && assist.name.trim() !== ""
+      ? assist.name.trim()
+      : null;
 
   let details: string | null = null;
-  if (assistName && typeStr === "subst") details = JSON.stringify({ assist: assistName, detail: detailStr });
-  else if (detailStr && event_type === "info") details = `${String(raw.type ?? "")}: ${detailStr}`;
-  else if (assistName) details = JSON.stringify({ assist: assistName, detail: detailStr });
+  if (assistName && typeStr === "subst")
+    details = JSON.stringify({ assist: assistName, detail: detailStr });
+  else if (detailStr && event_type === "info")
+    details = `${String(raw.type ?? "")}: ${detailStr}`;
+  else if (assistName)
+    details = JSON.stringify({ assist: assistName, detail: detailStr });
 
   const is_own_goal = event_type === "goal" && detailLower.includes("own goal");
 
@@ -402,14 +427,17 @@ const CUP_ROUND_MAP: [RegExp, string | ((m: RegExpMatchArray) => string)][] = [
   [/qualifying\s*[-–]?\s*(\d+)/i, (m: RegExpMatchArray) => `Q${m[1]}`],
 ];
 
-export function roundShortFromFixtureRow(row: Record<string, unknown>): string | null {
+export function roundShortFromFixtureRow(
+  row: Record<string, unknown>,
+): string | null {
   const league = row.league as Record<string, unknown> | undefined;
   const raw = typeof league?.round === "string" ? league.round.trim() : "";
   if (raw === "") return null;
   const seasonNum = /Regular\s+Season\s*[-–]\s*(\d+)/i.exec(raw);
   if (seasonNum?.[1]) return `J${seasonNum[1]}`;
   const tailNum = /[-–]\s*(\d+)\s*$/i.exec(raw);
-  if (tailNum?.[1] && /season|jour|matchday|gameweek/i.test(raw)) return `J${tailNum[1]}`;
+  if (tailNum?.[1] && /season|jour|matchday|gameweek/i.test(raw))
+    return `J${tailNum[1]}`;
   for (const [pattern, label] of CUP_ROUND_MAP) {
     const m = pattern.exec(raw);
     if (m) return typeof label === "function" ? label(m) : label;
@@ -431,7 +459,8 @@ export function patchMatchFromFixtureRow(
   const elapsed = num(status?.elapsed);
   const mappedStatus = mapApiFootballFixtureStatusShort(short);
   let matchStatus = mappedStatus;
-  if ((homeScore > 0 || awayScore > 0) && matchStatus === "upcoming") matchStatus = "first_half";
+  if ((homeScore > 0 || awayScore > 0) && matchStatus === "upcoming")
+    matchStatus = "first_half";
   const roundShort = roundShortFromFixtureRow(row);
   return {
     home_score: homeScore,
@@ -442,7 +471,9 @@ export function patchMatchFromFixtureRow(
   };
 }
 
-export function fixtureApiStatusShortFromRow(row: Record<string, unknown>): string {
+export function fixtureApiStatusShortFromRow(
+  row: Record<string, unknown>,
+): string {
   const fixture = row.fixture as Record<string, unknown> | undefined;
   const status = fixture?.status as Record<string, unknown> | undefined;
   const s = status?.short;
@@ -471,11 +502,18 @@ const TRACKED_STAT_TYPES = new Set([
  * ⚡ Sync rapide des événements timeline (buts, cartons, remplacements).
  * 1 seul appel API — conçu pour être appelé à chaque tick du monitor (≈ 1 min).
  */
-export async function syncMatchEvents(matchId: string): Promise<SyncEventsResult> {
+export async function syncMatchEvents(
+  matchId: string,
+): Promise<SyncEventsResult> {
   const admin = createAdminClient();
   const ctx = await resolveMatchContext(admin, matchId);
   if (!ctx) {
-    return { matchId, fixtureId: null, skippedReason: "no_context", timelineUpserted: 0 };
+    return {
+      matchId,
+      fixtureId: null,
+      skippedReason: "no_context",
+      timelineUpserted: 0,
+    };
   }
 
   const eventsPayload = await fetchApiFootball<unknown>("fixtures/events", {
@@ -483,12 +521,16 @@ export async function syncMatchEvents(matchId: string): Promise<SyncEventsResult
   });
 
   const events = extractFixtureList(eventsPayload);
-  const inserts: Database["public"]["Tables"]["match_timeline_events"]["Insert"][] = [];
+  const inserts: Database["public"]["Tables"]["match_timeline_events"]["Insert"][] =
+    [];
   events.forEach((ev, index) => {
     const mapped = mapEventToTimeline(
-      matchId, ctx.fixtureId, index,
+      matchId,
+      ctx.fixtureId,
+      index,
       ev as Record<string, unknown>,
-      ctx.homeApiId, ctx.awayApiId,
+      ctx.homeApiId,
+      ctx.awayApiId,
     );
     if (mapped) inserts.push(mapped);
   });
@@ -500,7 +542,10 @@ export async function syncMatchEvents(matchId: string): Promise<SyncEventsResult
       const slice = inserts.slice(i, i + tlChunk);
       const { error } = await admin
         .from("match_timeline_events")
-        .upsert(slice, { onConflict: "api_football_event_id", ignoreDuplicates: false });
+        .upsert(slice, {
+          onConflict: "api_football_event_id",
+          ignoreDuplicates: false,
+        });
       if (error) throw new Error(`timeline upsert: ${error.message}`);
       timelineUpserted += slice.length;
     }
@@ -513,7 +558,11 @@ export async function syncMatchEvents(matchId: string): Promise<SyncEventsResult
 
   let apiMarketSync: SyncEventsResult["apiMarketSync"];
   try {
-    apiMarketSync = await applyApiFootballSignalsToMarkets(admin, matchId, events);
+    apiMarketSync = await applyApiFootballSignalsToMarkets(
+      admin,
+      matchId,
+      events,
+    );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[api-football-market] match ${matchId}:`, msg);
@@ -526,7 +575,9 @@ export async function syncMatchEvents(matchId: string): Promise<SyncEventsResult
     };
   }
 
-  console.log(`⚡ Fast-Sync Events: Match ${matchId} — ${events.length} events (${timelineUpserted} upserted)`);
+  console.log(
+    `⚡ Fast-Sync Events: Match ${matchId} — ${events.length} events (${timelineUpserted} upserted)`,
+  );
 
   return { matchId, fixtureId: ctx.fixtureId, timelineUpserted, apiMarketSync };
 }
@@ -552,11 +603,18 @@ export async function fetchFixtureEventsRaw(
  * 📊 Sync des statistiques de match (possession, tirs, corners…).
  * 1 seul appel API — appelé au heartbeat de 5 min.
  */
-export async function syncMatchStatistics(matchId: string): Promise<SyncStatsResult> {
+export async function syncMatchStatistics(
+  matchId: string,
+): Promise<SyncStatsResult> {
   const admin = createAdminClient();
   const ctx = await resolveMatchContext(admin, matchId);
   if (!ctx) {
-    return { matchId, fixtureId: null, skippedReason: "no_context", statisticsUpserted: 0 };
+    return {
+      matchId,
+      fixtureId: null,
+      skippedReason: "no_context",
+      statisticsUpserted: 0,
+    };
   }
 
   const payload = await fetchApiFootball<unknown>("fixtures/statistics", {
@@ -564,7 +622,8 @@ export async function syncMatchStatistics(matchId: string): Promise<SyncStatsRes
   });
 
   const blocks = extractFixtureList(payload);
-  const upserts: Database["public"]["Tables"]["match_statistics"]["Insert"][] = [];
+  const upserts: Database["public"]["Tables"]["match_statistics"]["Insert"][] =
+    [];
 
   for (const block of blocks) {
     const b = block as Record<string, unknown>;
@@ -602,20 +661,33 @@ export async function syncMatchStatistics(matchId: string): Promise<SyncStatsRes
     .update({ last_stats_sync_at: new Date().toISOString() })
     .eq("id", matchId);
 
-  console.log(`📊 Heartbeat Stats: Match ${matchId} — ${upserts.length} stats upserted`);
+  console.log(
+    `📊 Heartbeat Stats: Match ${matchId} — ${upserts.length} stats upserted`,
+  );
 
-  return { matchId, fixtureId: ctx.fixtureId, statisticsUpserted: upserts.length };
+  return {
+    matchId,
+    fixtureId: ctx.fixtureId,
+    statisticsUpserted: upserts.length,
+  };
 }
 
 /**
  * Sync des compositions (feuille de match).
  * 1 seul appel API — appelé une fois avant/au début du match.
  */
-export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResult> {
+export async function syncMatchLineups(
+  matchId: string,
+): Promise<SyncLineupsResult> {
   const admin = createAdminClient();
   const ctx = await resolveMatchContext(admin, matchId);
   if (!ctx) {
-    return { matchId, fixtureId: null, skippedReason: "no_context", lineupsInserted: 0 };
+    return {
+      matchId,
+      fixtureId: null,
+      skippedReason: "no_context",
+      lineupsInserted: 0,
+    };
   }
 
   const lineupsPayload = await fetchApiFootball<unknown>("fixtures/lineups", {
@@ -634,14 +706,24 @@ export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResu
     let team_side: "home" | "away" | null = null;
     let teamUuid: string | null = null;
     let teamName: string | null = null;
-    if (teamApi === ctx.homeApiId) { team_side = "home"; teamUuid = ctx.homeTeamId; teamName = ctx.homeTeamName; }
-    else if (teamApi === ctx.awayApiId) { team_side = "away"; teamUuid = ctx.awayTeamId; teamName = ctx.awayTeamName; }
+    if (teamApi === ctx.homeApiId) {
+      team_side = "home";
+      teamUuid = ctx.homeTeamId;
+      teamName = ctx.homeTeamName;
+    } else if (teamApi === ctx.awayApiId) {
+      team_side = "away";
+      teamUuid = ctx.awayTeamId;
+      teamName = ctx.awayTeamName;
+    }
     if (team_side == null || teamUuid == null || teamName == null) continue;
 
     const startXI = b.startXI as unknown[] | undefined;
     const subs = b.substitutes as unknown[] | undefined;
 
-    const pushPlayers = async (arr: unknown[] | undefined, status: "starter" | "bench") => {
+    const pushPlayers = async (
+      arr: unknown[] | undefined,
+      status: "starter" | "bench",
+    ) => {
       if (!Array.isArray(arr)) return;
       for (const cell of arr) {
         const c = cell as Record<string, unknown>;
@@ -649,7 +731,9 @@ export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResu
         const name = typeof pl?.name === "string" ? pl.name.trim() : "";
         if (name === "") continue;
         const apiPid = num(pl?.id) ?? 0;
-        const pos = mapLineupPositionApi(typeof pl?.pos === "string" ? pl.pos : null);
+        const pos = mapLineupPositionApi(
+          typeof pl?.pos === "string" ? pl.pos : null,
+        );
         const numRaw = pl?.number;
         const shirt_number =
           numRaw != null && String(numRaw).trim() !== ""
@@ -665,7 +749,9 @@ export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResu
             position: pos,
             fixtureId: ctx.fixtureId,
           });
-        } catch { player_id = null; }
+        } catch {
+          player_id = null;
+        }
         lineupInserts.push({
           match_id: matchId,
           player_name: name,
@@ -682,14 +768,19 @@ export async function syncMatchLineups(matchId: string): Promise<SyncLineupsResu
     await pushPlayers(subs, "bench");
   }
 
-  const { error: delErr } = await admin.from("lineups").delete().eq("match_id", matchId);
+  const { error: delErr } = await admin
+    .from("lineups")
+    .delete()
+    .eq("match_id", matchId);
   if (delErr) throw new Error(`lineups delete: ${delErr.message}`);
 
   let lineupsInserted = 0;
   if (lineupInserts.length > 0) {
     const chunkSz = 50;
     for (let i = 0; i < lineupInserts.length; i += chunkSz) {
-      const { error } = await admin.from("lineups").insert(lineupInserts.slice(i, i + chunkSz));
+      const { error } = await admin
+        .from("lineups")
+        .insert(lineupInserts.slice(i, i + chunkSz));
       if (error) throw new Error(`lineups insert: ${error.message}`);
       lineupsInserted += lineupInserts.slice(i, i + chunkSz).length;
     }
@@ -730,16 +821,46 @@ export async function syncApiFootballMatch(
     .maybeSingle();
 
   if (mErr) throw new Error(`syncApiFootballMatch match: ${mErr.message}`);
-  if (!match) return { matchId, skippedReason: "match_not_found", fixtureId: null, lineupsInserted: 0, timelineUpserted: 0, statisticsUpserted: 0, matchUpdated: false };
-  if (!match.home_team_id || !match.away_team_id) return { matchId, skippedReason: "missing_home_or_away_team_id", fixtureId: match.api_football_id, lineupsInserted: 0, timelineUpserted: 0, statisticsUpserted: 0, matchUpdated: false };
+  if (!match)
+    return {
+      matchId,
+      skippedReason: "match_not_found",
+      fixtureId: null,
+      lineupsInserted: 0,
+      timelineUpserted: 0,
+      statisticsUpserted: 0,
+      matchUpdated: false,
+    };
+  if (!match.home_team_id || !match.away_team_id)
+    return {
+      matchId,
+      skippedReason: "missing_home_or_away_team_id",
+      fixtureId: match.api_football_id,
+      lineupsInserted: 0,
+      timelineUpserted: 0,
+      statisticsUpserted: 0,
+      matchUpdated: false,
+    };
 
-  const teamMap = await fetchTeamsApiByUuid(admin, [match.home_team_id, match.away_team_id]);
+  const teamMap = await fetchTeamsApiByUuid(admin, [
+    match.home_team_id,
+    match.away_team_id,
+  ]);
   const homeTeam = teamMap.get(match.home_team_id);
   const awayTeam = teamMap.get(match.away_team_id);
   const homeApiId = homeTeam?.api_football_id ?? null;
   const awayApiId = awayTeam?.api_football_id ?? null;
 
-  if (homeApiId == null || awayApiId == null) return { matchId, skippedReason: "missing_api_football_team_id", fixtureId: match.api_football_id, lineupsInserted: 0, timelineUpserted: 0, statisticsUpserted: 0, matchUpdated: false };
+  if (homeApiId == null || awayApiId == null)
+    return {
+      matchId,
+      skippedReason: "missing_api_football_team_id",
+      fixtureId: match.api_football_id,
+      lineupsInserted: 0,
+      timelineUpserted: 0,
+      statisticsUpserted: 0,
+      matchUpdated: false,
+    };
 
   let fixtureId = match.api_football_id;
 
@@ -749,14 +870,39 @@ export async function syncApiFootballMatch(
     const season = String(getApiFootballSeasonYear());
     const fixturesParams = { team: String(homeApiId), date, season };
     const debugUrl = new URL(`${API_FOOTBALL_BASE_URL}/fixtures`);
-    for (const [k, v] of Object.entries(fixturesParams)) debugUrl.searchParams.set(k, v);
-    console.log("[syncApiFootballMatch] GET /fixtures (résolution)", { homeApiId, awayApiId, date, season, url: debugUrl.toString() });
+    for (const [k, v] of Object.entries(fixturesParams))
+      debugUrl.searchParams.set(k, v);
+    console.log("[syncApiFootballMatch] GET /fixtures (résolution)", {
+      homeApiId,
+      awayApiId,
+      date,
+      season,
+      url: debugUrl.toString(),
+    });
 
     const payload = await fetchApiFootball<unknown>("fixtures", fixturesParams);
     const rows = extractFixtureList(payload);
     const picked = pickFixtureIdStrict(rows, homeApiId, awayApiId);
-    if (picked === "none") return { matchId, skippedReason: "fixture_not_found", fixtureId: null, lineupsInserted: 0, timelineUpserted: 0, statisticsUpserted: 0, matchUpdated: false };
-    if (picked === "ambiguous") return { matchId, skippedReason: "fixture_ambiguous", fixtureId: null, lineupsInserted: 0, timelineUpserted: 0, statisticsUpserted: 0, matchUpdated: false };
+    if (picked === "none")
+      return {
+        matchId,
+        skippedReason: "fixture_not_found",
+        fixtureId: null,
+        lineupsInserted: 0,
+        timelineUpserted: 0,
+        statisticsUpserted: 0,
+        matchUpdated: false,
+      };
+    if (picked === "ambiguous")
+      return {
+        matchId,
+        skippedReason: "fixture_ambiguous",
+        fixtureId: null,
+        lineupsInserted: 0,
+        timelineUpserted: 0,
+        statisticsUpserted: 0,
+        matchUpdated: false,
+      };
     fixtureId = picked.fixtureId;
 
     const row = rows.find((item) => {
@@ -766,41 +912,82 @@ export async function syncApiFootballMatch(
     }) as Record<string, unknown> | undefined;
 
     await delay(ORCHESTRATOR_CALL_DELAY_MS);
-    const { error: up0 } = await admin.from("matches").update({ api_football_id: fixtureId, ...(row ? patchMatchFromFixtureRow(row) : {}) }).eq("id", matchId);
+    const { error: up0 } = await admin
+      .from("matches")
+      .update({
+        api_football_id: fixtureId,
+        ...(row ? patchMatchFromFixtureRow(row) : {}),
+      })
+      .eq("id", matchId);
     if (up0) throw new Error(`matches update fixture resolve: ${up0.message}`);
   } else {
     // Mise à jour score/statut depuis la fixture
     await delay(ORCHESTRATOR_CALL_DELAY_MS);
-    const payload = await fetchApiFootball<unknown>("fixtures", { id: String(fixtureId) });
+    const payload = await fetchApiFootball<unknown>("fixtures", {
+      id: String(fixtureId),
+    });
     const rows = extractFixtureList(payload);
     const row = (rows[0] ?? null) as Record<string, unknown> | null;
     if (row) {
-      const { error: up1 } = await admin.from("matches").update(patchMatchFromFixtureRow(row)).eq("id", matchId);
-      if (up1) throw new Error(`matches update from fixture id: ${up1.message}`);
+      const { error: up1 } = await admin
+        .from("matches")
+        .update(patchMatchFromFixtureRow(row))
+        .eq("id", matchId);
+      if (up1)
+        throw new Error(`matches update from fixture id: ${up1.message}`);
     }
   }
 
   // Sync parallèle : compos + events + stats (api_football_id est maintenant en DB)
   const [lineupsResult, eventsResult, statsResult] = await Promise.all([
     syncMatchLineups(matchId).catch((err) => {
-      console.warn(`[syncApiFootballMatch] lineups: ${err instanceof Error ? err.message : String(err)}`);
-      return { matchId, fixtureId, skippedReason: "error", lineupsInserted: 0 } as SyncLineupsResult;
+      console.warn(
+        `[syncApiFootballMatch] lineups: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return {
+        matchId,
+        fixtureId,
+        skippedReason: "error",
+        lineupsInserted: 0,
+      } as SyncLineupsResult;
     }),
     syncMatchEvents(matchId).catch((err) => {
-      console.warn(`[syncApiFootballMatch] events: ${err instanceof Error ? err.message : String(err)}`);
-      return { matchId, fixtureId, skippedReason: "error", timelineUpserted: 0 } as SyncEventsResult;
+      console.warn(
+        `[syncApiFootballMatch] events: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return {
+        matchId,
+        fixtureId,
+        skippedReason: "error",
+        timelineUpserted: 0,
+      } as SyncEventsResult;
     }),
     syncMatchStatistics(matchId).catch((err) => {
-      console.warn(`[syncApiFootballMatch] stats: ${err instanceof Error ? err.message : String(err)}`);
-      return { matchId, fixtureId, skippedReason: "error", statisticsUpserted: 0 } as SyncStatsResult;
+      console.warn(
+        `[syncApiFootballMatch] stats: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return {
+        matchId,
+        fixtureId,
+        skippedReason: "error",
+        statisticsUpserted: 0,
+      } as SyncStatsResult;
     }),
   ]);
 
-  const { data: afterMatch } = await admin.from("matches").select("status").eq("id", matchId).maybeSingle();
+  const { data: afterMatch } = await admin
+    .from("matches")
+    .select("status")
+    .eq("id", matchId)
+    .maybeSingle();
   if (afterMatch?.status === "finished") {
-    const { error: pronoResErr } = await admin.rpc("resolve_match_pronos", { p_match_id: matchId });
+    const { error: pronoResErr } = await admin.rpc("resolve_match_pronos", {
+      p_match_id: matchId,
+    });
     if (pronoResErr) {
-      console.warn(`[syncApiFootballMatch] resolve_match_pronos: ${pronoResErr.message}`);
+      console.warn(
+        `[syncApiFootballMatch] resolve_match_pronos: ${pronoResErr.message}`,
+      );
     }
   }
 

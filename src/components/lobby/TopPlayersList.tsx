@@ -99,8 +99,12 @@ export function TopPlayersList({
 
           {/* Nom + matchs joués */}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-white">{p.player_name}</p>
-            <p className="text-[11px] text-zinc-500">{p.played_matches} matchs</p>
+            <p className="truncate text-sm font-bold text-white">
+              {p.player_name}
+            </p>
+            <p className="text-[11px] text-zinc-500">
+              {p.played_matches} matchs
+            </p>
           </div>
 
           {/* Logo équipe */}

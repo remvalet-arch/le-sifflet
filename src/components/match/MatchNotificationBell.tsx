@@ -18,7 +18,10 @@ type ApiRes = { ok: boolean; data?: { smart_mute: boolean }; error?: string };
  */
 export function MatchNotificationBell({ matchId }: Props) {
   const supabase = createClient();
-  const [row, setRow] = useState<Pick<MatchSubscriptionRow, "smart_mute"> | null>(null);
+  const [row, setRow] = useState<Pick<
+    MatchSubscriptionRow,
+    "smart_mute"
+  > | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
 
@@ -122,7 +125,10 @@ export function MatchNotificationBell({ matchId }: Props) {
       ) : muted ? (
         <BellOff className="h-5 w-5" aria-hidden />
       ) : (
-        <Bell className={`h-5 w-5 ${subscribed ? "fill-current" : ""}`} aria-hidden />
+        <Bell
+          className={`h-5 w-5 ${subscribed ? "fill-current" : ""}`}
+          aria-hidden
+        />
       )}
     </button>
   );

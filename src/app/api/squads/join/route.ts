@@ -21,9 +21,12 @@ export async function POST(request: NextRequest) {
     if (!invite_code?.trim()) return errorResponse("Code requis", 400);
 
     // Ne pas SELECT sur squads : la RLS masque les ligues privées aux non-membres.
-    const { data: inviteRows, error: squadErr } = await supabase.rpc("squad_by_invite_code", {
-      p_invite: invite_code.trim(),
-    });
+    const { data: inviteRows, error: squadErr } = await supabase.rpc(
+      "squad_by_invite_code",
+      {
+        p_invite: invite_code.trim(),
+      },
+    );
 
     if (squadErr) {
       console.error("Supabase Error:", squadErr);
@@ -31,7 +34,8 @@ export async function POST(request: NextRequest) {
     }
     const rows = inviteRows ?? [];
     const squad = rows[0];
-    if (!squad) return errorResponse("Code invalide — vérifie et réessaie", 404);
+    if (!squad)
+      return errorResponse("Code invalide — vérifie et réessaie", 404);
 
     const { data: existing, error: existingErr } = await supabase
       .from("squad_members")
@@ -47,7 +51,9 @@ export async function POST(request: NextRequest) {
 
     if (existing) return errorResponse("Tu es déjà dans cette ligue", 400);
 
-    const { error } = await supabase.from("squad_members").insert({ squad_id: squad.id, user_id: user.id });
+    const { error } = await supabase
+      .from("squad_members")
+      .insert({ squad_id: squad.id, user_id: user.id });
 
     if (error) {
       console.error("Supabase Error:", error);

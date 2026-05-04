@@ -1,0 +1,14 @@
+<skill>
+  <name>Waze-like Realtime Signal</name>
+  <description>Ajouter ou modifier un événement diffusé en temps réel (ex: "Penalty", "Faute", "Hors-jeu") via Supabase Realtime.</description>
+  <architecture_rules>
+    <rule>Typage strict : L'événement doit être ajouté au type/enum des signaux dans le dossier des types TypeScript.</rule>
+    <rule>Canal de diffusion : Les signaux s'écoutent sur le channel du match via `supabase.channel('match_room_XYZ')`. Utiliser `on('broadcast', { event: 'SIGNAL_NAME' }, callback)`.</rule>
+    <rule>Composant UI associé : Chaque nouveau signal doit avoir une représentation visuelle courte et impactante (Modal flash ou Toast via `sonner`) invitant les autres à parier.</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Lancer le serveur local (`npm run dev`).</verification_step>
+    <verification_step>Adapter et exécuter `scripts/simulate-match-scenario.ts` via `npm run test:backend` pour émettre le nouveau signal.</verification_step>
+    <verification_step>Vérifier que l'interface client réagit instantanément au broadcast.</verification_step>
+  </harness>
+</skill>

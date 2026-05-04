@@ -2,15 +2,35 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Menu, X, BookOpen, Settings, LogOut, Scale, Trophy } from "lucide-react";
+import {
+  Menu,
+  X,
+  BookOpen,
+  Settings,
+  LogOut,
+  Scale,
+  Trophy,
+} from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/client";
 import { useLocale } from "@/lib/i18n/useLocale";
 import type { ProfileRow } from "@/types/database";
 
-type Props = { siffletsBalance: number; username: string; userId: string; rank: string; xp: number };
+type Props = {
+  siffletsBalance: number;
+  username: string;
+  userId: string;
+  rank: string;
+  xp: number;
+};
 
-export function TopBar({ siffletsBalance, username, userId, rank, xp: initialXp }: Props) {
+export function TopBar({
+  siffletsBalance,
+  username,
+  userId,
+  rank,
+  xp: initialXp,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [balance, setBalance] = useState(siffletsBalance);
   const [liveRank, setLiveRank] = useState(rank);
@@ -50,13 +70,13 @@ export function TopBar({ siffletsBalance, username, userId, rank, xp: initialXp 
       if (flashTimer.current) clearTimeout(flashTimer.current);
       void supabase.removeChannel(channel);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return (
     <>
       <header
-        className="fixed top-0 z-50 w-full border-b border-white/8 bg-zinc-950/95 backdrop-blur-xl"
+        className="fixed top-0 z-50 w-full max-w-md border-b border-white/8 bg-zinc-950/95 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="flex h-14 items-center justify-between px-4">
@@ -65,7 +85,9 @@ export function TopBar({ siffletsBalance, username, userId, rank, xp: initialXp 
             <span className="rounded border border-white/25 px-1.5 py-0.5 text-[11px] font-black tracking-widest text-white">
               VAR
             </span>
-            <span className="text-sm font-black uppercase tracking-widest text-white">TIME</span>
+            <span className="text-sm font-black uppercase tracking-widest text-white">
+              TIME
+            </span>
           </Link>
 
           {/* Balance — flash vert quand le solde augmente */}
@@ -119,7 +141,9 @@ export function TopBar({ siffletsBalance, username, userId, rank, xp: initialXp 
               {t.topbar.connected}
             </p>
             <p className="mt-0.5 text-base font-black text-white">{username}</p>
-            <p className="mt-0.5 text-[11px] font-semibold text-zinc-500">{liveRank}</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-zinc-500">
+              {liveRank}
+            </p>
             <p className="mt-0.5 text-[10px] font-bold tabular-nums text-zinc-600">
               {liveXp.toLocaleString("fr-FR")} XP
             </p>
@@ -164,7 +188,9 @@ export function TopBar({ siffletsBalance, username, userId, rank, xp: initialXp 
 
         {/* Language switcher */}
         <div className="mx-3 mt-1 flex items-center justify-between rounded-xl border border-white/8 bg-white/3 px-4 py-3">
-          <span className="text-sm font-semibold text-zinc-400">{t.topbar.language}</span>
+          <span className="text-sm font-semibold text-zinc-400">
+            {t.topbar.language}
+          </span>
           <div className="flex overflow-hidden rounded-lg border border-white/10">
             {(["fr", "en"] as const).map((l) => (
               <button

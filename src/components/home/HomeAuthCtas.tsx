@@ -21,7 +21,12 @@ export function HomeAuthCtas() {
   }, []);
 
   if (!ready) {
-    return <div className="h-12 w-full max-w-xs rounded-full bg-white/10" aria-hidden />;
+    return (
+      <div
+        className="h-12 w-full max-w-xs rounded-full bg-white/10"
+        aria-hidden
+      />
+    );
   }
 
   if (loggedIn) {
@@ -32,5 +37,9 @@ export function HomeAuthCtas() {
     );
   }
 
-  return <SignInWithGoogleButton className={btnClass}>Continuer avec Google</SignInWithGoogleButton>;
+  return (
+    <SignInWithGoogleButton className={btnClass}>
+      Continuer avec Google
+    </SignInWithGoogleButton>
+  );
 }

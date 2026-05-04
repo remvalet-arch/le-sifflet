@@ -8,7 +8,9 @@ import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
 
   // Guard modérateur — vérification stricte côté serveur
@@ -27,11 +29,7 @@ export async function POST(request: NextRequest) {
     result?: string;
   };
 
-  if (
-    !body.event_id ||
-    !body.result ||
-    !["oui", "non"].includes(body.result)
-  ) {
+  if (!body.event_id || !body.result || !["oui", "non"].includes(body.result)) {
     return errorResponse("Paramètres invalides", 400);
   }
 

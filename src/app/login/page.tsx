@@ -21,7 +21,9 @@ export default async function LoginPage() {
             <span className="rounded border border-white/30 px-2.5 py-1 text-lg font-black tracking-widest text-white">
               VAR
             </span>
-            <span className="text-xl font-black uppercase tracking-widest text-white">TIME</span>
+            <span className="text-xl font-black uppercase tracking-widest text-white">
+              TIME
+            </span>
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white">
@@ -34,9 +36,7 @@ export default async function LoginPage() {
         </div>
 
         {/* Google button */}
-        <SignInWithGoogleButton
-          className="mt-8 flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white font-bold text-zinc-800 shadow-md transition hover:bg-zinc-100 active:scale-[0.98]"
-        >
+        <SignInWithGoogleButton className="mt-8 flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white font-bold text-zinc-800 shadow-md transition hover:bg-zinc-100 active:scale-[0.98]">
           <GoogleIcon />
           Continuer avec Google
         </SignInWithGoogleButton>

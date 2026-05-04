@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ToasterProvider } from "@/components/providers/ToasterProvider";
 import { ServiceWorkerRegister } from "@/components/providers/ServiceWorkerRegister";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
-const appUrl =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "VAR Time",
+    startupImage: [
+      {
+        url: "/icon.svg",
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
@@ -45,9 +50,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50 font-sans">
-        {children}
+      <body className="min-h-full bg-zinc-950 text-zinc-50 font-sans">
+        {/* Vue Desktop / Container Mobile-first */}
+        <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden bg-zinc-950 shadow-2xl relative">
+          {children}
+        </div>
         <ServiceWorkerRegister />
+        <InstallPrompt />
         <ToasterProvider />
       </body>
     </html>

@@ -15,11 +15,10 @@ import { MatchTimeline } from "./MatchTimeline";
 import { MatchLineups } from "./MatchLineups";
 import { ActionDrawer } from "./ActionDrawer";
 import { MatchStats } from "./MatchStats";
-import { PolymarketTab } from "./PolymarketTab";
 import { MatchNotificationBell } from "./MatchNotificationBell";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 
-type Tab = "kop" | "compo" | "stats" | "pronos";
+type Tab = "kop" | "compo" | "stats";
 type Props = {
   match: MatchRow;
   siffletsBalance: number;
@@ -34,13 +33,9 @@ export function LiveRoom({
   isModerator,
 }: Props) {
   const [liveMatch, setLiveMatch] = useState<MatchRow>(match);
-  const isUpcoming = liveMatch.status === "upcoming";
-  const [activeTab, setActiveTab] = useState<Tab>(() =>
-    match.status === "upcoming" ? "pronos" : "kop",
-  );
+  const [activeTab, setActiveTab] = useState<Tab>("kop");
 
-  // Si le match démarre alors que l'utilisateur est sur "pronos", on retombe sur "kop"
-  const displayedTab: Tab = activeTab === "pronos" && !isUpcoming ? "kop" : activeTab;
+  const displayedTab: Tab = activeTab;
 
   // Cooldown
   const [cooldownUntil, setCooldownUntil] = useState<Date | null>(() =>
@@ -61,6 +56,21 @@ export function LiveRoom({
   const [activeEvent, setActiveEvent] = useState<MarketEventRow | null>(null);
   const [localBalance, setLocalBalance] = useState(siffletsBalance);
 
+  useEffect(() => {
+    if (localBalance < 10) {
+      void fetch("/api/claim-rsa", { method: "POST" })
+        .then((res) => res.json())
+        .then((json: { ok: boolean; data?: { new_balance: number } }) => {
+          if (json.ok && json.data) {
+            setLocalBalance(json.data.new_balance);
+            toast.success(
+              "L'arbitre te fait une fleur, revoilà 50 Sifflets 💸",
+            );
+          }
+        });
+    }
+  }, [localBalance]);
+
   const { squadId, squadName } = useActiveSquad();
 
   // Drawer
@@ -69,8 +79,14 @@ export function LiveRoom({
   // Cooldown countdown
   useEffect(() => {
     const tick = () => {
-      if (!cooldownUntil) { setCooldownSecs(0); return; }
-      const s = Math.max(0, Math.ceil((cooldownUntil.getTime() - Date.now()) / 1000));
+      if (!cooldownUntil) {
+        setCooldownSecs(0);
+        return;
+      }
+      const s = Math.max(
+        0,
+        Math.ceil((cooldownUntil.getTime() - Date.now()) / 1000),
+      );
       setCooldownSecs(s);
       if (s === 0) setCooldownUntil(null);
     };
@@ -92,7 +108,9 @@ export function LiveRoom({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => { if (data) setActiveEvent(data); });
+      .then(({ data }) => {
+        if (data) setActiveEvent(data);
+      });
   }, [match.id]);
 
   // Realtime subscriptions
@@ -103,7 +121,12 @@ export function LiveRoom({
       .channel(`match-room-${match.id}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "matches", filter: `id=eq.${match.id}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "matches",
+          filter: `id=eq.${match.id}`,
+        },
         (payload) => {
           const updated = payload.new as MatchRow;
           setLiveMatch(updated);
@@ -116,7 +139,12 @@ export function LiveRoom({
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "market_events", filter: `match_id=eq.${match.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "market_events",
+          filter: `match_id=eq.${match.id}`,
+        },
         (payload) => {
           const event = payload.new as MarketEventRow;
           if (event?.status === "open") setActiveEvent(event);
@@ -124,7 +152,12 @@ export function LiveRoom({
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "market_events", filter: `match_id=eq.${match.id}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "market_events",
+          filter: `match_id=eq.${match.id}`,
+        },
         (payload) => {
           const event = payload.new as MarketEventRow;
           if (event?.status === "resolved") {
@@ -140,13 +173,20 @@ export function LiveRoom({
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "bets", filter: `user_id=eq.${userId}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "bets",
+          filter: `user_id=eq.${userId}`,
+        },
         (payload) => {
           const bet = payload.new as BetRow;
           if (bet.status === "won") {
             const reward = Math.round(Number(bet.potential_reward));
             setLocalBalance((b) => b + reward);
-            toast.success(`Prédiction juste ! +${reward.toLocaleString("fr-FR")} Pts 🎉`);
+            toast.success(
+              `Prédiction juste ! +${reward.toLocaleString("fr-FR")} Pts 🎉`,
+            );
           } else if (bet.status === "lost") {
             toast.error("Pari perdu… Meilleure chance la prochaine fois !");
           }
@@ -154,16 +194,32 @@ export function LiveRoom({
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [match.id, userId]);
 
-  // Signale à la BottomNav que le Super Button doit être affiché
+  // Signale à la BottomNav que le Super Button doit être affiché uniquement en live
+  const isLive =
+    liveMatch.status === "first_half" ||
+    liveMatch.status === "half_time" ||
+    liveMatch.status === "second_half" ||
+    liveMatch.status === "paused";
+
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent("sifflet:drawer-available", { detail: { enabled: true } }));
+    window.dispatchEvent(
+      new CustomEvent("sifflet:drawer-available", {
+        detail: { enabled: isLive },
+      }),
+    );
     return () => {
-      window.dispatchEvent(new CustomEvent("sifflet:drawer-available", { detail: { enabled: false } }));
+      window.dispatchEvent(
+        new CustomEvent("sifflet:drawer-available", {
+          detail: { enabled: false },
+        }),
+      );
     };
-  }, []);
+  }, [isLive]);
 
   // Écoute le Super Button de la BottomNav
   useEffect(() => {
@@ -198,10 +254,14 @@ export function LiveRoom({
         data?: { cooldown_until: string | null };
         error?: string;
       };
-      if (!res.ok) { toast.error(json.error ?? "Erreur inattendue"); return; }
+      if (!res.ok) {
+        toast.error(json.error ?? "Erreur inattendue");
+        return;
+      }
       markAsSignaled(type);
       toast.success("Signal envoyé ! En attente d'autres confirmations…");
-      if (json.data?.cooldown_until) setCooldownUntil(new Date(json.data.cooldown_until));
+      if (json.data?.cooldown_until)
+        setCooldownUntil(new Date(json.data.cooldown_until));
     } catch {
       toast.error("Connexion perdue, réessaie !");
     } finally {
@@ -209,13 +269,13 @@ export function LiveRoom({
     }
   }
 
-  const cooldownMins    = Math.floor(cooldownSecs / 60);
+  const cooldownMins = Math.floor(cooldownSecs / 60);
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "kop", label: "Kop" },
     { id: "compo", label: "Compo" },
-    { id: isUpcoming ? "pronos" : "stats", label: isUpcoming ? "Pronos" : "Stats" },
+    { id: "stats", label: "Stats" },
   ];
 
   return (
@@ -242,7 +302,9 @@ export function LiveRoom({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`relative flex flex-1 min-h-[44px] items-center justify-center gap-1 text-xs font-black uppercase tracking-wide transition-colors ${
-                displayedTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+                displayedTab === tab.id
+                  ? "text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
               {tab.label}
@@ -287,15 +349,6 @@ export function LiveRoom({
           homeTeamColor={liveMatch.home_team_color}
           awayTeamColor={liveMatch.away_team_color}
           matchStatus={liveMatch.status}
-        />
-      )}
-      {displayedTab === "pronos" && (
-        <PolymarketTab
-          matchId={liveMatch.id}
-          teamHome={liveMatch.team_home}
-          teamAway={liveMatch.team_away}
-          homeTeamLogo={liveMatch.home_team_logo}
-          awayTeamLogo={liveMatch.away_team_logo}
         />
       )}
       {/* Drawer d'action */}

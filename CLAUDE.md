@@ -41,9 +41,20 @@ Copy `.env.example` to `.env.local` and fill in:
 
 ## Absolute rules (skills)
 
-### 1. Auto-correction
+**Before performing any action, you must check the `.skills/` directory.**
+If your current task matches the intent of a skill file, you MUST read ONLY that skill file (XML format) to save tokens and strictly follow its instructions and constraints.
 
-Before declaring any task complete, run `npm run lint` and `npm run typecheck`. Fix all errors silently before reporting done.
+### 1. Auto-correction & Tâches (Workflow V-Coding)
+
+Tu dois fonctionner en parfaite autonomie (V-Coding). Le "Product Owner" te donnera ses consignes dans le fichier `TASKS.md`.
+
+1. Prends la prochaine tâche non-cochée dans `TASKS.md`.
+2. Exécute le code en respectant les fichiers `.skills/`.
+3. Avant de déclarer la tâche terminée, **tu dois obligatoirement lancer `npm run ai:check`**.
+4. S'il y a des erreurs, tu dois les analyser et les corriger silencieusement. Relance la commande jusqu'à obtenir un succès.
+5. **Auto-Documentation (Mémoire) :** Mets systématiquement à jour le fichier `PROJECT_STATE.md` si tu as ajouté une route, une table, ou modifié l'architecture. Ne laisse jamais ce fichier devenir obsolète.
+6. Ne demande pas au client de tester manuellement tant que la commande `ai:check` ne passe pas.
+7. Coche la case dans `TASKS.md` quand c'est fini.
 
 ### 2. Supabase typing
 
@@ -108,7 +119,7 @@ Realtime is enabled on `market_events`, `bets`, and `alert_signals`.
 
 **Important:** All Realtime tables with RLS require `REPLICA IDENTITY FULL`. Without it, events are silently dropped for passive clients. Tables currently configured: `matches`, `market_events`, `bets`.
 
-**Admin client (`src/lib/supabase/admin.ts`):** `createAdminClient()` uses `SUPABASE_SERVICE_ROLE_KEY` (never `NEXT_PUBLIC`_). Required for operations that bypass RLS: market_event INSERT in `/api/alert`, matches UPDATE for cooldown, `resolve_event` RPC call.
+**Admin client (`src/lib/supabase/admin.ts`):** `createAdminClient()` uses `SUPABASE_SERVICE_ROLE_KEY` (never `NEXT_PUBLIC`\_). Required for operations that bypass RLS: market_event INSERT in `/api/alert`, matches UPDATE for cooldown, `resolve_event` RPC call.
 
 **Cotes parimutuel :** affichage et validation via la RPC **`get_event_odds`** (masse des mises) ; la fenêtre de vote côté UI reste **90 s** (`LIVE_BETTING_WINDOW_SECONDS`).
 

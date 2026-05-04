@@ -26,14 +26,9 @@ export async function POST() {
     return errorResponse("Solde suffisant, pas de refill disponible", 400);
   }
 
-  const cutoff = new Date(
-    Date.now() - REFILL_COOLDOWN_HOURS * 60 * 60 * 1000,
-  );
+  const cutoff = new Date(Date.now() - REFILL_COOLDOWN_HOURS * 60 * 60 * 1000);
 
-  if (
-    profile.last_refill_date &&
-    new Date(profile.last_refill_date) > cutoff
-  ) {
+  if (profile.last_refill_date && new Date(profile.last_refill_date) > cutoff) {
     return errorResponse("Bonus déjà récupéré aujourd'hui", 400);
   }
 

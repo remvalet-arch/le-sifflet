@@ -35,7 +35,8 @@ export async function GET(
       console.error("Supabase Error:", memErr);
       return errorResponse(memErr.message, 500);
     }
-    if (!membership) return errorResponse("Ligue introuvable ou accès refusé", 403);
+    if (!membership)
+      return errorResponse("Ligue introuvable ou accès refusé", 403);
 
     const { data: squad, error: sErr } = await supabase
       .from("squads")
@@ -48,13 +49,21 @@ export async function GET(
       return errorResponse("Ligue introuvable", 404);
     }
 
-    const { data: pairs, error: rpcErr } = await supabase.rpc("squad_members_for_my_squads");
+    const { data: pairs, error: rpcErr } = await supabase.rpc(
+      "squad_members_for_my_squads",
+    );
     if (rpcErr) {
       console.error("Supabase Error:", rpcErr);
       return errorResponse(rpcErr.message, 500);
     }
 
-    const memberIds = [...new Set((pairs ?? []).filter((p) => p.squad_id === squadId).map((p) => p.user_id))];
+    const memberIds = [
+      ...new Set(
+        (pairs ?? [])
+          .filter((p) => p.squad_id === squadId)
+          .map((p) => p.user_id),
+      ),
+    ];
     if (memberIds.length === 0) {
       return successResponse({
         squad,
@@ -80,7 +89,9 @@ export async function GET(
         sifflets_balance: p.sifflets_balance ?? 0,
         rank: p.rank ?? "—",
       }))
-      .sort((a, b) => b.xp - a.xp || a.username.localeCompare(b.username, "fr"));
+      .sort(
+        (a, b) => b.xp - a.xp || a.username.localeCompare(b.username, "fr"),
+      );
 
     const pot_commun = leaderboard.reduce((s, m) => s + m.sifflets_balance, 0);
 

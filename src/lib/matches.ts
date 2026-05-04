@@ -38,16 +38,18 @@ export function formatMatchStatus(status: MatchStatus): string {
 }
 
 const STATUS_ORDER: Record<MatchStatus, number> = {
-  first_half:  0,
+  first_half: 0,
   second_half: 0,
-  paused:      0,
-  half_time:   1,
-  upcoming:    2,
-  finished:    3,
+  paused: 0,
+  half_time: 1,
+  upcoming: 2,
+  finished: 3,
 };
 
 /** Lobby : en cours d’abord, puis upcoming, puis finished ; puis start_time croissant. */
-export function sortMatchesForLobby<T extends Pick<MatchRow, "status" | "start_time">>(matches: T[]): T[] {
+export function sortMatchesForLobby<
+  T extends Pick<MatchRow, "status" | "start_time">,
+>(matches: T[]): T[] {
   return [...matches].sort((a, b) => {
     const oa = STATUS_ORDER[a.status] ?? 99;
     const ob = STATUS_ORDER[b.status] ?? 99;

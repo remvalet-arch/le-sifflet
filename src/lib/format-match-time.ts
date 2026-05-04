@@ -26,7 +26,9 @@ export function normalizeMatchStartTimeIso(iso: string): string {
   return s;
 }
 
-const parisTimeParts = (isoUtc: string): { hour: string; minute: string } | null => {
+const parisTimeParts = (
+  isoUtc: string,
+): { hour: string; minute: string } | null => {
   const d = new Date(normalizeMatchStartTimeIso(isoUtc));
   if (Number.isNaN(d.getTime())) return null;
   const f = new Intl.DateTimeFormat("fr-FR", {

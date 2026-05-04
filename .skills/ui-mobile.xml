@@ -1,0 +1,15 @@
+<skill>
+  <name>UI Mobile (React 19 & Tailwind v4)</name>
+  <description>Créer ou modifier des composants d'interface utilisateur pour la PWA "Le Sifflet" (VAR Time).</description>
+  <architecture_rules>
+    <rule>Server Components par défaut : N'utilise "use client" qu'en haut des fichiers qui nécessitent des hooks d'état (useState, useEffect) ou des interactions (onClick).</rule>
+    <rule>Mobile-First UX : Toutes les zones cliquables (boutons, liens, cartes) DOIVENT avoir une taille minimale de min-h-[48px] et min-w-[48px] pour faciliter le tap. Pas d'états :hover critiques pour la navigation.</rule>
+    <rule>Design System (Tailwind v4) : Utilise exclusivement les couleurs du thème : bg-pitch-dark, bg-pitch-light, text-chalk, border-whistle, text-card-red, text-card-yellow.</rule>
+    <rule>Librairies UI : Toujours utiliser `lucide-react` pour les icônes. Toujours utiliser `sonner` pour les toasts (toast.success()).</rule>
+    <rule>Ton Editorial : Utiliser le tutoiement ("Ton pari", "Tu as gagné") et un ton décalé (type Mon Petit Gazon).</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Vérifier l'absence d'erreurs TypeScript via `npm run typecheck`.</verification_step>
+    <verification_step>Vérifier avec Playwright UI ou le navigateur que le composant s'intègre visuellement sans déborder sur un écran de 375px de large (iPhone SE).</verification_step>
+  </harness>
+</skill>

@@ -2,7 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
-import { fetchApiFootball, getApiFootballSeasonYear } from "@/lib/api-football-client";
+import {
+  fetchApiFootball,
+  getApiFootballSeasonYear,
+} from "@/lib/api-football-client";
 
 const SEARCH_MIN_LEN = 3;
 /** ≥ 6,5 s entre deux appels API — reste sous le plafond 10 requêtes / minute (plan gratuit). */
@@ -64,7 +67,10 @@ export async function GET() {
 
   const apiKey = process.env.API_FOOTBALL_KEY?.trim();
   if (apiKey === undefined || apiKey === "" || apiKey === "undefined") {
-    return errorResponse("API_FOOTBALL_KEY manquante ou vide (voir .env.example)", 500);
+    return errorResponse(
+      "API_FOOTBALL_KEY manquante ou vide (voir .env.example)",
+      500,
+    );
   }
 
   const admin = createAdminClient();

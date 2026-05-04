@@ -1,0 +1,13 @@
+<skill>
+  <name>Supabase Schema & Database</name>
+  <description>Créer ou modifier des tables, des vues, des Row Level Security (RLS) ou des fonctions RPC dans Supabase.</description>
+  <architecture_rules>
+    <rule>Pas de modification directe via l'UI Supabase : Toutes les modifications de schéma doivent être écrites sous forme de fichiers de migration SQL dans `supabase/migrations/`.</rule>
+    <rule>RLS Obligatoire : Toute nouvelle table DOIT activer RLS (`ALTER TABLE x ENABLE ROW LEVEL SECURITY;`). Fournir les policies pour SELECT, INSERT, UPDATE selon `auth.uid()`.</rule>
+    <rule>Synchronisation TypeScript : Après exécution SQL, les types doivent être regénérés via `npx supabase gen types typescript --local > src/types/supabase.ts` (ou la commande du projet).</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Appliquer la migration locale : `npx supabase db reset` ou `npx supabase migration up`.</verification_step>
+    <verification_step>Exécuter `npm run typecheck` après la génération des types. Tout doit compiler sans erreur.</verification_step>
+  </harness>
+</skill>

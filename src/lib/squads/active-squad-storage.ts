@@ -3,7 +3,9 @@ export const ACTIVE_SQUAD_STORAGE_KEY = "var-time-active-squad";
 
 export type ActiveSquadPayload = { id: string; name: string };
 
-export function parseActiveSquad(raw: string | null): ActiveSquadPayload | null {
+export function parseActiveSquad(
+  raw: string | null,
+): ActiveSquadPayload | null {
   if (!raw) return null;
   try {
     const v = JSON.parse(raw) as unknown;
@@ -15,7 +17,10 @@ export function parseActiveSquad(raw: string | null): ActiveSquadPayload | null 
       typeof (v as ActiveSquadPayload).id === "string" &&
       typeof (v as ActiveSquadPayload).name === "string"
     ) {
-      return { id: (v as ActiveSquadPayload).id, name: (v as ActiveSquadPayload).name };
+      return {
+        id: (v as ActiveSquadPayload).id,
+        name: (v as ActiveSquadPayload).name,
+      };
     }
   } catch {
     /* ignore */
@@ -28,9 +33,12 @@ export function readActiveSquadFromStorage(): ActiveSquadPayload | null {
   return parseActiveSquad(localStorage.getItem(ACTIVE_SQUAD_STORAGE_KEY));
 }
 
-export function writeActiveSquadToStorage(payload: ActiveSquadPayload | null): void {
+export function writeActiveSquadToStorage(
+  payload: ActiveSquadPayload | null,
+): void {
   if (typeof window === "undefined") return;
-  if (payload) localStorage.setItem(ACTIVE_SQUAD_STORAGE_KEY, JSON.stringify(payload));
+  if (payload)
+    localStorage.setItem(ACTIVE_SQUAD_STORAGE_KEY, JSON.stringify(payload));
   else localStorage.removeItem(ACTIVE_SQUAD_STORAGE_KEY);
   window.dispatchEvent(new CustomEvent("sifflet:active-squad-changed"));
 }

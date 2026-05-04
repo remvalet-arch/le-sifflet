@@ -8,9 +8,13 @@ import { useEffect } from "react";
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    if (typeof window === "undefined" || !("serviceWorker" in navigator))
+      return;
     const { protocol, hostname } = window.location;
-    const secure = protocol === "https:" || hostname === "localhost" || hostname === "127.0.0.1";
+    const secure =
+      protocol === "https:" ||
+      hostname === "localhost" ||
+      hostname === "127.0.0.1";
     if (!secure) return;
 
     void navigator.serviceWorker

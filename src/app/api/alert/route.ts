@@ -80,7 +80,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Compte les signaux DISTINCTS (utilisateurs différents) dans la fenêtre de 30s
-  const since = new Date(Date.now() - ALERT_WINDOW_SECONDS * 1000).toISOString();
+  const since = new Date(
+    Date.now() - ALERT_WINDOW_SECONDS * 1000,
+  ).toISOString();
   const { data: recentSignals, error: signalsError } = await supabase
     .from("alert_signals")
     .select("user_id")
@@ -93,7 +95,9 @@ export async function POST(request: NextRequest) {
     return errorResponse(signalsError.message);
   }
 
-  const distinctUsers = [...new Set((recentSignals ?? []).map((s) => s.user_id))];
+  const distinctUsers = [
+    ...new Set((recentSignals ?? []).map((s) => s.user_id)),
+  ];
   const distinctCount = distinctUsers.length;
 
   console.log(

@@ -6,11 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 
 const BADGE_EMOJI: Record<string, string> = {
   oeil_de_faucon: "🦅",
-  nostradamus:    "✨",
-  collina:        "🛡️",
-  chat_noir:      "👻",
-  fidele:         "📅",
-  goleador:       "⚽",
+  nostradamus: "✨",
+  collina: "🛡️",
+  chat_noir: "👻",
+  fidele: "📅",
+  goleador: "⚽",
 };
 
 type Props = { userId: string };
@@ -38,16 +38,17 @@ export function BadgeUnlockListener({ userId }: Props) {
             .single();
           if (data) {
             const emoji = BADGE_EMOJI[data.slug] ?? "🏅";
-            toast.success(
-              `${emoji} Nouveau badge débloqué : ${data.label} !`,
-              { duration: 6000 },
-            );
+            toast.success(`${emoji} Nouveau badge débloqué : ${data.label} !`, {
+              duration: 6000,
+            });
           }
         },
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   return null;

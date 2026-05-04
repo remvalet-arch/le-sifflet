@@ -6,28 +6,35 @@ import type { MatchStatus } from "@/types/database";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 const VALID_STATUSES: MatchStatus[] = [
-  "upcoming", "first_half", "half_time", "second_half", "paused", "finished",
+  "upcoming",
+  "first_half",
+  "half_time",
+  "second_half",
+  "paused",
+  "finished",
 ];
 
 const INFO_DETAILS: Partial<Record<MatchStatus, string>> = {
-  first_half:  "Coup d'envoi de la première mi-temps",
-  half_time:   "Mi-temps",
+  first_half: "Coup d'envoi de la première mi-temps",
+  half_time: "Mi-temps",
   second_half: "Coup d'envoi de la deuxième mi-temps",
-  paused:      "Match interrompu",
-  finished:    "Fin du match",
+  paused: "Match interrompu",
+  finished: "Fin du match",
 };
 
 const INFO_MINUTES: Partial<Record<MatchStatus, number>> = {
-  first_half:  0,
-  half_time:   45,
+  first_half: 0,
+  half_time: 45,
   second_half: 45,
-  paused:      45,
-  finished:    90,
+  paused: 45,
+  finished: 90,
 };
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
 
   const { data: profile } = await supabase
@@ -65,9 +72,9 @@ export async function POST(request: NextRequest) {
   if (details) {
     void admin.from("match_timeline_events").insert({
       match_id,
-      event_type:  "info",
-      minute:      INFO_MINUTES[newStatus] ?? 0,
-      team_side:   "home",
+      event_type: "info",
+      minute: INFO_MINUTES[newStatus] ?? 0,
+      team_side: "home",
       player_name: "Arbitre",
       is_own_goal: false,
       details,

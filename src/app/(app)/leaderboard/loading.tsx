@@ -1,4 +1,12 @@
-function SkeletonBlock({ h, w, cls = "" }: { h: string; w: string; cls?: string }) {
+function SkeletonBlock({
+  h,
+  w,
+  cls = "",
+}: {
+  h: string;
+  w: string;
+  cls?: string;
+}) {
   return <div className={`${h} ${w} rounded-full bg-zinc-800 ${cls}`} />;
 }
 

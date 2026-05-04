@@ -27,13 +27,15 @@ function verifyCronBearer(request: Request): boolean {
   }
 }
 
-export type PastLineupSyncItem = Awaited<ReturnType<typeof syncSpecificMatchLineups>> & {
+export type PastLineupSyncItem = Awaited<
+  ReturnType<typeof syncSpecificMatchLineups>
+> & {
   error?: string;
 };
 
 /**
- * GET /api/admin/sync-past-lineups *(temporaire)*  
- * Matchs **`finished`** à rattraper : **sans** `lineups` **ou** **sans** lignes `match_timeline_events` (compos OK mais timeline vide, etc.).  
+ * GET /api/admin/sync-past-lineups *(temporaire)*
+ * Matchs **`finished`** à rattraper : **sans** `lineups` **ou** **sans** lignes `match_timeline_events` (compos OK mais timeline vide, etc.).
  * Appelle `syncSpecificMatchLineups` (API-Football) pour chaque candidat. **6,5 s** entre chaque match (quota 10 req/min).
  *
  * Auth : identique à `/api/admin/sync-live` (modérateur ou `Authorization: Bearer` + `CRON_SECRET`).
@@ -42,7 +44,10 @@ export async function GET(request: Request) {
   const run = async () => {
     const admin = createAdminClient();
 
-    const { data: finishedRows, error: finErr } = await admin.from("matches").select("id").eq("status", "finished");
+    const { data: finishedRows, error: finErr } = await admin
+      .from("matches")
+      .select("id")
+      .eq("status", "finished");
 
     if (finErr) {
       throw new Error(finErr.message);
@@ -62,7 +67,10 @@ export async function GET(request: Request) {
     const idChunk = 150;
     for (let i = 0; i < allIds.length; i += idChunk) {
       const slice = allIds.slice(i, i + idChunk);
-      const { data: luRows, error: luErr } = await admin.from("lineups").select("match_id").in("match_id", slice);
+      const { data: luRows, error: luErr } = await admin
+        .from("lineups")
+        .select("match_id")
+        .in("match_id", slice);
       if (luErr) {
         throw new Error(luErr.message);
       }
@@ -82,7 +90,9 @@ export async function GET(request: Request) {
       }
     }
 
-    const candidateIds = allIds.filter((id) => !withLineups.has(id) || !withTimeline.has(id));
+    const candidateIds = allIds.filter(
+      (id) => !withLineups.has(id) || !withTimeline.has(id),
+    );
     const results: PastLineupSyncItem[] = [];
 
     for (let i = 0; i < candidateIds.length; i += 1) {

@@ -1,23 +1,34 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Pencil, Trash2, X, Check } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Pencil,
+  Trash2,
+  X,
+  Check,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import type { MatchStatus, MatchTimelineEventRow, TimelineEventType } from "@/types/database";
+import type {
+  MatchStatus,
+  MatchTimelineEventRow,
+  TimelineEventType,
+} from "@/types/database";
 
 const ICONS: Record<TimelineEventType, string> = {
-  goal:         "⚽",
-  yellow_card:  "🟨",
-  red_card:     "🟥",
+  goal: "⚽",
+  yellow_card: "🟨",
+  red_card: "🟥",
   substitution: "🔄",
-  info:         "📣",
+  info: "📣",
 };
 
 const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
-  goal:         "⚽ But",
-  yellow_card:  "🟨 Carton jaune",
-  red_card:     "🟥 Carton rouge",
+  goal: "⚽ But",
+  yellow_card: "🟨 Carton jaune",
+  red_card: "🟥 Carton rouge",
   substitution: "🔄 Changement",
 };
 
@@ -56,9 +67,9 @@ function EventCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const icon   = ICONS[ev.event_type];
+  const icon = ICONS[ev.event_type];
   const isGoal = ev.event_type === "goal";
-  const isSub  = ev.event_type === "substitution";
+  const isSub = ev.event_type === "substitution";
   const isRight = side === "away";
   const subPlayerIn = isSub ? parseSubstitutionPlayerIn(ev.details) : null;
 
@@ -72,13 +83,22 @@ function EventCard({
         } ${isSub ? "max-w-[min(100%,11rem)] min-w-[7.5rem]" : "max-w-[150px]"} ${isRight ? "flex-row-reverse" : ""}`}
       >
         <span className="text-xl leading-none">{icon}</span>
-        <div className={`flex min-w-0 flex-1 flex-col ${isRight ? "items-end text-right" : ""}`}>
-          <span className="text-xs font-black text-white">{ev.minute}&apos;</span>
+        <div
+          className={`flex min-w-0 flex-1 flex-col ${isRight ? "items-end text-right" : ""}`}
+        >
+          <span className="text-xs font-black text-white">
+            {ev.minute}&apos;
+          </span>
           {isSub ? (
             <div className="mt-1 flex w-full min-w-0 flex-col gap-1.5 text-[11px] leading-snug">
               {subPlayerIn && (
-                <span className={`flex items-start gap-1 font-semibold text-emerald-400 ${isRight ? "flex-row-reverse" : ""}`}>
-                  <ArrowUpRight className="mt-0.5 h-3 w-3 shrink-0 opacity-90" aria-hidden />
+                <span
+                  className={`flex items-start gap-1 font-semibold text-emerald-400 ${isRight ? "flex-row-reverse" : ""}`}
+                >
+                  <ArrowUpRight
+                    className="mt-0.5 h-3 w-3 shrink-0 opacity-90"
+                    aria-hidden
+                  />
                   <span className="min-w-0 break-words">{subPlayerIn}</span>
                 </span>
               )}
@@ -87,7 +107,10 @@ function EventCard({
                   subPlayerIn ? "text-rose-300/90" : "text-zinc-200"
                 }`}
               >
-                <ArrowDownRight className="mt-0.5 h-3 w-3 shrink-0 opacity-90" aria-hidden />
+                <ArrowDownRight
+                  className="mt-0.5 h-3 w-3 shrink-0 opacity-90"
+                  aria-hidden
+                />
                 <span className="min-w-0 break-words">{ev.player_name}</span>
               </span>
             </div>
@@ -124,7 +147,11 @@ function EventCard({
   );
 }
 
-type Props = { matchId: string; isModerator: boolean; matchStatus: MatchStatus };
+type Props = {
+  matchId: string;
+  isModerator: boolean;
+  matchStatus: MatchStatus;
+};
 
 function timelineEmptyMessage(status: MatchStatus): string {
   if (status === "finished") {
@@ -138,13 +165,16 @@ export const MatchTimeline = memo(function MatchTimeline({
   isModerator,
   matchStatus,
 }: Props) {
-  const [events, setEvents]       = useState<MatchTimelineEventRow[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [events, setEvents] = useState<MatchTimelineEventRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm]   = useState<EditState>({
-    event_type: "goal", minute: "", player_name: "", is_own_goal: false,
+  const [editForm, setEditForm] = useState<EditState>({
+    event_type: "goal",
+    minute: "",
+    player_name: "",
+    is_own_goal: false,
   });
-  const [saving, setSaving]       = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -163,27 +193,45 @@ export const MatchTimeline = memo(function MatchTimeline({
       .channel(`timeline-${matchId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "match_timeline_events", filter: `match_id=eq.${matchId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "match_timeline_events",
+          filter: `match_id=eq.${matchId}`,
+        },
         (payload) => {
           setEvents((prev) =>
-            [...prev, payload.new as MatchTimelineEventRow].sort((a, b) => b.minute - a.minute),
+            [...prev, payload.new as MatchTimelineEventRow].sort(
+              (a, b) => b.minute - a.minute,
+            ),
           );
         },
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "match_timeline_events", filter: `match_id=eq.${matchId}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "match_timeline_events",
+          filter: `match_id=eq.${matchId}`,
+        },
         (payload) => {
           const updated = payload.new as MatchTimelineEventRow;
           setEvents((prev) =>
-            prev.map((e) => (e.id === updated.id ? updated : e))
+            prev
+              .map((e) => (e.id === updated.id ? updated : e))
               .sort((a, b) => b.minute - a.minute),
           );
         },
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: "match_timeline_events", filter: `match_id=eq.${matchId}` },
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "match_timeline_events",
+          filter: `match_id=eq.${matchId}`,
+        },
         (payload) => {
           const deleted = payload.old as { id: string };
           setEvents((prev) => prev.filter((e) => e.id !== deleted.id));
@@ -191,15 +239,17 @@ export const MatchTimeline = memo(function MatchTimeline({
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [matchId]);
 
   function startEdit(ev: MatchTimelineEventRow) {
     if (ev.event_type === "info") return;
     setEditingId(ev.id);
     setEditForm({
-      event_type:  ev.event_type as Exclude<TimelineEventType, "info">,
-      minute:      String(ev.minute),
+      event_type: ev.event_type as Exclude<TimelineEventType, "info">,
+      minute: String(ev.minute),
       player_name: ev.player_name,
       is_own_goal: ev.is_own_goal,
     });
@@ -208,8 +258,14 @@ export const MatchTimeline = memo(function MatchTimeline({
   async function handleSaveEdit() {
     if (!editingId) return;
     const min = parseInt(editForm.minute);
-    if (isNaN(min) || min < 0 || min > 120) { toast.error("Minute invalide (0–120)"); return; }
-    if (!editForm.player_name.trim()) { toast.error("Nom du joueur manquant"); return; }
+    if (isNaN(min) || min < 0 || min > 120) {
+      toast.error("Minute invalide (0–120)");
+      return;
+    }
+    if (!editForm.player_name.trim()) {
+      toast.error("Nom du joueur manquant");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -217,15 +273,18 @@ export const MatchTimeline = memo(function MatchTimeline({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          event_id:    editingId,
-          event_type:  editForm.event_type,
-          minute:      min,
+          event_id: editingId,
+          event_type: editForm.event_type,
+          minute: min,
           player_name: editForm.player_name.trim(),
           is_own_goal: editForm.is_own_goal,
         }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok) { toast.error(json.error ?? "Erreur"); return; }
+      if (!res.ok) {
+        toast.error(json.error ?? "Erreur");
+        return;
+      }
       toast.success("Événement modifié !");
       setEditingId(null);
     } catch {
@@ -244,7 +303,10 @@ export const MatchTimeline = memo(function MatchTimeline({
         body: JSON.stringify({ event_id: eventId }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok) { toast.error(json.error ?? "Erreur"); return; }
+      if (!res.ok) {
+        toast.error(json.error ?? "Erreur");
+        return;
+      }
       toast.success("Événement supprimé");
     } catch {
       toast.error("Connexion perdue");
@@ -287,7 +349,9 @@ export const MatchTimeline = memo(function MatchTimeline({
 
   if (events.length === 0) {
     return (
-      <p className="mt-6 py-10 text-center text-sm text-zinc-500">{timelineEmptyMessage(matchStatus)}</p>
+      <p className="mt-6 py-10 text-center text-sm text-zinc-500">
+        {timelineEmptyMessage(matchStatus)}
+      </p>
     );
   }
 
@@ -298,8 +362,8 @@ export const MatchTimeline = memo(function MatchTimeline({
 
       <div className="flex flex-col gap-6">
         {events.map((ev) => {
-          const isInfo    = ev.event_type === "info";
-          const isHome    = ev.team_side === "home";
+          const isInfo = ev.event_type === "info";
+          const isHome = ev.team_side === "home";
           const isEditing = editingId === ev.id;
 
           // ── Événement info : bulle centrée ──────────────────────────────────
@@ -307,7 +371,9 @@ export const MatchTimeline = memo(function MatchTimeline({
             return (
               <div key={ev.id} className="relative flex justify-center px-4">
                 <div className="z-10 flex items-center gap-2 rounded-full border border-zinc-700/60 bg-zinc-900 px-4 py-1.5">
-                  <span className="text-[10px] font-black text-zinc-500">{ev.minute}&apos;</span>
+                  <span className="text-[10px] font-black text-zinc-500">
+                    {ev.minute}&apos;
+                  </span>
                   <span className="text-[11px] font-semibold text-zinc-400">
                     {ev.details ?? ev.player_name}
                   </span>
@@ -328,7 +394,9 @@ export const MatchTimeline = memo(function MatchTimeline({
                       side="home"
                       isModerator={isModerator}
                       onEdit={() => startEdit(ev)}
-                      onDelete={() => { void handleDelete(ev.id); }}
+                      onDelete={() => {
+                        void handleDelete(ev.id);
+                      }}
                     />
                   )}
                 </div>
@@ -344,7 +412,9 @@ export const MatchTimeline = memo(function MatchTimeline({
                       side="away"
                       isModerator={isModerator}
                       onEdit={() => startEdit(ev)}
-                      onDelete={() => { void handleDelete(ev.id); }}
+                      onDelete={() => {
+                        void handleDelete(ev.id);
+                      }}
                     />
                   )}
                 </div>
@@ -354,41 +424,81 @@ export const MatchTimeline = memo(function MatchTimeline({
               {isEditing && (
                 <div className="mx-3 rounded-xl border border-white/10 bg-zinc-800/80 p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-black uppercase tracking-wide text-zinc-400">Modifier l&apos;événement</span>
-                    <button onClick={() => setEditingId(null)} className="text-zinc-500 hover:text-white">
+                    <span className="text-[11px] font-black uppercase tracking-wide text-zinc-400">
+                      Modifier l&apos;événement
+                    </span>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="text-zinc-500 hover:text-white"
+                    >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <div className="flex flex-col gap-2">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="mb-1 block text-[10px] font-bold text-zinc-500">Type</label>
+                        <label className="mb-1 block text-[10px] font-bold text-zinc-500">
+                          Type
+                        </label>
                         <select
                           value={editForm.event_type}
-                          onChange={(e) => setEditForm((f) => ({ ...f, event_type: e.target.value as Exclude<TimelineEventType, "info">, is_own_goal: false }))}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              event_type: e.target.value as Exclude<
+                                TimelineEventType,
+                                "info"
+                              >,
+                              is_own_goal: false,
+                            }))
+                          }
                           className={SELECT_CLS}
                         >
-                          {(Object.entries(EVENT_LABELS) as [Exclude<TimelineEventType, "info">, string][]).map(([val, label]) => (
-                            <option key={val} value={val}>{label}</option>
+                          {(
+                            Object.entries(EVENT_LABELS) as [
+                              Exclude<TimelineEventType, "info">,
+                              string,
+                            ][]
+                          ).map(([val, label]) => (
+                            <option key={val} value={val}>
+                              {label}
+                            </option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="mb-1 block text-[10px] font-bold text-zinc-500">Minute</label>
+                        <label className="mb-1 block text-[10px] font-bold text-zinc-500">
+                          Minute
+                        </label>
                         <input
-                          type="number" inputMode="numeric" min={0} max={120}
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          max={120}
                           value={editForm.minute}
-                          onChange={(e) => setEditForm((f) => ({ ...f, minute: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              minute: e.target.value,
+                            }))
+                          }
                           className={SELECT_CLS}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-zinc-500">Joueur</label>
+                      <label className="mb-1 block text-[10px] font-bold text-zinc-500">
+                        Joueur
+                      </label>
                       <input
                         type="text"
                         value={editForm.player_name}
-                        onChange={(e) => setEditForm((f) => ({ ...f, player_name: e.target.value }))}
+                        onChange={(e) =>
+                          setEditForm((f) => ({
+                            ...f,
+                            player_name: e.target.value,
+                          }))
+                        }
                         className={SELECT_CLS}
                       />
                     </div>
@@ -397,14 +507,21 @@ export const MatchTimeline = memo(function MatchTimeline({
                         <input
                           type="checkbox"
                           checked={editForm.is_own_goal}
-                          onChange={(e) => setEditForm((f) => ({ ...f, is_own_goal: e.target.checked }))}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              is_own_goal: e.target.checked,
+                            }))
+                          }
                           className="h-3.5 w-3.5 rounded accent-orange-500"
                         />
                         Contre son camp (CSC)
                       </label>
                     )}
                     <button
-                      onClick={() => { void handleSaveEdit(); }}
+                      onClick={() => {
+                        void handleSaveEdit();
+                      }}
                       disabled={saving}
                       className="flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-green-600 text-xs font-black text-white transition hover:bg-green-500 disabled:opacity-50"
                     >

@@ -68,7 +68,7 @@ function TeamSide({
 
 export function Scoreboard({ match }: { match: MatchRow }) {
   const inProgress = isMatchInProgress(match.status);
-  const showScore  = inProgress || match.status === "finished";
+  const showScore = inProgress || match.status === "finished";
 
   return (
     <div className="px-6 pt-4 pb-3">

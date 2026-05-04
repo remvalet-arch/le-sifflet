@@ -5,7 +5,10 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapPosition } from "@/lib/map-tsdb-position";
-import { SYNC_LIVE_MAX_MATCHES_PER_RUN, syncApiFootballMatch } from "@/services/api-football-sync";
+import {
+  SYNC_LIVE_MAX_MATCHES_PER_RUN,
+  syncApiFootballMatch,
+} from "@/services/api-football-sync";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, MatchStatus } from "@/types/database";
 
@@ -21,21 +24,38 @@ const VIP_EVENTS_TEAM_IDS = ["133604", "133664", "133738"] as const;
 
 type TeamRowForMatch = Pick<
   Database["public"]["Tables"]["teams"]["Row"],
-  "id" | "thesportsdb_team_id" | "name" | "competition_id" | "logo_url" | "color_primary"
+  | "id"
+  | "thesportsdb_team_id"
+  | "name"
+  | "competition_id"
+  | "logo_url"
+  | "color_primary"
 >;
 
-const VIP_TEAM_SEARCHES: { searchTerm: string; pick: (teams: TsdbTeamSearchRow[]) => TsdbTeamSearchRow | undefined }[] = [
+const VIP_TEAM_SEARCHES: {
+  searchTerm: string;
+  pick: (teams: TsdbTeamSearchRow[]) => TsdbTeamSearchRow | undefined;
+}[] = [
   {
     searchTerm: "Arsenal",
     pick: (teams) =>
       teams.find((t) => t.strSport === "Soccer" && t.strTeam === "Arsenal") ??
-      teams.find((t) => t.strSport === "Soccer" && t.strTeam.includes("Arsenal")),
+      teams.find(
+        (t) => t.strSport === "Soccer" && t.strTeam.includes("Arsenal"),
+      ),
   },
   {
     searchTerm: "Bayern Munich",
     pick: (teams) =>
-      teams.find((t) => t.strSport === "Soccer" && t.strTeam.includes("Bayern") && t.strTeam.includes("Munich")) ??
-      teams.find((t) => t.strSport === "Soccer" && t.strTeam.includes("Bayern")),
+      teams.find(
+        (t) =>
+          t.strSport === "Soccer" &&
+          t.strTeam.includes("Bayern") &&
+          t.strTeam.includes("Munich"),
+      ) ??
+      teams.find(
+        (t) => t.strSport === "Soccer" && t.strTeam.includes("Bayern"),
+      ),
   },
   {
     searchTerm: "Atletico Madrid",
@@ -45,7 +65,10 @@ const VIP_TEAM_SEARCHES: { searchTerm: string; pick: (teams: TsdbTeamSearchRow[]
           t.strSport === "Soccer" &&
           (t.strTeam.includes("Atlético") || t.strTeam.includes("Atletico")) &&
           t.strTeam.includes("Madrid"),
-      ) ?? teams.find((t) => t.strSport === "Soccer" && t.strTeam.includes("Atletico")),
+      ) ??
+      teams.find(
+        (t) => t.strSport === "Soccer" && t.strTeam.includes("Atletico"),
+      ),
   },
 ];
 
@@ -108,13 +131,17 @@ function mapTeamLogoUrl(team: TsdbTeam | TsdbTeamSearchRow): string | null {
   return emptyToNull(pickTeamField(team, "strTeamBadge", "strBadge"));
 }
 
-function mapTeamColorPrimary(team: TsdbTeam | TsdbTeamSearchRow): string | null {
+function mapTeamColorPrimary(
+  team: TsdbTeam | TsdbTeamSearchRow,
+): string | null {
   return emptyToNull(
     pickTeamField(team, "strTeamColour1", "strTeamColor1", "strColour1"),
   );
 }
 
-function mapTeamColorSecondary(team: TsdbTeam | TsdbTeamSearchRow): string | null {
+function mapTeamColorSecondary(
+  team: TsdbTeam | TsdbTeamSearchRow,
+): string | null {
   return emptyToNull(
     pickTeamField(team, "strTeamColour2", "strTeamColor2", "strColour2"),
   );
@@ -262,7 +289,11 @@ function mapTsdbStatusToMatchStatus(strStatus: string): MatchStatus {
   if (k.includes("finished") || k.includes("full time")) return "finished";
   if (k.includes("half time") || k === "halftime") return "half_time";
   if (k.includes("second half") || k.includes("2nd half")) return "second_half";
-  if (k.includes("first half") || k.includes("1st half") || k.includes("in progress")) {
+  if (
+    k.includes("first half") ||
+    k.includes("1st half") ||
+    k.includes("in progress")
+  ) {
     return "first_half";
   }
   if (k.includes("not started")) return "upcoming";
@@ -272,11 +303,18 @@ function mapTsdbStatusToMatchStatus(strStatus: string): MatchStatus {
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
 
-export async function ensureCompetitionByLeagueId(admin: Admin, leagueId: string): Promise<string> {
-  const data = await apiFetch<{ leagues: TsdbLeagueRow[] | null }>(`lookupleague.php?id=${leagueId}`);
+export async function ensureCompetitionByLeagueId(
+  admin: Admin,
+  leagueId: string,
+): Promise<string> {
+  const data = await apiFetch<{ leagues: TsdbLeagueRow[] | null }>(
+    `lookupleague.php?id=${leagueId}`,
+  );
   const league = data.leagues?.[0];
   if (!league) {
-    throw new Error(`Ligue TheSportsDB ${leagueId} introuvable (lookupleague).`);
+    throw new Error(
+      `Ligue TheSportsDB ${leagueId} introuvable (lookupleague).`,
+    );
   }
 
   const { data: existing, error: exErr } = await admin
@@ -345,7 +383,9 @@ export function mapTeamUpsert(
 }
 
 export async function lookupTeamById(idTeam: string): Promise<TsdbTeam> {
-  const data = await apiFetch<{ teams: TsdbTeam[] | null }>(`lookupteam.php?id=${encodeURIComponent(idTeam)}`);
+  const data = await apiFetch<{ teams: TsdbTeam[] | null }>(
+    `lookupteam.php?id=${encodeURIComponent(idTeam)}`,
+  );
   const t = data.teams?.[0];
   if (!t) {
     throw new Error(`lookupteam.php?id=${idTeam} : aucune équipe`);
@@ -366,14 +406,19 @@ export type Ligue1SyncResult = {
  */
 export async function fetchAndUpsertLigue1(): Promise<Ligue1SyncResult> {
   const admin = createAdminClient();
-  const competitionId = await ensureCompetitionByLeagueId(admin, LIGUE1_LEAGUE_ID);
+  const competitionId = await ensureCompetitionByLeagueId(
+    admin,
+    LIGUE1_LEAGUE_ID,
+  );
   await delay(THROTTLE_MS);
 
   const ligueQuery = encodeURIComponent("French Ligue 1");
-  const data = await apiFetch<{ teams: (TsdbTeam & { strSport?: string })[] | null }>(
-    `search_all_teams.php?l=${ligueQuery}`,
+  const data = await apiFetch<{
+    teams: (TsdbTeam & { strSport?: string })[] | null;
+  }>(`search_all_teams.php?l=${ligueQuery}`);
+  const teams = (data.teams ?? []).filter(
+    (t) => !t.strSport || t.strSport === "Soccer",
   );
-  const teams = (data.teams ?? []).filter((t) => !t.strSport || t.strSport === "Soccer");
   let teamsUpserted = 0;
 
   for (const t of teams) {
@@ -382,9 +427,10 @@ export async function fetchAndUpsertLigue1(): Promise<Ligue1SyncResult> {
       c1: (t as TsdbTeam).strTeamColour1,
     });
     const row = mapTeamUpsert(t, competitionId);
-    const { error } = await admin
-      .from("teams")
-      .upsert(row, { onConflict: "thesportsdb_team_id", ignoreDuplicates: false });
+    const { error } = await admin.from("teams").upsert(row, {
+      onConflict: "thesportsdb_team_id",
+      ignoreDuplicates: false,
+    });
     if (error) {
       throw new Error(`teams L1 upsert ${t.idTeam}: ${error.message}`);
     }
@@ -418,19 +464,25 @@ export async function fetchAndUpsertVIPTeams(): Promise<VipTeamSyncResult[]> {
     const list = data.teams ?? [];
     const chosen = pick(list);
     if (!chosen) {
-      throw new Error(`Aucune équipe trouvée pour la recherche « ${searchTerm} » (searchteams).`);
+      throw new Error(
+        `Aucune équipe trouvée pour la recherche « ${searchTerm} » (searchteams).`,
+      );
     }
 
     await delay(THROTTLE_MS);
     const fullTeam = await lookupTeamById(chosen.idTeam);
 
-    const competitionId = await ensureCompetitionByLeagueId(admin, fullTeam.idLeague);
+    const competitionId = await ensureCompetitionByLeagueId(
+      admin,
+      fullTeam.idLeague,
+    );
     await delay(THROTTLE_MS);
 
     const row = mapTeamUpsert(fullTeam, competitionId);
-    const { error } = await admin
-      .from("teams")
-      .upsert(row, { onConflict: "thesportsdb_team_id", ignoreDuplicates: false });
+    const { error } = await admin.from("teams").upsert(row, {
+      onConflict: "thesportsdb_team_id",
+      ignoreDuplicates: false,
+    });
     if (error) {
       throw new Error(`teams VIP upsert ${fullTeam.idTeam}: ${error.message}`);
     }
@@ -457,7 +509,9 @@ export type RosterSyncResult = {
  * Synchronise l'effectif TheSportsDB vers `players`.
  * @param thesportsdbTeamId — `idTeam` TheSportsDB (ex. passé à `lookup_all_players.php?id=`).
  */
-export async function syncRosterForTeam(thesportsdbTeamId: string): Promise<RosterSyncResult> {
+export async function syncRosterForTeam(
+  thesportsdbTeamId: string,
+): Promise<RosterSyncResult> {
   const admin = createAdminClient();
 
   const { data: teamRow, error: teamErr } = await admin
@@ -481,31 +535,41 @@ export async function syncRosterForTeam(thesportsdbTeamId: string): Promise<Rost
   );
   const roster = data.player ?? [];
 
-  const rows: Database["public"]["Tables"]["players"]["Insert"][] = roster.map((p) => {
-    const img = pickCutout(p);
-    return {
-      thesportsdb_id: p.idPlayer,
-      team_id: teamRow.id,
-      team_thesportsdb_id: p.idTeam,
-      team_name: teamRow.name,
-      player_name: p.strPlayer,
-      position: mapPosition(p.strPosition ?? ""),
-      cutout_url: img,
-      image_url: img,
-      synced_at: new Date().toISOString(),
-    };
-  });
+  const rows: Database["public"]["Tables"]["players"]["Insert"][] = roster.map(
+    (p) => {
+      const img = pickCutout(p);
+      return {
+        thesportsdb_id: p.idPlayer,
+        team_id: teamRow.id,
+        team_thesportsdb_id: p.idTeam,
+        team_name: teamRow.name,
+        player_name: p.strPlayer,
+        position: mapPosition(p.strPosition ?? ""),
+        cutout_url: img,
+        image_url: img,
+        synced_at: new Date().toISOString(),
+      };
+    },
+  );
 
   if (rows.length === 0) {
-    return { thesportsdbTeamId, supabaseTeamId: teamRow.id, playersUpserted: 0 };
+    return {
+      thesportsdbTeamId,
+      supabaseTeamId: teamRow.id,
+      playersUpserted: 0,
+    };
   }
 
   const chunkSize = 80;
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
-    const { error } = await admin.from("players").upsert(chunk, { onConflict: "thesportsdb_id" });
+    const { error } = await admin
+      .from("players")
+      .upsert(chunk, { onConflict: "thesportsdb_id" });
     if (error) {
-      throw new Error(`players upsert chunk ${thesportsdbTeamId}: ${error.message}`);
+      throw new Error(
+        `players upsert chunk ${thesportsdbTeamId}: ${error.message}`,
+      );
     }
     await delay(THROTTLE_MS);
   }
@@ -522,7 +586,10 @@ export async function syncRosterForTeam(thesportsdbTeamId: string): Promise<Rost
 /**
  * Charge toutes les lignes `teams` nécessaires en **une requête par chunk** (pas de N+1).
  */
-async function fetchTeamsMap(admin: Admin, tsdbTeamIds: string[]): Promise<Map<string, TeamRowForMatch>> {
+async function fetchTeamsMap(
+  admin: Admin,
+  tsdbTeamIds: string[],
+): Promise<Map<string, TeamRowForMatch>> {
   const unique = [...new Set(tsdbTeamIds.map(tsdbTeamKey).filter(Boolean))];
   const map = new Map<string, TeamRowForMatch>();
   if (unique.length === 0) return map;
@@ -532,7 +599,9 @@ async function fetchTeamsMap(admin: Admin, tsdbTeamIds: string[]): Promise<Map<s
     const slice = unique.slice(i, i + chunkSize);
     const { data, error } = await admin
       .from("teams")
-      .select("id, thesportsdb_team_id, name, competition_id, logo_url, color_primary")
+      .select(
+        "id, thesportsdb_team_id, name, competition_id, logo_url, color_primary",
+      )
       .in("thesportsdb_team_id", slice);
     if (error) {
       throw new Error(`teams map: ${error.message}`);
@@ -605,13 +674,17 @@ export type SyncUpcomingMatchesResult = {
 export async function syncUpcomingMatches(): Promise<SyncUpcomingMatchesResult> {
   const admin = createAdminClient();
 
-  const dataL1 = await apiFetch<unknown>(`eventsnextleague.php?id=${LIGUE1_LEAGUE_ID}`);
+  const dataL1 = await apiFetch<unknown>(
+    `eventsnextleague.php?id=${LIGUE1_LEAGUE_ID}`,
+  );
   await delay(THROTTLE_MS);
   const eventsL1 = extractEventsPayload(dataL1);
 
   const eventsVip: TsdbMatchEvent[] = [];
   for (const teamId of VIP_EVENTS_TEAM_IDS) {
-    const dataV = await apiFetch<unknown>(`eventsnext.php?id=${encodeURIComponent(teamId)}`);
+    const dataV = await apiFetch<unknown>(
+      `eventsnext.php?id=${encodeURIComponent(teamId)}`,
+    );
     eventsVip.push(...extractEventsPayload(dataV));
     await delay(THROTTLE_MS);
   }
@@ -636,7 +709,9 @@ export async function syncUpcomingMatches(): Promise<SyncUpcomingMatchesResult> 
   let matchesUpserted = 0;
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
-    const { error } = await admin.from("matches").upsert(chunk, { onConflict: "thesportsdb_event_id" });
+    const { error } = await admin
+      .from("matches")
+      .upsert(chunk, { onConflict: "thesportsdb_event_id" });
     if (error) {
       throw new Error(`matches upsert: ${error.message}`);
     }
@@ -662,7 +737,13 @@ const ACTIVE_LIVE_SYNC_STATUSES: MatchStatus[] = [
 
 type MatchRowApiLive = Pick<
   Database["public"]["Tables"]["matches"]["Row"],
-  "id" | "home_team_id" | "away_team_id" | "team_home" | "team_away" | "status" | "start_time"
+  | "id"
+  | "home_team_id"
+  | "away_team_id"
+  | "team_home"
+  | "team_away"
+  | "status"
+  | "start_time"
 >;
 
 async function fetchTeamsApiFootballByUuid(
@@ -675,7 +756,10 @@ async function fetchTeamsApiFootballByUuid(
   const chunkSize = 100;
   for (let i = 0; i < unique.length; i += chunkSize) {
     const slice = unique.slice(i, i + chunkSize);
-    const { data, error } = await admin.from("teams").select("id, api_football_id").in("id", slice);
+    const { data, error } = await admin
+      .from("teams")
+      .select("id, api_football_id")
+      .in("id", slice);
     if (error) throw new Error(`teams api_football_id: ${error.message}`);
     for (const row of data ?? []) {
       map.set(row.id, row.api_football_id);
@@ -712,11 +796,15 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
   const [inPlayRes, upcomingRes] = await Promise.all([
     admin
       .from("matches")
-      .select("id, home_team_id, away_team_id, team_home, team_away, status, start_time")
+      .select(
+        "id, home_team_id, away_team_id, team_home, team_away, status, start_time",
+      )
       .in("status", ACTIVE_LIVE_SYNC_STATUSES),
     admin
       .from("matches")
-      .select("id, home_team_id, away_team_id, team_home, team_away, status, start_time")
+      .select(
+        "id, home_team_id, away_team_id, team_home, team_away, status, start_time",
+      )
       .eq("status", "upcoming")
       .lte("start_time", thresholdIso),
   ]);
@@ -756,7 +844,10 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
 
   const eligible = candidates.filter((m) => {
     if (!m.home_team_id || !m.away_team_id) return false;
-    return apiByTeam.get(m.home_team_id) != null && apiByTeam.get(m.away_team_id) != null;
+    return (
+      apiByTeam.get(m.home_team_id) != null &&
+      apiByTeam.get(m.away_team_id) != null
+    );
   });
 
   const skippedNoApi = candidates.length - eligible.length;
@@ -769,7 +860,9 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
 
   for (let i = 0; i < matches.length; i += 1) {
     const m = matches[i]!;
-    const r = await syncApiFootballMatch(m.id, { leadingDelayMs: i > 0 ? 6500 : 0 });
+    const r = await syncApiFootballMatch(m.id, {
+      leadingDelayMs: i > 0 ? 6500 : 0,
+    });
     if (!r.skippedReason) {
       matchesUpdatedFromLivescore += 1;
     } else {
@@ -811,7 +904,9 @@ export type SyncSpecificMatchLineupsResult = {
 /**
  * Sync **un** match via API-Football (compositions + timeline + score), même interface que l’ancien import TSDB lineups.
  */
-export async function syncSpecificMatchLineups(matchId: string): Promise<SyncSpecificMatchLineupsResult> {
+export async function syncSpecificMatchLineups(
+  matchId: string,
+): Promise<SyncSpecificMatchLineupsResult> {
   const r = await syncApiFootballMatch(matchId);
   return {
     matchId: r.matchId,
@@ -831,7 +926,9 @@ export type InitialSyncSummary = {
 /**
  * Chaîne complète : Ligue 1 + VIP, optionnellement tous les rosters des équipes en base.
  */
-export async function runInitialSync(options: { rosters: boolean }): Promise<InitialSyncSummary> {
+export async function runInitialSync(options: {
+  rosters: boolean;
+}): Promise<InitialSyncSummary> {
   const ligue1 = await fetchAndUpsertLigue1();
   const vip = await fetchAndUpsertVIPTeams();
 
@@ -840,7 +937,9 @@ export async function runInitialSync(options: { rosters: boolean }): Promise<Ini
   }
 
   const admin = createAdminClient();
-  const { data: allTeams, error } = await admin.from("teams").select("thesportsdb_team_id");
+  const { data: allTeams, error } = await admin
+    .from("teams")
+    .select("thesportsdb_team_id");
   if (error) {
     throw new Error(error.message);
   }

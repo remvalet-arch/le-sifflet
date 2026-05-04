@@ -32,17 +32,27 @@ export function MatchListSkeleton() {
         <div className="h-2.5 w-16 rounded-full bg-zinc-700" />
       </div>
       <ul className="flex flex-col gap-3">
-        <li><MatchCardSkeleton /></li>
-        <li><MatchCardSkeleton /></li>
+        <li>
+          <MatchCardSkeleton />
+        </li>
+        <li>
+          <MatchCardSkeleton />
+        </li>
       </ul>
       {/* Section À venir */}
       <div className="mb-5 mt-8">
         <div className="h-2.5 w-12 rounded-full bg-zinc-700" />
       </div>
       <ul className="flex flex-col gap-3">
-        <li><MatchCardSkeleton /></li>
-        <li><MatchCardSkeleton /></li>
-        <li><MatchCardSkeleton /></li>
+        <li>
+          <MatchCardSkeleton />
+        </li>
+        <li>
+          <MatchCardSkeleton />
+        </li>
+        <li>
+          <MatchCardSkeleton />
+        </li>
       </ul>
     </div>
   );

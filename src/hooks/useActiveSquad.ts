@@ -33,7 +33,10 @@ function getServerSnapshot(): string {
 
 export function useActiveSquad() {
   const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const squad = useMemo(() => (raw === "" ? null : parseActiveSquad(raw)), [raw]);
+  const squad = useMemo(
+    () => (raw === "" ? null : parseActiveSquad(raw)),
+    [raw],
+  );
 
   const setActiveSquad = useCallback((payload: ActiveSquadPayload | null) => {
     writeActiveSquadToStorage(payload);

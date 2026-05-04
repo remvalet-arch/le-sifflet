@@ -9,7 +9,12 @@ const CHAIN_MAP: Partial<Record<MarketEventType, MarketEventType>> = {
 export async function resolveEvent(
   eventId: string,
   result: "oui" | "non",
-): Promise<{ winners: number; total_paid: number; multiplier: number; braquage_squads: number }> {
+): Promise<{
+  winners: number;
+  total_paid: number;
+  multiplier: number;
+  braquage_squads: number;
+}> {
   const admin = createAdminClient();
 
   // Récupère le type et le match avant résolution (pour le chaining)
@@ -41,13 +46,24 @@ export async function resolveEvent(
       if (!existing) {
         admin
           .from("market_events")
-          .insert({ match_id: event.match_id, type: chainType, status: "open", initiators: [] })
+          .insert({
+            match_id: event.match_id,
+            type: chainType,
+            status: "open",
+            initiators: [],
+          })
           .then(({ error: chainErr }) => {
-            if (chainErr) console.error("[resolve] Chain event failed:", chainErr.message);
+            if (chainErr)
+              console.error("[resolve] Chain event failed:", chainErr.message);
           });
       }
     }
   }
 
-  return data as { winners: number; total_paid: number; multiplier: number; braquage_squads: number };
+  return data as {
+    winners: number;
+    total_paid: number;
+    multiplier: number;
+    braquage_squads: number;
+  };
 }

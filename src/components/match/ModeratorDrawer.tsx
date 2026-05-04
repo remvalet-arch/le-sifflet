@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { TimelineEventType, LineupRow } from "@/types/database";
 
 const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
-  goal:         "⚽ But",
-  yellow_card:  "🟨 Carton jaune",
-  red_card:     "🟥 Carton rouge",
+  goal: "⚽ But",
+  yellow_card: "🟨 Carton jaune",
+  red_card: "🟥 Carton rouge",
   substitution: "🔄 Changement",
 };
 
@@ -24,14 +24,20 @@ type Props = {
   teamAway: string;
 };
 
-export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: Props) {
+export function ModeratorDrawer({
+  open,
+  onClose,
+  matchId,
+  teamHome,
+  teamAway,
+}: Props) {
   const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [eventType, setEventType] = useState<TimelineEventType>("goal");
   const [minute, setMinute] = useState("");
   const [teamSide, setTeamSide] = useState<"home" | "away">("home");
   const [playerName, setPlayerName] = useState("");
   const [playerOut, setPlayerOut] = useState("");
-  const [playerIn, setPlayerIn]   = useState("");
+  const [playerIn, setPlayerIn] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Fetch lineups once
@@ -43,7 +49,6 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
       .eq("match_id", matchId)
       .then(({ data }) => setLineups(data ?? []));
   }, [matchId]);
-
 
   const starters = lineups.filter(
     (p) => p.team_side === teamSide && p.status === "starter",
@@ -75,7 +80,9 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
       : playerName;
 
     if (!finalPlayerName) {
-      toast.error(isSub ? "Sélectionne les deux joueurs" : "Sélectionne un joueur");
+      toast.error(
+        isSub ? "Sélectionne les deux joueurs" : "Sélectionne un joueur",
+      );
       return;
     }
 
@@ -93,7 +100,10 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
         }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok) { toast.error(json.error ?? "Erreur inattendue"); return; }
+      if (!res.ok) {
+        toast.error(json.error ?? "Erreur inattendue");
+        return;
+      }
       toast.success("Événement ajouté à la timeline !");
       setMinute("");
       setPlayerName("");
@@ -138,14 +148,19 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
             </label>
             <select
               value={eventType}
-              onChange={(e) => { setEventType(e.target.value as TimelineEventType); resetPlayers(); }}
+              onChange={(e) => {
+                setEventType(e.target.value as TimelineEventType);
+                resetPlayers();
+              }}
               className={SELECT_CLS}
             >
-              {(Object.entries(EVENT_LABELS) as [TimelineEventType, string][]).map(
-                ([val, label]) => (
-                  <option key={val} value={val}>{label}</option>
-                ),
-              )}
+              {(
+                Object.entries(EVENT_LABELS) as [TimelineEventType, string][]
+              ).map(([val, label]) => (
+                <option key={val} value={val}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -172,7 +187,10 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
               </label>
               <select
                 value={teamSide}
-                onChange={(e) => { setTeamSide(e.target.value as "home" | "away"); resetPlayers(); }}
+                onChange={(e) => {
+                  setTeamSide(e.target.value as "home" | "away");
+                  resetPlayers();
+                }}
                 className={SELECT_CLS}
               >
                 <option value="home">{teamHome}</option>
@@ -195,7 +213,9 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
                   disabled={starters.length === 0}
                 >
                   <option value="">
-                    {starters.length === 0 ? "Aucun titulaire" : "Sélectionner…"}
+                    {starters.length === 0
+                      ? "Aucun titulaire"
+                      : "Sélectionner…"}
                   </option>
                   {starters.map((p) => (
                     <option key={p.id} value={p.player_name}>
@@ -237,7 +257,9 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
                 disabled={starters.length === 0}
               >
                 <option value="">
-                  {starters.length === 0 ? "Aucun titulaire disponible" : "Sélectionner…"}
+                  {starters.length === 0
+                    ? "Aucun titulaire disponible"
+                    : "Sélectionner…"}
                 </option>
                 {starters.map((p) => (
                   <option key={p.id} value={p.player_name}>
@@ -253,7 +275,11 @@ export function ModeratorDrawer({ open, onClose, matchId, teamHome, teamAway }: 
             disabled={loading}
             className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? <LoaderCircle className="h-5 w-5 animate-spin" /> : "Valider"}
+            {loading ? (
+              <LoaderCircle className="h-5 w-5 animate-spin" />
+            ) : (
+              "Valider"
+            )}
           </button>
         </form>
       </div>

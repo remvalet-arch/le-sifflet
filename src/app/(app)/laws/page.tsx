@@ -32,9 +32,18 @@ const VAR_SITUATIONS = [
 ];
 
 const PRINCIPLES = [
-  { label: "Erreur claire et évidente", body: "La VAR n'intervient que pour les erreurs manifestes. Un arbitre ne peut pas être contredit pour des jugements subjectifs." },
-  { label: "Décision finale à l'arbitre", body: "La VAR recommande, l'arbitre tranche. Il peut aller consulter l'écran bord-terrain (OFR — On Field Review) pour décider lui-même." },
-  { label: "Célébration suspendue", body: "Par protocole, les joueurs doivent attendre la validation de la VAR avant de célébrer un but. L'arbitre lève la main pour signaler la vérification." },
+  {
+    label: "Erreur claire et évidente",
+    body: "La VAR n'intervient que pour les erreurs manifestes. Un arbitre ne peut pas être contredit pour des jugements subjectifs.",
+  },
+  {
+    label: "Décision finale à l'arbitre",
+    body: "La VAR recommande, l'arbitre tranche. Il peut aller consulter l'écran bord-terrain (OFR — On Field Review) pour décider lui-même.",
+  },
+  {
+    label: "Célébration suspendue",
+    body: "Par protocole, les joueurs doivent attendre la validation de la VAR avant de célébrer un but. L'arbitre lève la main pour signaler la vérification.",
+  },
 ];
 
 export default function LawsPage() {
@@ -52,7 +61,8 @@ export default function LawsPage() {
           Lois du Jeu VAR
         </h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Les 4 situations officielles où l&rsquo;assistance vidéo peut intervenir.
+          Les 4 situations officielles où l&rsquo;assistance vidéo peut
+          intervenir.
         </p>
       </div>
 
@@ -60,10 +70,33 @@ export default function LawsPage() {
       <div className="flex flex-col gap-4">
         {VAR_SITUATIONS.map((s) => {
           const accent =
-            s.color === "green"  ? { border: "border-green-500/25",  bg: "bg-green-500/10",  text: "text-green-400",  badge: "bg-green-500/15"  } :
-            s.color === "yellow" ? { border: "border-yellow-500/25", bg: "bg-yellow-500/10", text: "text-yellow-400", badge: "bg-yellow-500/15" } :
-            s.color === "red"    ? { border: "border-red-500/25",    bg: "bg-red-500/10",    text: "text-red-400",    badge: "bg-red-500/15"    } :
-                                   { border: "border-blue-500/25",   bg: "bg-blue-500/10",   text: "text-blue-400",   badge: "bg-blue-500/15"   };
+            s.color === "green"
+              ? {
+                  border: "border-green-500/25",
+                  bg: "bg-green-500/10",
+                  text: "text-green-400",
+                  badge: "bg-green-500/15",
+                }
+              : s.color === "yellow"
+                ? {
+                    border: "border-yellow-500/25",
+                    bg: "bg-yellow-500/10",
+                    text: "text-yellow-400",
+                    badge: "bg-yellow-500/15",
+                  }
+                : s.color === "red"
+                  ? {
+                      border: "border-red-500/25",
+                      bg: "bg-red-500/10",
+                      text: "text-red-400",
+                      badge: "bg-red-500/15",
+                    }
+                  : {
+                      border: "border-blue-500/25",
+                      bg: "bg-blue-500/10",
+                      text: "text-blue-400",
+                      badge: "bg-blue-500/15",
+                    };
           return (
             <div
               key={s.number}
@@ -71,11 +104,15 @@ export default function LawsPage() {
             >
               <div className={`px-5 py-3 ${accent.bg}`}>
                 <div className="flex items-center gap-3">
-                  <span className={`shrink-0 rounded-lg px-2 py-1 text-sm font-black tabular-nums ${accent.badge} ${accent.text}`}>
+                  <span
+                    className={`shrink-0 rounded-lg px-2 py-1 text-sm font-black tabular-nums ${accent.badge} ${accent.text}`}
+                  >
                     {s.number}
                   </span>
                   <div>
-                    <p className={`text-sm font-black ${accent.text}`}>{s.title}</p>
+                    <p className={`text-sm font-black ${accent.text}`}>
+                      {s.title}
+                    </p>
                     <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
                       {s.subtitle}
                     </p>
@@ -83,7 +120,9 @@ export default function LawsPage() {
                 </div>
               </div>
               <div className="px-5 py-4">
-                <p className="text-sm leading-relaxed text-zinc-400">{s.body}</p>
+                <p className="text-sm leading-relaxed text-zinc-400">
+                  {s.body}
+                </p>
               </div>
             </div>
           );

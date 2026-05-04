@@ -27,13 +27,13 @@ Monnaie interne : **Sifflets** (points fictifs). Aucune monnaie réelle, aucun g
 
 ## 3. Périmètre fonctionnel (MVP+)
 
-| Domaine | Description | Notes produit |
-|--------|-------------|----------------|
-| **Live** | Lobby matchs, salle live, alertes, `market_events`, paris OUI/NON, résolution + notifications | Cœur « VAR / Waze » |
-| **Avant match** | Paris long terme sur un match à venir ou en cours (selon règles métier) : types type buteur, score exact | Vitrine landing + onglet Prédictions |
-| **Progression** | Trust score, karma, refill, leaderboard | Badges profil ; la **ligne de grades** sur la landing est **narrative** (ne remplace pas le modèle SQL profil) |
-| **Auth & profil** | Google OAuth, profil, historique de paris | — |
-| **Modération** | Résolution manuelle / admin, seuils trust | — |
+| Domaine           | Description                                                                                              | Notes produit                                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Live**          | Lobby matchs, salle live, alertes, `market_events`, paris OUI/NON, résolution + notifications            | Cœur « VAR / Waze »                                                                                            |
+| **Avant match**   | Paris long terme sur un match à venir ou en cours (selon règles métier) : types type buteur, score exact | Vitrine landing + onglet Prédictions                                                                           |
+| **Progression**   | Trust score, karma, refill, leaderboard                                                                  | Badges profil ; la **ligne de grades** sur la landing est **narrative** (ne remplace pas le modèle SQL profil) |
+| **Auth & profil** | Google OAuth, profil, historique de paris                                                                | —                                                                                                              |
+| **Modération**    | Résolution manuelle / admin, seuils trust                                                                | —                                                                                                              |
 
 ---
 

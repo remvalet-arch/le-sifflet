@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#22c55e" />
+  <rect x="96" y="128" width="320" height="224" rx="24" fill="none" stroke="#09090b" stroke-width="32" />
+  <path d="M176 128 L256 64 L336 128" fill="none" stroke="#09090b" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="224" y="352" width="64" height="64" fill="#09090b" />
+  <rect x="160" y="416" width="192" height="32" rx="16" fill="#09090b" />
+  <text x="256" y="260" font-family="system-ui, sans-serif" font-weight="900" font-size="80" text-anchor="middle" fill="#09090b">VAR</text>
+</svg>

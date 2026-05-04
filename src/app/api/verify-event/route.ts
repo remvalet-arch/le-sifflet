@@ -25,8 +25,7 @@ export async function POST(request: NextRequest) {
 
   if (!event) return errorResponse("Événement introuvable ou déjà résolu", 404);
 
-  const ageSeconds =
-    (Date.now() - new Date(event.created_at).getTime()) / 1000;
+  const ageSeconds = (Date.now() - new Date(event.created_at).getTime()) / 1000;
 
   if (ageSeconds < MIN_AGE_SECONDS) {
     return successResponse({

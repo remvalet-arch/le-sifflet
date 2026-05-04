@@ -27,13 +27,28 @@ function isNextImageRemoteLogo(url: string): boolean {
   }
 }
 
-function TeamLogo({ url, label }: { url: string | null | undefined; label: string }) {
+function TeamLogo({
+  url,
+  label,
+}: {
+  url: string | null | undefined;
+  label: string;
+}) {
   const trimmed = (url ?? "").trim();
-  const box = "h-7 w-7 shrink-0 rounded-md border border-white/10 bg-zinc-900/80 object-contain p-0.5";
+  const box =
+    "h-7 w-7 shrink-0 rounded-md border border-white/10 bg-zinc-900/80 object-contain p-0.5";
 
   if (trimmed.startsWith("http") && isNextImageRemoteLogo(trimmed)) {
     return (
-      <Image src={trimmed} alt="" width={28} height={28} className={box} sizes="28px" title={label} />
+      <Image
+        src={trimmed}
+        alt=""
+        width={28}
+        height={28}
+        className={box}
+        sizes="28px"
+        title={label}
+      />
     );
   }
   if (trimmed.startsWith("http")) {
@@ -50,7 +65,9 @@ function TeamLogo({ url, label }: { url: string | null | undefined; label: strin
   );
 }
 
-function sortByPosition<T extends { position: string | null; player_name: string }>(rows: T[]): T[] {
+function sortByPosition<
+  T extends { position: string | null; player_name: string },
+>(rows: T[]): T[] {
   return [...rows].sort((a, b) => {
     const pa = POS_ORDER[a.position ?? ""] ?? 9;
     const pb = POS_ORDER[b.position ?? ""] ?? 9;
@@ -70,7 +87,10 @@ function initialsFromName(fullName: string): string {
     .slice(0, 2);
 }
 
-function pickPlayerPhotoUrl(imageUrl: string | null | undefined, cutoutUrl: string | null | undefined): string {
+function pickPlayerPhotoUrl(
+  imageUrl: string | null | undefined,
+  cutoutUrl: string | null | undefined,
+): string {
   const img = (imageUrl ?? "").trim();
   if (img.startsWith("http")) return img;
   const cut = (cutoutUrl ?? "").trim();
@@ -90,7 +110,8 @@ function PlayerRosterAvatar({
   const [broken, setBroken] = useState(false);
   const url = pickPlayerPhotoUrl(imageUrl, cutoutUrl);
   const showImg = url !== "" && !broken;
-  const ring = "flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-800";
+  const ring =
+    "flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-800";
 
   if (showImg && isNextImageRemoteLogo(url)) {
     return (
@@ -121,7 +142,11 @@ function PlayerRosterAvatar({
 
   const ini = initialsFromName(name);
   if (ini.length > 0) {
-    return <div className={`${ring} text-[11px] font-black text-zinc-300`}>{ini}</div>;
+    return (
+      <div className={`${ring} text-[11px] font-black text-zinc-300`}>
+        {ini}
+      </div>
+    );
   }
 
   return (
@@ -145,17 +170,25 @@ function PlayerLine({
   cutoutUrl: string | null;
 }) {
   const pos = (position ?? "").trim();
-  const posLabel = pos && POS_LABEL[pos] ? POS_LABEL[pos] : pos.length > 0 ? pos : null;
+  const posLabel =
+    pos && POS_LABEL[pos] ? POS_LABEL[pos] : pos.length > 0 ? pos : null;
   return (
     <li className="flex gap-2 border-b border-white/5 py-2 last:border-0">
-      <PlayerRosterAvatar name={name} imageUrl={imageUrl} cutoutUrl={cutoutUrl} />
+      <PlayerRosterAvatar
+        name={name}
+        imageUrl={imageUrl}
+        cutoutUrl={cutoutUrl}
+      />
       <span className="w-8 shrink-0 self-center text-right text-xs font-black tabular-nums text-zinc-500">
         {shirtNumber ?? "—"}
       </span>
       <div className="min-w-0 flex-1 self-center">
         <p className="truncate text-sm font-semibold text-white">{name}</p>
         {posLabel && (
-          <p className="mt-0.5 truncate text-[10px] text-zinc-500" title={posLabel}>
+          <p
+            className="mt-0.5 truncate text-[10px] text-zinc-500"
+            title={posLabel}
+          >
             {posLabel}
           </p>
         )}
@@ -228,7 +261,9 @@ export const MatchLineups = memo(function MatchLineups({
       const { data: pl, error: errPl } = await supabase
         .from("players")
         .select("*")
-        .in("team_id", [homeTeamId, awayTeamId]);
+        .in("team_id", [homeTeamId, awayTeamId])
+        .not("team_thesportsdb_id", "is", null)
+        .neq("team_thesportsdb_id", "");
 
       if (cancelled) return;
 
@@ -257,7 +292,10 @@ export const MatchLineups = memo(function MatchLineups({
     return (
       <div className="mt-6 grid animate-pulse gap-3 md:grid-cols-2">
         {[0, 1].map((i) => (
-          <div key={i} className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
+          <div
+            key={i}
+            className="rounded-2xl border border-white/10 bg-zinc-900 p-4"
+          >
             <div className="mb-4 flex items-center gap-2">
               <div className="h-7 w-7 rounded-md bg-zinc-800" />
               <div className="h-4 w-32 rounded-full bg-zinc-800" />
@@ -285,7 +323,8 @@ export const MatchLineups = memo(function MatchLineups({
       <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
         <Users className="h-10 w-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
-          Les compos ne sont pas encore tombées. Le coach fait durer le suspense.
+          Les compos ne sont pas encore tombées. Le coach fait durer le
+          suspense.
         </p>
       </div>
     );
@@ -305,10 +344,14 @@ export const MatchLineups = memo(function MatchLineups({
           </h3>
         </header>
         {rows.length === 0 ? (
-          <p className="text-xs text-zinc-600">Aucun joueur en base pour cette équipe.</p>
+          <p className="text-xs text-zinc-600">
+            Aucun joueur en base pour cette équipe.
+          </p>
         ) : (
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Effectif</p>
+            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              Effectif
+            </p>
             <ul>
               {rows.map((p) => (
                 <PlayerLine

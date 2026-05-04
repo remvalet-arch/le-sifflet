@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with `[create-next-app](https://nextjs.org/docs/app/api-reference/cli/create-next-app)`.
+# VAR Time 📺⚽
 
-## Getting Started
+**VAR Time** (Le Sifflet) est une application PWA "second écran" pour le football. Conçue pour vivre les matchs en direct avec ses amis, elle permet de signaler les actions litigieuses façon Waze (fautes, penaltys, hors-jeux) et de parier en temps réel avec la communauté sur l'issue de la VAR.
 
-First, run the development server:
+L'application tourne autour de "Sifflets", une monnaie virtuelle, avec un ton très "Mon Petit Gazon" (MPG) pour chambrer ses amis dans une ligue privée.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 La Stack Technique
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Framework :** Next.js 16 (App Router)
+- **UI :** React 19, Tailwind v4, Lucide React, Sonner (Toasts)
+- **Base de données & Temps Réel :** Supabase (PostgreSQL, Row Level Security, RPC, Realtime subscriptions)
+- **Tests :** Playwright (Tests E2E)
+- **Mobile-first :** PWA (Progressive Web App) optimisée pour le "tap" et l'utilisation au stade (Optimistic UI).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Installation & Démarrage
 
-This project uses `[next/font](https://nextjs.org/docs/app/building-your-application/optimizing/fonts)` to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Cloner le projet :**
 
-## Learn More
+   ```bash
+   git clone <repo>
+   cd le-sifflet
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Configuration Environnement :**
+   Copie `.env.example` en `.env.local` et remplis tes clés Supabase.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   _Tu auras besoin de `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, et `SUPABASE_SERVICE_ROLE_KEY` (pour l'API d'administration)._
 
-## Deploy on Vercel
+3. **Installer les dépendances :**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Base de données :**
+   *(Optionnel) Si tu utilises Supabase localement, assure-toi d'appliquer les migrations via la CLI.*
+
+5. **Lancer le serveur de développement :**
+   ```bash
+   npm run dev
+   ```
+   Rends-toi sur [http://localhost:3000](http://localhost:3000).
+
+## 🤖 Guide V-Coder (Agent IA)
+
+Ce dépôt est conçu pour être développé en totale autonomie par une IA (V-Coding).
+Un fichier **`TASKS.md`** sert de point d'entrée pour l'agent.
+
+Commandes clés pour la validation de l'IA :
+
+- `npm run ai:check` : Exécute `prettier`, `eslint` et le typecheck TypeScript. Le code doit compiler silencieusement avant d'être validé.
+- `npm run ai:verify` : Exécute le check complet + les tests end-to-end (Playwright).
+- `npm run test:backend` : Lance un script de simulation de "vrai match" pour voir des événements pop-up en temps réel à l'écran.
+
+Veuillez consulter les fichiers dans `.skills/` pour les conventions strictes d'architecture.
+
+---
+
+_Que la VAR soit avec vous._

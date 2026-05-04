@@ -25,11 +25,21 @@ function StandingsGrid({ rows }: { rows: LeagueStandingRow[] }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/50">
       <div className="grid grid-cols-[1.75rem_1fr_2.5rem_2.5rem_2.5rem_auto] items-center gap-x-1 border-b border-white/8 px-3 py-2.5">
-        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">#</span>
-        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Équipe</span>
-        <span className="text-center text-[10px] font-black uppercase tracking-widest text-zinc-600">J</span>
-        <span className="text-center text-[10px] font-black uppercase tracking-widest text-zinc-600">+/-</span>
-        <span className="text-center text-[10px] font-black uppercase tracking-widest text-whistle">Pts</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
+          #
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
+          Équipe
+        </span>
+        <span className="text-center text-[10px] font-black uppercase tracking-widest text-zinc-600">
+          J
+        </span>
+        <span className="text-center text-[10px] font-black uppercase tracking-widest text-zinc-600">
+          +/-
+        </span>
+        <span className="text-center text-[10px] font-black uppercase tracking-widest text-whistle">
+          Pts
+        </span>
         <span className="hidden text-center text-[10px] font-black uppercase tracking-widest text-zinc-600 sm:block">
           Forme
         </span>
@@ -58,9 +68,13 @@ function StandingsGrid({ rows }: { rows: LeagueStandingRow[] }) {
                   ⚽
                 </span>
               )}
-              <span className="truncate text-xs font-bold text-white">{s.team_name}</span>
+              <span className="truncate text-xs font-bold text-white">
+                {s.team_name}
+              </span>
             </div>
-            <span className="text-center text-xs text-zinc-400">{s.played}</span>
+            <span className="text-center text-xs text-zinc-400">
+              {s.played}
+            </span>
             <span
               className={`text-center text-xs font-semibold tabular-nums ${
                 s.goals_diff > 0
@@ -144,7 +158,9 @@ export function LeagueStandingsTable({ leagueApiId }: { leagueApiId: number }) {
   if (standings.length === 0) {
     return (
       <div className="rounded-2xl border border-white/8 bg-zinc-900/50 px-4 py-10 text-center">
-        <p className="text-sm font-bold text-zinc-400">Classement non disponible</p>
+        <p className="text-sm font-bold text-zinc-400">
+          Classement non disponible
+        </p>
         <p className="mt-1 text-xs text-zinc-600">
           Lance{" "}
           <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-zinc-400">

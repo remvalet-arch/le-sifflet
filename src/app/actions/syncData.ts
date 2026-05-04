@@ -16,13 +16,19 @@ const MVP_LEAGUES = new Set(["4334", "4480"]);
 
 function mapStatus(strStatus: string): MatchStatus {
   switch (strStatus) {
-    case "Match Finished": return "finished";
-    case "1H":             return "first_half";
-    case "HT":             return "half_time";
-    case "2H":             return "second_half";
+    case "Match Finished":
+      return "finished";
+    case "1H":
+      return "first_half";
+    case "HT":
+      return "half_time";
+    case "2H":
+      return "second_half";
     case "Extra Time":
-    case "ET":             return "second_half";
-    default:               return "upcoming";
+    case "ET":
+      return "second_half";
+    default:
+      return "upcoming";
   }
 }
 
@@ -30,7 +36,9 @@ function mapStatus(strStatus: string): MatchStatus {
 
 async function assertModerator() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Non authentifié");
 
   const { data: profile } = await supabase
@@ -54,10 +62,13 @@ export async function syncMatchData(eventId: string) {
   await assertModerator();
 
   const event = await getEventDetails(eventId.trim());
-  if (!event) throw new Error("Événement introuvable — vérifie l'ID TheSportsDB");
+  if (!event)
+    throw new Error("Événement introuvable — vérifie l'ID TheSportsDB");
 
   if (!MVP_LEAGUES.has(event.idLeague)) {
-    throw new Error("Compétition non supportée pour le MVP (Ligue 1 ou Champions League uniquement)");
+    throw new Error(
+      "Compétition non supportée pour le MVP (Ligue 1 ou Champions League uniquement)",
+    );
   }
 
   // Formater le kick-off en ISO 8601 UTC
@@ -72,12 +83,12 @@ export async function syncMatchData(eventId: string) {
     .upsert(
       {
         thesportsdb_event_id: event.idEvent,
-        team_home:   event.strHomeTeam,
-        team_away:   event.strAwayTeam,
-        start_time:  startTime,
-        status:      mapStatus(event.strStatus),
-        home_score:  parseInt(event.intHomeScore ?? "0") || 0,
-        away_score:  parseInt(event.intAwayScore ?? "0") || 0,
+        team_home: event.strHomeTeam,
+        team_away: event.strAwayTeam,
+        start_time: startTime,
+        status: mapStatus(event.strStatus),
+        home_score: parseInt(event.intHomeScore ?? "0") || 0,
+        away_score: parseInt(event.intAwayScore ?? "0") || 0,
         home_team_logo: event.strHomeTeamBadge ?? null,
         away_team_logo: event.strAwayTeamBadge ?? null,
       },
@@ -98,15 +109,16 @@ export async function syncTeamRoster(teamId: string, teamName: string) {
   await assertModerator();
 
   const roster = await getTeamRoster(teamId.trim());
-  if (roster.length === 0) throw new Error("Aucun joueur retourné par l'API pour cette équipe");
+  if (roster.length === 0)
+    throw new Error("Aucun joueur retourné par l'API pour cette équipe");
 
   const rows = roster.map((p) => ({
-    thesportsdb_id:       p.idPlayer,
-    team_thesportsdb_id:  p.idTeam,
-    team_name:            teamName,
-    player_name:          p.strPlayer,
-    position:             mapPosition(p.strPosition),
-    synced_at:            new Date().toISOString(),
+    thesportsdb_id: p.idPlayer,
+    team_thesportsdb_id: p.idTeam,
+    team_name: teamName,
+    player_name: p.strPlayer,
+    position: mapPosition(p.strPosition),
+    synced_at: new Date().toISOString(),
   }));
 
   const admin = createAdminClient();

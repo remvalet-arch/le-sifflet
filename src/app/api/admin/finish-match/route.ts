@@ -3,11 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { syncLeagueHubData } from "@/services/api-football-hub-sync";
+import { getApiFootballSeasonYear } from "@/lib/api-football-client";
 
 export async function POST(request: NextRequest) {
   // ── Guard modérateur ────────────────────────────────────────────────────────
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
 
   const { data: profile } = await supabase
@@ -49,12 +53,12 @@ export async function POST(request: NextRequest) {
   // ── 2. Événement timeline 'info' ───────────────────────────────────────────
   void admin.from("match_timeline_events").insert({
     match_id,
-    event_type:  "info",
-    minute:      90,
-    team_side:   "home",
+    event_type: "info",
+    minute: 90,
+    team_side: "home",
     player_name: "Arbitre",
     is_own_goal: false,
-    details:     "Fin du match",
+    details: "Fin du match",
   });
 
   // ── 3. Résolution des paris long terme ────────────────────────────────────
@@ -64,10 +68,32 @@ export async function POST(request: NextRequest) {
 
   if (rpcErr) return errorResponse(`Résolution échouée : ${rpcErr.message}`);
 
-  const { error: pronoErr } = await admin.rpc("resolve_match_pronos", { p_match_id: match_id });
+  const { error: pronoErr } = await admin.rpc("resolve_match_pronos", {
+    p_match_id: match_id,
+  });
   if (pronoErr) {
     console.warn(`[finish-match] resolve_match_pronos: ${pronoErr.message}`);
   }
+
+  // Async hub stats sync — ne bloque pas la réponse
+  void (async () => {
+    const { data: comp } = await admin
+      .from("matches")
+      .select("competition_id")
+      .eq("id", match_id)
+      .single();
+    if (!comp?.competition_id) return;
+    const { data: league } = await admin
+      .from("competitions")
+      .select("api_football_league_id")
+      .eq("id", comp.competition_id)
+      .single();
+    if (!league?.api_football_league_id) return;
+    await syncLeagueHubData(
+      league.api_football_league_id,
+      getApiFootballSeasonYear(),
+    );
+  })();
 
   return successResponse({
     finished: true,

@@ -30,11 +30,7 @@ export function SignInWithGoogleButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => void signIn()}
-      className={className}
-    >
+    <button type="button" onClick={() => void signIn()} className={className}>
       {children}
     </button>
   );

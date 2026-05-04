@@ -10,6 +10,6 @@ export function calculateDynamicOdds(
 ): number {
   if (totalBetsOverall <= 0) return baseOdd;
   const popularity = totalBetsOnScore / totalBetsOverall;
-  const adjusted   = baseOdd * (1 - 0.35 * popularity);
-  return Math.max(1.10, Math.round(adjusted * 10) / 10);
+  const adjusted = baseOdd * (1 - 0.35 * popularity);
+  return Math.max(1.1, Math.round(adjusted * 10) / 10);
 }

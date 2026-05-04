@@ -4,7 +4,10 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { fetchApiFootball, getApiFootballSeasonYear } from "@/lib/api-football-client";
+import {
+  fetchApiFootball,
+  getApiFootballSeasonYear,
+} from "@/lib/api-football-client";
 import { EUROPEAN_CUPS, TOP_LEAGUES } from "@/lib/constants/top-leagues";
 import { num, patchMatchFromFixtureRow } from "@/services/api-football-sync";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -73,15 +76,24 @@ async function ensureCompetitionForApiLeague(
     )
     .select("id")
     .single();
-  if (error || !data) throw new Error(error?.message ?? "competitions upsert sans retour");
+  if (error || !data)
+    throw new Error(error?.message ?? "competitions upsert sans retour");
   return data.id;
 }
 
 async function fetchTeamsByApiIds(
   admin: Admin,
   apiIds: number[],
-): Promise<Map<number, { id: string; logo_url: string | null; color_primary: string | null }>> {
-  const map = new Map<number, { id: string; logo_url: string | null; color_primary: string | null }>();
+): Promise<
+  Map<
+    number,
+    { id: string; logo_url: string | null; color_primary: string | null }
+  >
+> {
+  const map = new Map<
+    number,
+    { id: string; logo_url: string | null; color_primary: string | null }
+  >();
   const unique = [...new Set(apiIds.filter((n) => n > 0))];
   if (unique.length === 0) return map;
   const chunk = 100;
@@ -115,7 +127,11 @@ async function upsertTeamByApiId(
   name: string,
   logoUrl: string | null,
   competitionId: string,
-): Promise<{ id: string; logo_url: string | null; color_primary: string | null }> {
+): Promise<{
+  id: string;
+  logo_url: string | null;
+  color_primary: string | null;
+}> {
   const syntheticId = `apifb-team-${apiId}`;
   const { data, error } = await admin
     .from("teams")
@@ -209,13 +225,22 @@ async function importFixtureList(
       ? leagueObj.name.trim()
       : labelFallback;
   const leagueLogo =
-    typeof leagueObj?.logo === "string" && leagueObj.logo.trim() !== "" ? leagueObj.logo.trim() : null;
+    typeof leagueObj?.logo === "string" && leagueObj.logo.trim() !== ""
+      ? leagueObj.logo.trim()
+      : null;
 
   let competitionId: string;
   try {
-    competitionId = await ensureCompetitionForApiLeague(admin, leagueApiId, leagueName, leagueLogo);
+    competitionId = await ensureCompetitionForApiLeague(
+      admin,
+      leagueApiId,
+      leagueName,
+      leagueLogo,
+    );
   } catch (e) {
-    out.errors.push(`competition L${String(leagueApiId)}: ${e instanceof Error ? e.message : String(e)}`);
+    out.errors.push(
+      `competition L${String(leagueApiId)}: ${e instanceof Error ? e.message : String(e)}`,
+    );
     return;
   }
 
@@ -226,28 +251,41 @@ async function importFixtureList(
     if (fid == null) continue;
 
     const teams = row.teams as Record<string, unknown> | undefined;
-    const homeApi = num((teams?.home as Record<string, unknown> | undefined)?.id);
-    const awayApi = num((teams?.away as Record<string, unknown> | undefined)?.id);
+    const homeApi = num(
+      (teams?.home as Record<string, unknown> | undefined)?.id,
+    );
+    const awayApi = num(
+      (teams?.away as Record<string, unknown> | undefined)?.id,
+    );
     const homeName =
-      typeof (teams?.home as Record<string, unknown> | undefined)?.name === "string"
+      typeof (teams?.home as Record<string, unknown> | undefined)?.name ===
+      "string"
         ? String((teams?.home as Record<string, unknown>).name).trim()
         : "";
     const awayName =
-      typeof (teams?.away as Record<string, unknown> | undefined)?.name === "string"
+      typeof (teams?.away as Record<string, unknown> | undefined)?.name ===
+      "string"
         ? String((teams?.away as Record<string, unknown>).name).trim()
         : "";
 
-    if (homeApi == null || awayApi == null || homeName === "" || awayName === "") {
+    if (
+      homeApi == null ||
+      awayApi == null ||
+      homeName === "" ||
+      awayName === ""
+    ) {
       out.skippedNoTeams += 1;
       continue;
     }
 
     const homeLogo =
-      typeof (teams?.home as Record<string, unknown> | undefined)?.logo === "string"
+      typeof (teams?.home as Record<string, unknown> | undefined)?.logo ===
+      "string"
         ? String((teams?.home as Record<string, unknown>).logo).trim()
         : "";
     const awayLogo =
-      typeof (teams?.away as Record<string, unknown> | undefined)?.logo === "string"
+      typeof (teams?.away as Record<string, unknown> | undefined)?.logo ===
+      "string"
         ? String((teams?.away as Record<string, unknown>).logo).trim()
         : "";
 
@@ -257,16 +295,30 @@ async function importFixtureList(
     if (!homeRow || !awayRow) {
       try {
         if (!homeRow) {
-          homeRow = await upsertTeamByApiId(admin, homeApi, homeName, homeLogo || null, competitionId);
+          homeRow = await upsertTeamByApiId(
+            admin,
+            homeApi,
+            homeName,
+            homeLogo || null,
+            competitionId,
+          );
           teamMap.set(homeApi, homeRow);
         }
         if (!awayRow) {
-          awayRow = await upsertTeamByApiId(admin, awayApi, awayName, awayLogo || null, competitionId);
+          awayRow = await upsertTeamByApiId(
+            admin,
+            awayApi,
+            awayName,
+            awayLogo || null,
+            competitionId,
+          );
           teamMap.set(awayApi, awayRow);
         }
       } catch (e) {
         out.skippedNoTeams += 1;
-        out.errors.push(`auto-upsert team fixture ${String(fid)}: ${e instanceof Error ? e.message : String(e)}`);
+        out.errors.push(
+          `auto-upsert team fixture ${String(fid)}: ${e instanceof Error ? e.message : String(e)}`,
+        );
         continue;
       }
     }
@@ -277,7 +329,9 @@ async function importFixtureList(
       start_time = new Date(ts * 1000).toISOString();
     } else if (typeof ts === "string" && ts.trim() !== "") {
       const n = parseInt(ts, 10);
-      start_time = !Number.isNaN(n) ? new Date(n * 1000).toISOString() : new Date().toISOString();
+      start_time = !Number.isNaN(n)
+        ? new Date(n * 1000).toISOString()
+        : new Date().toISOString();
     } else {
       const dateStr =
         typeof fixture?.date === "string" && fixture.date.trim() !== ""
@@ -309,7 +363,9 @@ async function importFixtureList(
       round_short: patch.round_short ?? null,
     };
 
-    const { error: upErr } = await admin.from("matches").upsert(insert, { onConflict: "api_football_id" });
+    const { error: upErr } = await admin
+      .from("matches")
+      .upsert(insert, { onConflict: "api_football_id" });
     if (upErr) {
       out.errors.push(`match fixture ${String(fid)}: ${upErr.message}`);
       continue;
@@ -318,16 +374,27 @@ async function importFixtureList(
   }
 }
 
-const SYNC_LEAGUES_FOR_DATE: readonly { apiFootballLeagueId: number; label: string }[] = [
-  ...TOP_LEAGUES.map((l) => ({ apiFootballLeagueId: l.apiFootballLeagueId, label: l.label })),
-  ...EUROPEAN_CUPS.map((c) => ({ apiFootballLeagueId: c.apiFootballLeagueId, label: c.label })),
+const SYNC_LEAGUES_FOR_DATE: readonly {
+  apiFootballLeagueId: number;
+  label: string;
+}[] = [
+  ...TOP_LEAGUES.map((l) => ({
+    apiFootballLeagueId: l.apiFootballLeagueId,
+    label: l.label,
+  })),
+  ...EUROPEAN_CUPS.map((c) => ({
+    apiFootballLeagueId: c.apiFootballLeagueId,
+    label: c.label,
+  })),
 ];
 
 /**
  * Pour chaque ligue Top 5 + coupe UEFA : `GET /fixtures?league=&season=&date=` puis upsert `matches` (`api_football_id`).
  * @param dateYmd `YYYY-MM-DD` (jour calendrier API, en pratique aligné UTC côté API pour la journée).
  */
-export async function syncApiFootballFixturesForDate(dateYmd: string): Promise<SyncApiFootballFixturesForDateResult> {
+export async function syncApiFootballFixturesForDate(
+  dateYmd: string,
+): Promise<SyncApiFootballFixturesForDateResult> {
   const admin = createAdminClient();
   const season = String(getApiFootballSeasonYear());
   const wait = throttleMs();
@@ -368,7 +435,14 @@ export async function syncApiFootballFixturesForDate(dateYmd: string): Promise<S
       continue;
     }
 
-    await importFixtureList(admin, list, league.apiFootballLeagueId, league.label, dateYmd, result);
+    await importFixtureList(
+      admin,
+      list,
+      league.apiFootballLeagueId,
+      league.label,
+      dateYmd,
+      result,
+    );
   }
 
   return result;
@@ -418,6 +492,13 @@ export async function syncApiFootballFixturesByRound(
   }
 
   const fallbackDate = new Date().toISOString().slice(0, 10);
-  await importFixtureList(admin, list, leagueId, labelFallbackForLeagueId(leagueId), fallbackDate, empty);
+  await importFixtureList(
+    admin,
+    list,
+    leagueId,
+    labelFallbackForLeagueId(leagueId),
+    fallbackDate,
+    empty,
+  );
   return empty;
 }

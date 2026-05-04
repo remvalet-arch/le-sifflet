@@ -39,11 +39,14 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
       .from("market_events")
       .select("id, match_id")
       .in("id", eventIds);
-    const eventMatchMap = new Map((events ?? []).map((e) => [e.id, e.match_id]));
-    for (const bet of (shortBets ?? [])) {
+    const eventMatchMap = new Map(
+      (events ?? []).map((e) => [e.id, e.match_id]),
+    );
+    for (const bet of shortBets ?? []) {
       if (bet.status === "lost") {
         const matchId = eventMatchMap.get(bet.event_id);
-        if (matchId) lostMatchCounts[matchId] = (lostMatchCounts[matchId] ?? 0) + 1;
+        if (matchId)
+          lostMatchCounts[matchId] = (lostMatchCounts[matchId] ?? 0) + 1;
       }
     }
   }
@@ -55,9 +58,12 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
 
     switch (badge.criteria_type) {
       case "var_streak_3": {
-        const resolved = (shortBets ?? []).filter((b) => b.status !== "pending");
+        const resolved = (shortBets ?? []).filter(
+          (b) => b.status !== "pending",
+        );
         shouldUnlock =
-          resolved.length >= 3 && resolved.slice(0, 3).every((b) => b.status === "won");
+          resolved.length >= 3 &&
+          resolved.slice(0, 3).every((b) => b.status === "won");
         break;
       }
       case "exact_score_win":
@@ -69,7 +75,9 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
         shouldUnlock = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
         break;
       case "var_loss_5_same_match":
-        shouldUnlock = Object.values(lostMatchCounts).some((count) => count >= 5);
+        shouldUnlock = Object.values(lostMatchCounts).some(
+          (count) => count >= 5,
+        );
         break;
       case "scorer_win":
         shouldUnlock = (pronos ?? []).some(

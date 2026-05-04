@@ -53,9 +53,12 @@ export async function POST(request: NextRequest) {
     return errorResponse("Les prédictions sont closes", 400);
   }
 
-  const { data: oddsRows, error: oddsErr } = await supabase.rpc("get_event_odds", {
-    p_event_id: event_id,
-  });
+  const { data: oddsRows, error: oddsErr } = await supabase.rpc(
+    "get_event_odds",
+    {
+      p_event_id: event_id,
+    },
+  );
 
   if (oddsErr || !oddsRows?.length) {
     return errorResponse("Impossible de lire les cotes du marché", 500);
@@ -68,7 +71,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (multiplier > implied + IMPLIED_ODDS_TOLERANCE) {
-    return errorResponse("Multiplicateur invalide — la cote a bougé, réessaie", 400);
+    return errorResponse(
+      "Multiplicateur invalide — la cote a bougé, réessaie",
+      400,
+    );
   }
 
   const validatedMultiplier = Math.min(multiplier, implied);
@@ -95,8 +101,7 @@ export async function POST(request: NextRequest) {
       return errorResponse("Mise invalide (min. 10 Pts)", 400);
     if (msg.includes("invalid_multiplier"))
       return errorResponse("Multiplicateur invalide", 400);
-    if (msg.includes("unauthorized"))
-      return errorResponse("Non autorisé", 401);
+    if (msg.includes("unauthorized")) return errorResponse("Non autorisé", 401);
     return errorResponse(msg);
   }
 

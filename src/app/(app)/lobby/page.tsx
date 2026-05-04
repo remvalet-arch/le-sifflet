@@ -26,7 +26,11 @@ async function MatchListFetcher({
 
   const roundFetch =
     viewMode === "round" && roundContext != null
-      ? await fetchLobbyMatchesByRound(supabase, roundContext.leagueApiId, roundContext.roundShort)
+      ? await fetchLobbyMatchesByRound(
+          supabase,
+          roundContext.leagueApiId,
+          roundContext.roundShort,
+        )
       : null;
   const dayFetch =
     viewMode === "round" && roundContext != null
@@ -51,8 +55,10 @@ async function MatchListFetcher({
         <CalendarX className="h-10 w-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
           Aucun match pour la journée{" "}
-          <span className="font-mono text-chalk">{roundContext.roundShort}</span> (ligue{" "}
-          {roundContext.leagueApiId}).
+          <span className="font-mono text-chalk">
+            {roundContext.roundShort}
+          </span>{" "}
+          (ligue {roundContext.leagueApiId}).
         </p>
       </div>
     );
@@ -104,7 +110,11 @@ export default async function LobbyPage({ searchParams }: PageProps) {
     <>
       <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
         <Suspense
-          key={viewMode === "round" && roundContext ? `${roundContext.leagueApiId}-${roundContext.roundShort}` : "day"}
+          key={
+            viewMode === "round" && roundContext
+              ? `${roundContext.leagueApiId}-${roundContext.roundShort}`
+              : "day"
+          }
           fallback={<MatchListSkeleton />}
         >
           <MatchListFetcher viewMode={viewMode} roundContext={roundContext} />

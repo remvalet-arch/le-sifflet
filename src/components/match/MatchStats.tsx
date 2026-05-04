@@ -9,16 +9,16 @@ const FINISHED_STATUSES = new Set<MatchStatus>(["finished"]);
 
 /** Stats affichées dans cet ordre — les autres sont ignorées. */
 const FEATURED_STATS: { type: string; label: string }[] = [
-  { type: "Ball Possession",  label: "Possession" },
-  { type: "Shots on Goal",    label: "Tirs cadrés" },
-  { type: "Total Shots",      label: "Tirs totaux" },
-  { type: "Corner Kicks",     label: "Corners" },
-  { type: "Fouls",            label: "Fautes" },
-  { type: "Yellow Cards",     label: "Cartons jaunes" },
-  { type: "Red Cards",        label: "Cartons rouges" },
-  { type: "Offsides",         label: "Hors-jeux" },
+  { type: "Ball Possession", label: "Possession" },
+  { type: "Shots on Goal", label: "Tirs cadrés" },
+  { type: "Total Shots", label: "Tirs totaux" },
+  { type: "Corner Kicks", label: "Corners" },
+  { type: "Fouls", label: "Fautes" },
+  { type: "Yellow Cards", label: "Cartons jaunes" },
+  { type: "Red Cards", label: "Cartons rouges" },
+  { type: "Offsides", label: "Hors-jeux" },
   { type: "Goalkeeper Saves", label: "Arrêts" },
-  { type: "Passes %",         label: "Précision passes" },
+  { type: "Passes %", label: "Précision passes" },
 ];
 
 type Props = {
@@ -77,24 +77,36 @@ function StatRow({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
-        <span className={homeWins || tie ? "font-bold text-white" : "text-zinc-400"}>
+        <span
+          className={homeWins || tie ? "font-bold text-white" : "text-zinc-400"}
+        >
           {homeRaw ?? "—"}
         </span>
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
           {label}
         </span>
-        <span className={awayWins || tie ? "font-bold text-white" : "text-zinc-400"}>
+        <span
+          className={awayWins || tie ? "font-bold text-white" : "text-zinc-400"}
+        >
           {awayRaw ?? "—"}
         </span>
       </div>
       <div className="flex h-2.5 overflow-hidden rounded-full bg-zinc-800/90">
         <div
           className="h-full rounded-l-full transition-all duration-700"
-          style={{ width: `${homePct}%`, backgroundColor: homeColor, opacity: homeOpacity }}
+          style={{
+            width: `${homePct}%`,
+            backgroundColor: homeColor,
+            opacity: homeOpacity,
+          }}
         />
         <div
           className="h-full rounded-r-full transition-all duration-700"
-          style={{ width: `${awayPct}%`, backgroundColor: awayColor, opacity: awayOpacity }}
+          style={{
+            width: `${awayPct}%`,
+            backgroundColor: awayColor,
+            opacity: awayOpacity,
+          }}
         />
       </div>
     </div>
@@ -144,23 +156,27 @@ export const MatchStats = memo(function MatchStats({
       .in("id", ids)
       .then(({ data }) => {
         for (const team of data ?? []) {
-          const best =
-            isHexColor(team.color_primary) ? team.color_primary
-            : isHexColor(team.color_secondary) ? team.color_secondary
-            : null;
+          const best = isHexColor(team.color_primary)
+            ? team.color_primary
+            : isHexColor(team.color_secondary)
+              ? team.color_secondary
+              : null;
           if (needsHome && team.id === homeTeamId) setResolvedHomeColor(best);
           if (needsAway && team.id === awayTeamId) setResolvedAwayColor(best);
         }
       });
   }, [homeTeamId, awayTeamId, homeTeamColor, awayTeamColor]);
 
-  const fetchStats = useCallback((supabase: ReturnType<typeof createClient>) => {
-    return supabase
-      .from("match_statistics")
-      .select("*")
-      .eq("match_id", matchId)
-      .then(({ data }) => data ?? []);
-  }, [matchId]);
+  const fetchStats = useCallback(
+    (supabase: ReturnType<typeof createClient>) => {
+      return supabase
+        .from("match_statistics")
+        .select("*")
+        .eq("match_id", matchId)
+        .then(({ data }) => data ?? []);
+    },
+    [matchId],
+  );
 
   const triggerForceSync = useCallback(async () => {
     if (forceSyncTriggered.current) return;
@@ -192,12 +208,21 @@ export const MatchStats = memo(function MatchStats({
       .channel(`match-stats-${matchId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "match_statistics", filter: `match_id=eq.${matchId}` },
-        () => { void fetchStats(supabase).then((data) => setRows(data)); },
+        {
+          event: "*",
+          schema: "public",
+          table: "match_statistics",
+          filter: `match_id=eq.${matchId}`,
+        },
+        () => {
+          void fetchStats(supabase).then((data) => setRows(data));
+        },
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [matchId, fetchStats]);
 
   // Lazy sync : déclenche automatiquement si match terminé sans stats
@@ -207,7 +232,10 @@ export const MatchStats = memo(function MatchStats({
     }
   }, [loading, rows.length, matchStatus, triggerForceSync]);
 
-  const statsMap = new Map<string, { home: string | null; away: string | null }>();
+  const statsMap = new Map<
+    string,
+    { home: string | null; away: string | null }
+  >();
   for (const row of rows) {
     const isHome = row.team_id === homeTeamId;
     const isAway = row.team_id === awayTeamId;
@@ -255,9 +283,21 @@ export const MatchStats = memo(function MatchStats({
     <div className="mt-6 space-y-6 px-4 pb-6">
       {/* En-tête équipes avec swatch couleur */}
       <div className="flex items-center justify-between">
-        <TeamHeader name={teamHome} logo={homeTeamLogo} color={homeColor} align="left" />
-        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Stats</span>
-        <TeamHeader name={teamAway} logo={awayTeamLogo} color={awayColor} align="right" />
+        <TeamHeader
+          name={teamHome}
+          logo={homeTeamLogo}
+          color={homeColor}
+          align="left"
+        />
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+          Stats
+        </span>
+        <TeamHeader
+          name={teamAway}
+          logo={awayTeamLogo}
+          color={awayColor}
+          align="right"
+        />
       </div>
 
       {/* Barres de stats */}
@@ -292,7 +332,9 @@ function TeamHeader({
   align: "left" | "right";
 }) {
   return (
-    <div className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}>
+    <div
+      className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}
+    >
       <div className="relative shrink-0">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -310,7 +352,9 @@ function TeamHeader({
           aria-hidden
         />
       </div>
-      <span className="line-clamp-2 max-w-[88px] text-xs font-bold leading-tight text-zinc-300">{name}</span>
+      <span className="line-clamp-2 max-w-[88px] text-xs font-bold leading-tight text-zinc-300">
+        {name}
+      </span>
     </div>
   );
 }

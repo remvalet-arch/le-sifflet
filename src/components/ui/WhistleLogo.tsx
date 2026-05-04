@@ -1,7 +1,7 @@
 type Size = "sm" | "md" | "lg" | "xl";
 
 const SIZE_MAP: Record<Size, { box: string; svg: number }> = {
-  sm: { box: "h-8 w-8 rounded-xl",  svg: 16 },
+  sm: { box: "h-8 w-8 rounded-xl", svg: 16 },
   md: { box: "h-10 w-10 rounded-xl", svg: 20 },
   lg: { box: "h-16 w-16 rounded-2xl", svg: 32 },
   xl: { box: "h-24 w-24 rounded-3xl", svg: 48 },

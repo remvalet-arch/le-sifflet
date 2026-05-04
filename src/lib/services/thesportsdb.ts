@@ -34,13 +34,19 @@ async function apiFetch<T>(path: string): Promise<T> {
 // ── Fonctions publiques ───────────────────────────────────────────────────────
 
 /** Détails d'un événement par son ID TheSportsDB (lookupevent.php). */
-export async function getEventDetails(eventId: string): Promise<TsdbEvent | null> {
-  const data = await apiFetch<{ events: TsdbEvent[] | null }>(`lookupevent.php?id=${eventId}`);
+export async function getEventDetails(
+  eventId: string,
+): Promise<TsdbEvent | null> {
+  const data = await apiFetch<{ events: TsdbEvent[] | null }>(
+    `lookupevent.php?id=${eventId}`,
+  );
   return data.events?.[0] ?? null;
 }
 
 /** Effectif complet d'une équipe par son Team ID (lookup_all_players.php). */
 export async function getTeamRoster(teamId: string): Promise<TsdbPlayer[]> {
-  const data = await apiFetch<{ player: TsdbPlayer[] | null }>(`lookup_all_players.php?id=${teamId}`);
+  const data = await apiFetch<{ player: TsdbPlayer[] | null }>(
+    `lookup_all_players.php?id=${teamId}`,
+  );
   return data.player ?? [];
 }

@@ -6,7 +6,12 @@ export type MatchStatus =
   | "paused"
   | "finished";
 
-export type TimelineEventType = "goal" | "yellow_card" | "red_card" | "substitution" | "info";
+export type TimelineEventType =
+  | "goal"
+  | "yellow_card"
+  | "red_card"
+  | "substitution"
+  | "info";
 export type MarketEventType =
   | "penalty_check"
   | "penalty_outcome"
@@ -604,7 +609,7 @@ export interface Database {
           id: string;
           match_id: string;
           user_id: string;
-          prono_type: "exact_score" | "scorer";
+          prono_type: "exact_score" | "scorer" | "scorer_allocation";
           prono_value: string;
           reward_amount: number;
           placed_at: string;
@@ -614,7 +619,7 @@ export interface Database {
           id?: string;
           match_id: string;
           user_id: string;
-          prono_type: "exact_score" | "scorer";
+          prono_type: "exact_score" | "scorer" | "scorer_allocation";
           prono_value: string;
           reward_amount: number;
           placed_at?: string;
@@ -624,7 +629,7 @@ export interface Database {
           id?: string;
           match_id?: string;
           user_id?: string;
-          prono_type?: "exact_score" | "scorer";
+          prono_type?: "exact_score" | "scorer" | "scorer_allocation";
           prono_value?: string;
           reward_amount?: number;
           placed_at?: string;
@@ -779,11 +784,21 @@ export interface Database {
           p_event_id: string;
           p_result: string;
         };
-        Returns: { winners: number; total_paid: number; multiplier: number; braquage_squads: number };
+        Returns: {
+          winners: number;
+          total_paid: number;
+          multiplier: number;
+          braquage_squads: number;
+        };
       };
       get_event_odds: {
         Args: { p_event_id: string };
-        Returns: Array<{ option: string; pool_staked: number; total_pool: number; implied_multiplier: number }>;
+        Returns: Array<{
+          option: string;
+          pool_staked: number;
+          total_pool: number;
+          implied_multiplier: number;
+        }>;
       };
       place_long_term_bet: {
         Args: {
@@ -835,6 +850,15 @@ export interface Database {
         Args: { p_match_id: string };
         Returns: Record<string, unknown>;
       };
+      place_match_prono: {
+        Args: {
+          p_match_id: string;
+          p_home_score: number;
+          p_away_score: number;
+          p_scorers_json?: unknown;
+        };
+        Returns: Record<string, unknown>;
+      };
       profile_rank_from_xp: {
         Args: { p_xp: number };
         Returns: string;
@@ -846,7 +870,8 @@ export interface Database {
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type MatchRow = Database["public"]["Tables"]["matches"]["Row"];
 export type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
-export type SquadMemberRow = Database["public"]["Tables"]["squad_members"]["Row"];
+export type SquadMemberRow =
+  Database["public"]["Tables"]["squad_members"]["Row"];
 export type MatchSubscriptionRow =
   Database["public"]["Tables"]["match_subscriptions"]["Row"];
 export type MarketEventRow =
@@ -860,11 +885,15 @@ export type MatchTimelineEventRow =
 export type LongTermBetRow =
   Database["public"]["Tables"]["long_term_bets"]["Row"];
 export type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
-export type CompetitionRow = Database["public"]["Tables"]["competitions"]["Row"];
+export type CompetitionRow =
+  Database["public"]["Tables"]["competitions"]["Row"];
 export type TeamRow = Database["public"]["Tables"]["teams"]["Row"];
 export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
 export type UserBadgeRow = Database["public"]["Tables"]["user_badges"]["Row"];
-export type MatchStatisticsRow = Database["public"]["Tables"]["match_statistics"]["Row"];
+export type MatchStatisticsRow =
+  Database["public"]["Tables"]["match_statistics"]["Row"];
 export type PronoRow = Database["public"]["Tables"]["pronos"]["Row"];
-export type LeagueStandingRow = Database["public"]["Tables"]["league_standings"]["Row"];
-export type LeagueTopPlayerRow = Database["public"]["Tables"]["league_top_players"]["Row"];
+export type LeagueStandingRow =
+  Database["public"]["Tables"]["league_standings"]["Row"];
+export type LeagueTopPlayerRow =
+  Database["public"]["Tables"]["league_top_players"]["Row"];

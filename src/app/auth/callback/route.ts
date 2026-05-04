@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
   const next = safeInternalPath(nextRaw, "/lobby");
 
   if (!code) {
-    return NextResponse.redirect(new URL("/?error=auth_missing_code", url.origin));
+    return NextResponse.redirect(
+      new URL("/?error=auth_missing_code", url.origin),
+    );
   }
 
   const supabase = await createClient();

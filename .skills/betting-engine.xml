@@ -1,0 +1,13 @@
+<skill>
+  <name>Betting Engine & Sifflets Balance</name>
+  <description>Manipuler la logique financière virtuelle : calcul des cotes (Parimutuel), prise de pari, ou résolution/distribution des gains en "Sifflets".</description>
+  <architecture_rules>
+    <rule>Sécurité Absolue (Zero Trust Client) : La table `sifflets_balance` NE DOIT JAMAIS être mise à jour directement depuis le client. Toute modification passe par une fonction PostgreSQL sécurisée (RPC) ou une Edge Function / Server Action utilisant le client Admin (service_role).</rule>
+    <rule>Mécanique Parimutuel : Les cotes (odds) ne sont pas fixes. Elles sont calculées dynamiquement (ex: via `get_event_odds`) en fonction du ratio des mises. Ne pas hardcoder les cotes.</rule>
+    <rule>Transactionnalité : Un pari est valide uniquement si solde >= mise. La déduction doit être transactionnelle avec l'insertion du pari.</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Écrire un test (Playwright ou script TS backend) simulant 2 utilisateurs misant sur des résultats opposés.</verification_step>
+    <verification_step>Vérifier l'équation : Somme_Sifflets_Initiale == Somme_Sifflets_Finale. L'application ne doit pas "créer" de la monnaie magique lors de la résolution d'un pari, la somme redistribuée doit être égale à la somme misée (aux arrondis près).</verification_step>
+  </harness>
+</skill>

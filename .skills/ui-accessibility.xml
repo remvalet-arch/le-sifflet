@@ -1,0 +1,12 @@
+<skill>
+  <name>UI Accessibility & AI Eyes (Test IDs)</name>
+  <description>Rendre les composants UI "visibles" pour les scripts de tests automatisés (Playwright) et accessibles pour les utilisateurs.</description>
+  <architecture_rules>
+    <rule>Test IDs : TOUT élément interactif (bouton, lien, modale, champ de texte) DOIT posséder un attribut `data-testid="nom-clair"`. (ex: `data-testid="bet-yes-button"`).</rule>
+    <rule>Accessibilité (A11y) : Ajouter des `aria-label` pertinents sur les boutons qui ne contiennent que des icônes (sans texte) pour que les lecteurs d'écran (et l'IA) comprennent leur fonction.</rule>
+    <rule>États visuels : Toujours refléter l'état via des attributs sémantiques comme `aria-disabled="true"` ou `aria-expanded="true/false"` plutôt que juste changer une classe CSS.</rule>
+  </architecture_rules>
+  <harness>
+    <verification_step>Vérifier dans le DOM (via les DevTools ou Playwright) que les sélecteurs `[data-testid="..."]` sont bien présents et uniques pour l'action donnée.</verification_step>
+  </harness>
+</skill>

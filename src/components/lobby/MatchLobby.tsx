@@ -62,13 +62,24 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   const trimmed = (url ?? "").trim();
   if (trimmed.startsWith("https://") && isNextImageRemoteLogoUrl(trimmed)) {
     return (
-      <Image src={trimmed} alt={alt} width={24} height={24} className="h-6 w-6 shrink-0 object-contain" sizes="24px" />
+      <Image
+        src={trimmed}
+        alt={alt}
+        width={24}
+        height={24}
+        className="h-6 w-6 shrink-0 object-contain"
+        sizes="24px"
+      />
     );
   }
   if (trimmed.startsWith("http")) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={trimmed} alt={alt} className="h-6 w-6 shrink-0 object-contain" />
+      <img
+        src={trimmed}
+        alt={alt}
+        className="h-6 w-6 shrink-0 object-contain"
+      />
     );
   }
   return (
@@ -101,7 +112,9 @@ function buildLeagueGroups(rows: LobbyMatchRow[]): LeagueGroup[] {
     const displayName = tabLabelForApiId(apiId);
     const dbBadge = m.competition?.badge_url ?? null;
     // Fallback CDN API-Football si badge_url absent en base
-    const badge = dbBadge ?? `https://media.api-sports.io/football/leagues/${String(apiId)}.png`;
+    const badge =
+      dbBadge ??
+      `https://media.api-sports.io/football/leagues/${String(apiId)}.png`;
     let g = map.get(key);
     if (!g) {
       g = { groupKey: key, displayName, badge, rows: [] };
@@ -120,7 +133,10 @@ function buildLeagueGroups(rows: LobbyMatchRow[]): LeagueGroup[] {
     return a.displayName.localeCompare(b.displayName, "fr");
   });
   for (const g of list) {
-    g.rows.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    g.rows.sort(
+      (a, b) =>
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+    );
   }
   return list;
 }
@@ -136,7 +152,9 @@ function defaultTabForProps(
 }
 
 function roundShortForGroup(group: LeagueGroup): string | null {
-  const rs = group.rows.map((r) => (r.round_short ?? "").trim()).find((s) => s !== "");
+  const rs = group.rows
+    .map((r) => (r.round_short ?? "").trim())
+    .find((s) => s !== "");
   return rs ?? null;
 }
 
@@ -180,8 +198,15 @@ type EuropeHubViewProps = {
   roundContext: { leagueApiId: number; roundShort: string } | null;
 };
 
-function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: EuropeHubViewProps) {
-  const [selectedCupId, setSelectedCupId] = useState<number>(EUROPEAN_CUPS[0].apiFootballLeagueId);
+function EuropeHubView({
+  europeGrouped,
+  europeRows,
+  roundView,
+  roundContext,
+}: EuropeHubViewProps) {
+  const [selectedCupId, setSelectedCupId] = useState<number>(
+    EUROPEAN_CUPS[0].apiFootballLeagueId,
+  );
   const selectCup = useCallback((id: number) => setSelectedCupId(id), []);
 
   return (
@@ -190,8 +215,15 @@ function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: E
       {europeRows.length > 0 && (
         <div className="flex flex-col gap-10">
           {europeGrouped.map((group) => (
-            <section key={group.groupKey} className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4">
-              <LeagueSectionHeader group={group} showRoundLink roundView={roundView} />
+            <section
+              key={group.groupKey}
+              className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4"
+            >
+              <LeagueSectionHeader
+                group={group}
+                showRoundLink
+                roundView={roundView}
+              />
               <ul className="mt-4 flex flex-col gap-3">
                 {group.rows.map((m) => (
                   <li key={m.id}>
@@ -210,7 +242,10 @@ function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: E
       )}
 
       {/* Sous-sélecteur de coupe — même pattern que les onglets principaux */}
-      <nav className="-mx-1 flex gap-1 overflow-x-auto pb-1" aria-label="Compétition européenne">
+      <nav
+        className="-mx-1 flex gap-1 overflow-x-auto pb-1"
+        aria-label="Compétition européenne"
+      >
         {EUROPEAN_CUPS.map((cup) => (
           <button
             key={cup.apiFootballLeagueId}
@@ -231,7 +266,11 @@ function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: E
       <LeagueHub
         key={selectedCupId}
         leagueApiId={selectedCupId}
-        initialRound={roundContext?.leagueApiId === selectedCupId ? roundContext.roundShort : null}
+        initialRound={
+          roundContext?.leagueApiId === selectedCupId
+            ? roundContext.roundShort
+            : null
+        }
       />
     </div>
   );
@@ -249,10 +288,15 @@ export function MatchLobby({
   /** Liste du jour = auto-forward (aucun match sur le football day). */
   dayFallbackBanner?: { shownDayLabelFr: string } | null;
 }) {
-  const [tab, setTab] = useState<LobbyTabKey>(() => defaultTabForProps(viewMode, roundContext));
+  const [tab, setTab] = useState<LobbyTabKey>(() =>
+    defaultTabForProps(viewMode, roundContext),
+  );
 
   const rows = useMemo(
-    () => initialMatches.filter((m) => isLobbyTrackedLeagueApiId(m.competition?.api_football_league_id)),
+    () =>
+      initialMatches.filter((m) =>
+        isLobbyTrackedLeagueApiId(m.competition?.api_football_league_id),
+      ),
     [initialMatches],
   );
 
@@ -267,7 +311,10 @@ export function MatchLobby({
     [rows],
   );
 
-  const directGrouped = useMemo(() => buildLeagueGroups(directRows), [directRows]);
+  const directGrouped = useMemo(
+    () => buildLeagueGroups(directRows),
+    [directRows],
+  );
 
   const europeRows = useMemo(
     () =>
@@ -278,14 +325,18 @@ export function MatchLobby({
     [rows],
   );
 
-  const europeGrouped = useMemo(() => buildLeagueGroups(europeRows), [europeRows]);
+  const europeGrouped = useMemo(
+    () => buildLeagueGroups(europeRows),
+    [europeRows],
+  );
 
   const roundView = viewMode === "round" && roundContext != null;
 
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12 text-center text-sm text-zinc-400">
-        Aucun match {roundView ? "pour cette sélection" : "pour cette journée"} (championnats + coupes UEFA).
+        Aucun match {roundView ? "pour cette sélection" : "pour cette journée"}{" "}
+        (championnats + coupes UEFA).
       </div>
     );
   }
@@ -295,9 +346,15 @@ export function MatchLobby({
       {roundView && roundContext != null && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/90 px-3 py-2.5 text-xs text-zinc-400">
           <span>
-            Journée <span className="font-mono font-bold text-chalk">{roundContext.roundShort}</span>
+            Journée{" "}
+            <span className="font-mono font-bold text-chalk">
+              {roundContext.roundShort}
+            </span>
           </span>
-          <Link href="/lobby" className="font-bold uppercase tracking-wide text-whistle hover:underline">
+          <Link
+            href="/lobby"
+            className="font-bold uppercase tracking-wide text-whistle hover:underline"
+          >
             ← Jour Paris
           </Link>
         </div>
@@ -305,10 +362,14 @@ export function MatchLobby({
 
       {!roundView && dayFallbackBanner != null && (
         <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-xs leading-snug text-amber-100/95">
-          <p className="font-black uppercase tracking-wide text-amber-400/95">Aujourd&apos;hui : repos</p>
+          <p className="font-black uppercase tracking-wide text-amber-400/95">
+            Aujourd&apos;hui : repos
+          </p>
           <p className="mt-1 font-medium text-amber-50/90">
             Prochains matchs le{" "}
-            <span className="font-bold capitalize text-white">{dayFallbackBanner.shownDayLabelFr}</span>
+            <span className="font-bold capitalize text-white">
+              {dayFallbackBanner.shownDayLabelFr}
+            </span>
           </p>
         </div>
       )}
@@ -341,8 +402,15 @@ export function MatchLobby({
         ) : (
           <div className="flex flex-col gap-10">
             {directGrouped.map((group) => (
-              <section key={group.groupKey} className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4">
-                <LeagueSectionHeader group={group} showRoundLink roundView={roundView} />
+              <section
+                key={group.groupKey}
+                className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4"
+              >
+                <LeagueSectionHeader
+                  group={group}
+                  showRoundLink
+                  roundView={roundView}
+                />
                 <ul className="mt-4 flex flex-col gap-3">
                   {group.rows.map((m) => (
                     <li key={m.id}>
@@ -366,7 +434,8 @@ export function MatchLobby({
           roundView={roundView}
           roundContext={roundContext}
         />
-      ) : (() => {
+      ) : (
+        (() => {
           const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
           if (!league) return null;
           return (
@@ -375,7 +444,8 @@ export function MatchLobby({
               initialRound={roundContext?.roundShort ?? null}
             />
           );
-        })()}
+        })()
+      )}
     </div>
   );
 }

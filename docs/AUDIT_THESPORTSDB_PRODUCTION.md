@@ -13,17 +13,17 @@
 
 Les chemins ci-dessous listent du contenu **non issu** d’une source unique dynamique (API tamponnée), ou des **constantes métier** calées sur des entités réelles.
 
-| Chemin | Nature du contenu en dur |
-|--------|---------------------------|
-| `src/app/page.tsx` | **PhoneMockup** : noms d’équipes abrégés `PSG` / `OL`, score `1 — 0`, minute `47'`, libellés « EN DIRECT », cotes `×2.00` / `×1.80`, points `50` / `+100` / `+200` — pure démo marketing (hors DB). |
-| `src/components/match/ActionDrawer.tsx` | **`MVP_TEAMS`** : IDs TheSportsDB (`133714`, `133664`, `133604`, `133738`) + noms (`Paris Saint-Germain`, `Bayern Munich`, `Arsenal`, `Atletico Madrid`) pour l’import roster modérateur. |
-| `src/lib/services/thesportsdb.ts` | **URL de base** `https://www.thesportsdb.com/api/v1/json/...` ; **clé par défaut** littérale `"123"` si `THESPORTSDB_API_KEY` absente ; types **`TsdbEvent`** / **`TsdbPlayer`** calés sur un sous-ensemble de champs API. |
-| `src/lib/sports/sportsProvider.ts` | Pas de noms d’équipes : **mock probabiliste** pour la résolution d’événements (`SUCCESS` / `FAILURE` / `WAIT`) — dette « pas de vérité terrain » pour la prod. |
+| Chemin                                  | Nature du contenu en dur                                                                                                                                                                                                   |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/page.tsx`                      | **PhoneMockup** : noms d’équipes abrégés `PSG` / `OL`, score `1 — 0`, minute `47'`, libellés « EN DIRECT », cotes `×2.00` / `×1.80`, points `50` / `+100` / `+200` — pure démo marketing (hors DB).                        |
+| `src/components/match/ActionDrawer.tsx` | **`MVP_TEAMS`** : IDs TheSportsDB (`133714`, `133664`, `133604`, `133738`) + noms (`Paris Saint-Germain`, `Bayern Munich`, `Arsenal`, `Atletico Madrid`) pour l’import roster modérateur.                                  |
+| `src/lib/services/thesportsdb.ts`       | **URL de base** `https://www.thesportsdb.com/api/v1/json/...` ; **clé par défaut** littérale `"123"` si `THESPORTSDB_API_KEY` absente ; types **`TsdbEvent`** / **`TsdbPlayer`** calés sur un sous-ensemble de champs API. |
+| `src/lib/sports/sportsProvider.ts`      | Pas de noms d’équipes : **mock probabiliste** pour la résolution d’événements (`SUCCESS` / `FAILURE` / `WAIT`) — dette « pas de vérité terrain » pour la prod.                                                             |
 
 **Hors `src/` mais critique pour la « donnée statique » actuelle :**
 
-| Chemin | Nature |
-|--------|--------|
+| Chemin              | Nature                                                                                                                                                                                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `supabase/seed.sql` | **INSERT** massifs : noms de clubs (L1, UCL), statuts (`upcoming`, `second_half`, `finished`), scores, couleurs hex, logos **émojis** (`🔴🔵`), **lineups** (noms de joueurs PSG / Lorient, positions). Source principale de vérité **démo** aujourd’hui. |
 
 **Fichiers qui consomment la DB mais ne hardcodent pas d’entités sportives** (à mettre à jour **indirectement** quand le schéma `matches` / jointures évoluera) :  
@@ -31,14 +31,14 @@ Les chemins ci-dessous listent du contenu **non issu** d’une source unique dyn
 
 ### 1.2 Types / interfaces TypeScript à faire évoluer
 
-| Fichier / symbole | Rôle actuel | Impact refonte |
-|-------------------|-------------|----------------|
-| `src/types/database.ts` — `MatchRow`, tables `matches` | Champs dénormalisés : `team_home`, `team_away`, `home_team_logo`, `away_team_logo`, `home_team_color`, `away_team_color`, `thesportsdb_event_id`, `MatchStatus`, scores, `match_minute` | Passage à un modèle **relationnel** (`competition_id`, `home_team_id`, `away_team_id`, etc.) ou vues / RPC qui **projettent** encore des alias pour limiter le churn UI. |
-| `src/types/database.ts` — `PlayerRow`, table `players` | `thesportsdb_id`, `team_thesportsdb_id`, `team_name`, `player_name`, `position` (G/D/M/A) | Aligner sur `team_id` FK, positions TSDB, `cutout_url`, etc. |
-| `src/lib/matches.ts` | Réexport `MatchRow`, `MatchStatus`, tri lobby | Inchangé si `MatchRow` reste stable ; sinon adapter imports / champs optionnels. |
-| `src/lib/services/thesportsdb.ts` — `TsdbEvent`, `TsdbPlayer` | Couche API brute | Étendre pour Premium (couleurs, cutouts, fanart, strStatus détaillé…) ou centraliser dans `src/types/thesportsdb.ts`. |
-| `src/components/profile/ProfileClient.tsx` | Types inline pour paris (`teamHome`, `teamAway`, etc.) | Enrichir ou dériver depuis requêtes jointes `matches` + `teams`. |
-| `src/app/actions/syncData.ts` | Map `TsdbEvent` → colonnes `matches` | Réécrire vers upsert **tampon** (`matches` + `teams` + `competitions`) et rate limiting. |
+| Fichier / symbole                                             | Rôle actuel                                                                                                                                                                             | Impact refonte                                                                                                                                                           |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/types/database.ts` — `MatchRow`, tables `matches`        | Champs dénormalisés : `team_home`, `team_away`, `home_team_logo`, `away_team_logo`, `home_team_color`, `away_team_color`, `thesportsdb_event_id`, `MatchStatus`, scores, `match_minute` | Passage à un modèle **relationnel** (`competition_id`, `home_team_id`, `away_team_id`, etc.) ou vues / RPC qui **projettent** encore des alias pour limiter le churn UI. |
+| `src/types/database.ts` — `PlayerRow`, table `players`        | `thesportsdb_id`, `team_thesportsdb_id`, `team_name`, `player_name`, `position` (G/D/M/A)                                                                                               | Aligner sur `team_id` FK, positions TSDB, `cutout_url`, etc.                                                                                                             |
+| `src/lib/matches.ts`                                          | Réexport `MatchRow`, `MatchStatus`, tri lobby                                                                                                                                           | Inchangé si `MatchRow` reste stable ; sinon adapter imports / champs optionnels.                                                                                         |
+| `src/lib/services/thesportsdb.ts` — `TsdbEvent`, `TsdbPlayer` | Couche API brute                                                                                                                                                                        | Étendre pour Premium (couleurs, cutouts, fanart, strStatus détaillé…) ou centraliser dans `src/types/thesportsdb.ts`.                                                    |
+| `src/components/profile/ProfileClient.tsx`                    | Types inline pour paris (`teamHome`, `teamAway`, etc.)                                                                                                                                  | Enrichir ou dériver depuis requêtes jointes `matches` + `teams`.                                                                                                         |
+| `src/app/actions/syncData.ts`                                 | Map `TsdbEvent` → colonnes `matches`                                                                                                                                                    | Réécrire vers upsert **tampon** (`matches` + `teams` + `competitions`) et rate limiting.                                                                                 |
 
 **Note :** il n’existe pas d’interface nommée `Prediction` dans le dépôt ; les paris sont modélisés via `BetRow`, `LongTermBetRow`, `MarketEventRow`.
 
@@ -121,30 +121,30 @@ Pour la **compatibilité progressive** avec l’UI actuelle, une **vue SQL** ou 
 
 Les fichiers sous `supabase/migrations/` décrivent le schéma **réellement évolutif** appliqué sur vos environnements (dans l’ordre numérique) :
 
-| Fichier | Rôle principal (rappel) |
-|---------|-------------------------|
-| `0001_init.sql` | `profiles`, `matches` (début : `team_home` / `team_away`, statuts `upcoming`/`live`/`finished`), `rooms`, `room_members`, `market_events`, `bets`, trigger profil. |
-| `0002_alert_signals.sql` | `alert_signals`, colonne `alert_cooldown_until` sur `matches`. |
-| `0003_place_bet_rpc.sql` | RPC `place_bet`, contraintes paris. |
-| `0004_realtime_matches.sql` | Realtime sur `matches`. |
-| `0005_fix_realtime.sql` | Realtime / replica identity sur `market_events`. |
-| `0006_resolve_event.sql` | `resolve_event`, contraintes `bets`, replica identity `bets`. |
-| `0007_new_alert_types.sql` | Types d’alertes / marchés étendus. |
-| `0008_karma_waze.sql` | Karma / signaux (PRD Waze). |
-| `0009_profile_extras.sql` | Champs profil (trust, refill, onboarding, etc.). |
-| `0010_livescore.sql` | **`home_score` / `away_score` / `match_minute`** sur `matches` ; table **`lineups`** + RLS (`authenticated` SELECT, `service_role` écriture). |
-| `0011_place_bet_v2.sql` | Évolution RPC / paris. |
-| `0012_match_timeline.sql` | **`match_timeline_events`** (FK → `matches`), Realtime. |
-| `0013_profiles_realtime.sql` | Realtime profils. |
-| `0014_team_colors.sql` | **`home_team_color` / `away_team_color` / `home_team_logo` / `away_team_logo`** sur `matches`. |
-| `0015_match_states.sql` | Statuts **granulaires** (`first_half`, `half_time`, …) — remplace l’ancien `live`. |
-| `0016_timeline_own_goal.sql` | `is_own_goal` sur la timeline. |
-| `0017_long_term_bets.sql` | **`long_term_bets`** (FK → `matches`), RPC `place_long_term_bet`. |
-| `0018_rls_lineups.sql` | RLS lineups affinée (toujours **authenticated** en lecture). |
-| `0019_players_table.sql` | Table **`players`** (effectifs TSDB : `thesportsdb_id`, `team_name`, …) ; **`thesportsdb_event_id`** UNIQUE sur `matches` ; RLS **`players`** : SELECT `authenticated` uniquement (pas `anon`), écriture `service_role`. |
-| `0020_timeline_info_events.sql` | Type d’événement `info` sur la timeline. |
-| `0021_score_and_resolve.sql` | **`increment_match_score`**, **`resolve_long_term_bets`** — lisent/écrivent **`matches`**, `match_timeline_events`, `profiles`, `long_term_bets`. |
-| `0022_badges.sql` | `badges`, `user_badges`. |
+| Fichier                         | Rôle principal (rappel)                                                                                                                                                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `0001_init.sql`                 | `profiles`, `matches` (début : `team_home` / `team_away`, statuts `upcoming`/`live`/`finished`), `rooms`, `room_members`, `market_events`, `bets`, trigger profil.                                                       |
+| `0002_alert_signals.sql`        | `alert_signals`, colonne `alert_cooldown_until` sur `matches`.                                                                                                                                                           |
+| `0003_place_bet_rpc.sql`        | RPC `place_bet`, contraintes paris.                                                                                                                                                                                      |
+| `0004_realtime_matches.sql`     | Realtime sur `matches`.                                                                                                                                                                                                  |
+| `0005_fix_realtime.sql`         | Realtime / replica identity sur `market_events`.                                                                                                                                                                         |
+| `0006_resolve_event.sql`        | `resolve_event`, contraintes `bets`, replica identity `bets`.                                                                                                                                                            |
+| `0007_new_alert_types.sql`      | Types d’alertes / marchés étendus.                                                                                                                                                                                       |
+| `0008_karma_waze.sql`           | Karma / signaux (PRD Waze).                                                                                                                                                                                              |
+| `0009_profile_extras.sql`       | Champs profil (trust, refill, onboarding, etc.).                                                                                                                                                                         |
+| `0010_livescore.sql`            | **`home_score` / `away_score` / `match_minute`** sur `matches` ; table **`lineups`** + RLS (`authenticated` SELECT, `service_role` écriture).                                                                            |
+| `0011_place_bet_v2.sql`         | Évolution RPC / paris.                                                                                                                                                                                                   |
+| `0012_match_timeline.sql`       | **`match_timeline_events`** (FK → `matches`), Realtime.                                                                                                                                                                  |
+| `0013_profiles_realtime.sql`    | Realtime profils.                                                                                                                                                                                                        |
+| `0014_team_colors.sql`          | **`home_team_color` / `away_team_color` / `home_team_logo` / `away_team_logo`** sur `matches`.                                                                                                                           |
+| `0015_match_states.sql`         | Statuts **granulaires** (`first_half`, `half_time`, …) — remplace l’ancien `live`.                                                                                                                                       |
+| `0016_timeline_own_goal.sql`    | `is_own_goal` sur la timeline.                                                                                                                                                                                           |
+| `0017_long_term_bets.sql`       | **`long_term_bets`** (FK → `matches`), RPC `place_long_term_bet`.                                                                                                                                                        |
+| `0018_rls_lineups.sql`          | RLS lineups affinée (toujours **authenticated** en lecture).                                                                                                                                                             |
+| `0019_players_table.sql`        | Table **`players`** (effectifs TSDB : `thesportsdb_id`, `team_name`, …) ; **`thesportsdb_event_id`** UNIQUE sur `matches` ; RLS **`players`** : SELECT `authenticated` uniquement (pas `anon`), écriture `service_role`. |
+| `0020_timeline_info_events.sql` | Type d’événement `info` sur la timeline.                                                                                                                                                                                 |
+| `0021_score_and_resolve.sql`    | **`increment_match_score`**, **`resolve_long_term_bets`** — lisent/écrivent **`matches`**, `match_timeline_events`, `profiles`, `long_term_bets`.                                                                        |
+| `0022_badges.sql`               | `badges`, `user_badges`.                                                                                                                                                                                                 |
 
 **Conséquences pour la refonte « competitions / teams / matches relationnels » :**
 
@@ -315,23 +315,23 @@ GRANT SELECT ON public.matches TO anon, authenticated;
 
 ### 3.1 Contrainte 100 requêtes / minute
 
-| Mécanisme | Description |
-|-----------|-------------|
-| **Limiteur central** | Un seul composant (Edge Function « orchestrateur » ou route API interne) consomme le quota ; **pas** d’appels TSDB depuis le client ou depuis N workers non coordonnés. |
-| **Token bucket / compteur** | Table `ingestion_rate` ou Redis externe ; sleep / backoff si proche du plafond. |
-| **Batch par ligue** | Préférer `eventsnextleague.php` / `eventspastleague.php` **par `idLeague`** plutôt que N× `lookupevent.php` quand un listing suffit. |
-| **Persistance = cache** | Une fois ingéré, **ne pas** rappeler l’API pour le même event tant que `updated_at` / etag métier est frais. |
-| **File d’attente** | Jobs `teams` / `players` / `matches` séquentiels avec délai minimal \(600 ms\) entre appels si besoin pour rester \< 100/min en crête. |
+| Mécanisme                   | Description                                                                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Limiteur central**        | Un seul composant (Edge Function « orchestrateur » ou route API interne) consomme le quota ; **pas** d’appels TSDB depuis le client ou depuis N workers non coordonnés. |
+| **Token bucket / compteur** | Table `ingestion_rate` ou Redis externe ; sleep / backoff si proche du plafond.                                                                                         |
+| **Batch par ligue**         | Préférer `eventsnextleague.php` / `eventspastleague.php` **par `idLeague`** plutôt que N× `lookupevent.php` quand un listing suffit.                                    |
+| **Persistance = cache**     | Une fois ingéré, **ne pas** rappeler l’API pour le même event tant que `updated_at` / etag métier est frais.                                                            |
+| **File d’attente**          | Jobs `teams` / `players` / `matches` séquentiels avec délai minimal \(600 ms\) entre appels si besoin pour rester \< 100/min en crête.                                  |
 
 ### 3.2 Data froide (cron hebdomadaire)
 
 **Objectif :** effectifs, cutouts, couleurs, badges ligue, métadonnées stables.
 
-| Étape | Route TheSportsDB (v1 JSON, alignée sur `lib/services/thesportsdb.ts`) | Résultat tampon |
-|--------|------------------------------------------------------------------------|-----------------|
-| Sync ligues suivies | `search_all_leagues.php` ou liste figée d’`idLeague` + `lookupleague.php?id={idLeague}` | `competitions` (`strLeague`, `strBadge`) |
-| Sync équipes de la ligue | `lookup_all_teams.php?id={idLeague}` | `teams` (`strTeam`, `strTeamShort`, `strTeamBadge`, `strColour1`, `strColour2`) |
-| Sync effectif | `lookup_all_players.php?id={idTeam}` (déjà utilisé dans le code via `getTeamRoster`) | `players` (`strPlayer`, `strPosition`, `strCutout`, …) |
+| Étape                    | Route TheSportsDB (v1 JSON, alignée sur `lib/services/thesportsdb.ts`)                  | Résultat tampon                                                                 |
+| ------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Sync ligues suivies      | `search_all_leagues.php` ou liste figée d’`idLeague` + `lookupleague.php?id={idLeague}` | `competitions` (`strLeague`, `strBadge`)                                        |
+| Sync équipes de la ligue | `lookup_all_teams.php?id={idLeague}`                                                    | `teams` (`strTeam`, `strTeamShort`, `strTeamBadge`, `strColour1`, `strColour2`) |
+| Sync effectif            | `lookup_all_players.php?id={idTeam}` (déjà utilisé dans le code via `getTeamRoster`)    | `players` (`strPlayer`, `strPosition`, `strCutout`, …)                          |
 
 **Fréquence :** hebdomadaire + **manuel** modérateur (déjà présent via `syncTeamRoster` / `ActionDrawer`) pour rattrapage avant matchs à enjeux.
 
@@ -339,23 +339,24 @@ GRANT SELECT ON public.matches TO anon, authenticated;
 
 **Objectif :** calendrier, statuts live / finished, scores, minute.
 
-| Étape | Route TheSportsDB | Résultat tampon |
-|--------|-------------------|-----------------|
-| Prochains matchs par compétition | `eventsnextleague.php?id={idLeague}` | Upsert `matches` futurs (`dateEvent`, `strTime`, `idEvent`, équipes) |
-| Matchs récents / terminés | `eventspastleague.php?id={idLeague}` | Mise à jour scores + statut |
-| Détail live ponctuel | `lookupevent.php?id={idEvent}` (déjà `getEventDetails`) | Affinage `strStatus`, `intHomeScore`, `intAwayScore`, badges si manquants |
+| Étape                            | Route TheSportsDB                                       | Résultat tampon                                                           |
+| -------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Prochains matchs par compétition | `eventsnextleague.php?id={idLeague}`                    | Upsert `matches` futurs (`dateEvent`, `strTime`, `idEvent`, équipes)      |
+| Matchs récents / terminés        | `eventspastleague.php?id={idLeague}`                    | Mise à jour scores + statut                                               |
+| Détail live ponctuel             | `lookupevent.php?id={idEvent}` (déjà `getEventDetails`) | Affinage `strStatus`, `intHomeScore`, `intAwayScore`, badges si manquants |
 
-**Fréquence suggérée :**  
-- **Horaire** en période de compétition pour les ligues « live » ;  
+**Fréquence suggérée :**
+
+- **Horaire** en période de compétition pour les ligues « live » ;
 - **Quotidien** pour ligues basse activité.  
-Les transitions **granulaires** (`first_half`, `half_time`, …) peuvent rester **pilotées modération / logique interne** si l’API ne distingue pas finement ; mapper `strStatus` TSDB → `MatchStatus` (comme dans `syncData.mapStatus`) en documentant les valeurs réelles observées en Premium.
+  Les transitions **granulaires** (`first_half`, `half_time`, …) peuvent rester **pilotées modération / logique interne** si l’API ne distingue pas finement ; mapper `strStatus` TSDB → `MatchStatus` (comme dans `syncData.mapStatus`) en documentant les valeurs réelles observées en Premium.
 
 ### 3.4 Edge Functions Supabase vs Route Handlers Next.js
 
-| Option | Avantages | Inconvénients |
-|--------|-----------|---------------|
-| **Edge Functions** | Cron natif Supabase, proche de la DB, secret API TSDB hors bundle Next | Autre runtime, monitoring à brancher |
-| **API Routes + cron externe** (Vercel Cron, GitHub Actions) | Même stack que l’existant (`syncData`, `createAdminClient`) | Garder secrets et rate limit côté serveur uniquement |
+| Option                                                      | Avantages                                                              | Inconvénients                                        |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Edge Functions**                                          | Cron natif Supabase, proche de la DB, secret API TSDB hors bundle Next | Autre runtime, monitoring à brancher                 |
+| **API Routes + cron externe** (Vercel Cron, GitHub Actions) | Même stack que l’existant (`syncData`, `createAdminClient`)            | Garder secrets et rate limit côté serveur uniquement |
 
 **Recommandation d’architecture :** une **Edge Function planifiée** « ingest-league » + **service_role** pour upsert ; le front continue de **lire uniquement** Supabase. Les Server Actions actuelles (`syncMatchData`) peuvent être **réduites** à des triggers admin ou désactivées une fois l’ingestion automatique fiable.
 
@@ -401,21 +402,22 @@ export default nextConfig;
 
 **Variante** (anciennes configs) : `images.domains` est déprécié au profit de `remotePatterns` — rester sur `remotePatterns`.
 
-**Bonnes pratiques UX :**  
-- `sizes` + largeurs fixes pour le mobile-first ;  
-- `placeholder="blur"` seulement si vous générez un `blurDataURL` ou utilisez un poster local ;  
+**Bonnes pratiques UX :**
+
+- `sizes` + largeurs fixes pour le mobile-first ;
+- `placeholder="blur"` seulement si vous générez un `blurDataURL` ou utilisez un poster local ;
 - prévoir un **fallback** crest (initiales / silouhette) si URL TSDB vide, comme aujourd’hui avec couleur de fond.
 
 ---
 
 ## 5. Synthèse des risques et ordre de travail suggéré
 
-1. **Schéma `matches`** : migration sensible (nombreuses FK applicatives — voir **§2.0** : `0010`–`0021` ancrées sur `matches.id`). Adapter **`increment_match_score`** et **`resolve_long_term_bets`** dans la même bascule si les colonnes changent de nom.  
-2. **`src/types/database.ts`** : régénérer ou maintenir à la main en sync avec les **nouvelles** migrations (après `0022_*`).  
-3. **Seed** : remplacer `seed.sql` démo par script d’import TSDB ou seed minimal + ingestion.  
-4. **Vérification terrain** : remplacer `sportsProvider.ts` par logique s’appuyant sur TSDB ou sur champs tampon enrichis.  
+1. **Schéma `matches`** : migration sensible (nombreuses FK applicatives — voir **§2.0** : `0010`–`0021` ancrées sur `matches.id`). Adapter **`increment_match_score`** et **`resolve_long_term_bets`** dans la même bascule si les colonnes changent de nom.
+2. **`src/types/database.ts`** : régénérer ou maintenir à la main en sync avec les **nouvelles** migrations (après `0022_*`).
+3. **Seed** : remplacer `seed.sql` démo par script d’import TSDB ou seed minimal + ingestion.
+4. **Vérification terrain** : remplacer `sportsProvider.ts` par logique s’appuyant sur TSDB ou sur champs tampon enrichis.
 5. **Images** : `next.config.ts` + choix `<Image>` vs `<img>` (CSP, LCP).
 
 ---
 
-*Document généré pour préparation production — aucune implémentation front déclenchée par ce livrable.*
+_Document généré pour préparation production — aucune implémentation front déclenchée par ce livrable._

@@ -54,18 +54,22 @@ export type ImportLeagueAssetsResult = {
  * `search_all_teams.php?l={leagueName}` puis, par équipe soccer : `lookupteam`, upsert `teams`,
  * `lookup_all_players`, upsert `players` (dont `image_url`). Délai 300 ms au début de chaque équipe.
  */
-export async function importLeagueAssets(leagueName: string): Promise<ImportLeagueAssetsResult> {
+export async function importLeagueAssets(
+  leagueName: string,
+): Promise<ImportLeagueAssetsResult> {
   const trimmed = leagueName.trim();
   if (trimmed === "") {
     throw new Error("leagueName vide");
   }
 
   const admin = createAdminClient();
-  const data = await v1Fetch<{ teams: (TsdbTeam & { strSport?: string })[] | null }>(
-    `search_all_teams.php?l=${encodeURIComponent(trimmed)}`,
-  );
+  const data = await v1Fetch<{
+    teams: (TsdbTeam & { strSport?: string })[] | null;
+  }>(`search_all_teams.php?l=${encodeURIComponent(trimmed)}`);
   await delay(300);
-  const teams = (data.teams ?? []).filter((t) => !t.strSport || t.strSport === "Soccer");
+  const teams = (data.teams ?? []).filter(
+    (t) => !t.strSport || t.strSport === "Soccer",
+  );
 
   let teamsImported = 0;
   let playersImported = 0;
@@ -81,7 +85,9 @@ export async function importLeagueAssets(leagueName: string): Promise<ImportLeag
       ignoreDuplicates: false,
     });
     if (upsertTeamErr) {
-      throw new Error(`teams upsert ${fullTeam.idTeam}: ${upsertTeamErr.message}`);
+      throw new Error(
+        `teams upsert ${fullTeam.idTeam}: ${upsertTeamErr.message}`,
+      );
     }
     teamsImported += 1;
 
@@ -94,7 +100,9 @@ export async function importLeagueAssets(leagueName: string): Promise<ImportLeag
       throw new Error(trErr.message);
     }
     if (!teamRow) {
-      throw new Error(`Équipe TheSportsDB ${fullTeam.idTeam} introuvable après upsert`);
+      throw new Error(
+        `Équipe TheSportsDB ${fullTeam.idTeam} introuvable après upsert`,
+      );
     }
 
     const rosterData = await v1Fetch<{ player: TsdbPlayerRow[] | null }>(
@@ -102,20 +110,21 @@ export async function importLeagueAssets(leagueName: string): Promise<ImportLeag
     );
     const roster = rosterData.player ?? [];
 
-    const playerRows: Database["public"]["Tables"]["players"]["Insert"][] = roster.map((p) => {
-      const img = pickCutout(p);
-      return {
-        thesportsdb_id: p.idPlayer,
-        team_id: teamRow.id,
-        team_thesportsdb_id: p.idTeam,
-        team_name: teamRow.name,
-        player_name: p.strPlayer,
-        position: mapPosition(p.strPosition ?? ""),
-        cutout_url: img,
-        image_url: img,
-        synced_at: new Date().toISOString(),
-      };
-    });
+    const playerRows: Database["public"]["Tables"]["players"]["Insert"][] =
+      roster.map((p) => {
+        const img = pickCutout(p);
+        return {
+          thesportsdb_id: p.idPlayer,
+          team_id: teamRow.id,
+          team_thesportsdb_id: p.idTeam,
+          team_name: teamRow.name,
+          player_name: p.strPlayer,
+          position: mapPosition(p.strPosition ?? ""),
+          cutout_url: img,
+          image_url: img,
+          synced_at: new Date().toISOString(),
+        };
+      });
 
     if (playerRows.length === 0) {
       continue;
@@ -124,7 +133,9 @@ export async function importLeagueAssets(leagueName: string): Promise<ImportLeag
     const chunkSize = 80;
     for (let i = 0; i < playerRows.length; i += chunkSize) {
       const chunk = playerRows.slice(i, i + chunkSize);
-      const { error: pErr } = await admin.from("players").upsert(chunk, { onConflict: "thesportsdb_id" });
+      const { error: pErr } = await admin
+        .from("players")
+        .upsert(chunk, { onConflict: "thesportsdb_id" });
       if (pErr) {
         throw new Error(`players upsert ${fullTeam.idTeam}: ${pErr.message}`);
       }
