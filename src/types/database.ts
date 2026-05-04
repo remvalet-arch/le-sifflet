@@ -672,6 +672,7 @@ export interface Database {
           goals_diff: number;
           played: number;
           form: string | null;
+          group_name: string | null;
           updated_at: string;
         };
         Insert: {
@@ -686,6 +687,7 @@ export interface Database {
           goals_diff?: number;
           played?: number;
           form?: string | null;
+          group_name?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -700,6 +702,7 @@ export interface Database {
           goals_diff?: number;
           played?: number;
           form?: string | null;
+          group_name?: string | null;
           updated_at?: string;
         };
         Relationships: [];

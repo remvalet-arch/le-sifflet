@@ -1,9 +1,11 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { BarChart2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { MatchStatisticsRow, MatchStatus } from "@/types/database";
+
+const FINISHED_STATUSES = new Set<MatchStatus>(["finished"]);
 
 /** Stats affichées dans cet ordre — les autres sont ignorées. */
 const FEATURED_STATS: { type: string; label: string }[] = [
@@ -123,38 +125,63 @@ export const MatchStats = memo(function MatchStats({
 }: Props) {
   const [rows, setRows] = useState<MatchStatisticsRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const forceSyncTriggered = useRef(false);
+
+  const fetchStats = useCallback((supabase: ReturnType<typeof createClient>) => {
+    return supabase
+      .from("match_statistics")
+      .select("*")
+      .eq("match_id", matchId)
+      .then(({ data }) => data ?? []);
+  }, [matchId]);
+
+  const triggerForceSync = useCallback(async () => {
+    if (forceSyncTriggered.current) return;
+    forceSyncTriggered.current = true;
+    setSyncing(true);
+    try {
+      await fetch("/api/match/force-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId }),
+      });
+      const supabase = createClient();
+      const data = await fetchStats(supabase);
+      setRows(data);
+    } finally {
+      setSyncing(false);
+    }
+  }, [matchId, fetchStats]);
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Chargement initial
-    void supabase
-      .from("match_statistics")
-      .select("*")
-      .eq("match_id", matchId)
-      .then(({ data }) => {
-        setRows(data ?? []);
-        setLoading(false);
-      });
+    void fetchStats(supabase).then((data) => {
+      setRows(data);
+      setLoading(false);
+    });
 
-    // Realtime : mise à jour live quand le monitor upserte de nouvelles stats
     const channel = supabase
       .channel(`match-stats-${matchId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "match_statistics", filter: `match_id=eq.${matchId}` },
         () => {
-          void supabase
-            .from("match_statistics")
-            .select("*")
-            .eq("match_id", matchId)
-            .then(({ data }) => { if (data) setRows(data); });
+          void fetchStats(supabase).then((data) => setRows(data));
         },
       )
       .subscribe();
 
     return () => { void supabase.removeChannel(channel); };
-  }, [matchId]);
+  }, [matchId, fetchStats]);
+
+  // Lazy sync : déclenche automatiquement si match terminé sans stats
+  useEffect(() => {
+    if (!loading && rows.length === 0 && FINISHED_STATUSES.has(matchStatus)) {
+      void triggerForceSync();
+    }
+  }, [loading, rows.length, matchStatus, triggerForceSync]);
 
   // Construit un index { type → { home?: string, away?: string } }
   const statsMap = new Map<string, { home: string | null; away: string | null }>();
@@ -173,10 +200,15 @@ export const MatchStats = memo(function MatchStats({
 
   const isUpcoming = matchStatus === "upcoming";
 
-  if (loading) {
+  if (loading || syncing) {
     return (
-      <div className="mt-6 px-4 pb-10 text-center">
+      <div className="mt-6 flex flex-col items-center gap-3 px-4 pb-10 text-center">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-whistle" />
+        {syncing && (
+          <p className="text-xs font-bold text-zinc-500">
+            Récupération des archives du match…
+          </p>
+        )}
       </div>
     );
   }

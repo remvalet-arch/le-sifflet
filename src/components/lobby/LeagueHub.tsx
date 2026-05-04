@@ -17,10 +17,19 @@ const HUB_TABS: { id: HubTabId; label: string }[] = [
   { id: "assists", label: "Passeurs" },
 ];
 
-function parseRoundNumber(roundShort: string): number {
-  const m = /(\d+)/.exec(roundShort);
-  return m?.[1] ? parseInt(m[1], 10) : 0;
+/** Trouve la première date d'un round parmi les matchs donnés (pour le tri). */
+function roundEarliestDate(round: string, matches: MatchRow[]): number {
+  let min = Infinity;
+  for (const m of matches) {
+    if (m.round_short !== round) continue;
+    const t = new Date(m.start_time).getTime();
+    if (t < min) min = t;
+  }
+  return min === Infinity ? 0 : min;
 }
+
+/** Statuts "en cours" pour déterminer la journée active. */
+const LIVE_STATUSES = new Set(["live", "first_half", "second_half", "half_time"] as const);
 
 export function LeagueHub({
   leagueApiId,
@@ -69,13 +78,25 @@ export function LeagueHub({
       setMatches(rows);
 
       if (!initialRound && rows.length > 0) {
-        // Sélectionne la journée la plus récente par défaut
-        const rounds = [
-          ...new Set(
-            rows.map((m) => m.round_short).filter((r): r is string => r !== null),
-          ),
-        ].sort((a, b) => parseRoundNumber(b) - parseRoundNumber(a));
-        setSelectedRound(rounds[0] ?? null);
+        const uniqueRounds = [
+          ...new Set(rows.map((m) => m.round_short).filter((r): r is string => r !== null)),
+        ].sort((a, b) => roundEarliestDate(b, rows) - roundEarliestDate(a, rows));
+
+        const now = Date.now();
+        const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+        // 1. Priorité : journée avec un match en direct
+        const liveRound = rows.find((m) => LIVE_STATUSES.has(m.status as never))?.round_short ?? null;
+        if (liveRound) {
+          setSelectedRound(liveRound);
+        } else {
+          // 2. Première journée dont le premier match est passé ou dans les 3 prochains jours
+          const currentRound =
+            uniqueRounds.find((r) => roundEarliestDate(r, rows) <= now + THREE_DAYS_MS) ??
+            uniqueRounds[0] ??
+            null;
+          setSelectedRound(currentRound);
+        }
       }
 
       setLoading(false);
@@ -87,7 +108,7 @@ export function LeagueHub({
     };
   }, [leagueApiId, initialRound]);
 
-  // Liste des journées triées du plus récent au plus ancien
+  // Liste des journées triées par date de premier match, du plus récent au plus ancien
   const rounds = useMemo(() => {
     const rs = [
       ...new Set(
@@ -96,7 +117,7 @@ export function LeagueHub({
           .filter((r): r is string => r !== null),
       ),
     ];
-    return rs.sort((a, b) => parseRoundNumber(b) - parseRoundNumber(a));
+    return rs.sort((a, b) => roundEarliestDate(b, matches) - roundEarliestDate(a, matches));
   }, [matches]);
 
   const selectedRoundIndex = selectedRound ? rounds.indexOf(selectedRound) : 0;

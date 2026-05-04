@@ -105,6 +105,45 @@ async function fetchTeamsByApiIds(
   return map;
 }
 
+/**
+ * Upserte une équipe manquante en base à partir des données API-Football.
+ * Utilise `thesportsdb_team_id = "apifb-team-{apiId}"` comme clé synthétique.
+ */
+async function upsertTeamByApiId(
+  admin: Admin,
+  apiId: number,
+  name: string,
+  logoUrl: string | null,
+  competitionId: string,
+): Promise<{ id: string; logo_url: string | null; color_primary: string | null }> {
+  const syntheticId = `apifb-team-${apiId}`;
+  const { data, error } = await admin
+    .from("teams")
+    .upsert(
+      {
+        thesportsdb_team_id: syntheticId,
+        name,
+        api_football_id: apiId,
+        logo_url: logoUrl || null,
+        competition_id: competitionId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "thesportsdb_team_id" },
+    )
+    .select("id, logo_url, color_primary")
+    .single();
+  if (error) {
+    const { data: retry } = await admin
+      .from("teams")
+      .select("id, logo_url, color_primary")
+      .eq("api_football_id", apiId)
+      .maybeSingle();
+    if (retry) return retry;
+    throw new Error(`upsert team ${apiId}: ${error.message}`);
+  }
+  return data;
+}
+
 export type SyncApiFootballFixturesForDateResult = {
   date: string;
   season: string;
@@ -203,13 +242,6 @@ async function importFixtureList(
       continue;
     }
 
-    const homeRow = teamMap.get(homeApi);
-    const awayRow = teamMap.get(awayApi);
-    if (!homeRow || !awayRow) {
-      out.skippedNoTeams += 1;
-      continue;
-    }
-
     const homeLogo =
       typeof (teams?.home as Record<string, unknown> | undefined)?.logo === "string"
         ? String((teams?.home as Record<string, unknown>).logo).trim()
@@ -218,6 +250,26 @@ async function importFixtureList(
       typeof (teams?.away as Record<string, unknown> | undefined)?.logo === "string"
         ? String((teams?.away as Record<string, unknown>).logo).trim()
         : "";
+
+    let homeRow = teamMap.get(homeApi);
+    let awayRow = teamMap.get(awayApi);
+
+    if (!homeRow || !awayRow) {
+      try {
+        if (!homeRow) {
+          homeRow = await upsertTeamByApiId(admin, homeApi, homeName, homeLogo || null, competitionId);
+          teamMap.set(homeApi, homeRow);
+        }
+        if (!awayRow) {
+          awayRow = await upsertTeamByApiId(admin, awayApi, awayName, awayLogo || null, competitionId);
+          teamMap.set(awayApi, awayRow);
+        }
+      } catch (e) {
+        out.skippedNoTeams += 1;
+        out.errors.push(`auto-upsert team fixture ${String(fid)}: ${e instanceof Error ? e.message : String(e)}`);
+        continue;
+      }
+    }
 
     const ts = fixture?.timestamp;
     let start_time: string;

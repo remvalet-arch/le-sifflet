@@ -84,6 +84,7 @@ interface ApiStandingEntry {
   goalsDiff: number;
   all: { played: number };
   form: string | null;
+  group?: string;
 }
 
 interface ApiPlayerEntry {
@@ -131,26 +132,31 @@ async function importStandings(): Promise<void> {
   }>("standings", { league: String(leagueId), season: String(season) });
 
   const groups = payload.response?.[0]?.league?.standings ?? [];
-  const entries = groups.flat();
 
-  if (entries.length === 0) {
+  if (groups.length === 0 || groups.flat().length === 0) {
     log.warn("Aucun classement disponible pour cette ligue / saison");
     return;
   }
 
-  const rows = entries.map((s) => ({
-    league_id: leagueId,
-    season,
-    rank: s.rank,
-    team_id: s.team.id,
-    team_name: s.team.name,
-    team_logo: s.team.logo || null,
-    points: s.points,
-    goals_diff: s.goalsDiff,
-    played: s.all.played,
-    form: s.form ?? null,
-    updated_at: new Date().toISOString(),
-  }));
+  // Les coupes renvoient plusieurs sous-tableaux (un par groupe ou par phase)
+  const rows = groups.flatMap((group) => {
+    const groupName: string | null =
+      group.length > 0 && group[0]?.group ? String(group[0].group) : null;
+    return group.map((s) => ({
+      league_id: leagueId,
+      season,
+      rank: s.rank,
+      team_id: s.team.id,
+      team_name: s.team.name,
+      team_logo: s.team.logo || null,
+      points: s.points,
+      goals_diff: s.goalsDiff,
+      played: s.all.played,
+      form: s.form ?? null,
+      group_name: groupName,
+      updated_at: new Date().toISOString(),
+    }));
+  });
 
   const { error } = await db
     .from("league_standings")
@@ -273,7 +279,65 @@ async function importFixtures(): Promise<void> {
     return;
   }
 
-  // 4c. Upsert MASSIF de toutes les fixtures dans `matches`
+  // 4c. Résolution + auto-upsert des équipes manquantes
+  const allTeamApiIds = Array.from(
+    new Set(
+      allFixtures.flatMap((f) => [f.teams.home.id, f.teams.away.id]).filter((id) => id > 0),
+    ),
+  );
+
+  // Fetch teams already in DB
+  const teamMap = new Map<number, string>();
+  if (allTeamApiIds.length > 0) {
+    const CHUNK = 100;
+    for (let i = 0; i < allTeamApiIds.length; i += CHUNK) {
+      const { data } = await db
+        .from("teams")
+        .select("id, api_football_id")
+        .in("api_football_id", allTeamApiIds.slice(i, i + CHUNK));
+      for (const row of data ?? []) {
+        if (row.api_football_id != null) teamMap.set(row.api_football_id, row.id);
+      }
+    }
+  }
+
+  // Auto-upsert des équipes absentes (si compétition connue)
+  if (competitionId) {
+    const missingTeamIds = allTeamApiIds.filter((id) => !teamMap.has(id));
+    const teamInfoMap = new Map<number, { name: string; logo: string }>();
+    for (const f of allFixtures) {
+      teamInfoMap.set(f.teams.home.id, { name: f.teams.home.name, logo: f.teams.home.logo });
+      teamInfoMap.set(f.teams.away.id, { name: f.teams.away.name, logo: f.teams.away.logo });
+    }
+    let autoUpserted = 0;
+    for (const apiId of missingTeamIds) {
+      const info = teamInfoMap.get(apiId);
+      if (!info) continue;
+      const syntheticId = `apifb-team-${apiId}`;
+      const { data: upserted } = await db
+        .from("teams")
+        .upsert(
+          {
+            thesportsdb_team_id: syntheticId,
+            name: info.name,
+            api_football_id: apiId,
+            logo_url: info.logo || null,
+            competition_id: competitionId,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "thesportsdb_team_id" },
+        )
+        .select("id, api_football_id")
+        .single();
+      if (upserted?.api_football_id != null) {
+        teamMap.set(upserted.api_football_id, upserted.id);
+        autoUpserted++;
+      }
+    }
+    if (autoUpserted > 0) log.ok(`${autoUpserted} équipes auto-upsertées`);
+  }
+
+  // 4d. Upsert MASSIF de toutes les fixtures dans `matches`
   const matchRows = allFixtures
     .filter((f) => f.fixture.id > 0 && f.teams.home.name && f.teams.away.name)
     .map((f) => ({
@@ -288,6 +352,8 @@ async function importFixtures(): Promise<void> {
       home_team_logo: f.teams.home.logo || null,
       away_team_logo: f.teams.away.logo || null,
       competition_id: competitionId,
+      home_team_id: teamMap.get(f.teams.home.id) ?? null,
+      away_team_id: teamMap.get(f.teams.away.id) ?? null,
     }));
 
   // Upsert par batch de 200 pour éviter les payloads trop lourds
@@ -307,7 +373,7 @@ async function importFixtures(): Promise<void> {
   console.log("");
   log.ok(`${upserted} matches upsertés en base`);
 
-  // 4d. Récupère les IDs internes des matchs terminés
+  // 4e. Récupère les IDs internes des matchs terminés
   const finishedApiIds = allFixtures
     .filter((f) => FINISHED_STATUSES.has(f.fixture.status.short))
     .map((f) => f.fixture.id);
@@ -329,7 +395,7 @@ async function importFixtures(): Promise<void> {
   const toSync = dbMatches ?? [];
   log.info(`${toSync.length} matchs terminés en base à synchroniser (events + compos + stats)`);
 
-  // 4e. syncApiFootballMatch sur chaque match terminé
+  // 4f. syncApiFootballMatch sur chaque match terminé
   let successCount = 0;
   let skipCount = 0;
   let errorCount = 0;

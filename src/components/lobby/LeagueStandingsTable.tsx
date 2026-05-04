@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { LeagueStandingRow } from "@/types/database";
 
@@ -21,61 +21,9 @@ function FormPill({ char }: { char: string }) {
   );
 }
 
-export function LeagueStandingsTable({ leagueApiId }: { leagueApiId: number }) {
-  const [standings, setStandings] = useState<LeagueStandingRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createClient();
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      const { data } = await supabase
-        .from("league_standings")
-        .select("*")
-        .eq("league_id", leagueApiId)
-        .order("season", { ascending: false })
-        .order("rank", { ascending: true });
-
-      if (cancelled) return;
-
-      const maxSeason = data?.[0]?.season ?? 0;
-      setStandings((data ?? []).filter((s) => s.season === maxSeason));
-      setLoading(false);
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [leagueApiId]);
-
-  if (loading) {
-    return (
-      <div className="py-10 text-center text-sm text-zinc-500">
-        Chargement du classement…
-      </div>
-    );
-  }
-
-  if (standings.length === 0) {
-    return (
-      <div className="rounded-2xl border border-white/8 bg-zinc-900/50 px-4 py-10 text-center">
-        <p className="text-sm font-bold text-zinc-400">Classement non disponible</p>
-        <p className="mt-1 text-xs text-zinc-600">
-          Lance{" "}
-          <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-zinc-400">
-            npx tsx scripts/import-league-history.ts {leagueApiId}
-          </code>
-        </p>
-      </div>
-    );
-  }
-
+function StandingsGrid({ rows }: { rows: LeagueStandingRow[] }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/50">
-      {/* En-tête */}
       <div className="grid grid-cols-[1.75rem_1fr_2.5rem_2.5rem_2.5rem_auto] items-center gap-x-1 border-b border-white/8 px-3 py-2.5">
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">#</span>
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Équipe</span>
@@ -87,14 +35,13 @@ export function LeagueStandingsTable({ leagueApiId }: { leagueApiId: number }) {
         </span>
       </div>
 
-      {/* Lignes */}
-      {standings.map((s, idx) => {
+      {rows.map((s, idx) => {
         const formChars = (s.form ?? "").split("").slice(-5);
         return (
           <div
             key={s.id}
             className={`grid grid-cols-[1.75rem_1fr_2.5rem_2.5rem_2.5rem_auto] items-center gap-x-1 px-3 py-2.5 transition-colors hover:bg-white/[0.03] ${
-              idx < standings.length - 1 ? "border-b border-white/[0.06]" : ""
+              idx < rows.length - 1 ? "border-b border-white/[0.06]" : ""
             }`}
           >
             <span className="text-xs font-bold text-zinc-500">{s.rank}</span>
@@ -136,6 +83,90 @@ export function LeagueStandingsTable({ leagueApiId }: { leagueApiId: number }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+export function LeagueStandingsTable({ leagueApiId }: { leagueApiId: number }) {
+  const [standings, setStandings] = useState<LeagueStandingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      const { data } = await supabase
+        .from("league_standings")
+        .select("*")
+        .eq("league_id", leagueApiId)
+        .order("season", { ascending: false })
+        .order("rank", { ascending: true });
+
+      if (cancelled) return;
+
+      const maxSeason = data?.[0]?.season ?? 0;
+      setStandings((data ?? []).filter((s) => s.season === maxSeason));
+      setLoading(false);
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [leagueApiId]);
+
+  // Regroupe par group_name quand les données en ont
+  const groups = useMemo(() => {
+    const hasGroups = standings.some((s) => s.group_name != null);
+    if (!hasGroups) return [{ name: null, rows: standings }];
+
+    const groupMap = new Map<string, LeagueStandingRow[]>();
+    for (const s of standings) {
+      const key = s.group_name ?? "";
+      if (!groupMap.has(key)) groupMap.set(key, []);
+      groupMap.get(key)!.push(s);
+    }
+    return [...groupMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, rows]) => ({ name: name || null, rows }));
+  }, [standings]);
+
+  if (loading) {
+    return (
+      <div className="py-10 text-center text-sm text-zinc-500">
+        Chargement du classement…
+      </div>
+    );
+  }
+
+  if (standings.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/8 bg-zinc-900/50 px-4 py-10 text-center">
+        <p className="text-sm font-bold text-zinc-400">Classement non disponible</p>
+        <p className="mt-1 text-xs text-zinc-600">
+          Lance{" "}
+          <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-zinc-400">
+            npx tsx scripts/import-league-history.ts {leagueApiId}
+          </code>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {groups.map((g) => (
+        <div key={g.name ?? "__single__"}>
+          {g.name && (
+            <p className="mb-2 px-1 text-[11px] font-black uppercase tracking-widest text-zinc-500">
+              {g.name}
+            </p>
+          )}
+          <StandingsGrid rows={g.rows} />
+        </div>
+      ))}
     </div>
   );
 }

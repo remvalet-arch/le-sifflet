@@ -385,6 +385,23 @@ function pickFixtureIdStrict(
   return "ambiguous";
 }
 
+const CUP_ROUND_MAP: [RegExp, string | ((m: RegExpMatchArray) => string)][] = [
+  [/^final$/i, "Finale"],
+  [/3rd\s*place/i, "3e place"],
+  [/semi[-\s]?finals?/i, "Demies"],
+  [/quarter[-\s]?finals?/i, "Quarts"],
+  [/round\s+of\s+64/i, "32èmes"],
+  [/round\s+of\s+32/i, "16èmes"],
+  [/round\s+of\s+16/i, "8èmes"],
+  [/round\s+of\s+8/i, "Quarts"],
+  [/round\s+of\s+4/i, "Demies"],
+  [/league\s+phase/i, "Phase de ligue"],
+  [/group\s+stage\s*[-–]\s*(\d+)/i, (m: RegExpMatchArray) => `GS-${m[1]}`],
+  [/preliminary\s+stage/i, "Préliminaires"],
+  [/play[-\s]?offs?/i, "Playoffs"],
+  [/qualifying\s*[-–]?\s*(\d+)/i, (m: RegExpMatchArray) => `Q${m[1]}`],
+];
+
 export function roundShortFromFixtureRow(row: Record<string, unknown>): string | null {
   const league = row.league as Record<string, unknown> | undefined;
   const raw = typeof league?.round === "string" ? league.round.trim() : "";
@@ -393,7 +410,11 @@ export function roundShortFromFixtureRow(row: Record<string, unknown>): string |
   if (seasonNum?.[1]) return `J${seasonNum[1]}`;
   const tailNum = /[-–]\s*(\d+)\s*$/i.exec(raw);
   if (tailNum?.[1] && /season|jour|matchday|gameweek/i.test(raw)) return `J${tailNum[1]}`;
-  const max = 28;
+  for (const [pattern, label] of CUP_ROUND_MAP) {
+    const m = pattern.exec(raw);
+    if (m) return typeof label === "function" ? label(m) : label;
+  }
+  const max = 20;
   if (raw.length > max) return `${raw.slice(0, max - 1)}…`;
   return raw;
 }
