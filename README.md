@@ -37,7 +37,7 @@ L'application tourne autour de "Sifflets", une monnaie virtuelle, avec un ton tr
    ```
 
 4. **Base de données :**
-   *(Optionnel) Si tu utilises Supabase localement, assure-toi d'appliquer les migrations via la CLI.*
+   _(Optionnel) Si tu utilises Supabase localement, assure-toi d'appliquer les migrations via la CLI._
 
 5. **Lancer le serveur de développement :**
    ```bash

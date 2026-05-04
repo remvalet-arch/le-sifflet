@@ -17,10 +17,9 @@ export default async function PronosPage() {
     nowMs + 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  // Matchs à venir sur les 7 prochains jours, ligues suivies
   const { data: competitions } = await supabase
     .from("competitions")
-    .select("id, api_football_league_id")
+    .select("id, name, badge_url, api_football_league_id")
     .in("api_football_league_id", LOBBY_TRACKED_LEAGUE_API_IDS as number[]);
 
   const competitionIds = (competitions ?? []).map((c) => c.id);
@@ -42,7 +41,6 @@ export default async function PronosPage() {
     .order("start_time", { ascending: true })
     .limit(50);
 
-  // Pronos existants de l'utilisateur pour ces matchs
   const matchIds = (matches ?? []).map((m) => m.id);
   const { data: existingPronos } =
     matchIds.length > 0
@@ -67,6 +65,11 @@ export default async function PronosPage() {
       <PronosticsHubClient
         matches={matches ?? []}
         existingPronos={existingPronos ?? []}
+        competitions={(competitions ?? []).map((c) => ({
+          id: c.id,
+          name: c.name,
+          badge_url: c.badge_url,
+        }))}
       />
     </main>
   );
