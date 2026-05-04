@@ -185,7 +185,7 @@ function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: E
   const selectCup = useCallback((id: number) => setSelectedCupId(id), []);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Matchs Europe du jour (si présents) */}
       {europeRows.length > 0 && (
         <div className="flex flex-col gap-10">
@@ -209,31 +209,23 @@ function EuropeHubView({ europeGrouped, europeRows, roundView, roundContext }: E
         </div>
       )}
 
-      {/* Séparateur + sous-sélecteur de coupe */}
-      <div>
-        <div className="mb-3 flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
-            Explorer par compétition
-          </span>
-          <div className="h-px flex-1 bg-white/8" />
-        </div>
-        <nav className="flex gap-1.5" aria-label="Compétition européenne">
-          {EUROPEAN_CUPS.map((cup) => (
-            <button
-              key={cup.apiFootballLeagueId}
-              type="button"
-              onClick={() => selectCup(cup.apiFootballLeagueId)}
-              className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
-                selectedCupId === cup.apiFootballLeagueId
-                  ? "bg-zinc-700 text-white"
-                  : "bg-zinc-900/60 text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              {cup.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Sous-sélecteur de coupe — même pattern que les onglets principaux */}
+      <nav className="-mx-1 flex gap-1 overflow-x-auto pb-1" aria-label="Compétition européenne">
+        {EUROPEAN_CUPS.map((cup) => (
+          <button
+            key={cup.apiFootballLeagueId}
+            type="button"
+            onClick={() => selectCup(cup.apiFootballLeagueId)}
+            className={`shrink-0 rounded-full px-3 py-2 text-xs font-black uppercase tracking-wide transition ${
+              selectedCupId === cup.apiFootballLeagueId
+                ? "bg-whistle text-pitch-900"
+                : "bg-zinc-800/90 text-zinc-400 hover:bg-zinc-800"
+            }`}
+          >
+            {cup.label}
+          </button>
+        ))}
+      </nav>
 
       {/* Hub de la coupe sélectionnée */}
       <LeagueHub
