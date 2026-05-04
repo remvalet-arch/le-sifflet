@@ -659,6 +659,96 @@ export interface Database {
         };
         Relationships: [];
       };
+      league_standings: {
+        Row: {
+          id: string;
+          league_id: number;
+          season: number;
+          rank: number;
+          team_id: number;
+          team_name: string;
+          team_logo: string | null;
+          points: number;
+          goals_diff: number;
+          played: number;
+          form: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          league_id: number;
+          season: number;
+          rank: number;
+          team_id: number;
+          team_name: string;
+          team_logo?: string | null;
+          points?: number;
+          goals_diff?: number;
+          played?: number;
+          form?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          league_id?: number;
+          season?: number;
+          rank?: number;
+          team_id?: number;
+          team_name?: string;
+          team_logo?: string | null;
+          points?: number;
+          goals_diff?: number;
+          played?: number;
+          form?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      league_top_players: {
+        Row: {
+          id: string;
+          league_id: number;
+          season: number;
+          type: "scorer" | "assist";
+          rank: number;
+          player_id: number;
+          player_name: string;
+          player_photo: string | null;
+          team_logo: string | null;
+          goals_or_assists_count: number;
+          played_matches: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          league_id: number;
+          season: number;
+          type: "scorer" | "assist";
+          rank: number;
+          player_id: number;
+          player_name: string;
+          player_photo?: string | null;
+          team_logo?: string | null;
+          goals_or_assists_count?: number;
+          played_matches?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          league_id?: number;
+          season?: number;
+          type?: "scorer" | "assist";
+          rank?: number;
+          player_id?: number;
+          player_name?: string;
+          player_photo?: string | null;
+          team_logo?: string | null;
+          goals_or_assists_count?: number;
+          played_matches?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -773,3 +863,5 @@ export type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
 export type UserBadgeRow = Database["public"]["Tables"]["user_badges"]["Row"];
 export type MatchStatisticsRow = Database["public"]["Tables"]["match_statistics"]["Row"];
 export type PronoRow = Database["public"]["Tables"]["pronos"]["Row"];
+export type LeagueStandingRow = Database["public"]["Tables"]["league_standings"]["Row"];
+export type LeagueTopPlayerRow = Database["public"]["Tables"]["league_top_players"]["Row"];

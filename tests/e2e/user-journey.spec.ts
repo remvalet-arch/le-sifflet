@@ -2,8 +2,12 @@
  * Parcours utilisateur complet — VAR Time
  *
  * Prérequis :
- *   - App en cours d'exécution sur localhost:3000 (ou PLAYWRIGHT_BASE_URL)
- *   - TEST_AUTH_SECRET défini dans .env.local
+ *   - App en cours d'exécution ; **PLAYWRIGHT_BASE_URL** = URL exacte du dev (port inclus,
+ *     ex. http://localhost:3002 si Next écoute sur 3002). Sinon Playwright relance un second
+ *     `npm run dev` sur le port par défaut et peut entrer en conflit.
+ *   - TEST_AUTH_SECRET + Supabase (`SUPABASE_SERVICE_ROLE_KEY`, etc.) dans .env.local — le
+ *     global setup appelle GET /api/test/auth (magic link) : une erreur « fetch failed » vient
+ *     en général d’un appel Supabase injoignable depuis le serveur Next.
  *   - Au moins un match dans la base (seed.sql)
  *
  * Lance avec : npm run test:e2e

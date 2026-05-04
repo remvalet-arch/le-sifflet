@@ -182,7 +182,7 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 | **`long_term_bets` (legacy)** | Table + RPC encore en base ; **plus** d’API ni d’UI profil — remplacé par **`pronos`**. |
 | **Vérification auto résolution event** | [`sportsProvider.ts`](src/lib/sports/sportsProvider.ts) interroge **API-Football** (`fetchFixtureEventsRaw`) pour **`var_goal`** / **`penalty_check`** ; sinon `WAIT` (admin / autre flux). |
 | **Déclencheur VAR / pénalty auto** | **Fait** : heuristiques sur incidents `fixtures/events` dans **`applyApiFootballSignalsToMarkets`** (appelée depuis **`syncMatchEvents`**) + signaux communautaires **`/api/alert`** inchangés. |
-| **Tests E2E** | [`tests/e2e/user-journey.spec.ts`](tests/e2e/user-journey.spec.ts) aligné sur **Kop / Compo / Pronos \| Stats / Ligue** + parcours **Pronos** (score exact, bunker 0-0). |
+| **Tests E2E** | [`tests/e2e/user-journey.spec.ts`](tests/e2e/user-journey.spec.ts) : **PWA `sw.js`**, lobby, **Kop / Compo / Pronos \| Stats**, **Pronos** + **Bunker 0-0**, profil **Confiance** + **Paris VAR**. Exécution locale : aligner **`PLAYWRIGHT_BASE_URL`** sur le port du dev (voir § Tests). |
 | **`match_minute`** | Alimentée via sync API-Football sur `matches` ; pas de « chronomètre » autonome côté app hors données fournisseur. |
 
 ---
@@ -194,8 +194,10 @@ npm run dev
 npm run build
 npm run lint && npm run typecheck
 npm run test:backend   # scripts/simulate-match-scenario.ts
-npm run test:e2e       # Playwright — voir décalage libellés onglets ci-dessus
+npm run test:e2e       # Playwright — libellés Kop / Compo / Pronos / Bunker 0-0
 ```
+
+**E2E** : `PLAYWRIGHT_BASE_URL` doit pointer vers l’URL réelle du `npm run dev` (y compris le **port**, ex. `http://localhost:3002` si `PORT=3002`). Sinon le `webServer` Playwright tente un second Next et échoue. Si le **global setup** échoue sur `/api/test/auth` avec `fetch failed`, vérifier réseau + `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` accessibles depuis ce serveur.
 
 Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 

@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants/top-leagues";
 import { isNextImageRemoteLogoUrl } from "@/lib/remote-logo-hosts";
 import { MatchCard } from "@/components/lobby/MatchCard";
+import { LeagueHub } from "@/components/lobby/LeagueHub";
 import { isLobbyLiveStatus } from "@/lib/matches";
 import type { LobbyMatchRow } from "@/types/lobby";
 import { toMatchRow } from "@/types/lobby";
@@ -124,10 +125,6 @@ function buildLeagueGroups(rows: LobbyMatchRow[]): LeagueGroup[] {
   return list;
 }
 
-function tabLabel(tab: LobbyTabKey): string {
-  return TABS.find((t) => t.id === tab)?.label ?? "";
-}
-
 function defaultTabForProps(
   viewMode: "day" | "round",
   roundContext: { leagueApiId: number; roundShort: string } | null,
@@ -217,17 +214,7 @@ export function MatchLobby({
 
   const europeGrouped = useMemo(() => buildLeagueGroups(europeRows), [europeRows]);
 
-  const leagueTabMatches = useMemo(() => {
-    if (tab === "direct" || tab === "europe") return [];
-    const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
-    if (!league) return [];
-    return rows
-      .filter((m) => m.competition?.api_football_league_id === league.apiFootballLeagueId)
-      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-  }, [rows, tab]);
-
   const roundView = viewMode === "round" && roundContext != null;
-  const emptyLeagueHint = roundView ? "pour ce tour" : "pour cette journée";
 
   if (rows.length === 0) {
     return (
@@ -309,7 +296,7 @@ export function MatchLobby({
       ) : tab === "europe" ? (
         europeRows.length === 0 ? (
           <p className="rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-8 text-center text-sm text-zinc-500">
-            Aucun match Europe (C1, C3, Conference) {emptyLeagueHint}.
+            Aucun match Europe (C1, C3, Conference) {roundView ? "pour ce tour" : "pour cette journée"}.
           </p>
         ) : (
           <div className="flex flex-col gap-10">
@@ -332,24 +319,16 @@ export function MatchLobby({
             ))}
           </div>
         )
-      ) : leagueTabMatches.length === 0 ? (
-        <p className="rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-8 text-center text-sm text-zinc-500">
-          Aucun match {tabLabel(tab)} {emptyLeagueHint}.
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {leagueTabMatches.map((m) => (
-            <li key={m.id}>
-              <MatchCard
-                match={toMatchRow(m)}
-                goalEvents={goalsFromTimeline(m)}
-                mpgLayout
-                hasLineups={m.has_lineups}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      ) : (() => {
+          const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
+          if (!league) return null;
+          return (
+            <LeagueHub
+              leagueApiId={league.apiFootballLeagueId}
+              initialRound={roundContext?.roundShort ?? null}
+            />
+          );
+        })()}
     </div>
   );
 }
