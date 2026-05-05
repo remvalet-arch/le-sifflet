@@ -27,7 +27,7 @@ export default async function PronosPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, team_home, team_away, home_team_id, away_team_id, home_team_logo, away_team_logo, start_time, competition_id, round_short, status",
+      "id, team_home, team_away, home_team_id, away_team_id, home_team_logo, away_team_logo, start_time, competition_id, round_short, status, odds_home, odds_draw, odds_away",
     )
     .in("status", [
       "upcoming",
@@ -42,15 +42,28 @@ export default async function PronosPage() {
     .limit(50);
 
   const matchIds = (matches ?? []).map((m) => m.id);
-  const { data: existingPronos } =
+  const [{ data: existingPronos }, { data: stats }] =
     matchIds.length > 0
-      ? await supabase
-          .from("pronos")
-          .select("match_id, prono_type, prono_value")
-          .eq("user_id", user.id)
-          .in("match_id", matchIds)
-          .in("prono_type", ["exact_score", "scorer_allocation"])
-      : { data: [] };
+      ? await Promise.all([
+          supabase
+            .from("pronos")
+            .select("match_id, prono_type, prono_value")
+            .eq("user_id", user.id)
+            .in("match_id", matchIds)
+            .in("prono_type", ["exact_score", "scorer_allocation"]),
+          supabase
+            .from("v_match_pronos_stats")
+            .select("*")
+            .in("match_id", matchIds),
+        ])
+      : [{ data: [] }, { data: [] }];
+
+  const statsByMatchId = new Map(stats?.map((s) => [s.match_id, s]));
+
+  const enrichedMatches = (matches ?? []).map((m) => ({
+    ...m,
+    community_stats: statsByMatchId.get(m.id) ?? null,
+  }));
 
   return (
     <main className="flex flex-col gap-4 px-4 py-4">
@@ -63,7 +76,7 @@ export default async function PronosPage() {
         </span>
       </div>
       <PronosticsHubClient
-        matches={matches ?? []}
+        matches={enrichedMatches}
         existingPronos={existingPronos ?? []}
         competitions={(competitions ?? []).map((c) => ({
           id: c.id,

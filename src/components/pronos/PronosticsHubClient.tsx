@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Bell, Check, ChevronDown, ChevronRight, Target } from "lucide-react";
+import {
+  Bell,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Target,
+  Minus,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
 import { format, formatRelative, isToday, isTomorrow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { convertOddToPoints } from "@/lib/odds";
 import { PlayerPickerSheet } from "./PlayerPickerSheet";
 
 type MatchStub = {
@@ -21,6 +30,17 @@ type MatchStub = {
   competition_id: string | null;
   round_short: string | null;
   status: string;
+  odds_home?: number | null;
+  odds_draw?: number | null;
+  odds_away?: number | null;
+  community_stats?: {
+    total_pronos: number;
+    community_1_pct: number;
+    community_N_pct: number;
+    community_2_pct: number;
+    home_form: string | null;
+    away_form: string | null;
+  } | null;
 };
 
 export type CompetitionStub = {
@@ -140,15 +160,85 @@ function aggregateSlots(slots: string[]): ScorerEntry[] {
   return Array.from(map.entries()).map(([name, goals]) => ({ name, goals }));
 }
 
+function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
+  // Pad with unknown if less than 5
+  const paddedForm = [...form];
+  while (paddedForm.length < 5) paddedForm.push("unknown");
+
+  return (
+    <div className="flex gap-1">
+      {paddedForm.slice(0, 5).map((res, i) => {
+        if (res === "W") {
+          return (
+            <div
+              key={i}
+              className="flex h-3 w-3 items-center justify-center rounded-full bg-green-500"
+            >
+              <Check className="h-2 w-2 text-white" strokeWidth={4} />
+            </div>
+          );
+        }
+        if (res === "L") {
+          return (
+            <div
+              key={i}
+              className="flex h-3 w-3 items-center justify-center rounded-full bg-red-500"
+            >
+              <X className="h-2 w-2 text-white" strokeWidth={4} />
+            </div>
+          );
+        }
+        if (res === "D") {
+          return (
+            <div
+              key={i}
+              className="flex h-3 w-3 items-center justify-center rounded-full bg-zinc-500"
+            >
+              <Minus className="h-2 w-2 text-white" strokeWidth={4} />
+            </div>
+          );
+        }
+        return (
+          <div
+            key={i}
+            className="flex h-3 w-3 items-center justify-center rounded-full bg-zinc-800 border border-white/10"
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function parseFormString(
+  form: string | null | undefined,
+): ("W" | "D" | "L" | "unknown")[] {
+  if (!form) return ["unknown", "unknown", "unknown", "unknown", "unknown"];
+  // Sometimes API-Football form is oldest first, sometimes newest.
+  // Generally it's oldest -> newest. We'll just map 'W', 'D', 'L'.
+  const chars = form
+    .toUpperCase()
+    .replace(/[^WDL]/g, "")
+    .split("")
+    .reverse(); // Reverse so most recent is first, or keep as is? MPG shows oldest to newest left to right. Let's just map it.
+  const mapped: ("W" | "D" | "L" | "unknown")[] = chars
+    .map((c) => c as "W" | "D" | "L")
+    .reverse();
+  return mapped;
+}
+
 function TeamLogo({ logo, name }: { logo: string | null; name: string }) {
   if (logo?.startsWith("http")) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={logo} alt={name} className="h-8 w-8 object-contain" />
+      <img
+        src={logo}
+        alt={name}
+        className="h-10 w-10 object-contain drop-shadow-md"
+      />
     );
   }
   return (
-    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-sm">
+    <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-sm">
       ⚽
     </span>
   );
@@ -183,8 +273,8 @@ function ScoreInput({
         onChange(v);
         if (v.length >= 1) onFilled?.();
       }}
-      className="h-12 w-12 rounded-xl border border-white/15 bg-zinc-900 text-center text-xl font-black text-white outline-none ring-0 transition focus:border-whistle focus:ring-1 focus:ring-whistle/40 disabled:cursor-not-allowed disabled:opacity-50"
-      placeholder="–"
+      className="h-14 w-12 rounded-[10px] border border-white/10 bg-[#2D2D2D] text-center text-xl font-black text-white outline-none ring-0 transition focus:border-amber-500/50 focus:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+      placeholder=""
     />
   );
 }
@@ -451,43 +541,128 @@ function MatchPronoCard({
         </div>
 
         {/* Teams + score inputs */}
-        <div className="flex items-center gap-3">
-          <div className="flex flex-1 flex-col items-center gap-1.5">
+        <div className="flex items-start justify-between mt-2 mb-2">
+          {/* Left Team */}
+          <div className="flex flex-1 flex-col items-center text-center">
             <TeamLogo logo={match.home_team_logo} name={match.team_home} />
-            <span className="line-clamp-2 text-center text-[11px] font-bold leading-tight text-white">
+            <span className="mt-2 line-clamp-1 text-xs font-bold leading-tight text-white">
               {match.team_home}
             </span>
+            <div className="mt-1.5">
+              <TeamFormPills
+                form={parseFormString(match.community_stats?.home_form)}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <ScoreInput
-              value={homeScore}
-              onChange={(val) => {
-                if (!isLocked) setHomeScore(val);
-              }}
-              onFilled={() => {
-                if (!isLocked) awayRef.current?.focus();
-              }}
-              disabled={isLocked}
-              aria-label={`Buts ${match.team_home}`}
-            />
-            <span className="text-lg font-black text-zinc-600">–</span>
-            <ScoreInput
-              value={awayScore}
-              onChange={(val) => {
-                if (!isLocked) setAwayScore(val);
-              }}
-              inputRef={awayRef}
-              disabled={isLocked}
-              aria-label={`Buts ${match.team_away}`}
-            />
+          {/* Center Block */}
+          <div className="flex flex-col items-center mx-2 shrink-0">
+            {/* Inputs */}
+            <div className="flex items-center gap-2.5 mb-2.5">
+              <ScoreInput
+                value={homeScore}
+                onChange={(val) => {
+                  if (!isLocked) setHomeScore(val);
+                }}
+                onFilled={() => {
+                  if (!isLocked) awayRef.current?.focus();
+                }}
+                disabled={isLocked}
+                aria-label={`Buts ${match.team_home}`}
+              />
+              <ScoreInput
+                value={awayScore}
+                onChange={(val) => {
+                  if (!isLocked) setAwayScore(val);
+                }}
+                inputRef={awayRef}
+                disabled={isLocked}
+                aria-label={`Buts ${match.team_away}`}
+              />
+            </div>
+
+            {/* Odds Pills (1, N, 2) */}
+            {(() => {
+              const pts1 = match.odds_home
+                ? convertOddToPoints(match.odds_home, 220)
+                : 50;
+              const ptsN = match.odds_draw
+                ? convertOddToPoints(match.odds_draw, 220)
+                : 50;
+              const pts2 = match.odds_away
+                ? convertOddToPoints(match.odds_away, 220)
+                : 50;
+
+              const is1 = scoresValid && homeInt > awayInt;
+              const isN = scoresValid && homeInt === awayInt;
+              const is2 = scoresValid && homeInt < awayInt;
+
+              return (
+                <>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <div
+                      className={`flex flex-col items-center justify-center rounded-[6px] px-2 py-1 min-w-[2.5rem] transition-all ${is1 ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
+                    >
+                      <span
+                        className={`text-[11px] font-black tabular-nums ${is1 ? "text-amber-400" : "text-zinc-400"}`}
+                      >
+                        {pts1}
+                      </span>
+                    </div>
+                    <div
+                      className={`flex flex-col items-center justify-center rounded-[6px] px-2 py-1 min-w-[2.5rem] transition-all ${isN ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
+                    >
+                      <span
+                        className={`text-[11px] font-black tabular-nums ${isN ? "text-amber-400" : "text-zinc-400"}`}
+                      >
+                        {ptsN}
+                      </span>
+                    </div>
+                    <div
+                      className={`flex flex-col items-center justify-center rounded-[6px] px-2 py-1 min-w-[2.5rem] transition-all ${is2 ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
+                    >
+                      <span
+                        className={`text-[11px] font-black tabular-nums ${is2 ? "text-amber-400" : "text-zinc-400"}`}
+                      >
+                        {pts2}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Community Percentages */}
+                  <div className="flex items-center justify-center gap-1.5 mt-1 opacity-75">
+                    <div className="min-w-[2.5rem] text-center">
+                      <span className="text-[10px] font-medium text-zinc-500">
+                        {match.community_stats?.community_1_pct ?? 0}%
+                      </span>
+                    </div>
+                    <div className="min-w-[2.5rem] text-center">
+                      <span className="text-[10px] font-medium text-zinc-500">
+                        {match.community_stats?.community_N_pct ?? 0}%
+                      </span>
+                    </div>
+                    <div className="min-w-[2.5rem] text-center">
+                      <span className="text-[10px] font-medium text-zinc-500">
+                        {match.community_stats?.community_2_pct ?? 0}%
+                      </span>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
-          <div className="flex flex-1 flex-col items-center gap-1.5">
+          {/* Right Team */}
+          <div className="flex flex-1 flex-col items-center text-center">
             <TeamLogo logo={match.away_team_logo} name={match.team_away} />
-            <span className="line-clamp-2 text-center text-[11px] font-bold leading-tight text-white">
+            <span className="mt-2 line-clamp-1 text-xs font-bold leading-tight text-white">
               {match.team_away}
             </span>
+            <div className="mt-1.5">
+              <TeamFormPills
+                form={parseFormString(match.community_stats?.away_form)}
+              />
+            </div>
           </div>
         </div>
 

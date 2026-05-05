@@ -12,7 +12,6 @@ import {
   EXACT_SCORE_DEFAULT_ODD,
 } from "@/lib/odds";
 
-const SCORE_EXACT_REWARD = convertOddToPoints(EXACT_SCORE_DEFAULT_ODD, 220);
 const BUNKER_REWARD = convertOddToPoints(18.0, 220);
 
 function getScorerReward(pos: string | null | undefined): number {
@@ -362,24 +361,36 @@ export function PolymarketTab({
                   </p>
                 </div>
               ) : (
-                <div className="mb-3 flex items-center justify-between rounded-xl border border-white/8 bg-zinc-800/60 px-4 py-2.5">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-                      Score exact
-                    </p>
-                    <p className="text-base font-black text-white">
-                      {derivedScore}
-                    </p>
+                <>
+                  <div className="mb-3 flex items-center justify-between rounded-xl border border-white/8 bg-zinc-800/60 px-4 py-2.5">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                        Score exact
+                      </p>
+                      <p className="text-base font-black text-white">
+                        {derivedScore}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                        Gain de base
+                      </p>
+                      <p className="text-xl font-black text-white">
+                        +{scoreReward.toLocaleString("fr-FR")} pts
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-                      Récompense
+                  {!implied1N2Odd && (
+                    <p className="mb-2 text-center text-[10px] italic text-zinc-500">
+                      Cotes en attente
                     </p>
-                    <p className="text-2xl font-black text-green-400">
-                      +{SCORE_EXACT_REWARD.toLocaleString("fr-FR")} Pts
-                    </p>
+                  )}
+                  <div className="mb-4 flex items-center justify-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 border border-amber-500/20">
+                    <span className="text-[10px] font-black uppercase tracking-wide text-amber-500">
+                      + Jusqu&apos;à 100 pts (Prime Contre-Pied)
+                    </span>
                   </div>
-                </div>
+                </>
               )}
 
               <button

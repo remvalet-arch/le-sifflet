@@ -825,7 +825,17 @@ export interface Database {
       };
     };
     Views: {
-      [_ in never]: never;
+      v_match_pronos_stats: {
+        Row: {
+          match_id: string;
+          total_pronos: number;
+          community_1_pct: number;
+          community_N_pct: number;
+          community_2_pct: number;
+          home_form: string | null;
+          away_form: string | null;
+        };
+      };
     };
     Functions: {
       close_expired_market_events: {

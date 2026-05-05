@@ -178,27 +178,34 @@ L'objectif est de remplacer les éléments factices par nos vraies captures d'é
 - [x] **Étape 4 : Ajustement du Copywriting des Sifflets**
   - _Détails :_ Dans la section "Trois étapes", ajuste légèrement le texte du panel "Sifflets".
   - _Action :_ Texte mis à jour : "Les points gagnés (Sifflets) s'adaptent dynamiquement aux vraies cotes des matchs. C'est ton trésor de guerre pour miser quand la VAR s'ouvre."
-  
- 
- - [ ] **Refonte du flux de connexion Google (Sign-in with id_token)**
-  - _Détails :_ Le frontend doit récupérer l'ID Token depuis Google directement, puis l'envoyer à Supabase via `signInWithIdToken`.
-  - _Action 1 (Installation) :_ Si besoin, installe la librairie `@react-oauth/google` pour faciliter l'intégration du bouton Google côté client dans Next.js, ou utilise le SDK natif Google Identity.
-  - _Action 2 (Provider) :_ Entoure l'application (ou la page de login) avec le `GoogleOAuthProvider` en utilisant la variable d'environnement `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
-  - _Action 3 (Refonte du Bouton) :_ Dans le composant d'authentification (ex: `AuthModal` ou `LoginPage`), remplace l'appel actuel `supabase.auth.signInWithOAuth(...)` par le composant Google.
-  - _Action 4 (Connexion Supabase) :_ Dans le callback `onSuccess` de Google, récupère le `credential` (l'id_token) et envoie-le à Supabase avec la méthode : 
-    `await supabase.auth.signInWithIdToken({ provider: 'google', token: credential })`
-  - _Action 5 (Redirection) :_ Une fois la promesse Supabase résolue avec succès, redirige l'utilisateur vers la page `/lobby`.
-  
-[ ] **Affichage des Gains Potentiels (Match Card)**
-  - _Détails :_ Afficher dynamiquement les points à gagner en fonction du score saisi par l'utilisateur, en tenant compte de notre formule asymptotique pour le 1N2 et de notre prime mystère "Contre-Pied" pour le score exact.
-  - _Action 1 (Détection du 1N2) :_ Dans le composant où l'utilisateur saisit son score, crée un état dérivé. Si Score Domicile > Score Extérieur, c'est un "1". Si Égalité, c'est "N". Sinon, c'est "2".
-  - _Action 2 (Calcul UI des points de base) :_ Récupère les vraies cotes du match (`odds_home`, `odds_draw`, `odds_away`) passées en props. Utilise notre fonction utilitaire `convertOddToPoints(odd)` pour afficher le gain potentiel de l'issue choisie.
-  - _Action 3 (Design du Feedback) :_ Sous les inputs de score, affiche une petite zone de feedback dynamique. 
-    - Exemple de rendu : `Gain de base : 29 pts (Victoire Domicile)`
-  - _Action 4 (Badge "Contre-Pied") :_ À côté ou en dessous du gain de base, ajoute un petit badge stylisé (ex: texte doré ou bordure brillante) mentionnant : `+ Jusqu'à 100 pts (Prime Contre-Pied)`.
-  - _Action 5 (Fallback) :_ Si les cotes de l'API ne sont pas encore disponibles pour ce match (`odds_home` est `NULL`), affiche des gains génériques (ex: 50 pts) avec un petit texte "Cotes en attente".
+
+- [x] **Affichage des Gains Potentiels (Match Card)**
+
+- _Détails :_ Afficher dynamiquement les points à gagner en fonction du score saisi par l'utilisateur, en tenant compte de notre formule asymptotique pour le 1N2 et de notre prime mystère "Contre-Pied" pour le score exact.
+- _Action 1 (Détection du 1N2) :_ Dans le composant où l'utilisateur saisit son score, crée un état dérivé. Si Score Domicile > Score Extérieur, c'est un "1". Si Égalité, c'est "N". Sinon, c'est "2".
+- _Action 2 (Calcul UI des points de base) :_ Récupère les vraies cotes du match (`odds_home`, `odds_draw`, `odds_away`) passées en props. Utilise notre fonction utilitaire `convertOddToPoints(odd)` pour afficher le gain potentiel de l'issue choisie.
+- _Action 3 (Design du Feedback) :_ Sous les inputs de score, affiche une petite zone de feedback dynamique.
+  - Exemple de rendu : `Gain de base : 29 pts (Victoire Domicile)`
+- _Action 4 (Badge "Contre-Pied") :_ À côté ou en dessous du gain de base, ajoute un petit badge stylisé (ex: texte doré ou bordure brillante) mentionnant : `+ Jusqu'à 100 pts (Prime Contre-Pied)`.
+- _Action 5 (Fallback) :_ Si les cotes de l'API ne sont pas encore disponibles pour ce match (`odds_home` est `NULL`), affiche des gains génériques (ex: 50 pts) avec un petit texte "Cotes en attente".
+
+- [x] **Refonte UI Match Card Pronos (Style MPG)**
+  - _Détails :_ Rapprocher l'UI de saisie des pronostics du design de référence (compact, riche en données avant saisie).
+  - _Action 1 (UI Gains 1N2 statiques) :_ Sous les deux inputs de score (qui doivent adopter un style carré/arrondi minimaliste), afficher une rangée de 3 petites pilules sombres. Ces pilules affichent les gains potentiels de base (1, N, 2) calculés via les cotes `odds_*`. Retirer la zone de feedback dynamique sous les inputs qu'on avait faite précédemment.
+  - _Action 2 (Stats Communauté %) :_ Sous les pilules de gains, afficher la répartition (en pourcentage) des pronostics de la communauté pour le 1, N, et 2. Cela nécessite d'adapter le backend (création d'une Vue SQL ou modification de RPC) pour remonter les aggrégations de `pronos` par match.
+  - _Action 3 (Forme des équipes / Form Guide) :_ Sous le nom des équipes, afficher 5 petites pastilles circulaires (Vert = V, Gris = N, Rouge = D) correspondant aux 5 derniers résultats. Nécessite de créer une fonction RPC ou d'enrichir l'endpoint pour récupérer l'historique récent (`last_5_matches`) de chaque équipe.
+  - _Action 4 (Feedback de sélection) :_ Lorsqu'un utilisateur tape un score (ex: 2-1), la pilule correspondante au résultat induit (le "1" dans ce cas) doit s'illuminer ou se mettre en surbrillance pour valider visuellement son choix de gain.
 
 ## 🧊 Backlog (À faire plus tard)
+
+- [ ] **Refonte du flux de connexion Google (Sign-in with id_token)**
+- _Détails :_ Le frontend doit récupérer l'ID Token depuis Google directement, puis l'envoyer à Supabase via `signInWithIdToken`.
+- _Action 1 (Installation) :_ Si besoin, installe la librairie `@react-oauth/google` pour faciliter l'intégration du bouton Google côté client dans Next.js, ou utilise le SDK natif Google Identity.
+- _Action 2 (Provider) :_ Entoure l'application (ou la page de login) avec le `GoogleOAuthProvider` en utilisant la variable d'environnement `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- _Action 3 (Refonte du Bouton) :_ Dans le composant d'authentification (ex: `AuthModal` ou `LoginPage`), remplace l'appel actuel `supabase.auth.signInWithOAuth(...)` par le composant Google.
+- _Action 4 (Connexion Supabase) :_ Dans le callback `onSuccess` de Google, récupère le `credential` (l'id_token) et envoie-le à Supabase avec la méthode :
+  `await supabase.auth.signInWithIdToken({ provider: 'google', token: credential })`
+- _Action 5 (Redirection) :_ Une fois la promesse Supabase résolue avec succès, redirige l'utilisateur vers la page `/lobby`.
 
 - [ ] Ajouter les avatars personnalisés pour chaque "Arbitre".
 - [ ] Classement global ("Board des sifflets") mis à jour toutes les 24h.
