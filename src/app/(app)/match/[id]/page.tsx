@@ -23,17 +23,27 @@ export default async function MatchPage({ params }: Props) {
   const supabase = await createClient();
 
   const [
-    { data: match, error },
-    {
-      data: { user },
-    },
+    matchResponse,
+    authResponse,
   ] = await Promise.all([
-    supabase.from("matches").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("matches")
+      .select(
+        "*, home_team:teams!home_team_id(color_primary, color_secondary), away_team:teams!away_team_id(color_primary, color_secondary)",
+      )
+      .eq("id", id)
+      .maybeSingle(),
     supabase.auth.getUser(),
   ]);
 
-  if (error || !match) notFound();
+  const { data: matchData, error } = matchResponse;
+  const { data: { user } } = authResponse;
+
+  if (error || !matchData) notFound();
   if (!user) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const match = matchData as any; // Bypass TS error on missing relationship
 
   const { data: profile } = await supabase
     .from("profiles")

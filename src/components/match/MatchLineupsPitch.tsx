@@ -4,6 +4,7 @@ import Image from "next/image";
 import { memo } from "react";
 import type { LineupRow } from "@/types/database";
 import { startersForPitchRow } from "@/lib/pitch-lineups";
+import { resolveMatchColors } from "@/lib/colors";
 
 const LOGO_HOSTS = new Set(["www.thesportsdb.com", "r2.thesportsdb.com"]);
 
@@ -176,7 +177,9 @@ type Props = {
   homeTeamLogo?: string | null;
   awayTeamLogo?: string | null;
   homeTeamColor?: string | null;
+  homeTeamSecondaryColor?: string | null;
   awayTeamColor?: string | null;
+  awayTeamSecondaryColor?: string | null;
 };
 
 /** Terrain visuel type Google Sport : moitié haute domicile, moitié basse extérieur. */
@@ -187,7 +190,9 @@ export const MatchLineupsPitch = memo(function MatchLineupsPitch({
   homeTeamLogo,
   awayTeamLogo,
   homeTeamColor,
+  homeTeamSecondaryColor,
   awayTeamColor,
+  awayTeamSecondaryColor,
 }: Props) {
   const homeStarters = lineups.filter(
     (p) => p.team_side === "home" && p.status === "starter",
@@ -202,8 +207,12 @@ export const MatchLineupsPitch = memo(function MatchLineupsPitch({
     (p) => p.team_side === "away" && p.status === "bench",
   );
 
-  const homeBg = homeTeamColor ?? "#166534";
-  const awayBg = awayTeamColor ?? "#14532d";
+  const { finalHomeColor: homeBg, finalAwayColor: awayBg } = resolveMatchColors(
+    homeTeamColor,
+    homeTeamSecondaryColor,
+    awayTeamColor,
+    awayTeamSecondaryColor,
+  );
 
   const homeOrder = ["G", "D", "M", "A"] as const;
   const awayOrder = ["A", "M", "D", "G"] as const;

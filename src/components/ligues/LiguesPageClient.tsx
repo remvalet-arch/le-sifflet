@@ -415,10 +415,20 @@ export function LiguesPageClient({ userId }: { userId: string }) {
               ))}
             </ul>
           ) : (
-            <p className="rounded-2xl border border-dashed border-zinc-700 py-8 text-center text-sm text-zinc-500">
-              Aucune ligue pour l&apos;instant — crée-en une ou rejoins avec un
-              code.
-            </p>
+            <div className="rounded-2xl border border-dashed border-zinc-700 px-5 py-8 text-center">
+              <p className="text-base font-black text-white">
+                Tu joues en solo pour l&apos;instant
+              </p>
+              <p className="mt-2 text-sm text-zinc-400">
+                Tu peux faire tes pronos et parier dans la LiveRoom contre toute
+                la communauté. Mais c&apos;est quand même plus fun de chambrer
+                tes potes.
+              </p>
+              <p className="mt-3 text-sm font-bold text-amber-400">
+                Crée une ligue ou rejoins-en une avec un code — c&apos;est
+                gratuit !
+              </p>
+            </div>
           )}
 
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
@@ -429,8 +439,9 @@ export function LiguesPageClient({ userId }: { userId: string }) {
               </p>
             </div>
             <p className="text-sm text-zinc-400">
-              Les Pts perdus par les membres de ta ligue sur un même verdict
-              sont redistribués aux gagnants de cette ligue uniquement.
+              Tu joues contre toute la communauté. Les Pts des joueurs qui se
+              trompent financent les gagnants — ta ligue sert de classement et
+              de lieu de chambrage entre amis.
             </p>
           </div>
         </div>

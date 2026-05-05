@@ -196,6 +196,110 @@ L'objectif est de remplacer les éléments factices par nos vraies captures d'é
   - _Action 3 (Forme des équipes / Form Guide) :_ Sous le nom des équipes, afficher 5 petites pastilles circulaires (Vert = V, Gris = N, Rouge = D) correspondant aux 5 derniers résultats. Nécessite de créer une fonction RPC ou d'enrichir l'endpoint pour récupérer l'historique récent (`last_5_matches`) de chaque équipe.
   - _Action 4 (Feedback de sélection) :_ Lorsqu'un utilisateur tape un score (ex: 2-1), la pilule correspondante au résultat induit (le "1" dans ce cas) doit s'illuminer ou se mettre en surbrillance pour valider visuellement son choix de gain.
 
+Suite à nos premiers tests utilisateurs en conditions réelles, nous avons une série d'ajustements UX/UI à faire.
+
+Agis en tant que Lead Frontend et résous ces tickets :
+
+- [x] **Ticket 1 : Safe Area des Alertes (UI)**
+  - _Détails :_ Sur mobile, les notifications/alertes en haut de l'écran sont tronquées par l'appareil photo (encoche / Dynamic Island).
+  - _Action :_ Appliquer les utilitaires de Safe Area sur le conteneur global des toasts/alertes. Utiliser `pt-[env(safe-area-inset-top)]` ou ajouter un margin-top suffisant (`mt-12` ou `mt-16`) pour que les alertes s'affichent sous l'encoche de l'OS.
+
+- [x] **Ticket 2 : Bouton "Valider" conditionnel (UX)**
+  - _Détails :_ Sur la page de pronostics, l'utilisateur ne doit pas pouvoir (ou penser pouvoir) valider un prono vide.
+  - _Action :_ Dans le composant de saisie du score, le bouton "Valider les pronos" doit être en état `disabled` (grisé, non cliquable) ou carrément masqué tant que les champs de score (Domicile ET Extérieur) n'ont pas été remplis.
+
+- [x] **Ticket 3 : Buteurs Optionnels (Progressive Disclosure)**
+  - _Détails :_ Afficher directement la liste/saisie des buteurs donne l'impression aux joueurs que c'est obligatoire. C'est trop intrusif.
+  - _Action :_ Masquer par défaut l'interface de sélection des buteurs. Remplacer par un bouton discret type `+ Ajouter un buteur (Optionnel)`. Au clic, déplier l'interface de sélection des buteurs.
+
+- [x] **Ticket 4 : Timing d'affichage des matchs "Upcoming"**
+  - _Détails :_ Actuellement, les matchs semblent passer en statut "imminent" 15 minutes avant. C'est trop court pour se préparer.
+  - _Action :_ Trouver la constante ou la requête (côté front ou back) qui gère le seuil d'affichage des matchs à venir. Passer ce délai de `15` minutes à `45` minutes avant le coup d'envoi.
+
+Nous devons affiner notre Game Design et l'UX de nos Ligues privées. Nous avons statué sur le fonctionnement suivant : l'économie de la LiveRoom (Alerte VAR) repose sur un Pot Commun GLOBAL (toute l'application), mais les Ligues privées servent de classement et de lieu de "chambrage" entre amis.
+Agis en tant que Lead Product Manager & Frontend Developer pour réaliser ces tâches :
+
+- [x] **Ticket 1 : Mise à jour du Copywriting (Pot Global)**
+  - _Détails :_ Les textes actuels laissent penser qu'on prend l'argent de ses amis. Il faut corriger ça.
+  - _Action :_ Sur la page d'accueil, la page `/rules`, et d'éventuelles modales d'info dans la LiveRoom, mets à jour le texte du "Pari Mutuel".
+  - _Nouveau texte type :_ "Tu joues contre le reste de l'application. Les points des joueurs de toute la communauté qui se trompent financent les gains de ceux qui ont le bon flair !"
+
+- [x] **Ticket 2 : Filtres de Classement dans la Ligue (Semaine / Saison)**
+  - _Détails :_ Pour garder l'enjeu frais, le classement de la ligue ne doit pas juste être un cumul absolu depuis le début de l'année.
+  - _Action :_ Dans l'écran d'une Ligue (`LeagueDetails` ou `LeagueRanking`), ajoute un système de filtre/onglets simple au-dessus du classement : "Cette Semaine" (ou "Ce Mois") et "Général". Assure-toi que la requête Supabase correspondante calcule les points gagnés (ou l'évolution du solde) sur la période sélectionnée.
+
+- [x] **Ticket 3 : Le Fil d'Actualité / Mur des Légendes (UI Ligue)**
+  - _Détails :_ Il faut que les exploits des joueurs soient visibles par leurs amis pour créer de la jalousie et du chambrage.
+  - _Action :_ Dans l'écran de la Ligue, ajoute une section "Derniers exploits" ou "Activité" sous le classement.
+  - _Affichage :_ Récupère les derniers pronos ou paris VAR gagnés avec un gros gain (ex: > 100 pts) par les membres de cette ligue. Affiche-les sous forme de petite timeline ou de cartes discrètes. Ex: "🔥 Thomas a braqué +150 pts sur le score de Brest !" ou "🚨 Alex a pris +80 pts sur la VAR de PSG-OM".
+
+- [x] **Ticket 4 : Clarification du bouton "Rejoindre/Créer une ligue" (Solo UX)**
+  - _Détails :_ Un joueur sans ligue doit comprendre qu'il peut quand même jouer.
+  - _Action :_ Si l'utilisateur n'a aucune ligue, l'encart vide ("Empty State") sur la page des ligues doit être accueillant. Explique : "Tu peux faire tes pronos et jouer dans la LiveRoom en solo contre la communauté. Mais c'est plus fun de chambrer tes potes. Crée ta ligue !".
+
+- [x] **Ticket 5 : Mise à jour du Copywriting des Règles**
+  - _Détails :_ La page `/rules` doit être alignée avec notre vraie économie.
+  - _Action :_ Mettre à jour les textes pour expliquer clairement la différence :
+    1. Le Vainqueur (1N2) et les Buteurs rapportent des points basés sur les cotes réelles du match (plus c'est risqué, plus ça rapporte).
+    2. Le Score Exact déclenche la prime "Contre-Pied / Braquage" : un bonus qui dépend du pourcentage d'autres joueurs ayant trouvé ce score (le but est de surprendre la communauté).
+- [x] **Améliorations UX & Leaderboard Dynamique**
+- _Détails :_ Refonte du classement pour inclure des filtres temporels, création de profils publics et correction du "color clash" sur les feuilles de match.
+- _Action 1 (Leaderboard Périodique) :_ Dans la vue de la Ligue (`LeagueLeaderboard.tsx`), ajouter un filtre temporel (Saison, Mois, Semaine). Modifier la requête Supabase (ou créer une RPC `get_league_standings_by_period`) pour calculer le classement non pas sur l'XP global, mais sur la somme des points gagnés (`points_earned`) via les tables `pronos` et `live_bets` sur la période donnée.
+- _Action 2 (Profils Publics) :_ Rendre les joueurs cliquables dans le classement de la ligue. Créer une route dynamique `src/app/(app)/profile/[id]/page.tsx`. Réutiliser la structure visuelle de la page Profil actuelle, mais en mode "Lecture Seule" (fetcher les données du `userId` ciblé, masquer les boutons d'édition, les paramètres et l'email).
+- _Action 3 (Anti-Color Clash Maillots) :_ Dans le composant affichant la feuille de match / compositions (`MatchLineups.tsx` ou équivalent), créer une fonction utilitaire `resolveTeamColors(homeColor, awayColor)`. Si les deux couleurs (Hex ou noms) sont identiques ou trop similaires, forcer la couleur de l'équipe Extérieure (Away) sur un fallback lisible (ex: `#FFFFFF` avec bordure, ou la couleur secondaire de l'API si elle existe).
+
+- [x] **Filtrage Anti-Triche sur les Profils Publics**
+- _Détails :_ Les utilisateurs ne doivent voir que les pronostics/paris DÉJÀ RÉSOLUS des autres joueurs, pour éviter le copiage avant le début d'un match. Le filtrage doit se faire côté serveur.
+- _Action 1 (Historique des Pronos 1N2/Buteurs) :_ Dans la requête Supabase qui récupère l'historique du profil cible, ajouter un filtre strict : ne récupérer le prono QUE SI le match est terminé (ex: vérifier le statut du match `FT`, `AET`, `PEN` ou s'assurer que la colonne `points_earned` n'est pas `null`).
+- _Action 2 (Historique des Paris VAR) :_ Même logique pour les `live_bets` : ne remonter que les paris dont le statut est clôturé/résolu.
+- _Action 3 (UX/UI Info) :_ Sur la page du profil public, dans l'onglet ou la section "Historique", ajouter un petit message ou tooltip informatif (ex: 🔒 _Les pronostics des matchs à venir sont masqués pour éviter la triche._) pour que l'utilisateur comprenne pourquoi les derniers choix de son ami n'apparaissent pas.
+
+- [x] **Correction du positionnement du FAB (Floating Action Button)**
+  - _Action 1 (Localisation) :_ Trouve le composant qui rend ce bouton vert (probablement dans `BottomNav.tsx`, `Layout.tsx`, ou `MatchLayout.tsx`).
+  - _Action 2 (Fix CSS) :_ Assure-toi que la Bottom Navigation utilise bien `pb-[env(safe-area-inset-bottom)]` pour gérer les écrans d'iPhone.
+  - _Action 3 (Élévation du bouton) :_ Si le bouton est supposé flotter AU-DESSUS de la barre, donne-lui les classes suivantes : `fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50`. Ajuste le `4rem` selon la hauteur réelle de ta barre de navigation.
+  - _Action 4 (Alternative d'intégration) :_ Si le bouton est censé être INTÉGRÉ au centre de la barre de navigation (comme sur Instagram ou TikTok), place-le en `absolute -top-6 left-1/2 -translate-x-1/2` DANS le conteneur `relative` de la Bottom Nav, avec un `z-50`.
+  - _Action 5 (Apparence) :_ Vérifie qu'il a bien un `shadow-lg`, une bordure (ex: `border-4 border-zinc-950` pour l'isoler visuellement de la barre) et garde son glow vert.
+
+Agis en tant que Lead UI/UX Developer.
+
+- [x] **Tâche 1 : Résolution stricte du Color Clash (Compo & Stats)**
+  - _Le bug :_ Actuellement, si Arsenal joue contre l'Atlético, les barres de statistiques et les maillots sont tous rouges, c'est illisible.
+  - _Action 1 :_ Ouvre les composants `MatchStats.tsx` ET `MatchLineups.tsx` (ou les fichiers qui gèrent ces onglets).
+  - _Action 2 :_ Crée une logique locale AVANT le return : compare les codes couleurs Hex (ou les noms) des deux équipes. Si `color_secndary === awayColor` (ou s'ils sont trop proches, comme deux nuances de rouge), force `color_primary = '#ffffff'` (blanc) ou `#d1d5db` (gris clair) pour le reste du rendu de ce composant.
+  - _Action 3 :_ Applique bien cette variable `color_secondary` sécurisée aux barres de progression des statistiques (`w-full bg-[color]`) et aux points/maillots des compositions.
+
+- [x] **Tâche 2 : Refonte de la BottomNav (Style TikTok/Instagram)**
+  - _Le bug :_ Le bouton vert est coupé en bas de l'écran car il gère mal la safe-area.
+  - _Action 1 :_ Ouvre le fichier de la navigation du bas (ex: `BottomNav.tsx` ou `MobileNav.tsx`).
+  - _Action 2 :_ Supprime l'ancien composant du bouton vert flottant qui traînait dans le Layout.
+  - _Action 3 :_ Refonds la `BottomNav` pour y intégrer le bouton d'Alerte VAR au centre exact. Utilise un flex/grid layout symétrique. Par exemple, à gauche : "Stade" et "Pronos". Au centre : Le bouton vert d'Alerte VAR (en absolute, `-top-6`, avec un `z-50`, arrondi, glow vert, `border-4 border-zinc-950` pour créer un effet de découpe avec la nav en dessous). À droite : "Ligues" et "Profil".
+  - _Action 4 :_ Assure-toi que la barre de navigation globale a bien un `pb-[env(safe-area-inset-bottom)]` pour l'iPhone.
+
+  Claude, nous devons faire un nettoyage radical. Les correctifs précédents pour la BottomNav et les couleurs des équipes n'ont pas fonctionné. Oublie les anciens hacks CSS, nous allons implémenter des solutions robustes et simplifier l'UX.
+
+Agis en tant que Lead Frontend et Expert UI/UX.
+
+- [x] **Tâche 1 : L'algorithme des Couleurs de Maillots**
+  - _Contexte :_ La table `teams` contient `primary_color` et `secondary_color`.
+  - _Règle métier :_ L'équipe à domicile (Home) a TOUJOURS la priorité sur sa `primary_color`. L'équipe à l'extérieur (Away) utilise sa `primary_color` SAUF si elle est trop similaire à celle de Home. Dans ce cas, elle passe sur sa `secondary_color`. Si c'est toujours illisible, utiliser `#FFFFFF` (blanc) ou `#111827` (noir).
+  - _Action 1 :_ Crée un fichier utilitaire `src/lib/colors.ts`.
+  - _Action 2 :_ Écris une fonction `hasGoodContrast(hex1: string, hex2: string): boolean` qui calcule la distance des couleurs ou la luminance pour savoir si deux couleurs se confondent.
+  - _Action 3 :_ Écris une fonction `resolveMatchColors(homePrimary, homeSecondary, awayPrimary, awaySecondary)` qui applique la règle métier décrite ci-dessus et renvoie `{ finalHomeColor, finalAwayColor }`.
+  - _Action 4 :_ Implémente cette fonction dans `MatchStats.tsx` et `MatchLineups.tsx` pour que les barres de progression et les points/maillots utilisent ces couleurs corrigées.
+
+- [x] **Tâche 2 : Refonte Radicale de la BottomNav**
+  - _Contexte :_ L'UX est trop chargée et le bouton flottant "VAR" bug à cause des positions `absolute`/`fixed` sur Safari mobile.
+  - _Action 1 :_ Ouvre `BottomNav.tsx` (ou le composant de navigation mobile principal) et supprime tout le code CSS complexe de positionnement du bouton VAR.
+  - _Action 2 :_ Remplace le conteneur principal par une simple grille : `<nav className="grid h-16 grid-cols-5 bg-zinc-900 border-t border-white/10 pb-[env(safe-area-inset-bottom)] relative z-50">`
+  - _Action 3 :_ Place les éléments dans cet ordre :
+    - Col 1 : Stade/Matchs (Icône)
+    - Col 2 : Pronos (Icône)
+    - Col 3 (Le bouton VAR au centre) : Oublie le `absolute`. Utilise simplement un flex item centré, avec une marge négative pour le faire ressortir : `<div className="flex items-start justify-center -mt-5"><button className="h-14 w-14 rounded-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] border-4 border-zinc-950 flex items-center justify-center">🚨</button></div>`
+    - Col 4 : Classement/Ligues (Icône)
+    - Col 5 : Profil (Icône)
+  - _Action 4 :_ Enlève les textes sous les icônes si ça surcharge trop, garde uniquement des icônes claires (Lucide React) pour un look "App Native" très épuré.
+
 ## 🧊 Backlog (À faire plus tard)
 
 - [ ] **Refonte du flux de connexion Google (Sign-in with id_token)**

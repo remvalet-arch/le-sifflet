@@ -285,8 +285,10 @@ export function VotingModal({
       >
         <div className="px-6 pb-6 pt-5">
           <p id={descId} className="sr-only">
-            Parie des Sifflets sur une option. Cotes parimutuel en temps réel
-            selon les mises des joueurs. Ferme avec Échap ou le bouton Passer.
+            Parie des Sifflets contre toute la communauté. Les points des
+            joueurs qui se trompent financent les gains de ceux qui ont le bon
+            flair. Cotes en temps réel selon les mises. Ferme avec Échap ou le
+            bouton Passer.
           </p>
 
           {/* Header */}

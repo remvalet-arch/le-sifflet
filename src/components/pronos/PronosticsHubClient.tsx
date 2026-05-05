@@ -339,6 +339,7 @@ function MatchPronoCard({
 
   // Raw selections: grow as user picks players. Slots are derived via resizeSlots(raw, count).
   // No effects needed — slots are always computed from score count.
+  const [showScorers, setShowScorers] = useState(existingScorers != null);
   const [homeRaw, setHomeRaw] = useState<string[]>(() =>
     existingScorers ? expandScorers(existingScorers.home, homeCount) : [],
   );
@@ -382,7 +383,11 @@ function MatchPronoCard({
     idx: number;
   } | null>(null);
 
-  const isLocked = match.status !== "upcoming";
+  const [nowMs] = useState(() => Date.now());
+  const LOCK_BEFORE_MS = 45 * 60 * 1000;
+  const isLocked =
+    match.status !== "upcoming" ||
+    new Date(match.start_time).getTime() - nowMs < LOCK_BEFORE_MS;
   const awayRef = useRef<HTMLInputElement | null>(null);
 
   const scoresValid =
@@ -666,8 +671,21 @@ function MatchPronoCard({
           </div>
         </div>
 
-        {/* Scorer slots — auto-generated from score */}
-        {scoresValid && (homeCount > 0 || awayCount > 0) && (
+        {/* Scorer slots — masqués par défaut, déclenchés par l'utilisateur */}
+        {scoresValid &&
+          (homeCount > 0 || awayCount > 0) &&
+          !isLocked &&
+          !showScorers && (
+            <button
+              type="button"
+              onClick={() => setShowScorers(true)}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-600 py-2.5 text-xs font-bold text-zinc-400 transition hover:border-zinc-400 hover:text-zinc-200 active:scale-[0.98]"
+            >
+              <span className="text-base leading-none">+</span>
+              Ajouter les buteurs (Optionnel)
+            </button>
+          )}
+        {scoresValid && (homeCount > 0 || awayCount > 0) && showScorers && (
           <div className="mt-4 flex flex-col gap-4">
             {homeCount > 0 && (
               <div className="flex flex-col gap-2">
@@ -728,7 +746,7 @@ function MatchPronoCard({
           <div className="mt-4 flex w-full items-center justify-center rounded-xl bg-zinc-800/50 py-3 text-sm font-black uppercase tracking-wide text-zinc-500">
             Le match a commencé, pronos fermés 🔒
           </div>
-        ) : (
+        ) : scoresValid ? (
           <button
             type="button"
             disabled={!canSubmit || loading}
@@ -744,7 +762,7 @@ function MatchPronoCard({
               </>
             )}
           </button>
-        )}
+        ) : null}
       </div>
 
       {/* Player picker bottom sheet */}

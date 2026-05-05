@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
 type LeaderboardRow = {
@@ -9,14 +10,29 @@ type LeaderboardRow = {
   rank: string;
 };
 
-/** GET — détail ligue + classement membres (XP décroissant). Réservé aux membres. */
+type ActivityItem = {
+  user_id: string;
+  username: string;
+  points_earned: number;
+  contre_pied_bonus: number;
+  match_id: string;
+  team_home: string;
+  team_away: string;
+  placed_at: string;
+};
+
+/** GET — détail ligue + classement membres. ?period=week pour classement hebdo. Réservé aux membres. */
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ squadId: string }> },
 ) {
   try {
     const { squadId } = await context.params;
     if (!squadId) return errorResponse("squadId requis", 400);
+
+    const url = new URL(request.url);
+    const period =
+      url.searchParams.get("period") === "week" ? "week" : "general";
 
     const supabase = await createClient();
     const {
@@ -69,8 +85,12 @@ export async function GET(
         squad,
         leaderboard: [] as LeaderboardRow[],
         pot_commun: 0,
+        period,
+        activity: [],
       });
     }
+
+    const adminSupabase = createAdminClient();
 
     const { data: profiles, error: pErr } = await supabase
       .from("profiles")
@@ -81,11 +101,60 @@ export async function GET(
       return errorResponse(pErr.message, 500);
     }
 
+    const weeklyXpByUser: Map<string, number> = new Map();
+    if (period === "week") {
+      const now = new Date();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      monday.setHours(0, 0, 0, 0);
+
+      const { data: weekPronos, error: wErr } = await adminSupabase
+        .from("pronos")
+        .select("user_id, points_earned, matches!inner(start_time)")
+        .in("user_id", memberIds)
+        .gte("matches.start_time", monday.toISOString())
+        .gt("points_earned", 0);
+
+      if (wErr) {
+        console.error("Supabase Error (pronos):", wErr);
+        return errorResponse(wErr.message, 500);
+      }
+
+      const { data: weekBets, error: bErr } = await adminSupabase
+        .from("bets")
+        .select("user_id, potential_reward, amount_staked, placed_at")
+        .in("user_id", memberIds)
+        .gte("placed_at", monday.toISOString())
+        .eq("status", "won");
+
+      if (bErr) {
+        console.error("Supabase Error (bets):", bErr);
+        return errorResponse(bErr.message, 500);
+      }
+
+      for (const p of weekPronos ?? []) {
+        weeklyXpByUser.set(
+          p.user_id,
+          (weeklyXpByUser.get(p.user_id) ?? 0) + p.points_earned,
+        );
+      }
+
+      for (const b of weekBets ?? []) {
+        const netGain = b.potential_reward - b.amount_staked;
+        if (netGain > 0) {
+          weeklyXpByUser.set(
+            b.user_id,
+            (weeklyXpByUser.get(b.user_id) ?? 0) + netGain,
+          );
+        }
+      }
+    }
+
     const leaderboard: LeaderboardRow[] = (profiles ?? [])
       .map((p) => ({
         user_id: p.id,
         username: p.username,
-        xp: p.xp ?? 0,
+        xp: period === "week" ? (weeklyXpByUser.get(p.id) ?? 0) : (p.xp ?? 0),
         sifflets_balance: p.sifflets_balance ?? 0,
         rank: p.rank ?? "—",
       }))
@@ -95,7 +164,57 @@ export async function GET(
 
     const pot_commun = leaderboard.reduce((s, m) => s + m.sifflets_balance, 0);
 
-    return successResponse({ squad, leaderboard, pot_commun });
+    const usernameById = new Map(
+      (profiles ?? []).map((p) => [p.id, p.username]),
+    );
+
+    const { data: bigWins } = await adminSupabase
+      .from("pronos")
+      .select("user_id, points_earned, contre_pied_bonus, match_id, placed_at")
+      .in("user_id", memberIds)
+      .eq("status", "won")
+      .gt("points_earned", 100)
+      .order("points_earned", { ascending: false })
+      .limit(15);
+
+    const matchIds = [...new Set((bigWins ?? []).map((w) => w.match_id))];
+    const matchMap: Map<string, { team_home: string; team_away: string }> =
+      new Map();
+    if (matchIds.length > 0) {
+      const { data: matches } = await supabase
+        .from("matches")
+        .select("id, team_home, team_away")
+        .in("id", matchIds);
+      for (const m of matches ?? []) {
+        matchMap.set(m.id, { team_home: m.team_home, team_away: m.team_away });
+      }
+    }
+
+    const activity: ActivityItem[] = (bigWins ?? [])
+      .map((w) => {
+        const match = matchMap.get(w.match_id);
+        if (!match) return null;
+        return {
+          user_id: w.user_id,
+          username: usernameById.get(w.user_id) ?? "???",
+          points_earned: w.points_earned,
+          contre_pied_bonus: w.contre_pied_bonus,
+          match_id: w.match_id,
+          team_home: match.team_home,
+          team_away: match.team_away,
+          placed_at: w.placed_at,
+        };
+      })
+      .filter((x): x is ActivityItem => x !== null)
+      .slice(0, 10);
+
+    return successResponse({
+      squad,
+      leaderboard,
+      pot_commun,
+      period,
+      activity,
+    });
   } catch (error) {
     console.error("Supabase Error:", error);
     return errorResponse("Erreur serveur", 500);

@@ -6,23 +6,18 @@ export const metadata = { title: "Règles du jeu — VAR Time" };
 const PRONO_RULES = [
   {
     emoji: "🎯",
-    title: "Score exact",
-    body: "Pronostique le score final avant le coup d'envoi. Si tu trouves la bonne issue (victoire / nul / défaite), tu gagnes 50 Pts de base — même sans le score pile.",
+    title: "Le Vainqueur (1 / N / 2)",
+    body: "Pronostique la bonne issue (victoire domicile, nul, victoire extérieur) avant le coup d'envoi. Tu gagnes des points indexés sur les vraies cotes du marché : plus le résultat est improbable, plus ça rapporte. La formule asymptotique plafonne les gains à 220 pts maximum pour préserver l'économie du jeu.",
   },
   {
     emoji: "💎",
-    title: "La Prime de Contre-Pied",
-    body: "Si tu devines le score exact ET que peu de joueurs l'avaient vu venir, tu décroches la prime Contre-Pied : +10 pts (> 40% des bons 1N2 avaient ce score), +30 pts (Joli Coup), +60 pts (Le Visionnaire), ou +100 pts (💎 Le Braquage — moins de 5% l'avaient prédit !).",
+    title: "Le Score Exact & la Prime Contre-Pied",
+    body: "Dépasse l'issue et vise le score pile. Si tu es dans le bon camp ET que peu de joueurs ont trouvé ce score exact parmi ceux ayant la bonne issue, tu décroches la prime Contre-Pied : +10 pts (> 40%), +30 pts (Joli Coup), +60 pts (Le Visionnaire), ou +100 pts (💎 Le Braquage — moins de 5% !). Le but : surprendre la communauté.",
   },
   {
     emoji: "⚽",
-    title: "Buteurs",
-    body: "Parie sur un ou plusieurs buteurs avant le match. Chaque buteur trouvé rapporte des Pts selon sa position : Attaquant (~107 Pts), Milieu (~129 Pts), Défenseur (~138 Pts). Les cotes sont calculées avec une formule asymptotique : plus le buteur est improbable, plus le gain est élevé.",
-  },
-  {
-    emoji: "🛡️",
-    title: "Bunker 0-0",
-    body: "Le cas extrême : si tu pronostiques un match nul 0-0 et que tu as raison, tu déclenches la récompense Bunker — la plus haute de la gamme Score Exact.",
+    title: "Les Buteurs",
+    body: "Nomme un ou plusieurs buteurs avant le match. Chaque buteur trouvé rapporte des Pts selon la cote réelle du joueur — les défenseurs et milieux rapportent plus que les attaquants attendus. Les cotes sont calculées avec une formule asymptotique plafonnée à 150 pts par buteur, cumulables.",
   },
 ];
 
@@ -43,9 +38,9 @@ const LIVE_RULES = [
     body: "Les cotes ne sont pas fixes : elles bougent en temps réel en fonction des mises de tous les joueurs. Plus de monde sur OUI → la cote OUI baisse. C'est le pari mutuel, comme en hippisme. La cote affichée est une estimation (~Cote) jusqu'à la fermeture.",
   },
   {
-    emoji: "🏴‍☠️",
-    title: "Le Braquage de Ligue",
-    body: "Si tu es dans une ligue privée, les Pts perdus par les membres qui ont tort reviennent en bonus aux membres qui ont raison sur le même événement. Le pot de la ligue est redistribué entre les gagnants.",
+    emoji: "🌍",
+    title: "Le Pot Commun Global",
+    body: "Tu joues contre le reste de l'application, pas seulement tes amis. Les Sifflets des joueurs de toute la communauté qui se trompent financent les gains de ceux qui ont le bon flair. Les ligues privées, c'est pour le classement et le chambrage — le pot, lui, est global.",
   },
   {
     emoji: "🤝",

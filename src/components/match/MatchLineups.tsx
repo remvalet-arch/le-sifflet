@@ -207,6 +207,10 @@ type Props = {
   awayTeamLogo?: string | null;
   homeTeamColor?: string | null;
   awayTeamColor?: string | null;
+  homeTeamPrimaryColor?: string | null;
+  homeTeamSecondaryColor?: string | null;
+  awayTeamPrimaryColor?: string | null;
+  awayTeamSecondaryColor?: string | null;
 };
 
 export const MatchLineups = memo(function MatchLineups({
@@ -219,6 +223,10 @@ export const MatchLineups = memo(function MatchLineups({
   awayTeamLogo,
   homeTeamColor,
   awayTeamColor,
+  homeTeamPrimaryColor,
+  homeTeamSecondaryColor,
+  awayTeamPrimaryColor,
+  awayTeamSecondaryColor,
 }: Props) {
   const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [homeRoster, setHomeRoster] = useState<PlayerRow[]>([]);
@@ -378,8 +386,10 @@ export const MatchLineups = memo(function MatchLineups({
         teamAway={teamAway}
         homeTeamLogo={homeTeamLogo}
         awayTeamLogo={awayTeamLogo}
-        homeTeamColor={homeTeamColor}
-        awayTeamColor={awayTeamColor}
+        homeTeamColor={homeTeamColor || homeTeamPrimaryColor}
+        homeTeamSecondaryColor={homeTeamSecondaryColor}
+        awayTeamColor={awayTeamColor || awayTeamPrimaryColor}
+        awayTeamSecondaryColor={awayTeamSecondaryColor}
       />
     );
   }

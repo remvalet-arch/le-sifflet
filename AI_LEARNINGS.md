@@ -13,6 +13,7 @@
 
 ## 🗄️ Supabase & RPC (PostgreSQL)
 
+- **Calcul de points entre joueurs & RLS :** Les tables comme `bets` ou `pronos` ont des politiques RLS restrictives (ex: `USING (user_id = auth.uid())`). Lorsqu'on doit agréger ou afficher les scores/points d'une ligue (Squad) pour tous les membres dans une route API, il **faut impérativement utiliser le client Supabase `admin` (service_role)** via `createAdminClient()`. Sinon, la requête filtrera silencieusement et ne renverra que les données de l'utilisateur courant, donnant l'impression que tous les autres joueurs sont à 0 points.
 - **Le piège du JSONB dans les RPC :** Si une fonction PostgreSQL (RPC) attend un argument typé `JSONB` (ex: `p_scorers_json JSONB`), **NE PAS** faire de `JSON.stringify(objet)` côté TypeScript avant de l'envoyer. Passe l'objet JavaScript brut. Le client Supabase se charge de la sérialisation en JSONB. Si tu stringifies, Supabase renverra une erreur silencieuse de cast.
 - **Filtrage des relations (Players / Teams) :** Ne jamais utiliser de comparaison de chaînes de caractères (ex: `ilike("team_name")`) pour réconcilier les joueurs avec leurs équipes. Utiliser systématiquement la clé étrangère stricte `.in("team_id", teamIds)` pour éviter les faux-positifs ou les limitations massives de requêtes.
 

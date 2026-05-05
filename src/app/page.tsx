@@ -266,7 +266,7 @@ export default async function LandingPage() {
               Icon={Swords}
               color="blue"
               title="Braquage"
-              body="En direct, quand la modale tombe, tu paries avec ta ligue : le pot des perdants nourrit les gagnants — c'est le braquage."
+              body="En direct, quand la modale tombe, tu joues contre toute la communauté : les Sifflets des joueurs qui se trompent financent les gains de ceux qui ont le bon flair !"
             />
           </div>
 

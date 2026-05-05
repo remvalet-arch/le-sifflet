@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { BarChart2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { MatchStatisticsRow, MatchStatus } from "@/types/database";
+import { resolveMatchColors } from "@/lib/colors";
 
 const FINISHED_STATUSES = new Set<MatchStatus>(["finished"]);
 
@@ -31,6 +32,10 @@ type Props = {
   awayTeamLogo: string | null;
   homeTeamColor?: string | null;
   awayTeamColor?: string | null;
+  homeTeamPrimaryColor?: string | null;
+  homeTeamSecondaryColor?: string | null;
+  awayTeamPrimaryColor?: string | null;
+  awayTeamSecondaryColor?: string | null;
   matchStatus: MatchStatus;
 };
 
@@ -123,6 +128,10 @@ export const MatchStats = memo(function MatchStats({
   awayTeamLogo,
   homeTeamColor,
   awayTeamColor,
+  homeTeamPrimaryColor,
+  homeTeamSecondaryColor,
+  awayTeamPrimaryColor,
+  awayTeamSecondaryColor,
   matchStatus,
 }: Props) {
   const [rows, setRows] = useState<MatchStatisticsRow[]>([]);
@@ -130,42 +139,25 @@ export const MatchStats = memo(function MatchStats({
   const [syncing, setSyncing] = useState(false);
   const forceSyncTriggered = useRef(false);
 
-  // Couleurs résolues : props en premier, sinon chargées depuis la table teams
-  const [resolvedHomeColor, setResolvedHomeColor] = useState<string | null>(
-    isHexColor(homeTeamColor) ? homeTeamColor : null,
-  );
-  const [resolvedAwayColor, setResolvedAwayColor] = useState<string | null>(
-    isHexColor(awayTeamColor) ? awayTeamColor : null,
-  );
+  const resolvedHomePrimary = isHexColor(homeTeamColor)
+    ? homeTeamColor
+    : isHexColor(homeTeamPrimaryColor)
+      ? homeTeamPrimaryColor
+      : null;
+  
+  const resolvedHomeSecondary = isHexColor(homeTeamSecondaryColor)
+    ? homeTeamSecondaryColor
+    : null;
 
-  // Charge les couleurs manquantes depuis la table `teams`
-  useEffect(() => {
-    const needsHome = !isHexColor(homeTeamColor) && homeTeamId != null;
-    const needsAway = !isHexColor(awayTeamColor) && awayTeamId != null;
-    if (!needsHome && !needsAway) return;
-
-    const ids = [
-      ...(needsHome ? [homeTeamId!] : []),
-      ...(needsAway ? [awayTeamId!] : []),
-    ];
-
-    const supabase = createClient();
-    void supabase
-      .from("teams")
-      .select("id, color_primary, color_secondary")
-      .in("id", ids)
-      .then(({ data }) => {
-        for (const team of data ?? []) {
-          const best = isHexColor(team.color_primary)
-            ? team.color_primary
-            : isHexColor(team.color_secondary)
-              ? team.color_secondary
-              : null;
-          if (needsHome && team.id === homeTeamId) setResolvedHomeColor(best);
-          if (needsAway && team.id === awayTeamId) setResolvedAwayColor(best);
-        }
-      });
-  }, [homeTeamId, awayTeamId, homeTeamColor, awayTeamColor]);
+  const resolvedAwayPrimary = isHexColor(awayTeamColor)
+    ? awayTeamColor
+    : isHexColor(awayTeamPrimaryColor)
+      ? awayTeamPrimaryColor
+      : null;
+      
+  const resolvedAwaySecondary = isHexColor(awayTeamSecondaryColor)
+    ? awayTeamSecondaryColor
+    : null;
 
   const fetchStats = useCallback(
     (supabase: ReturnType<typeof createClient>) => {
@@ -250,8 +242,15 @@ export const MatchStats = memo(function MatchStats({
   const visibleStats = FEATURED_STATS.filter((s) => statsMap.has(s.type));
   const isUpcoming = matchStatus === "upcoming";
 
-  const homeColor = resolvedHomeColor ?? FALLBACK_HOME;
-  const awayColor = resolvedAwayColor ?? FALLBACK_AWAY;
+  const { finalHomeColor: homeColor, finalAwayColor: awayColor } =
+    resolveMatchColors(
+      resolvedHomePrimary,
+      resolvedHomeSecondary,
+      resolvedAwayPrimary,
+      resolvedAwaySecondary,
+      FALLBACK_HOME,
+      FALLBACK_AWAY,
+    );
 
   if (loading || syncing) {
     return (

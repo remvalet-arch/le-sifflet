@@ -9,6 +9,7 @@ import {
   Trophy,
   Wallet,
   ChevronLeft,
+  Flame,
 } from "lucide-react";
 import type { SquadRow } from "@/types/database";
 
@@ -20,10 +21,25 @@ type LeaderboardRow = {
   rank: string;
 };
 
+type Period = "general" | "week";
+
+type ActivityItem = {
+  user_id: string;
+  username: string;
+  points_earned: number;
+  contre_pied_bonus: number;
+  match_id: string;
+  team_home: string;
+  team_away: string;
+  placed_at: string;
+};
+
 type ApiPayload = {
   squad: SquadRow;
   leaderboard: LeaderboardRow[];
   pot_commun: number;
+  period: Period;
+  activity: ActivityItem[];
 };
 
 type ApiResponse<T> = { ok: boolean; data?: T; error?: string };
@@ -38,10 +54,11 @@ export function SquadDetailClient({
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [nudging, setNudging] = useState(false);
+  const [period, setPeriod] = useState<Period>("general");
 
   useEffect(() => {
     let alive = true;
-    void fetch(`/api/squads/${squadId}`)
+    void fetch(`/api/squads/${squadId}?period=${period}`)
       .then((r) => r.json())
       .then((json: ApiResponse<ApiPayload>) => {
         if (!alive) return;
@@ -63,7 +80,7 @@ export function SquadDetailClient({
     return () => {
       alive = false;
     };
-  }, [squadId]);
+  }, [squadId, period]);
 
   if (loading) {
     return (
@@ -84,7 +101,7 @@ export function SquadDetailClient({
     );
   }
 
-  const { squad, leaderboard, pot_commun } = data;
+  const { squad, leaderboard, pot_commun, activity } = data;
 
   async function handleNudge() {
     setNudging(true);
@@ -160,56 +177,139 @@ export function SquadDetailClient({
       </div>
 
       <div>
-        <div className="mb-3 flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-amber-400" aria-hidden />
-          <h2 className="text-sm font-black uppercase tracking-wide text-white">
-            Classement
-          </h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-amber-400" aria-hidden />
+            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+              Classement
+            </h2>
+          </div>
+          <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
+            {(["general", "week"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={`rounded-lg px-3 py-1 text-[11px] font-black transition ${
+                  period === p
+                    ? "bg-amber-500 text-black"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                {p === "general" ? "Général" : "Cette semaine"}
+              </button>
+            ))}
+          </div>
         </div>
         <p className="mb-3 text-xs text-zinc-500">
-          Tri par XP (puis pseudo). Solde Pts affiché pour le fun du vestiaire.
+          {period === "general"
+            ? "XP total (puis pseudo). Solde Pts affiché pour le fun du vestiaire."
+            : "Points gagnés depuis lundi (Pronos + Paris Live)."}
         </p>
         <ol className="flex flex-col gap-2">
-          {leaderboard.map((row, idx) => (
-            <li
-              key={row.user_id}
-              className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${
-                row.user_id === currentUserId
-                  ? "border-amber-500/40 bg-amber-500/10"
-                  : "border-white/10 bg-zinc-900/60"
-              }`}
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                    idx === 0
-                      ? "bg-amber-500 text-black"
-                      : "bg-zinc-800 text-zinc-400"
-                  }`}
-                >
-                  {idx + 1}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate font-bold text-white">
-                    {row.user_id === currentUserId ? "Toi" : row.username}
+          {leaderboard.map((row, idx) => {
+            const isMe = row.user_id === currentUserId;
+            const inner = (
+              <>
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
+                      idx === 0
+                        ? "bg-amber-500 text-black"
+                        : "bg-zinc-800 text-zinc-400"
+                    }`}
+                  >
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-white">
+                      {isMe ? "Toi" : row.username}
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      {row.rank}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-black tabular-nums text-amber-300">
+                    {row.xp.toLocaleString("fr-FR")}{" "}
+                    {period === "general" ? "XP" : "pts"}
                   </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                    {row.rank}
+                  <p className="text-[10px] font-bold text-zinc-500">
+                    {row.sifflets_balance.toLocaleString("fr-FR")} Pts
                   </p>
                 </div>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-black tabular-nums text-amber-300">
-                  {row.xp.toLocaleString("fr-FR")} XP
-                </p>
-                <p className="text-[10px] font-bold text-zinc-500">
-                  {row.sifflets_balance.toLocaleString("fr-FR")} Pts
-                </p>
-              </div>
-            </li>
-          ))}
+              </>
+            );
+            const cls = `flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition ${
+              isMe
+                ? "border-amber-500/40 bg-amber-500/10"
+                : "border-white/10 bg-zinc-900/60 hover:border-white/20 hover:bg-zinc-800/60"
+            }`;
+            return isMe ? (
+              <li key={row.user_id} className={cls}>
+                {inner}
+              </li>
+            ) : (
+              <li key={row.user_id}>
+                <Link
+                  href={`/profile/${row.user_id}`}
+                  className={`flex ${cls}`}
+                >
+                  {inner}
+                </Link>
+              </li>
+            );
+          })}
         </ol>
       </div>
+
+      {activity.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <Flame className="h-4 w-4 text-orange-400" aria-hidden />
+            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+              Derniers exploits
+            </h2>
+          </div>
+          <div className="flex flex-col gap-2">
+            {activity.map((item, idx) => {
+              const isBraquage = item.contre_pied_bonus >= 100;
+              const isVisionnaire =
+                item.contre_pied_bonus >= 60 && item.contre_pied_bonus < 100;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900/60 px-4 py-3"
+                >
+                  <span className="shrink-0 text-lg" aria-hidden>
+                    {isBraquage ? "💎" : isVisionnaire ? "🔮" : "🔥"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-white">
+                      <span className="text-amber-300">
+                        {item.user_id === currentUserId ? "Toi" : item.username}
+                      </span>{" "}
+                      a ramassé{" "}
+                      <span className="font-black text-green-400">
+                        +{item.points_earned} pts
+                      </span>
+                    </p>
+                    <p className="truncate text-[11px] text-zinc-500">
+                      {item.team_home} – {item.team_away}
+                      {item.contre_pied_bonus > 0 && (
+                        <span className="ml-1 text-amber-400">
+                          · Contre-Pied +{item.contre_pied_bonus}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

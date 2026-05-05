@@ -20,8 +20,14 @@ import { MatchNotificationBell } from "./MatchNotificationBell";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 
 type Tab = "kop" | "compo" | "stats";
+
+export type LiveRoomMatchRow = MatchRow & {
+  home_team?: { color_primary: string | null; color_secondary: string | null } | null;
+  away_team?: { color_primary: string | null; color_secondary: string | null } | null;
+};
+
 type Props = {
-  match: MatchRow;
+  match: LiveRoomMatchRow;
   siffletsBalance: number;
   userId: string;
   isModerator: boolean;
@@ -33,7 +39,7 @@ export function LiveRoom({
   userId,
   isModerator,
 }: Props) {
-  const [liveMatch, setLiveMatch] = useState<MatchRow>(match);
+  const [liveMatch, setLiveMatch] = useState<LiveRoomMatchRow>(match);
   const [activeTab, setActiveTab] = useState<Tab>("kop");
 
   const displayedTab: Tab = activeTab;
@@ -169,7 +175,10 @@ export function LiveRoom({
         },
         (payload) => {
           const updated = payload.new as MatchRow;
-          setLiveMatch(updated);
+          setLiveMatch((prev) => ({
+            ...prev,
+            ...updated,
+          }));
           setCooldownUntil(
             updated?.alert_cooldown_until
               ? new Date(updated.alert_cooldown_until)
@@ -399,6 +408,10 @@ export function LiveRoom({
           awayTeamLogo={liveMatch.away_team_logo}
           homeTeamColor={liveMatch.home_team_color}
           awayTeamColor={liveMatch.away_team_color}
+          homeTeamPrimaryColor={liveMatch.home_team?.color_primary}
+          homeTeamSecondaryColor={liveMatch.home_team?.color_secondary}
+          awayTeamPrimaryColor={liveMatch.away_team?.color_primary}
+          awayTeamSecondaryColor={liveMatch.away_team?.color_secondary}
         />
       )}
       {displayedTab === "stats" && (
@@ -412,6 +425,10 @@ export function LiveRoom({
           awayTeamLogo={liveMatch.away_team_logo}
           homeTeamColor={liveMatch.home_team_color}
           awayTeamColor={liveMatch.away_team_color}
+          homeTeamPrimaryColor={liveMatch.home_team?.color_primary}
+          homeTeamSecondaryColor={liveMatch.home_team?.color_secondary}
+          awayTeamPrimaryColor={liveMatch.away_team?.color_primary}
+          awayTeamSecondaryColor={liveMatch.away_team?.color_secondary}
           matchStatus={liveMatch.status}
         />
       )}
