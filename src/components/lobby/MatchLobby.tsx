@@ -15,6 +15,7 @@ import {
 import { isNextImageRemoteLogoUrl } from "@/lib/remote-logo-hosts";
 import { MatchCard } from "@/components/lobby/MatchCard";
 import { LeagueHub } from "@/components/lobby/LeagueHub";
+import { LeagueHubBoundary } from "@/components/lobby/LeagueHubBoundary";
 import { isLobbyLiveStatus } from "@/lib/matches";
 import type { LobbyMatchRow } from "@/types/lobby";
 import { toMatchRow } from "@/types/lobby";
@@ -91,11 +92,17 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
 
 function goalsFromTimeline(m: LobbyMatchRow): MatchGoalLine[] {
   return (m.match_timeline_events ?? [])
-    .filter((e) => String(e.event_type ?? "").toLowerCase() === "goal")
+    .filter(
+      (e) =>
+        String(e.event_type ?? "").toLowerCase() === "goal" &&
+        typeof e.minute === "number" &&
+        (e.player_name ?? "").trim() !== "" &&
+        (e.team_side === "home" || e.team_side === "away"),
+    )
     .map((e) => ({
-      minute: e.minute,
-      player_name: e.player_name,
-      team_side: e.team_side,
+      minute: e.minute as number,
+      player_name: e.player_name as string,
+      team_side: e.team_side as "home" | "away",
     }));
 }
 
@@ -263,15 +270,22 @@ function EuropeHubView({
       </nav>
 
       {/* Hub de la coupe sélectionnée */}
-      <LeagueHub
-        key={selectedCupId}
-        leagueApiId={selectedCupId}
-        initialRound={
-          roundContext?.leagueApiId === selectedCupId
-            ? roundContext.roundShort
-            : null
+      <LeagueHubBoundary
+        leagueName={
+          EUROPEAN_CUPS.find((c) => c.apiFootballLeagueId === selectedCupId)
+            ?.label
         }
-      />
+      >
+        <LeagueHub
+          key={selectedCupId}
+          leagueApiId={selectedCupId}
+          initialRound={
+            roundContext?.leagueApiId === selectedCupId
+              ? roundContext.roundShort
+              : null
+          }
+        />
+      </LeagueHubBoundary>
     </div>
   );
 }
@@ -439,10 +453,12 @@ export function MatchLobby({
           const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
           if (!league) return null;
           return (
-            <LeagueHub
-              leagueApiId={league.apiFootballLeagueId}
-              initialRound={roundContext?.roundShort ?? null}
-            />
+            <LeagueHubBoundary leagueName={league.label}>
+              <LeagueHub
+                leagueApiId={league.apiFootballLeagueId}
+                initialRound={roundContext?.roundShort ?? null}
+              />
+            </LeagueHubBoundary>
           );
         })()
       )}

@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 import { verifyMarketEventWithApiFootball } from "@/lib/sports/sportsProvider";
 import { resolveEvent } from "@/lib/resolve-event";
 
-const MIN_AGE_SECONDS = 3 * 60;
+const MIN_AGE_SECONDS = 6 * 60;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     .from("market_events")
     .select("id, type, match_id, created_at, status")
     .eq("id", body.event_id)
-    .eq("status", "open")
+    .in("status", ["open", "closed"])
     .single();
 
   if (!event) return errorResponse("Événement introuvable ou déjà résolu", 404);

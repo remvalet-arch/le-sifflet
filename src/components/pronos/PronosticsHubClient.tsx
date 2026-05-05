@@ -710,6 +710,17 @@ export function PronosticsHubClient({
     () => matches.filter((m) => pronoByMatchId.get(m.id)?.score != null).length,
   );
 
+  const [localSubmittedIds, setLocalSubmittedIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  function isMatchDone(matchId: string): boolean {
+    return (
+      localSubmittedIds.has(matchId) ||
+      pronoByMatchId.get(matchId)?.score != null
+    );
+  }
+
   function toggleSection(key: SectionKey) {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -768,9 +779,7 @@ export function PronosticsHubClient({
             0,
           );
           const dayDone = Array.from(cm.values()).reduce(
-            (s, ms) =>
-              s +
-              ms.filter((m) => pronoByMatchId.get(m.id)?.score != null).length,
+            (s, ms) => s + ms.filter((m) => isMatchDone(m.id)).length,
             0,
           );
           const allDone = dayDone === dayTotal;
@@ -827,10 +836,7 @@ export function PronosticsHubClient({
             <>
               <span className="text-[10px] text-zinc-500">
                 {Array.from(selectedCompMap.values()).reduce(
-                  (s, ms) =>
-                    s +
-                    ms.filter((m) => pronoByMatchId.get(m.id)?.score != null)
-                      .length,
+                  (s, ms) => s + ms.filter((m) => isMatchDone(m.id)).length,
                   0,
                 )}
                 /
@@ -854,8 +860,8 @@ export function PronosticsHubClient({
                 compId !== "__none__" ? competitionMap.get(compId) : null;
               const sectionKey: SectionKey = `${selectedDay}::${compId}`;
               const isOpen = expanded.has(sectionKey);
-              const sectionDone = groupMatches.filter(
-                (m) => pronoByMatchId.get(m.id)?.score != null,
+              const sectionDone = groupMatches.filter((m) =>
+                isMatchDone(m.id),
               ).length;
               const sectionTotal = groupMatches.length;
               const allDone = sectionDone === sectionTotal;
@@ -913,6 +919,12 @@ export function PronosticsHubClient({
                               setSubmittedCount((prev) =>
                                 submitted ? prev + 1 : Math.max(0, prev - 1),
                               );
+                              setLocalSubmittedIds((prev) => {
+                                const next = new Set(prev);
+                                if (submitted) next.add(m.id);
+                                else next.delete(m.id);
+                                return next;
+                              });
                             }}
                           />
                         );

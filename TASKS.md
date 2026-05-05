@@ -55,29 +55,76 @@
   - _Action 2 (Documentation) :_ Réécrire intégralement le `README.md`. Il doit contenir : Le nom du projet (VAR Time), le concept (Second écran communautaire), la stack (Next.js 16, Supabase, Tailwind), et les étapes d'installation (cloner, `.env.local`, npm install, db_reset, et les commandes V-Coder comme `npm run ai:verify`).
   - _Action 3 (UX PWA) :_ Ajouter un petit composant UI (un bandeau ou un Toast qui apparaît après 5 secondes) invitant l'utilisateur sur Safari/Chrome mobile à "Ajouter VAR Time à l'écran d'accueil" pour une meilleure expérience.
 
-## 🏃 Sprint "Rétention & Social" (Notifications Push)
+## 🏃 Sprint "Identité & Rétention" (Profil & Push)
 
-- [x] **Tâche 11 : Infrastructure Web Push Native (VAPID)**
+- [x] **Tâche 11 : Personnalisation du Profil Joueur**
+  - _Détails :_ Actuellement le profil est en lecture seule (souvent nom complet Google).
+  - _Action 1 :_ Bottom sheet "Modifier" dans `ProfileHeader` (modal conditionnel, `PATCH /api/profile`). ✓
+  - _Action 2 :_ Sélecteur de 20 emojis avatar + input username (3-25 chars, regex, unicité vérifiée serveur). ✓
+  - _Action 3 :_ Recherche de club (debounce 300 ms, filtre `api_football_id NOT NULL`), `favorite_team_id` sur `profiles` (migration `0057`), logo affiché dans le header. ✓
+
+- [x] **Tâche 12 : Infrastructure Web Push Native (VAPID)**
   - _Détails :_ Remplacer l'idée de Firebase par le standard natif VAPID + `web-push` (plus léger pour une PWA).
   - _Action 1 :_ Ajouter la table `push_subscriptions` (`user_id`, `endpoint`, `keys`).
   - _Action 2 :_ Ajouter une modale/toast d'Opt-In au moment où l'utilisateur valide son _tout premier_ pronostic (pour déclencher `Notification.requestPermission()`).
   - _Action 3 :_ Implémenter le stockage de la souscription via Server Action.
 
-- [x] **Tâche 12 : Prévoir une croix pour fermer la modale d'invitation au téléchargement PWA**
-  - _Détails :_ La modale est insistante, et surtout sur desktop , on ne peux pas la fermer
-
 - [x] **Tâche 13 : Smart Mute & Alertes Automatiques (Le Cycle du Match)**
   - _Détails :_ Le backend envoie les push, mais le téléphone doit filtrer intelligemment.
-  - _Action 1 :_ Modifier le Service Worker (`sw.js`) pour écouter l'event `push`. Implémenter la logique "Smart Mute" : si `clients.matchAll({ type: 'window' })` indique que l'app est ouverte et active, ne PAS afficher la notification Push (l'UI gère déjà ça en direct), sinon utiliser `self.registration.showNotification`.
-  - _Action 2 :_ Dans `api/alert` (ouverture marché VAR), déclencher l'envoi du Push aux utilisateurs qui ont la souscription au match.
+  - _Action 1 :_ Smart Mute dans `sw.js` — skip notif si app ouverte en premier plan. ✓
+  - _Action 2 :_ Push envoyé aux abonnés du match lors de l'ouverture d'un `market_event` (VAR). ✓
+  - _Note :_ Action 3 (notif Club Favori 15min avant coup d'envoi) reportée à Tâche 11 une fois `favorite_team_id` en place.
 
-- [x] **Tâche 14 : Le Buzzer Social (Interactions de Ligue)**
+- [x] **Tâche 14 : Prévoir une croix pour fermer la modale d'invitation au téléchargement PWA**
+  - _Détails :_ La modale est insistante, et surtout sur desktop, on ne peut pas la fermer. Croix ajoutée + durée portée à 15 s.
+
+- [x] **Tâche 15 : Le Buzzer Social (Interactions de Ligue)**
   - _Détails :_ Outils pour harceler gentiment ses potes.
-  - _Action 1 :_ Ajouter une route API `/api/squads/nudge`.
-  - _Action 2 :_ Créer un bouton "Nudge" dans la page de Ligue pour cibler ceux qui n'ont pas fait leurs pronos : "Raph attend tes pronos pour le braquage de ce soir !"
-  - _Action 3 :_ Créer le bouton "Sirène VAR / Panic Button" dans la LiveRoom pour rameuter la Ligue. Envoi limité via un cooldown/RLS pour éviter le spam.
+  - _Action 1 :_ Route `/api/squads/nudge` — push aux membres sans prono sur matchs à venir (cooldown 30 min). ✓
+  - _Action 2 :_ Bouton "Nudge pronos" dans `SquadDetailClient`. ✓
+  - _Action 3 :_ Bouton "Sirène VAR" dans `LiveRoom` (onglet Kop, match en direct, cooldown 15 min par user). ✓
+
+- [x] **Investigation & Fix : Crash d'affichage Europa/Conference League**
+  - _Détails :_ Sur les matchs d'Europa ou Conference League, un problème d'affichage survient. Probablement dû à des équipes non synchronisées en base de données.
+  - _Action :_ `LeagueHubBoundary` (Error Boundary React class) ajouté autour de chaque `LeagueHub` dans `MatchLobby` (Top 5 + coupes UEFA). Correction du cast `team_side` null dans `goalsFromTimeline` (filtre + assertion explicite). En cas d'erreur d'affichage, un fallback "Données indisponibles" remplace le crash. ✓
+
+- [x] **UX Pronos : Mise à jour en temps réel du compteur sans refresh**
+  - _Détails :_ Après la validation d'un pronostic, le compteur (ex: "0/1 matchs pronostiqués") ne s'actualise pas instantanément. L'utilisateur doit rafraîchir la page pour voir "1/1".
+  - _Action :_ Ajout d'un état `localSubmittedIds` dans `PronosticsHubClient`. Le callback `onSubmittedChange` met à jour ce set en plus de `submittedCount`, et la fonction `isMatchDone` combine les deux sources pour que tous les compteurs (barre globale, pills de jours, accordéons par compétition) se mettent à jour instantanément.
+
+- [x] **Refonte Anti-Triche VAR (Sécurité Backend Parimutuel)**
+  - _Détails :_ Le système de vote Waze/VAR est déjà "Optimistic" et bien pensé côté Front, mais il faut blinder les failles IPTV côté Serveur (Postgres/RPC).
+  - _Action 1 (Auto-Lock Strict 90s) :_ Déjà implémenté dans `0011_place_bet_v2.sql` — le serveur rejette si `created_at < now() - interval '90 seconds'`. ✓
+  - _Action 2 (Status Intermédiaire) :_ Migration `0058` : ajout de `'closed'` au CHECK constraint. Fonction `close_expired_market_events()` appelée à chaque tick du cron. Events passés 90s → `open` → `closed` (en attente verdict). ✓
+  - _Action 3 (Le Temps Mort du Juge) :_ `MIN_AGE_SECONDS` porté à 6 min dans `verify-event/route.ts`. ✓
+  - _Action 4 (Cooldown Anti-Spam) :_ `COOLDOWN_MINUTES` porté à 5 min dans `alert/route.ts`. ✓
+
+- [x] **Multilangue (i18n)**
+  - _Détails :_ Le projet a besoin de supporter plusieurs langues.
+  - _Action :_ Ajout de ES, DE, IT dans `translations.ts`. Mise à jour du type guard dans `useLocale.ts`. Sélecteur de langue dans `TopBar.tsx` étendu à 5 boutons (FR EN ES DE IT).
 
 ## 🧊 Backlog (À faire plus tard)
+
+- [ ] **Investigation & Fix : Crash d'affichage Europa/Conference League**
+  - _Détails :_ Sur les matchs d'Europa ou Conference League, un problème d'affichage survient. Probablement dû à des équipes non synchronisées en base de données.
+  - _Action :_ Implémenter un fallback ou synchroniser la liste manquante via API-Football, et ignorer la Conference League (la masquer) si ce n'est pas jugé pertinent pour l'économie du jeu. Adapter les écrans pour éviter un crash complet (Boundary/Fallback).
+
+- [ ] **Infrastructure i18n (Server & Client)**
+  - _Détails :_ Le projet a besoin de supporter plusieurs langues (FR, EN, ES, DE, IT), mais l'architecture actuelle (un simple hook client `useLocale`) est incompatible avec Next.js App Router (Server Components).
+  - _Action 1 :_ Mettre en place `next-intl` (qui gère l'App Router via le middleware pour détecter la langue du navigateur et injecter les traductions côté serveur).
+  - _Action 2 :_ Extraire toutes les strings d'un seul module précis (ex: la `TopBar` et la `BottomNav`) dans les fichiers `.json` de `next-intl` pour prouver le concept sans casser le reste.
+  - _Action 3 :_ Préparer le reste de la traduction pour des itérations futures, composant par composant.
+
+- [ ] **UX Pronos : Mise à jour en temps réel du compteur sans refresh**
+  - _Détails :_ Après la validation d'un pronostic, le compteur (ex: "0/1 matchs pronostiqués") ne s'actualise pas instantanément. L'utilisateur doit rafraîchir la page pour voir "1/1".
+  - _Action :_ S'assurer que le callback `onSubmittedChange` remonte bien l'état vers le compteur global dans `PronosticsHubClient` et force un re-render de la barre de progression instantanément.
+
+- [ ] **Refonte Anti-Triche VAR (Sécurité Backend Parimutuel)**
+  - _Détails :_ Le système de vote Waze/VAR est déjà "Optimistic" et bien pensé côté Front, mais il faut blinder les failles IPTV côté Serveur (Postgres/RPC).
+  - _Action 1 (Auto-Lock Strict 90s) :_ Modifier la RPC `place_bet_rpc.sql` (ou `place_bet_v2.sql`). Le serveur doit REJETER catégoriquement l'insertion d'un pari si `NOW() > (market_event.created_at + INTERVAL '90 seconds')`. L'UI masque le bouton au bout de 90s, mais un hacker API ne doit pas pouvoir parier à 91s. 
+  - _Action 2 (Status Intermédiaire) :_ Implémenter le statut intermédiaire `closed` sur un event (Votes clos, mais en attente du verdict API-Football/Arbitre).
+  - _Action 3 (Le Temps Mort du Juge) :_ Allonger la sécurité de vérification dans le cron (`verify-event`). Attendre au moins 5 ou 6 minutes avant que l'absence de retour API-Football ne clôture le pari en "NON" (pour laisser le temps à l'arbitre d'aller voir l'écran et à l'API de se mettre à jour). 
+  - _Action 4 (Cooldown Anti-Spam) :_ S'assurer que le `alert_cooldown_until` passe bien à 5 minutes pour toute la ligue/room dès le déclenchement d'une alerte afin d'éviter le spam.
 
 - [ ] Ajouter les avatars personnalisés pour chaque "Arbitre".
 - [ ] Classement global ("Board des sifflets") mis à jour toutes les 24h.

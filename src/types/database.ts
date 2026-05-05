@@ -20,7 +20,7 @@ export type MarketEventType =
   | "injury_sub"
   | "free_kick"
   | "corner";
-export type MarketEventStatus = "open" | "locked" | "resolved";
+export type MarketEventStatus = "open" | "closed" | "locked" | "resolved";
 export type BetStatus = "pending" | "won" | "lost";
 export type AlertActionType =
   | "penalty_check"
@@ -48,6 +48,7 @@ export interface Database {
           avatar_url: string | null;
           rank: string;
           updated_at: string | null;
+          favorite_team_id: string | null;
         };
         Insert: {
           id: string;
@@ -62,6 +63,7 @@ export interface Database {
           avatar_url?: string | null;
           rank?: string;
           updated_at?: string | null;
+          favorite_team_id?: string | null;
         };
         Update: {
           id?: string;
@@ -76,6 +78,7 @@ export interface Database {
           avatar_url?: string | null;
           rank?: string;
           updated_at?: string | null;
+          favorite_team_id?: string | null;
         };
         Relationships: [];
       };
@@ -810,6 +813,10 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      close_expired_market_events: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
       place_bet: {
         Args: {
           p_event_id: string;

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
 import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
 import { ProfileClient } from "@/components/profile/ProfileClient";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import type {
   ShortBetEntry,
   PronoEntry,
@@ -114,6 +115,21 @@ export default async function ProfilePage() {
     supabase.from("badges").select("*").order("created_at"),
     supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
   ]);
+
+  // Fetch favorite team if set
+  let favoriteTeam: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+  } | null = null;
+  if (profile?.favorite_team_id) {
+    const { data: team } = await supabase
+      .from("teams")
+      .select("id, name, logo_url")
+      .eq("id", profile.favorite_team_id)
+      .maybeSingle();
+    favoriteTeam = team ?? null;
+  }
 
   void checkAndUnlockBadges(user.id);
 
@@ -227,54 +243,30 @@ export default async function ProfilePage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
 
-      <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
-        <div className="flex items-center gap-4 px-5 py-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
-            🎽
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-black text-white">
-                {profile?.username ?? "Joueur"}
-              </p>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
-              >
-                {karma.emoji} {karma.label}
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-zinc-500">
-              {rank.emoji} {rank.label}
-            </p>
-            <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
-              {xpTotal.toLocaleString("fr-FR")} XP
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-black tabular-nums text-white">
-              {balance.toLocaleString("fr-FR")}
-            </p>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-              Pts
-            </p>
-          </div>
-        </div>
+      <ProfileHeader
+        username={profile?.username ?? "Joueur"}
+        avatarUrl={profile?.avatar_url ?? null}
+        favoriteTeam={favoriteTeam}
+        karma={karma}
+        rank={rank}
+        xpTotal={xpTotal}
+        balance={balance}
+      />
 
-        <div className="border-t border-white/8 px-5 py-3">
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-              Confiance
-            </span>
-            <span className={`text-[10px] font-black ${grade.color}`}>
-              {grade.icon} {grade.label} · {trustScore}
-            </span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-            <div
-              className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-              style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
-            />
-          </div>
+      <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+            Confiance
+          </span>
+          <span className={`text-[10px] font-black ${grade.color}`}>
+            {grade.icon} {grade.label} · {trustScore}
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
+            style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
+          />
         </div>
       </div>
 

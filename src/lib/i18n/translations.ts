@@ -1,4 +1,4 @@
-export type Locale = "fr" | "en";
+export type Locale = "fr" | "en" | "es" | "de" | "it";
 
 export interface Translations {
   nav: { stadium: string; kop: string; profile: string };
@@ -110,4 +110,124 @@ const en: Translations = {
   common: { pts: "Pts", loading: "Loading…" },
 };
 
-export const translations: Record<Locale, Translations> = { fr, en };
+const es: Translations = {
+  nav: { stadium: "Estadio", kop: "Kop", profile: "Perfil" },
+  topbar: {
+    connected: "Conectado",
+    rules: "Reglas del juego",
+    laws: "Leyes del Juego",
+    settings: "Ajustes",
+    language: "Idioma",
+    logout: "Cerrar sesión",
+  },
+  match: {
+    live: "En Directo",
+    upcoming: "Próximo",
+    finished: "Finalizado",
+    firstHalf: "1er Tiempo",
+    halfTime: "Descanso",
+    secondHalf: "2º Tiempo",
+    paused: "Parado",
+  },
+  lobby: {
+    title: "Los Partidos",
+    noMatches: "Sin partidos disponibles",
+    today: "Hoy",
+  },
+  voting: {
+    decision: "Decisión en curso",
+    timeLeft: "Tiempo restante",
+    closed: "Votos cerrados",
+    yes: "SÍ",
+    no: "NO",
+    stake: "Apuesta",
+    min: "MÍN",
+    half: "MITAD",
+    allIn: "ALL IN",
+  },
+  common: { pts: "Pts", loading: "Cargando…" },
+};
+
+const de: Translations = {
+  nav: { stadium: "Stadion", kop: "Kop", profile: "Profil" },
+  topbar: {
+    connected: "Angemeldet",
+    rules: "Spielregeln",
+    laws: "Fußballgesetze",
+    settings: "Einstellungen",
+    language: "Sprache",
+    logout: "Abmelden",
+  },
+  match: {
+    live: "Live",
+    upcoming: "Demnächst",
+    finished: "Beendet",
+    firstHalf: "1. Halbzeit",
+    halfTime: "Halbzeit",
+    secondHalf: "2. Halbzeit",
+    paused: "Unterbrochen",
+  },
+  lobby: {
+    title: "Spiele",
+    noMatches: "Keine Spiele verfügbar",
+    today: "Heute",
+  },
+  voting: {
+    decision: "Entscheidung läuft",
+    timeLeft: "Verbleibende Zeit",
+    closed: "Abstimmung geschlossen",
+    yes: "JA",
+    no: "NEIN",
+    stake: "Einsatz",
+    min: "MIN",
+    half: "HALB",
+    allIn: "ALL IN",
+  },
+  common: { pts: "Pkt", loading: "Laden…" },
+};
+
+const it: Translations = {
+  nav: { stadium: "Stadio", kop: "Kop", profile: "Profilo" },
+  topbar: {
+    connected: "Connesso",
+    rules: "Regole del gioco",
+    laws: "Regolamento IFAB",
+    settings: "Impostazioni",
+    language: "Lingua",
+    logout: "Disconnetti",
+  },
+  match: {
+    live: "In Diretta",
+    upcoming: "In Arrivo",
+    finished: "Terminato",
+    firstHalf: "1° Tempo",
+    halfTime: "Intervallo",
+    secondHalf: "2° Tempo",
+    paused: "Sospeso",
+  },
+  lobby: {
+    title: "Le Partite",
+    noMatches: "Nessuna partita disponibile",
+    today: "Oggi",
+  },
+  voting: {
+    decision: "Decisione in corso",
+    timeLeft: "Tempo rimanente",
+    closed: "Voti chiusi",
+    yes: "SÌ",
+    no: "NO",
+    stake: "Puntata",
+    min: "MIN",
+    half: "METÀ",
+    allIn: "ALL IN",
+  },
+  common: { pts: "Pti", loading: "Caricamento…" },
+};
+
+export const translations: Record<Locale, Translations> = {
+  fr,
+  en,
+  es,
+  de,
+  it,
+};

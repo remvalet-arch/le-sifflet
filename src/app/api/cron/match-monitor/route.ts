@@ -156,6 +156,7 @@ export async function GET(request: Request) {
     activeMatchCount: active.length,
     fixtureApiCalls: 0,
     matchesPatchedFromFixture: 0,
+    marketEventsClosed: 0,
     eventsSyncCount: 0,
     apiMarketEventsOpened: 0,
     apiMarketEventsResolved: 0,
@@ -164,6 +165,10 @@ export async function GET(request: Request) {
     fullSyncOnEndCount: 0,
     errors: [] as string[],
   };
+
+  // ── 0. Fermeture des events expirés (fenêtre 90s) ────────────────────────
+  const { data: closedCount } = await admin.rpc("close_expired_market_events");
+  summary.marketEventsClosed = (closedCount as number | null) ?? 0;
 
   if (active.length === 0) return successResponse(summary);
 

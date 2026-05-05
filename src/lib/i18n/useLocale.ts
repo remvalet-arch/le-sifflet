@@ -18,7 +18,8 @@ export function useLocale(): {
     // Lit la locale stockée via un handler (évite un setState direct dans l'effet)
     const sync = () => {
       const s = localStorage.getItem(STORAGE_KEY);
-      if (s === "en" || s === "fr") setLocaleState(s);
+      if (s === "fr" || s === "en" || s === "es" || s === "de" || s === "it")
+        setLocaleState(s);
     };
     window.addEventListener(CHANGE_EVENT, sync);
     // Dispatch initial pour déclencher sync après montage

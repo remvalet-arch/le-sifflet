@@ -40,7 +40,7 @@ export async function resolveEvent(
         .select("id")
         .eq("match_id", event.match_id)
         .eq("type", chainType)
-        .eq("status", "open")
+        .in("status", ["open", "closed"])
         .maybeSingle();
 
       if (!existing) {

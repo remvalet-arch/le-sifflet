@@ -192,11 +192,11 @@ export function TopBar({
             {t.topbar.language}
           </span>
           <div className="flex overflow-hidden rounded-lg border border-white/10">
-            {(["fr", "en"] as const).map((l) => (
+            {(["fr", "en", "es", "de", "it"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLocale(l)}
-                className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
+                className={`px-2.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
                   locale === l
                     ? "bg-green-500 text-zinc-950"
                     : "text-zinc-500 hover:text-white"

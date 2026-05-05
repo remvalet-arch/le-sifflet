@@ -106,7 +106,7 @@ async function hasOpenEvent(
     .select("id")
     .eq("match_id", matchId)
     .eq("type", type)
-    .eq("status", "open")
+    .in("status", ["open", "closed"])
     .maybeSingle();
   return Boolean(data?.id);
 }
@@ -137,7 +137,7 @@ async function resolveOpen(
     .select("id")
     .eq("match_id", matchId)
     .eq("type", type)
-    .eq("status", "open")
+    .in("status", ["open", "closed"])
     .maybeSingle();
   if (!row?.id) return false;
   try {

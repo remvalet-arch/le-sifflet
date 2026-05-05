@@ -26,7 +26,7 @@ const VALID_TYPES: AlertActionType[] = [
 ];
 const ALERT_THRESHOLD = 2;
 const ALERT_WINDOW_SECONDS = 30;
-const COOLDOWN_MINUTES = 3;
+const COOLDOWN_MINUTES = 5;
 const MIN_TRUST_SCORE = 50;
 
 export async function POST(request: NextRequest) {
@@ -129,13 +129,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifie qu'il n'y a pas déjà un event 'open' du même type
+    // Vérifie qu'il n'y a pas déjà un event ouvert ou fermé en attente de verdict
     const { data: existing } = await admin
       .from("market_events")
       .select("id")
       .eq("match_id", match_id)
       .eq("type", validType)
-      .eq("status", "open")
+      .in("status", ["open", "closed"])
       .maybeSingle();
 
     if (existing) {
