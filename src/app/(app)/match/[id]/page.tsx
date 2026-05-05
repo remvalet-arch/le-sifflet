@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { LiveRoom } from "@/components/match/LiveRoom";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
@@ -54,6 +55,64 @@ export default async function MatchPage({ params }: Props) {
   const siffletsBalance = profile?.sifflets_balance ?? 0;
   const isModerator = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
 
+  // Récupération des membres de ligues pour afficher leurs pronos ("Le Vestiaire")
+  const { data: pairs } = await supabase.rpc("squad_members_for_my_squads");
+  
+  // On inclut AUSSI l'utilisateur courant pour qu'il puisse voir son propre prono dans le vestiaire !
+  const memberIds = [
+    ...new Set([
+      ...(pairs ?? []).map((p) => p.user_id),
+      user.id,
+    ]),
+  ];
+
+  let squadPronos: {
+    user_id: string;
+    prono_type: "exact_score" | "scorer" | "scorer_allocation";
+    prono_value: string;
+    points_earned: number;
+    profiles: { username: string; avatar_url: string | null } | null;
+  }[] = [];
+
+  if (memberIds.length > 0) {
+    const adminSupabase = createAdminClient();
+    
+    // 1. On récupère les pronos
+    const { data: pronosData, error: pronosErr } = await adminSupabase
+      .from("pronos")
+      .select(`
+        user_id,
+        prono_type,
+        prono_value,
+        points_earned
+      `)
+      .eq("match_id", id)
+      .in("user_id", memberIds);
+
+    if (pronosErr) {
+      console.error("Erreur récupération pronos vestiaire:", pronosErr);
+    }
+
+    // 2. On récupère les profils associés séparément (car pronos.user_id pointe sur auth.users et non public.profiles)
+    const { data: profilesData } = await adminSupabase
+      .from("profiles")
+      .select("id, username, avatar_url")
+      .in("id", memberIds);
+
+    const profilesMap = new Map(
+      (profilesData ?? []).map((p) => [p.id, p])
+    );
+
+    // 3. On fusionne les deux
+    squadPronos = (pronosData ?? []).map((p) => ({
+      user_id: p.user_id,
+      prono_type: p.prono_type,
+      prono_value: p.prono_value,
+      points_earned: p.points_earned,
+      profiles: profilesMap.get(p.user_id) ?? null,
+    }));
+  }
+
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
       <Link
@@ -68,6 +127,7 @@ export default async function MatchPage({ params }: Props) {
         siffletsBalance={siffletsBalance}
         userId={user.id}
         isModerator={isModerator}
+        squadPronos={squadPronos}
       />
     </main>
   );

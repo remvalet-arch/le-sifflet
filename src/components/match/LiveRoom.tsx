@@ -17,9 +17,18 @@ import { MatchLineups } from "./MatchLineups";
 import { ActionDrawer } from "./ActionDrawer";
 import { MatchStats } from "./MatchStats";
 import { MatchNotificationBell } from "./MatchNotificationBell";
+import { LeaguePronosList } from "./LeaguePronosList";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 
-type Tab = "kop" | "compo" | "stats";
+export type SquadProno = {
+  user_id: string;
+  prono_type: "exact_score" | "scorer" | "scorer_allocation";
+  prono_value: string;
+  points_earned: number;
+  profiles: { username: string; avatar_url: string | null } | null;
+};
+
+type Tab = "kop" | "compo" | "stats" | "vestiaire";
 
 export type LiveRoomMatchRow = MatchRow & {
   home_team?: { color_primary: string | null; color_secondary: string | null } | null;
@@ -31,6 +40,7 @@ type Props = {
   siffletsBalance: number;
   userId: string;
   isModerator: boolean;
+  squadPronos: SquadProno[];
 };
 
 export function LiveRoom({
@@ -38,6 +48,7 @@ export function LiveRoom({
   siffletsBalance,
   userId,
   isModerator,
+  squadPronos,
 }: Props) {
   const [liveMatch, setLiveMatch] = useState<LiveRoomMatchRow>(match);
   const [activeTab, setActiveTab] = useState<Tab>("kop");
@@ -323,6 +334,7 @@ export function LiveRoom({
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "kop", label: "Kop" },
+    { id: "vestiaire", label: "Vestiaire" },
     { id: "compo", label: "Compo" },
     { id: "stats", label: "Stats" },
   ];
@@ -430,6 +442,13 @@ export function LiveRoom({
           awayTeamPrimaryColor={liveMatch.away_team?.color_primary}
           awayTeamSecondaryColor={liveMatch.away_team?.color_secondary}
           matchStatus={liveMatch.status}
+        />
+      )}
+      {displayedTab === "vestiaire" && (
+        <LeaguePronosList
+          matchStatus={liveMatch.status}
+          startTime={liveMatch.start_time}
+          squadPronos={squadPronos}
         />
       )}
       {/* Drawer d'action */}
