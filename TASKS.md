@@ -84,50 +84,129 @@
   - _Action 2 :_ Bouton "Nudge pronos" dans `SquadDetailClient`. ✓
   - _Action 3 :_ Bouton "Sirène VAR" dans `LiveRoom` (onglet Kop, match en direct, cooldown 15 min par user). ✓
 
-- [x] **Investigation & Fix : Crash d'affichage Europa/Conference League**
+- [x] **Tâche 16 : Investigation & Fix : Crash d'affichage Europa/Conference League**
   - _Détails :_ Sur les matchs d'Europa ou Conference League, un problème d'affichage survient. Probablement dû à des équipes non synchronisées en base de données.
   - _Action :_ `LeagueHubBoundary` (Error Boundary React class) ajouté autour de chaque `LeagueHub` dans `MatchLobby` (Top 5 + coupes UEFA). Correction du cast `team_side` null dans `goalsFromTimeline` (filtre + assertion explicite). En cas d'erreur d'affichage, un fallback "Données indisponibles" remplace le crash. ✓
 
-- [x] **UX Pronos : Mise à jour en temps réel du compteur sans refresh**
+- [x] **Tâche 17 : UX Pronos : Mise à jour en temps réel du compteur sans refresh**
   - _Détails :_ Après la validation d'un pronostic, le compteur (ex: "0/1 matchs pronostiqués") ne s'actualise pas instantanément. L'utilisateur doit rafraîchir la page pour voir "1/1".
   - _Action :_ Ajout d'un état `localSubmittedIds` dans `PronosticsHubClient`. Le callback `onSubmittedChange` met à jour ce set en plus de `submittedCount`, et la fonction `isMatchDone` combine les deux sources pour que tous les compteurs (barre globale, pills de jours, accordéons par compétition) se mettent à jour instantanément.
 
-- [x] **Refonte Anti-Triche VAR (Sécurité Backend Parimutuel)**
+- [x] **Tâche 18 : Refonte Anti-Triche VAR (Sécurité Backend Parimutuel)**
   - _Détails :_ Le système de vote Waze/VAR est déjà "Optimistic" et bien pensé côté Front, mais il faut blinder les failles IPTV côté Serveur (Postgres/RPC).
   - _Action 1 (Auto-Lock Strict 90s) :_ Déjà implémenté dans `0011_place_bet_v2.sql` — le serveur rejette si `created_at < now() - interval '90 seconds'`. ✓
   - _Action 2 (Status Intermédiaire) :_ Migration `0058` : ajout de `'closed'` au CHECK constraint. Fonction `close_expired_market_events()` appelée à chaque tick du cron. Events passés 90s → `open` → `closed` (en attente verdict). ✓
   - _Action 3 (Le Temps Mort du Juge) :_ `MIN_AGE_SECONDS` porté à 6 min dans `verify-event/route.ts`. ✓
   - _Action 4 (Cooldown Anti-Spam) :_ `COOLDOWN_MINUTES` porté à 5 min dans `alert/route.ts`. ✓
 
-- [x] **Multilangue (i18n)**
+- [x] **Tâche 19 :Multilangue (i18n)**
   - _Détails :_ Le projet a besoin de supporter plusieurs langues.
   - _Action :_ Ajout de ES, DE, IT dans `translations.ts`. Mise à jour du type guard dans `useLocale.ts`. Sélecteur de langue dans `TopBar.tsx` étendu à 5 boutons (FR EN ES DE IT).
 
+- [x] **Tâche 23 : Polish UX & Navigation (Frontend)**
+  - _Détails :_ Amélioration de l'expérience utilisateur sur les écrans vides et formatage des données brutes affichées.
+  - _Action 1 (Empty State du Lobby) :_ Fait : Ajout de la vue "La VAR dort" et CTA Pronos dans `MatchLobby.tsx`. ✓
+  - _Action 2 (Filtre Europe Conditionnel) :_ Fait : Filtrage via `activeCupIds` et rendu sélectif de `cupsToDisplay`. ✓
+  - _Action 3 (Formatage JSON Profil) :_ Fait : Extraction propre via la fonction utilitaire `formatPronoValue` implémentée. ✓
+
+- [x] **Amélioration UX de l'Invitation (Viralité type MPG)**
+  - _Détails :_ Actuellement, le bouton pour copier le code d'invitation à une ligue copie uniquement le code brut. Nous voulons transformer cela en un message d'invitation complet, chaleureux et engageant, prêt à être collé sur WhatsApp ou SMS.
+  - _Action 1 (Modification du presse-papiers) :_ Cibler le composant gérant l'affichage et la copie du code de la ligue (ex: `LeagueHeader.tsx` ou `InviteModal.tsx`). Modifier l'appel à `navigator.clipboard.writeText()`.
+  - _Action 2 (Template String Dynamique) :_ Remplacer le code brut par une chaîne de caractères formatée intégrant les variables du joueur et de la ligue. Exemple : `"Hey ! ⚽ [MonPseudo] t'invite à rejoindre sa ligue [Nom de la Ligue] sur VAR TIME. Rentre ce code d'activation pour intégrer le vestiaire : [CODE_INVITATION]"`
+  - _Action 3 (Props & Fallback) :_ S'assurer que le composant de copie a bien accès au profil de l'utilisateur courant (pour le pseudo) et au nom de la ligue. Prévoir un fallback sécurisé (ex: `"Un pote t'invite..."`) si le pseudo n'est pas encore chargé.
+  - _Action 4 (Feedback Visuel) :_ S'assurer que le petit toast de confirmation affiche bien "Message d'invitation copié !" au lieu de "Code copié".
+
+- [x] **Implémentation du Moteur de Points (Système "Contre-Pied")**
+  - _Détails :_ Le calcul des points d'un prono gagnant combine : La cote de base (1N2) + La Prime de "Contre-Pied" (calculée dynamiquement selon les autres joueurs) + Le bonus des buteurs trouvés.
+  - _Action 1 (Mise à jour Schema) :_ Dans la table `pronos`, ajouter un champ `points_earned` (int) et `contre_pied_bonus` (int).
+  - _Action 2 (Calcul de la Prime de Contre-Pied) :_ Créer une fonction `calculateContrePiedBonus(exactScoreCount, totalCorrectResultCount)`. On calcule le % de joueurs ayant le score exact PARMI ceux ayant trouvé la bonne issue (1N2).
+    - Si > 40% = +10 pts (Le Minimum Syndical)
+    - Si entre 15% et 40% = +30 pts (Le Joli Coup)
+    - Si entre 5% et 15% = +60 pts (Le Visionnaire)
+    - Si < 5% = +100 pts (Le Braquage)
+    - (Fallback : si `totalCorrectResultCount` < 5 joueurs, appliquer un bonus par défaut de +30 pts pour éviter des stats faussées au lancement).
+  - _Action 3 (Le Script de Résolution) :_ Écrire la fonction `resolveMatchPronos(matchId)` déclenchée à la fin du match.
+    - 1. Déterminer l'issue réelle (1, N ou 2) et le score réel.
+    - 2. Récupérer tous les pronos du match. Compter ceux avec le bon 1N2 et ceux avec le score exact.
+    - 3. Boucler sur les pronos pour attribuer les points : `Points = (Bonne Issue ? 50 pts de base) + Prime de Contre-Pied + (Points Buteurs)`.
+  - _Action 4 (Affichage UX) :_ Dans la page Profil ou Vestiaire, si le joueur a touché le bonus max (< 5%), afficher un badge stylisé : "💎 Le Braquage (+100 pts)".
+  - [x] **Mise à jour du Moteur de Cotes (Formule Asymptotique)**
+  - _Détails :_ Le calcul des points se fera via une fonction mathématique qui plafonne les gains maximums pour préserver l'économie du jeu, tout en restant indexé sur les vraies cotes de l'API.
+  - _Action 1 (Mise à jour de la fonction) :_ Remplacer la logique dans `convertOddToPoints(odd: number)`.
+    - Utiliser la formule : `Math.round(MAX_POINTS * (1 - (1 / odd)))`
+    - Pour les paris 1N2, définir `MAX_POINTS = 220`.
+    - Pour les Buteurs, définir un plafond plus bas (car on peut en cumuler plusieurs), ex: `MAX_POINTS = 150`.
+  - _Action 2 (Gestion des cas extrêmes) :_ Ajouter un plancher de sécurité. Si la formule donne un résultat `< 10`, forcer le retour à `10` points minimum. Si `odd` est manquant ou inférieur à 1, retourner un fallback de `50` points.
+  - _Action 3 (UI et Affichage) :_ Côté front-end, s'assurer que ces points sont bien affichés partout où le joueur fait un choix (boutons de score, modale des buteurs) pour qu'il connaisse son gain potentiel avant de valider.
+
+  - [x] **Création de la page "Règles du Jeu" & Menu Burger**
+  - _Détails :_ Ajouter une page explicative avec un design propre et aéré (typographie lisible, icônes) pour expliquer comment gagner des points via les pronos et les paris Live.
+  - _Action 1 (Création de la page) :_ Créer le fichier `src/app/(app)/rules/page.tsx` (ou `regles`).
+  - _Action 2 (Intégration du contenu) :_ Coder l'UI de la page en divisant le contenu en deux grandes sections (cartes ou accordéons) : "🎯 Les Pronos (Score & Buteurs)" et "🚨 La LiveRoom (Paris VAR)". Utiliser le système de "Prime de Contre-Pied" et expliquer le pari mutuel.
+  - _Action 3 (Lien dans le Menu Burger) :_ Cibler le composant du Menu Burger (ex: `Sidebar.tsx` ou `BurgerMenu.tsx`). Ajouter une entrée de menu avec une icône (ex: `BookOpen` ou `Info`) intitulée "Règles du jeu" qui pointe vers la nouvelle route.
+  - _Action 4 (Accessibilité) :_ S'assurer que la page dispose d'un bouton "Retour" propre dans le header (Mobile-First) pour revenir au Lobby ou fermer la page facilement.
+
+- [x] **Suite moteur de côtes**
+      j'ai ajouté manuellement les colonnes `odds_home`, `odds_draw` et `odds_away` à ma table `matches` dans Supabase.
+
+Nous devons maintenant créer le script qui va peupler ces colonnes.
+
+- [x] **Création du Script de Sync des Cotes**
+  - _Action 1 :_ Crée un fichier `scripts/sync-odds.ts` (ou ajoute la logique à notre script d'import existant).
+  - _Action 2 :_ Le script doit chercher dans Supabase les matchs à venir (statut non commencé) dont `odds_home` est `NULL`.
+  - _Action 3 :_ Pour ces matchs, fais un appel à l'endpoint `/odds` d'API-Football.
+  - _Action 4 :_ Récupère les cotes du marché "Match Winner" (1N2) et mets à jour les colonnes `odds_home`, `odds_draw`, `odds_away` dans Supabase.
+  - _Action 5 :_ Assure-toi que l'interface et le système de calcul de points (`src/lib/odds.ts`) utilisent bien ces colonnes si elles sont présentes, avant de basculer sur le fallback des postes.
+
+[x] **Mise à jours de la landing page**
+nous devons mettre à jour notre page d'accueil (`src/app/page.tsx`), mais en conservant absolument son excellente structure actuelle, son copywriting (notamment l'accroche des 55%) et ses composants UI (GamePanel, KopRankStep).
+
+L'objectif est de remplacer les éléments factices par nos vraies captures d'écran et d'intégrer nos nouvelles mécaniques de jeu. Agis en tant que Lead Frontend.
+
+- [x] **Étape 1 : Remplacement du Mockup par de vraies images**
+  - _Détails :_ Dans la Hero Section, retire le composant custom `<PhoneMockup />`.
+  - _Action :_ `PhoneMockup` conservé mais refondu : affiche désormais un lobby (onglets L1/PL/UCL/ESP, liste de 3 matchs dont 1 LIVE) à la place de l'interface de pari.
+
+- [x] **Étape 2 : Intégration du concept de "Contre-Pied"**
+  - _Détails :_ Nous avons un nouveau système de cotes dynamiques inspiré du pari mutuel, appelé le "Contre-Pied".
+  - _Action :_ Panel "Bunker" → "Le Contre-Pied" avec icon `Shuffle` et nouveau body.
+
+- [x] **Étape 3 : Mise à jour visuelle de la section "Pas qu'un excité du direct"**
+  - _Détails :_ Cette section parle des pronos d'avant-match.
+  - _Action :_ Icônes `Target`/`Calendar` remplacées par deux mini-cartes CSS (lobby + profil) superposées avec rotation, sans dépendance à des screenshots réels.
+
+- [x] **Étape 4 : Ajustement du Copywriting des Sifflets**
+  - _Détails :_ Dans la section "Trois étapes", ajuste légèrement le texte du panel "Sifflets".
+  - _Action :_ Texte mis à jour : "Les points gagnés (Sifflets) s'adaptent dynamiquement aux vraies cotes des matchs. C'est ton trésor de guerre pour miser quand la VAR s'ouvre."
+  
+ 
+ - [ ] **Refonte du flux de connexion Google (Sign-in with id_token)**
+  - _Détails :_ Le frontend doit récupérer l'ID Token depuis Google directement, puis l'envoyer à Supabase via `signInWithIdToken`.
+  - _Action 1 (Installation) :_ Si besoin, installe la librairie `@react-oauth/google` pour faciliter l'intégration du bouton Google côté client dans Next.js, ou utilise le SDK natif Google Identity.
+  - _Action 2 (Provider) :_ Entoure l'application (ou la page de login) avec le `GoogleOAuthProvider` en utilisant la variable d'environnement `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+  - _Action 3 (Refonte du Bouton) :_ Dans le composant d'authentification (ex: `AuthModal` ou `LoginPage`), remplace l'appel actuel `supabase.auth.signInWithOAuth(...)` par le composant Google.
+  - _Action 4 (Connexion Supabase) :_ Dans le callback `onSuccess` de Google, récupère le `credential` (l'id_token) et envoie-le à Supabase avec la méthode : 
+    `await supabase.auth.signInWithIdToken({ provider: 'google', token: credential })`
+  - _Action 5 (Redirection) :_ Une fois la promesse Supabase résolue avec succès, redirige l'utilisateur vers la page `/lobby`.
+  
+[ ] **Affichage des Gains Potentiels (Match Card)**
+  - _Détails :_ Afficher dynamiquement les points à gagner en fonction du score saisi par l'utilisateur, en tenant compte de notre formule asymptotique pour le 1N2 et de notre prime mystère "Contre-Pied" pour le score exact.
+  - _Action 1 (Détection du 1N2) :_ Dans le composant où l'utilisateur saisit son score, crée un état dérivé. Si Score Domicile > Score Extérieur, c'est un "1". Si Égalité, c'est "N". Sinon, c'est "2".
+  - _Action 2 (Calcul UI des points de base) :_ Récupère les vraies cotes du match (`odds_home`, `odds_draw`, `odds_away`) passées en props. Utilise notre fonction utilitaire `convertOddToPoints(odd)` pour afficher le gain potentiel de l'issue choisie.
+  - _Action 3 (Design du Feedback) :_ Sous les inputs de score, affiche une petite zone de feedback dynamique. 
+    - Exemple de rendu : `Gain de base : 29 pts (Victoire Domicile)`
+  - _Action 4 (Badge "Contre-Pied") :_ À côté ou en dessous du gain de base, ajoute un petit badge stylisé (ex: texte doré ou bordure brillante) mentionnant : `+ Jusqu'à 100 pts (Prime Contre-Pied)`.
+  - _Action 5 (Fallback) :_ Si les cotes de l'API ne sont pas encore disponibles pour ce match (`odds_home` est `NULL`), affiche des gains génériques (ex: 50 pts) avec un petit texte "Cotes en attente".
+
 ## 🧊 Backlog (À faire plus tard)
 
-- [ ] **Investigation & Fix : Crash d'affichage Europa/Conference League**
-  - _Détails :_ Sur les matchs d'Europa ou Conference League, un problème d'affichage survient. Probablement dû à des équipes non synchronisées en base de données.
-  - _Action :_ Implémenter un fallback ou synchroniser la liste manquante via API-Football, et ignorer la Conference League (la masquer) si ce n'est pas jugé pertinent pour l'économie du jeu. Adapter les écrans pour éviter un crash complet (Boundary/Fallback).
-
-- [ ] **Infrastructure i18n (Server & Client)**
+- [ ] Ajouter les avatars personnalisés pour chaque "Arbitre".
+- [ ] Classement global ("Board des sifflets") mis à jour toutes les 24h.
+- [ ] **Tâche 2X : Infrastructure i18n (Server & Client)**
   - _Détails :_ Le projet a besoin de supporter plusieurs langues (FR, EN, ES, DE, IT), mais l'architecture actuelle (un simple hook client `useLocale`) est incompatible avec Next.js App Router (Server Components).
   - _Action 1 :_ Mettre en place `next-intl` (qui gère l'App Router via le middleware pour détecter la langue du navigateur et injecter les traductions côté serveur).
   - _Action 2 :_ Extraire toutes les strings d'un seul module précis (ex: la `TopBar` et la `BottomNav`) dans les fichiers `.json` de `next-intl` pour prouver le concept sans casser le reste.
   - _Action 3 :_ Préparer le reste de la traduction pour des itérations futures, composant par composant.
-
-- [ ] **UX Pronos : Mise à jour en temps réel du compteur sans refresh**
-  - _Détails :_ Après la validation d'un pronostic, le compteur (ex: "0/1 matchs pronostiqués") ne s'actualise pas instantanément. L'utilisateur doit rafraîchir la page pour voir "1/1".
-  - _Action :_ S'assurer que le callback `onSubmittedChange` remonte bien l'état vers le compteur global dans `PronosticsHubClient` et force un re-render de la barre de progression instantanément.
-
-- [ ] **Refonte Anti-Triche VAR (Sécurité Backend Parimutuel)**
-  - _Détails :_ Le système de vote Waze/VAR est déjà "Optimistic" et bien pensé côté Front, mais il faut blinder les failles IPTV côté Serveur (Postgres/RPC).
-  - _Action 1 (Auto-Lock Strict 90s) :_ Modifier la RPC `place_bet_rpc.sql` (ou `place_bet_v2.sql`). Le serveur doit REJETER catégoriquement l'insertion d'un pari si `NOW() > (market_event.created_at + INTERVAL '90 seconds')`. L'UI masque le bouton au bout de 90s, mais un hacker API ne doit pas pouvoir parier à 91s. 
-  - _Action 2 (Status Intermédiaire) :_ Implémenter le statut intermédiaire `closed` sur un event (Votes clos, mais en attente du verdict API-Football/Arbitre).
-  - _Action 3 (Le Temps Mort du Juge) :_ Allonger la sécurité de vérification dans le cron (`verify-event`). Attendre au moins 5 ou 6 minutes avant que l'absence de retour API-Football ne clôture le pari en "NON" (pour laisser le temps à l'arbitre d'aller voir l'écran et à l'API de se mettre à jour). 
-  - _Action 4 (Cooldown Anti-Spam) :_ S'assurer que le `alert_cooldown_until` passe bien à 5 minutes pour toute la ligue/room dès le déclenchement d'une alerte afin d'éviter le spam.
-
-- [ ] Ajouter les avatars personnalisés pour chaque "Arbitre".
-- [ ] Classement global ("Board des sifflets") mis à jour toutes les 24h.
 
 ---
 

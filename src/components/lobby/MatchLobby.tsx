@@ -21,6 +21,8 @@ import type { LobbyMatchRow } from "@/types/lobby";
 import { toMatchRow } from "@/types/lobby";
 import type { MatchGoalLine } from "@/components/lobby/MatchCard";
 
+import { Target } from "lucide-react";
+
 /** Ordre des sections « Direct » / Europe : Top 5 puis coupes UEFA. */
 const LOBBY_GROUP_ORDER: readonly number[] = [
   ...TOP_LEAGUES.map((l) => l.apiFootballLeagueId),
@@ -211,8 +213,22 @@ function EuropeHubView({
   roundView,
   roundContext,
 }: EuropeHubViewProps) {
+  // Déterminer quelles coupes ont des matchs affichés actuellement
+  const activeCupIds = new Set(
+    europeRows
+      .map((m) => m.competition?.api_football_league_id)
+      .filter(Boolean),
+  );
+
+  // Ne garder que les coupes qui ont des matchs, ou par défaut la LDC si tout est vide
+  const visibleCups = EUROPEAN_CUPS.filter((c) =>
+    activeCupIds.has(c.apiFootballLeagueId),
+  );
+  const cupsToDisplay =
+    visibleCups.length > 0 ? visibleCups : [EUROPEAN_CUPS[0]!];
+
   const [selectedCupId, setSelectedCupId] = useState<number>(
-    EUROPEAN_CUPS[0].apiFootballLeagueId,
+    cupsToDisplay[0]!.apiFootballLeagueId,
   );
   const selectCup = useCallback((id: number) => setSelectedCupId(id), []);
 
@@ -248,12 +264,12 @@ function EuropeHubView({
         </div>
       )}
 
-      {/* Sous-sélecteur de coupe — même pattern que les onglets principaux */}
+      {/* Sous-sélecteur de coupe — conditionnel */}
       <nav
         className="-mx-1 flex gap-1 overflow-x-auto pb-1"
         aria-label="Compétition européenne"
       >
-        {EUROPEAN_CUPS.map((cup) => (
+        {cupsToDisplay.map((cup) => (
           <button
             key={cup.apiFootballLeagueId}
             type="button"
@@ -271,8 +287,9 @@ function EuropeHubView({
 
       {/* Hub de la coupe sélectionnée */}
       <LeagueHubBoundary
+        key={`boundary-${selectedCupId}`}
         leagueName={
-          EUROPEAN_CUPS.find((c) => c.apiFootballLeagueId === selectedCupId)
+          cupsToDisplay.find((c) => c.apiFootballLeagueId === selectedCupId)
             ?.label
         }
       >
@@ -410,9 +427,23 @@ export function MatchLobby({
 
       {tab === "direct" ? (
         directRows.length === 0 ? (
-          <p className="rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-8 text-center text-sm font-medium text-zinc-400">
-            Aucun match en direct pour le moment.
-          </p>
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-zinc-900/60 px-6 py-10 text-center shadow-inner">
+            <span className="text-4xl mb-3" aria-hidden="true">
+              😴
+            </span>
+            <p className="text-base font-black text-white">La VAR dort...</p>
+            <p className="mt-2 text-sm text-zinc-400">
+              Aucun match en direct pour le moment. Profites-en pour préparer
+              tes prochains braquages ou consulte les classements.
+            </p>
+            <Link
+              href="/pronos"
+              className="mt-6 flex h-12 items-center gap-2 rounded-xl bg-whistle px-6 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:bg-whistle/90 active:scale-95"
+            >
+              <Target className="h-4 w-4" />
+              Faire mes pronos
+            </Link>
+          </div>
         ) : (
           <div className="flex flex-col gap-10">
             {directGrouped.map((group) => (

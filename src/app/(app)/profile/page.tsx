@@ -197,6 +197,8 @@ export default async function ProfilePage() {
       prono_type: p.prono_type,
       prono_value: p.prono_value,
       reward_amount: p.reward_amount,
+      points_earned: p.points_earned,
+      contre_pied_bonus: p.contre_pied_bonus,
       placed_at: p.placed_at,
       teamHome: match?.team_home,
       teamAway: match?.team_away,
@@ -218,7 +220,10 @@ export default async function ProfilePage() {
       .reduce((s, b) => s + Math.round(Number(b.potential_reward)), 0) +
     pronos
       .filter((p) => p.status === "won")
-      .reduce((s, p) => s + p.reward_amount, 0);
+      .reduce(
+        (s, p) => s + (p.points_earned > 0 ? p.points_earned : p.reward_amount),
+        0,
+      );
 
   const REFILL_THRESHOLD = 500;
   // eslint-disable-next-line react-hooks/purity

@@ -194,6 +194,9 @@ export interface Database {
           has_lineups: boolean;
           last_events_sync_at: string | null;
           last_stats_sync_at: string | null;
+          odds_home: number | null;
+          odds_draw: number | null;
+          odds_away: number | null;
         };
         Insert: {
           id?: string;
@@ -219,6 +222,9 @@ export interface Database {
           has_lineups?: boolean;
           last_events_sync_at?: string | null;
           last_stats_sync_at?: string | null;
+          odds_home?: number | null;
+          odds_draw?: number | null;
+          odds_away?: number | null;
         };
         Update: {
           id?: string;
@@ -244,6 +250,9 @@ export interface Database {
           has_lineups?: boolean;
           last_events_sync_at?: string | null;
           last_stats_sync_at?: string | null;
+          odds_home?: number | null;
+          odds_draw?: number | null;
+          odds_away?: number | null;
         };
         Relationships: [];
       };
@@ -617,6 +626,8 @@ export interface Database {
           reward_amount: number;
           placed_at: string;
           status: "pending" | "won" | "lost";
+          points_earned: number;
+          contre_pied_bonus: number;
         };
         Insert: {
           id?: string;
@@ -627,6 +638,8 @@ export interface Database {
           reward_amount: number;
           placed_at?: string;
           status?: "pending" | "won" | "lost";
+          points_earned?: number;
+          contre_pied_bonus?: number;
         };
         Update: {
           id?: string;
@@ -637,6 +650,8 @@ export interface Database {
           reward_amount?: number;
           placed_at?: string;
           status?: "pending" | "won" | "lost";
+          points_earned?: number;
+          contre_pied_bonus?: number;
         };
         Relationships: [];
       };

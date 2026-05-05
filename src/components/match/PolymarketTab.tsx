@@ -5,13 +5,19 @@ import { Check, ChevronDown, ChevronUp, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { PlayerRow } from "@/types/database";
+import {
+  convertOddToPoints,
+  SCORER_DEFAULT_ODDS,
+  SCORER_MAX_POINTS,
+  EXACT_SCORE_DEFAULT_ODD,
+} from "@/lib/odds";
 
-const SCORE_EXACT_REWARD = 2000;
-const BUNKER_REWARD = 1200;
-const SCORER_REWARD: Record<string, number> = { A: 500, M: 1000, D: 2000 };
+const SCORE_EXACT_REWARD = convertOddToPoints(EXACT_SCORE_DEFAULT_ODD, 220);
+const BUNKER_REWARD = convertOddToPoints(18.0, 220);
 
 function getScorerReward(pos: string | null | undefined): number {
-  return SCORER_REWARD[(pos ?? "").trim()] ?? 1000;
+  const odd = SCORER_DEFAULT_ODDS[(pos ?? "").trim()] ?? 7.0;
+  return convertOddToPoints(odd, SCORER_MAX_POINTS);
 }
 
 function normalizeTeam(name: string): string {
@@ -27,9 +33,24 @@ function teamsMatch(a: string, b: string): boolean {
 }
 
 const POSITION_GROUPS: { key: string; label: string; reward: number }[] = [
-  { key: "A", label: "Attaquants", reward: 500 },
-  { key: "M", label: "Milieux", reward: 1000 },
-  { key: "D", label: "Défenseurs", reward: 2000 },
+  {
+    key: "A",
+    label: "Attaquants",
+    reward: convertOddToPoints(SCORER_DEFAULT_ODDS.A ?? 3.5, SCORER_MAX_POINTS),
+  },
+  {
+    key: "M",
+    label: "Milieux",
+    reward: convertOddToPoints(SCORER_DEFAULT_ODDS.M ?? 7.0, SCORER_MAX_POINTS),
+  },
+  {
+    key: "D",
+    label: "Défenseurs",
+    reward: convertOddToPoints(
+      SCORER_DEFAULT_ODDS.D ?? 15.0,
+      SCORER_MAX_POINTS,
+    ),
+  },
 ];
 
 function playerInGroup(pos: string | null | undefined, key: string): boolean {
@@ -45,6 +66,9 @@ type Props = {
   teamAway: string;
   homeTeamLogo?: string | null;
   awayTeamLogo?: string | null;
+  oddsHome?: number | null;
+  oddsDraw?: number | null;
+  oddsAway?: number | null;
 };
 
 // ── TeamBadge ─────────────────────────────────────────────────────────────────
@@ -111,6 +135,9 @@ export function PolymarketTab({
   teamAway,
   homeTeamLogo,
   awayTeamLogo,
+  oddsHome,
+  oddsDraw,
+  oddsAway,
 }: Props) {
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loadingLineups, setLoadingLineups] = useState(true);
@@ -176,7 +203,18 @@ export function PolymarketTab({
     aNum >= 0;
   const derivedScore = scoreInputsValid ? `${hNum}-${aNum}` : null;
   const isBunker = scoreInputsValid && hNum === 0 && aNum === 0;
-  const scoreReward = isBunker ? BUNKER_REWARD : SCORE_EXACT_REWARD;
+
+  // Utilise la vraie cote 1N2 si disponible, sinon la valeur par défaut
+  const implied1N2Odd = scoreInputsValid
+    ? hNum > aNum
+      ? (oddsHome ?? null)
+      : hNum === aNum
+        ? (oddsDraw ?? null)
+        : (oddsAway ?? null)
+    : null;
+  const scoreReward = isBunker
+    ? BUNKER_REWARD
+    : convertOddToPoints(implied1N2Odd ?? EXACT_SCORE_DEFAULT_ODD, 220);
   const alreadyBetScore = derivedScore
     ? hasProno("exact_score", derivedScore)
     : false;

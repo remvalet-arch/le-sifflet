@@ -12,10 +12,12 @@
     "ai:check": "npm run format && npm run lint && npm run typecheck",
     "ai:verify": "npm run ai:check && npm run test:e2e",
     "test:backend": "tsx --tsconfig tsconfig.json scripts/simulate-match-scenario.ts",
+    "sync:odds": "tsx --tsconfig tsconfig.json scripts/sync-odds.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
     "date-fns": "^4.1.0",

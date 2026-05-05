@@ -13,7 +13,7 @@ export default async function LoginPage() {
   if (user) redirect("/lobby");
 
   return (
-    <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-zinc-950 px-6">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-zinc-950 px-6">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center">

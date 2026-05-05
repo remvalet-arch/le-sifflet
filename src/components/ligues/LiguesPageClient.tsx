@@ -147,14 +147,22 @@ export function LiguesPageClient({ userId }: { userId: string }) {
     }
   }
 
-  function copyInvite(squadId: string, inv: string) {
-    void navigator.clipboard.writeText(inv);
+  function copyInvite(
+    squadId: string,
+    inv: string,
+    squadName: string,
+    members: SquadMember[],
+  ) {
+    const myUsername = members.find((m) => m.user_id === userId)?.username;
+    const from = myUsername ?? "Un pote";
+    const message = `Hey ! ⚽ ${from} t'invite à rejoindre sa ligue "${squadName}" sur VAR TIME. Rentre ce code d'activation pour intégrer le vestiaire : ${inv}`;
+    void navigator.clipboard.writeText(message);
     setCopiedSquadId(squadId);
     setTimeout(
       () => setCopiedSquadId((id) => (id === squadId ? null : id)),
       2000,
     );
-    toast.success("Code copié !");
+    toast.success("Message d'invitation copié !");
   }
 
   const tabs: { id: Tab; label: string }[] = [
@@ -304,7 +312,14 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                         </p>
                         {s.is_private && s.invite_code && (
                           <button
-                            onClick={() => copyInvite(s.id, s.invite_code!)}
+                            onClick={() =>
+                              copyInvite(
+                                s.id,
+                                s.invite_code!,
+                                s.name,
+                                s.members,
+                              )
+                            }
                             className="flex items-center gap-1 rounded border border-white/10 px-2 py-0.5 text-[10px] font-bold text-zinc-400 hover:text-white"
                           >
                             <Copy className="h-3 w-3" />
@@ -370,7 +385,9 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                   {s.invite_code && s.owner_id === userId && (
                     <button
                       type="button"
-                      onClick={() => copyInvite(s.id, s.invite_code!)}
+                      onClick={() =>
+                        copyInvite(s.id, s.invite_code!, s.name, s.members)
+                      }
                       className="mt-3 flex w-full items-center justify-between rounded-xl border border-zinc-700 bg-zinc-950/80 px-3 py-2"
                     >
                       <span className="font-mono text-sm font-black tracking-[0.2em] text-amber-400">

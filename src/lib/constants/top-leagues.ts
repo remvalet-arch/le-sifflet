@@ -14,7 +14,6 @@ export const TOP_LEAGUES = [
 export const EUROPEAN_CUPS = [
   { apiFootballLeagueId: 2, label: "Champions League" },
   { apiFootballLeagueId: 3, label: "Europa League" },
-  { apiFootballLeagueId: 848, label: "Europa Conference League" },
 ] as const;
 
 /** IDs ligue API du Top 5 uniquement. */

@@ -24,6 +24,8 @@ export type PronoEntry = {
   prono_type: "exact_score" | "scorer" | "scorer_allocation";
   prono_value: string;
   reward_amount: number;
+  points_earned: number;
+  contre_pied_bonus: number;
   placed_at: string;
   teamHome?: string;
   teamAway?: string;
@@ -78,7 +80,32 @@ function fmtDate(iso: string) {
   });
 }
 
-// ── Tab bar ───────────────────────────────────────────────────────────────────
+function formatPronoValue(
+  type: "exact_score" | "scorer" | "scorer_allocation",
+  value: string,
+) {
+  if (type === "exact_score") return `🎯 Score exact : ${value}`;
+  if (type === "scorer") return `⚽ Buteur : ${value}`;
+  if (type === "scorer_allocation") {
+    try {
+      const parsed = JSON.parse(value);
+      const names: string[] = [];
+      if (parsed.home)
+        parsed.home.forEach((s: { name: string; goals: number }) =>
+          names.push(`${s.name}${s.goals > 1 ? ` (x${s.goals})` : ""}`),
+        );
+      if (parsed.away)
+        parsed.away.forEach((s: { name: string; goals: number }) =>
+          names.push(`${s.name}${s.goals > 1 ? ` (x${s.goals})` : ""}`),
+        );
+      if (names.length === 0) return `⚽ Buteurs : Aucun (Bunker)`;
+      return `⚽ Buteurs : ${names.join(", ")}`;
+    } catch {
+      return `⚽ Buteurs : (Erreur format)`;
+    }
+  }
+  return value;
+}
 
 type Tab = "var" | "pronos" | "trophees";
 
@@ -217,10 +244,7 @@ export function ProfileClient({
               {pronos.map((p) => {
                 const cls = statusCls(p.status, "prono");
                 const lbl = statusLabel(p.status, "prono");
-                const line =
-                  p.prono_type === "scorer"
-                    ? `⚽ Buteur : ${p.prono_value}`
-                    : `🎯 Score exact : ${p.prono_value}`;
+                const line = formatPronoValue(p.prono_type, p.prono_value);
                 return (
                   <div
                     key={p.id}
@@ -243,9 +267,17 @@ export function ProfileClient({
                       >
                         {lbl}
                         {p.status === "won" &&
-                          ` +${p.reward_amount.toLocaleString("fr-FR")} Pts`}
+                          ` +${(p.points_earned > 0 ? p.points_earned : p.reward_amount).toLocaleString("fr-FR")} Pts`}
                       </span>
                     </div>
+                    {p.status === "won" && p.contre_pied_bonus === 100 && (
+                      <div className="mt-1.5 flex items-center gap-1 text-[10px] font-black text-amber-400">
+                        💎 Le Braquage
+                        <span className="font-normal text-zinc-500">
+                          +100 pts contre-pied
+                        </span>
+                      </div>
+                    )}
                     <div className="mt-1.5 text-[10px] text-zinc-600">
                       Gratuit · gain potentiel{" "}
                       <strong className="text-zinc-300">

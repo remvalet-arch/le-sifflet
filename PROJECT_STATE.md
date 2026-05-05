@@ -207,7 +207,7 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 
 1. **Avatars personnalisés** — `avatar_url` en UI profil (`<img>` dans TopBar + SquadDetail) ; upload via Storage Supabase ou URL externe.
 2. **Classement global ("Board des sifflets")** — vue publique des meilleurs `sifflets_balance` / XP, mise à jour quotidienne.
-3. **Migrations SQL en attente (prod)** — appliquer **`0055_fix_place_match_prono.sql`** (fix `match_subscriptions`) et **`0056_squad_nudges.sql`** dans l’éditeur SQL Supabase.
+3. **Migrations SQL en attente (prod)** — appliquer **`0055_fix_place_match_prono.sql`**, **`0056_squad_nudges.sql`**, et **`0059_contre_pied_bonus.sql`** dans l’éditeur SQL Supabase.
 4. **`long_term_bets` (legacy)** — option DROP si plus aucune ligne en base.
 
 ---
@@ -245,4 +245,11 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 
 ---
 
-_Fin du document — mise à jour 2026-05-05 (sprint Rétention & Social)._
+### Sprint Viralité & Économie des Points (Mai 2026)
+
+- **Invitation virale** : copie d'un message complet WhatsApp/SMS (pseudo + nom ligue + code) depuis `LiguesPageClient` au lieu du code brut.
+- **Moteur Contre-Pied** : migration `0059_contre_pied_bonus.sql` — colonnes `points_earned` / `contre_pied_bonus` sur `pronos` ; `resolve_match_pronos` recalculée : 50 pts base (bonne issue 1N2) + prime Contre-Pied si score exact (10/30/60/100 pts selon rareté) ; badge "💎 Le Braquage" sur profil.
+- **Formule asymptotique** : `convertOddToPoints(odd, maxPoints)` dans `src/lib/odds.ts` ; constantes `SCORER_DEFAULT_ODDS` / `SCORER_MAX_POINTS` / `EXACT_SCORE_DEFAULT_ODD` ; `PolymarketTab` utilise la formule pour l'affichage des gains potentiels et `p_reward_amount`.
+- **Page Règles du jeu** : refonte complète (deux sections : Pronos + LiveRoom), bouton Retour /lobby, lien dans le burger déjà branché (`/rules`).
+
+_Fin du document — mise à jour 2026-05-05 (sprint Viralité & Économie)._

@@ -5,11 +5,9 @@ import {
   DoorOpen,
   Globe2,
   QrCode,
+  Shuffle,
   Swords,
-  Target,
-  Calendar,
   Users,
-  Warehouse,
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -223,10 +221,10 @@ export default async function LandingPage() {
             />
             <GamePanel
               step="04"
-              Icon={Warehouse}
+              Icon={Shuffle}
               color="violet"
-              title="Bunker"
-              body="Pronos gratuits à gain fixe. Un match nul ? Réfugie-toi dans le Bunker 0-0."
+              title="Le Contre-Pied"
+              body="Oublie les cotes ennuyeuses. Trouve le score exact ou les buteurs que personne n'a vus venir, et rafle la mise. L'audace paie en Sifflets."
             />
           </div>
 
@@ -260,7 +258,7 @@ export default async function LandingPage() {
                 Icon={CircleDollarSign}
                 color="yellow"
                 title="Sifflets"
-                body="Tu récupères des Sifflets : pronos gratuits, bons coups, progression. C'est ta monnaie pour miser quand la VAR s'ouvre."
+                body="Les points gagnés (Sifflets) s'adaptent dynamiquement aux vraies cotes des matchs. C'est ton trésor de guerre pour miser quand la VAR s'ouvre."
               />
             </div>
             <GamePanel
@@ -275,20 +273,59 @@ export default async function LandingPage() {
           {/* Pronostics avant match — carte pleine largeur */}
           <div className="mt-14 overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-zinc-900/90 via-zinc-950/95 to-zinc-900/90 p-6 shadow-[0_0_50px_rgba(16,185,129,0.12)] backdrop-blur-sm sm:p-8 md:p-10">
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-10">
-              <div className="relative mx-auto flex shrink-0 items-center justify-center md:mx-0">
+              <div className="relative mx-auto h-36 w-56 shrink-0 md:mx-0">
                 <div
-                  className="absolute h-36 w-36 rounded-full bg-green-500/20 blur-3xl"
+                  className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-500/20 blur-3xl"
                   aria-hidden
                 />
-                <div className="relative flex items-center gap-3">
-                  <Target
-                    className="h-20 w-20 text-green-400 drop-shadow-[0_0_24px_rgba(34,197,94,0.55)] sm:h-24 sm:w-24"
-                    strokeWidth={1.25}
-                  />
-                  <Calendar
-                    className="h-14 w-14 text-emerald-300/90 drop-shadow-[0_0_18px_rgba(52,211,153,0.45)] sm:h-16 sm:w-16"
-                    strokeWidth={1.25}
-                  />
+                {/* Profile screen (behind) */}
+                <div className="absolute right-0 top-3 w-28 rotate-6 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <div className="h-5 w-5 shrink-0 rounded-full bg-emerald-500/30" />
+                    <div className="space-y-0.5">
+                      <div className="h-1 w-10 rounded bg-zinc-700" />
+                      <div className="h-1 w-6 rounded bg-zinc-600" />
+                    </div>
+                  </div>
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="mb-0.5 flex items-center justify-between rounded bg-zinc-800 px-1.5 py-1"
+                    >
+                      <div className="h-1 w-8 rounded bg-zinc-700" />
+                      <div
+                        className={`h-1 w-4 rounded ${i === 0 ? "bg-green-500/60" : "bg-zinc-600"}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {/* Lobby screen (front) */}
+                <div className="absolute left-0 top-0 w-28 -rotate-3 overflow-hidden rounded-xl border border-green-500/20 bg-zinc-900 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.6),0_0_20px_rgba(34,197,94,0.1)]">
+                  <div className="mb-1.5 flex gap-1">
+                    {["L1", "PL", "UCL"].map((tab, i) => (
+                      <span
+                        key={tab}
+                        className={`rounded px-1.5 py-0.5 text-[6px] font-black ${i === 0 ? "bg-green-500 text-black" : "bg-zinc-800 text-zinc-500"}`}
+                      >
+                        {tab}
+                      </span>
+                    ))}
+                  </div>
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="mb-1 overflow-hidden rounded-lg bg-zinc-800 p-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="h-1 w-8 rounded bg-zinc-600" />
+                        {i === 0 && (
+                          <span className="text-[5px] font-black text-red-400">
+                            ● LIVE
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="min-w-0 flex-1 text-center md:text-left">
@@ -580,87 +617,79 @@ function PhoneMockup() {
         className="absolute inset-0 -m-6 rounded-[3.5rem] bg-green-500/15 blur-3xl"
         aria-hidden
       />
-      {/* Coque : ratio smartphone moderne (~9:19.5), contenu fluide sans étirement */}
       <div className="relative flex aspect-[9/19.5] w-full flex-col overflow-hidden rounded-[2.5rem] border-[3px] border-zinc-700 bg-zinc-900 shadow-[0_32px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(34,197,94,0.08)]">
         {/* Notch */}
         <div className="flex shrink-0 items-center justify-center border-b border-zinc-800 py-2">
           <div className="h-1.5 w-14 rounded-full bg-zinc-700" />
         </div>
 
-        {/* Écran — remplit la hauteur restante, pas de déformation du contenu */}
-        <div className="flex min-h-0 flex-1 flex-col justify-between gap-1.5 bg-zinc-950 p-2.5 pb-3">
-          <div className="min-h-0 shrink-0 space-y-1.5">
-            {/* Scoreboard */}
-            <div className="overflow-hidden rounded-xl bg-zinc-900">
-              <div className="flex items-center justify-between px-2.5 py-1.5">
-                <span className="text-[9px] font-black text-white">PSG</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-white">1</span>
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
-                  <span className="text-xs font-black text-white">0</span>
-                </div>
-                <span className="text-[9px] font-black text-white">OL</span>
-              </div>
-              <div className="bg-green-500/10 px-2.5 py-0.5 text-center">
-                <span className="text-[8px] font-black text-green-400">
-                  47&rsquo; EN DIRECT
-                </span>
-              </div>
+        {/* Écran — lobby */}
+        <div className="flex min-h-0 flex-1 flex-col bg-zinc-950">
+          {/* Header */}
+          <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className="rounded border border-white/20 px-1 text-[7px] font-black text-white">
+                VAR
+              </span>
+              <span className="text-[8px] font-black text-white">TIME</span>
             </div>
-
-            {/* Event */}
-            <div className="px-0.5">
-              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">
-                Décision en cours
-              </p>
-              <p className="text-[0.8rem] font-black leading-tight text-white">
-                Il y a péno là&nbsp;?!
-              </p>
-            </div>
-
-            {/* Timer */}
-            <div>
-              <div className="mb-1 flex justify-between text-[8px]">
-                <span className="text-zinc-500">Temps restant</span>
-                <span className="font-black text-white">67s</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-                <div className="h-full w-3/4 rounded-full bg-green-500" />
-              </div>
-            </div>
+            <div className="h-5 w-5 rounded-full bg-zinc-700" />
           </div>
 
-          <div className="min-h-0 shrink-0 space-y-1.5">
-            {/* OUI / NON */}
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="flex min-h-0 flex-col items-center justify-center rounded-xl border-2 border-green-500 bg-green-500/15 py-2">
-                <span className="text-[8px] font-black uppercase text-green-400">
-                  OUI
+          {/* League tabs */}
+          <div className="flex shrink-0 gap-1 overflow-hidden border-b border-zinc-800 px-2.5 py-1.5">
+            {["L1", "PL", "UCL", "ESP"].map((tab, i) => (
+              <span
+                key={tab}
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[7px] font-black ${i === 0 ? "bg-green-500 text-black" : "bg-zinc-800 text-zinc-500"}`}
+              >
+                {tab}
+              </span>
+            ))}
+          </div>
+
+          {/* Match list */}
+          <div className="flex flex-1 flex-col gap-1.5 overflow-hidden p-2">
+            {/* Match LIVE */}
+            <div className="overflow-hidden rounded-xl bg-zinc-900 px-2.5 py-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1 text-[7px] font-black text-red-400">
+                  <span className="h-1 w-1 animate-pulse rounded-full bg-red-400" />
+                  LIVE
                 </span>
-                <span className="text-xs font-black text-green-400">×2.00</span>
+                <span className="text-[7px] text-zinc-500">67&rsquo;</span>
               </div>
-              <div className="flex min-h-0 flex-col items-center justify-center rounded-xl border-2 border-zinc-600 bg-zinc-800 py-2">
-                <span className="text-[8px] font-black uppercase text-zinc-300">
-                  NON
-                </span>
-                <span className="text-xs font-black text-zinc-400">×1.80</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[8px] font-black text-white">PSG</span>
+                <span className="text-[10px] font-black text-white">1 – 0</span>
+                <span className="text-[8px] font-black text-white">OL</span>
               </div>
             </div>
 
-            {/* Engagement */}
-            <div className="flex items-center rounded-lg bg-zinc-800/80 px-2 py-1.5">
-              <span className="text-[8px] text-zinc-500">Engagement</span>
-              <span className="ml-auto text-[10px] font-black text-white">
-                50 pts
-              </span>
-              <span className="ml-1 text-[8px] text-green-400">→ +100</span>
+            {/* Match upcoming 1 */}
+            <div className="overflow-hidden rounded-xl bg-zinc-900 px-2.5 py-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[7px] text-zinc-500">20:45</span>
+                <span className="text-[7px] text-zinc-600">Premier Lge</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[8px] font-black text-white">MAN C</span>
+                <span className="text-[8px] font-bold text-zinc-500">vs</span>
+                <span className="text-[8px] font-black text-white">ARS</span>
+              </div>
             </div>
 
-            {/* CTA */}
-            <div className="flex items-center justify-center rounded-xl bg-green-500 py-2">
-              <span className="text-[8px] font-black uppercase tracking-wide text-zinc-950">
-                Valider ma prédiction →
-              </span>
+            {/* Match upcoming 2 */}
+            <div className="overflow-hidden rounded-xl bg-zinc-900 px-2.5 py-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[7px] text-zinc-500">21:00</span>
+                <span className="text-[7px] text-zinc-600">UCL</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[8px] font-black text-white">REAL</span>
+                <span className="text-[8px] font-bold text-zinc-500">vs</span>
+                <span className="text-[8px] font-black text-white">BARÇA</span>
+              </div>
             </div>
           </div>
         </div>

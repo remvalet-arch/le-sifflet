@@ -51,10 +51,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className="h-full antialiased">
       <body className="min-h-full bg-zinc-950 text-zinc-50 font-sans">
-        {/* Vue Desktop / Container Mobile-first */}
-        <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden bg-zinc-950 shadow-2xl relative">
-          {children}
-        </div>
+        {children}
         <ServiceWorkerRegister />
         <InstallPrompt />
         <ToasterProvider />
