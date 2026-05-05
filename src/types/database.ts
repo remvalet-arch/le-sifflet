@@ -835,6 +835,7 @@ export interface Database {
           home_form: string | null;
           away_form: string | null;
         };
+        Relationships: [];
       };
     };
     Functions: {
