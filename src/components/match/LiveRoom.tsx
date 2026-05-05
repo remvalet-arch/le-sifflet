@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { Siren } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type {
   AlertActionType,
@@ -42,6 +43,45 @@ export function LiveRoom({
     match.alert_cooldown_until ? new Date(match.alert_cooldown_until) : null,
   );
   const [cooldownSecs, setCooldownSecs] = useState(0);
+
+  // Sirène VAR (panic button)
+  const [sirenLoading, setSirenLoading] = useState(false);
+  const [sirenCooldownUntil, setSirenCooldownUntil] = useState<Date | null>(
+    null,
+  );
+
+  async function handleVarAlert() {
+    if (sirenLoading || (sirenCooldownUntil && sirenCooldownUntil > new Date()))
+      return;
+    setSirenLoading(true);
+    try {
+      const res = await fetch("/api/squads/var-alert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ match_id: liveMatch.id }),
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: { sent_count: number };
+        error?: string;
+      };
+      if (!json.ok) {
+        toast.error(json.error ?? "Impossible d'envoyer la sirène");
+      } else {
+        const n = json.data?.sent_count ?? 0;
+        toast.success(
+          n > 0
+            ? `Sirène envoyée à ${n} coéquipier${n > 1 ? "s" : ""} 🚨`
+            : "Personne à appeler pour l'instant.",
+        );
+        setSirenCooldownUntil(new Date(Date.now() + 15 * 60 * 1000));
+      }
+    } catch {
+      toast.error("Connexion perdue");
+    } finally {
+      setSirenLoading(false);
+    }
+  }
 
   // Alert state
   const [pendingType, setPendingType] = useState<AlertActionType | null>(null);
@@ -318,11 +358,35 @@ export function LiveRoom({
 
       {/* Contenu de l'onglet */}
       {displayedTab === "kop" && (
-        <MatchTimeline
-          matchId={liveMatch.id}
-          isModerator={isModerator}
-          matchStatus={liveMatch.status}
-        />
+        <>
+          <MatchTimeline
+            matchId={liveMatch.id}
+            isModerator={isModerator}
+            matchStatus={liveMatch.status}
+          />
+          {/* Sirène VAR — panic button ligue */}
+          {isLive && (
+            <div className="mt-4 px-1 pb-2">
+              <button
+                type="button"
+                onClick={handleVarAlert}
+                disabled={
+                  sirenLoading ||
+                  (sirenCooldownUntil !== null &&
+                    sirenCooldownUntil > new Date())
+                }
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 py-3 text-sm font-black text-red-400 transition active:scale-[0.98] disabled:opacity-40"
+              >
+                <Siren className="h-4 w-4" />
+                {sirenLoading
+                  ? "Envoi…"
+                  : sirenCooldownUntil && sirenCooldownUntil > new Date()
+                    ? "Sirène VAR (cooldown 15 min)"
+                    : "Sirène VAR — Rameuter la ligue 🚨"}
+              </button>
+            </div>
+          )}
+        </>
       )}
       {displayedTab === "compo" && (
         <MatchLineups

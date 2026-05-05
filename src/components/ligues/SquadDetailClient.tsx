@@ -3,7 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { LoaderCircle, Trophy, Wallet, ChevronLeft } from "lucide-react";
+import {
+  BellRing,
+  LoaderCircle,
+  Trophy,
+  Wallet,
+  ChevronLeft,
+} from "lucide-react";
 import type { SquadRow } from "@/types/database";
 
 type LeaderboardRow = {
@@ -31,6 +37,7 @@ export function SquadDetailClient({
 }) {
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nudging, setNudging] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -79,6 +86,36 @@ export function SquadDetailClient({
 
   const { squad, leaderboard, pot_commun } = data;
 
+  async function handleNudge() {
+    setNudging(true);
+    try {
+      const res = await fetch("/api/squads/nudge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ squad_id: squadId }),
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: { sent_count: number };
+        error?: string;
+      };
+      if (!json.ok) {
+        toast.error(json.error ?? "Impossible d'envoyer le nudge");
+      } else {
+        const n = json.data?.sent_count ?? 0;
+        toast.success(
+          n > 0
+            ? `Nudge envoyé à ${n} joueur${n > 1 ? "s" : ""} ! 🎯`
+            : "Tout le monde a déjà pronostiqué !",
+        );
+      }
+    } catch {
+      toast.error("Connexion perdue");
+    } finally {
+      setNudging(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Link
@@ -96,15 +133,30 @@ export function SquadDetailClient({
         <h1 className="text-2xl font-black tracking-tight text-white">
           {squad.name}
         </h1>
-        <p className="mt-3 flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
-          <span className="inline-flex items-center gap-1.5">
-            <Wallet className="h-4 w-4" aria-hidden />
-            Pot commun :{" "}
-            <span className="font-black tabular-nums">
-              {pot_commun.toLocaleString("fr-FR")} Pts
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
+            <span className="inline-flex items-center gap-1.5">
+              <Wallet className="h-4 w-4" aria-hidden />
+              Pot commun :{" "}
+              <span className="font-black tabular-nums">
+                {pot_commun.toLocaleString("fr-FR")} Pts
+              </span>
             </span>
-          </span>
-        </p>
+          </p>
+          <button
+            type="button"
+            onClick={handleNudge}
+            disabled={nudging}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 disabled:opacity-50"
+          >
+            {nudging ? (
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <BellRing className="h-3.5 w-3.5 text-whistle" />
+            )}
+            Nudge pronos
+          </button>
+        </div>
       </div>
 
       <div>

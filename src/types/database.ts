@@ -781,6 +781,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      squad_nudge_logs: {
+        Row: {
+          id: string;
+          squad_id: string | null;
+          sent_by: string;
+          nudge_type: "prono" | "var_alert";
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          squad_id?: string | null;
+          sent_by: string;
+          nudge_type: "prono" | "var_alert";
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          squad_id?: string | null;
+          sent_by?: string;
+          nudge_type?: "prono" | "var_alert";
+          sent_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

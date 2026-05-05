@@ -52,7 +52,7 @@ Tu dois fonctionner en parfaite autonomie (V-Coding). Le "Product Owner" te donn
 2. Exécute le code en respectant les fichiers `.skills/`.
 3. Avant de déclarer la tâche terminée, **tu dois obligatoirement lancer `npm run ai:check`**.
 4. S'il y a des erreurs, tu dois les analyser et les corriger silencieusement. Relance la commande jusqu'à obtenir un succès.
-5. **Auto-Documentation (Mémoire) :** Mets systématiquement à jour le fichier `PROJECT_STATE.md` si tu as ajouté une route, une table, ou modifié l'architecture. Ne laisse jamais ce fichier devenir obsolète.
+5. **Auto-Documentation (Mémoire) :** Mets systématiquement à jour le fichier `PROJECT_STATE.md` si tu as ajouté une architecture. Si tu as rencontré un piège de code, ajoute-le à `AI_LEARNINGS.md`.
 6. Ne demande pas au client de tester manuellement tant que la commande `ai:check` ne passe pas.
 7. Coche la case dans `TASKS.md` quand c'est fini.
 

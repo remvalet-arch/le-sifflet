@@ -77,8 +77,9 @@ export function InstallPrompt() {
           )}
         </div>,
         {
-          duration: 8000,
+          duration: 15000,
           position: "top-center",
+          closeButton: true,
           icon: <Download className="h-5 w-5 text-green-500" />,
         },
       );

@@ -63,15 +63,15 @@
   - _Action 2 :_ Ajouter une modale/toast d'Opt-In au moment où l'utilisateur valide son _tout premier_ pronostic (pour déclencher `Notification.requestPermission()`).
   - _Action 3 :_ Implémenter le stockage de la souscription via Server Action.
 
-- [] **Tâche 12 : Prévoir une croix pour fermer la modale d'invitation au téléchargement PWA**
+- [x] **Tâche 12 : Prévoir une croix pour fermer la modale d'invitation au téléchargement PWA**
   - _Détails :_ La modale est insistante, et surtout sur desktop , on ne peux pas la fermer
 
-- [ ] **Tâche 13 : Smart Mute & Alertes Automatiques (Le Cycle du Match)**
+- [x] **Tâche 13 : Smart Mute & Alertes Automatiques (Le Cycle du Match)**
   - _Détails :_ Le backend envoie les push, mais le téléphone doit filtrer intelligemment.
   - _Action 1 :_ Modifier le Service Worker (`sw.js`) pour écouter l'event `push`. Implémenter la logique "Smart Mute" : si `clients.matchAll({ type: 'window' })` indique que l'app est ouverte et active, ne PAS afficher la notification Push (l'UI gère déjà ça en direct), sinon utiliser `self.registration.showNotification`.
   - _Action 2 :_ Dans `api/alert` (ouverture marché VAR), déclencher l'envoi du Push aux utilisateurs qui ont la souscription au match.
 
-- [ ] **Tâche 14 : Le Buzzer Social (Interactions de Ligue)**
+- [x] **Tâche 14 : Le Buzzer Social (Interactions de Ligue)**
   - _Détails :_ Outils pour harceler gentiment ses potes.
   - _Action 1 :_ Ajouter une route API `/api/squads/nudge`.
   - _Action 2 :_ Créer un bouton "Nudge" dans la page de Ligue pour cibler ceux qui n'ont pas fait leurs pronos : "Raph attend tes pronos pour le braquage de ce soir !"

@@ -3,6 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { AlertActionType } from "@/types/database";
+import { sendPushToMatchSubscribers } from "@/lib/push-sender";
+
+const ACTION_LABELS: Record<AlertActionType, string> = {
+  penalty_check: "Penalty en discussion",
+  penalty_outcome: "Résultat penalty",
+  var_goal: "But sous VAR",
+  red_card: "Carton rouge",
+  injury_sub: "Blessure / Remplacement",
+  free_kick: "Coup franc dangereux",
+  corner: "Corner",
+};
 
 const VALID_TYPES: AlertActionType[] = [
   "penalty_check",
@@ -145,6 +156,13 @@ export async function POST(request: NextRequest) {
     console.log(
       `[alert] ✅ market_event créé — match=${match_id} type=${validType} initiators=${distinctUsers.length}`,
     );
+
+    // Fire-and-forget : push aux abonnés du match
+    void sendPushToMatchSubscribers(match_id, {
+      title: "VAR Time 🟨",
+      body: `${ACTION_LABELS[validType]} — le marché vient d'ouvrir, parie !`,
+      url: `/match/${match_id}`,
+    }).catch((e) => console.error("[alert] push failed:", e));
 
     cooldown_until = new Date(
       Date.now() + COOLDOWN_MINUTES * 60 * 1000,

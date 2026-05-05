@@ -410,12 +410,35 @@ async function importFixtures(): Promise<void> {
 
   const toSync = dbMatches ?? [];
   log.info(
-    `${toSync.length} matchs terminés en base à synchroniser (events + compos + stats)`,
+    `${toSync.length} matchs terminés en base — vérification des données déjà importées…`,
   );
 
-  // 4f. syncApiFootballMatch sur chaque match terminé
+  // 4f. Pré-filtrage idempotent : une seule requête DB pour identifier les matchs
+  //     déjà complets (stats + events + compos) via les flags dénormalisés sur `matches`.
+  //     Évite d'appeler l'API-Football pour des données déjà présentes.
+  const matchUuids = toSync.map((m) => m.id);
+  const { data: alreadyComplete, error: completeErr } = await db
+    .from("matches")
+    .select("id")
+    .in("id", matchUuids)
+    .eq("has_lineups", true)
+    .not("last_events_sync_at", "is", null)
+    .not("last_stats_sync_at", "is", null);
+
+  if (completeErr)
+    throw new Error(`pré-filtrage matchs complets: ${completeErr.message}`);
+
+  const completeIds = new Set((alreadyComplete ?? []).map((m) => m.id));
+  const needSyncCount = toSync.length - completeIds.size;
+
+  log.ok(
+    `${completeIds.size} matchs déjà complets (skip) · ${needSyncCount} à synchroniser via API`,
+  );
+
+  // 4g. syncApiFootballMatch uniquement sur les matchs incomplets
   let successCount = 0;
-  let skipCount = 0;
+  let dbSkipCount = completeIds.size;
+  let syncSkipCount = 0;
   let errorCount = 0;
   const total = toSync.length;
 
@@ -423,8 +446,16 @@ async function importFixtures(): Promise<void> {
     const m = toSync[i]!;
     const progress = `${String(i + 1).padStart(String(total).length)}/${total}`;
 
+    // Skip sans délai si toutes les données sont déjà en base
+    if (completeIds.has(m.id)) {
+      process.stdout.write(
+        `${C.gray}  [SKIP] ${progress}  fixture #${m.api_football_id} déjà complet${C.reset}\r`,
+      );
+      continue;
+    }
+
     process.stdout.write(
-      `${C.gray}  Sync ${progress}  fixture #${m.api_football_id}…${C.reset}\r`,
+      `${C.gray}  Sync  ${progress}  fixture #${m.api_football_id}…${C.reset}\r`,
     );
 
     await delay(DELAY_MS);
@@ -433,7 +464,7 @@ async function importFixtures(): Promise<void> {
       const result = await syncApiFootballMatch(m.id);
 
       if (result.skippedReason) {
-        skipCount++;
+        syncSkipCount++;
         if (result.skippedReason !== "missing_api_football_team_id") {
           log.warn(
             `Sync ${progress}  fixture #${m.api_football_id} — skipped: ${result.skippedReason}`,
@@ -458,7 +489,7 @@ async function importFixtures(): Promise<void> {
 
   console.log("");
   log.ok(
-    `Terminé — ${successCount} sync / ${skipCount} skippés / ${errorCount} erreurs`,
+    `Terminé — ${successCount} sync · ${dbSkipCount} déjà en base · ${syncSkipCount} skippés (API) · ${errorCount} erreurs`,
   );
 }
 

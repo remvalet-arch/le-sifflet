@@ -176,7 +176,7 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 
 | Sujet                                  | État réel                                                                                                                                                                                                                                                                                  |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`match_subscriptions`** (0040)       | **Branché** : auto via **`place_prono` (0046)** ; cloche **`LiveRoom`** + **`POST /api/match-subscription`** (subscribe / mute / unmute). **Pas** de worker push dans ce repo.                                                                                                             |
+| **`match_subscriptions`** (0040)       | **Branché** : auto via **`place_prono` (0046)** ; cloche **`LiveRoom`** + **`POST /api/match-subscription`** ; push serveur via **`push-sender.ts`** + VAPID ; opt-in déclenché au premier prono.                                                                                          |
 | **`get_event_odds`**                   | **Branché** : `VotingModal` + validation côté **`/api/bet`**.                                                                                                                                                                                                                              |
 | **Résolution des `pronos`**            | **Fait (0045)** : `resolve_match_pronos` + appel sync fin de match ; buteur = événement timeline `goal` (nom normalisé).                                                                                                                                                                   |
 | **`long_term_bets` (legacy)**          | Table + RPC encore en base ; **plus** d’API ni d’UI profil — remplacé par **`pronos`**.                                                                                                                                                                                                    |
@@ -203,15 +203,46 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 
 ---
 
-## 📌 Next Steps (priorité produit / tech — **VAR TIME economy**)
+## 📌 Next Steps (backlog — **VAR TIME economy**)
 
-1. **Modale One-Tap (paris live)** — QA mobile continue ; enrichir les **libellés API-Football** (détails `Var` / pénalty) si le terrain remonte d’autres variantes que celles gérées dans **`api-football-market-bridge.ts`**.
-2. **Profils** — **`avatar_url`** en UI ; affinage des seuils **`profile_rank_from_xp`** / copy si besoin.
-3. **Produit** — **push / cron** sur `match_subscriptions` si besoin ; option DROP **`long_term_bets`** en base si plus aucune ligne legacy.
+1. **Avatars personnalisés** — `avatar_url` en UI profil (`<img>` dans TopBar + SquadDetail) ; upload via Storage Supabase ou URL externe.
+2. **Classement global ("Board des sifflets")** — vue publique des meilleurs `sifflets_balance` / XP, mise à jour quotidienne.
+3. **Migrations SQL en attente (prod)** — appliquer **`0055_fix_place_match_prono.sql`** (fix `match_subscriptions`) et **`0056_squad_nudges.sql`** dans l’éditeur SQL Supabase.
+4. **`long_term_bets` (legacy)** — option DROP si plus aucune ligne en base.
 
 ---
 
-_Fin du document — audit codebase au 2026-05-03 (sprint Clean-up)._
-\n### Sprint Audit UX (Mai 2026)\n- **Optimistic UI** : Les paris dans `VotingModal` se verrouillent visuellement instantanément avant la réponse serveur.\n- **RSA du Parieur** : Route `/api/claim-rsa` permettant de récupérer 50 Sifflets si le solde est vide.\n- **Transparence Parimutuel** : Labels mis à jour (`~Cote`) pour indiquer les cotes flottantes.\n- **Trust Score** : Migration `0051_trust_score.sql` mettant à jour le score de confiance (+2/-5) selon l'issue d'une alerte initiée.\n- **PWA Offline** : `sw.js` mis en cache, génération de `public/offline.html` et `public/icon.svg`, `manifest.webmanifest` mis à jour, `InstallPrompt` ajouté.\n- **Splash Screen** : Fichiers `loading.tsx` ajoutés pour masquer le chargement des Server Components.\n- **CTA VAR** : Bouton central de la BottomNav remplacé par l'icône `MonitorPlay` avec le texte 'Saisir la VAR'.\n- **Pronos (Buteurs)** : Menu déroulant listant tous les joueurs de l'équipe synchronisée, ainsi que 'CSC', plutôt qu'un champ texte libre.
+---
 
-- **CTA VAR (BottomNav)** : Disparaît dynamiquement et libère sa place sur les matchs dont le statut n'est pas "en cours". L'icône est maintenant centrée et parfaitement alignée avec le texte "LA VAR".\n- **Optimisation Desktop** : Application d'un `max-w-md mx-auto` sur le layout root pour conserver l'aspect Mobile-First sur les grands écrans.
+## 📋 Sprints terminés (résumé des ajouts)
+
+### Sprint Audit UX & Robustesse (Mai 2026)
+
+- **Optimistic UI** : paris dans `VotingModal` verrouillés visuellement avant la réponse serveur.
+- **RSA du Parieur** : route `/api/claim-rsa` — recrédite 50 Sifflets si solde < 10.
+- **Transparence Parimutuel** : labels `~Cote` + infobulle dans `VotingModal`.
+- **Trust Score** : migration `0051_trust_score.sql` — +2 pts sur alerte vraie, -5 sur fake.
+- **PWA Offline** : `sw.js` mise en cache, `public/offline.html`, `public/icon.svg`, `manifest.webmanifest`.
+- **Splash Screen** : `loading.tsx` pour les routes `(app)` et racine.
+- **CTA VAR (BottomNav)** : icône `MonitorPlay` + label "LA VAR" ; masqué si match non en direct.
+- **Optimisation Desktop** : `max-w-md mx-auto` sur le layout root (aspect mobile sur grand écran).
+- **Verrouillage Pronos** : champs grecs si `match.status !== "upcoming"` côté UI + RPC.
+- **PWA Install Prompt** : bandeau toast + bouton fermeture (croix) sur `InstallPrompt`.
+
+### Sprint Rétention & Social — Notifications Push (Mai 2026)
+
+- **Infrastructure VAPID** (`0011_push_subscriptions.sql`) : table `push_subscriptions` + opt-in à la première action → `POST /api/push-subscribe`.
+- **Utilitaire push serveur** [`src/lib/push-sender.ts`](src/lib/push-sender.ts) — `sendPushToMatchSubscribers` / `sendPushToUsers` (nettoie les endpoints 410 expirés).
+- **Alertes VAR push** : `/api/alert` déclenche un push aux abonnés du match au moment de l'ouverture d'un `market_event`.
+- **Smart Mute SW** : `sw.js` vérifie `clients.matchAll` — skip notif si app ouverte en premier plan.
+- **Nudge Pronos** (`POST /api/squads/nudge`) : envoie un push aux membres de la ligue sans prono sur les matchs à venir ; cooldown 30 min par squad (table `squad_nudge_logs`, migration **`0056`**) ; bouton « Nudge pronos » dans [`SquadDetailClient`](src/components/ligues/SquadDetailClient.tsx).
+- **Sirène VAR** (`POST /api/squads/var-alert`) : panic button dans [`LiveRoom`](src/components/match/LiveRoom.tsx) (onglet Kop, si match en direct) ; push à tous les membres de la ligue de l'utilisateur ; cooldown 15 min par user (même table `squad_nudge_logs`).
+
+### Hub Statistiques de Ligue (Mai 2026)
+
+- Tables **`league_standings`** + **`league_top_players`** (migration **`0048`**) — alimentées par [`scripts/import-league-history.ts`](scripts/import-league-history.ts).
+- Composants [`LeagueHub`](src/components/lobby/LeagueHub.tsx), [`LeagueStandingsTable`](src/components/lobby/LeagueStandingsTable.tsx), [`TopPlayersList`](src/components/lobby/TopPlayersList.tsx) — onglets Résultats / Classement / Buteurs / Passeurs intégrés dans [`MatchLobby`](src/components/lobby/MatchLobby.tsx) (onglets Top 5 et Europe).
+
+---
+
+_Fin du document — mise à jour 2026-05-05 (sprint Rétention & Social)._
