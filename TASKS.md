@@ -514,6 +514,58 @@ Agis en tant que Lead Backend et Game Designer.
 
 - [ ] Ajouter les avatars personnalisés pour chaque "Arbitre".
 - [ ] Classement global ("Board des sifflets") mis à jour toutes les 24h.
+
+---
+
+### 📱 Sprint Cap : Application Mobile Native (Capacitor)
+
+> Transformer la PWA en vraie app iOS + Android via Capacitor (chargement URL distante — zéro réécriture Next.js).
+> Prérequis : Apple Developer Program ($99/an) + Google Play Console ($25 one-time).
+
+- [ ] **Cap-1 : Setup Capacitor & premier build**
+  - _Action 1 :_ Installer `@capacitor/cli`, `@capacitor/core`, `@capacitor/ios`, `@capacitor/android`.
+  - _Action 2 :_ Configurer le mode URL distante dans `capacitor.config.ts` (pointer vers le domaine Vercel de prod).
+  - _Action 3 :_ Générer les projets natifs (`npx cap add ios`, `npx cap add android`).
+  - _Action 4 :_ Valider le premier build sur simulateur iOS (Xcode) + émulateur Android (Android Studio).
+  - _Action 5 :_ Splash screen + icônes (toutes tailles requises par les stores).
+  - _Action 6 :_ Gérer les safe areas iOS (notch, home indicator) via CSS `env(safe-area-inset-*)`.
+
+- [ ] **Cap-2 : Push notifications natives**
+  - _Problème :_ Le web push VAPID actuel ne fonctionne pas dans un contexte Capacitor/natif.
+  - _Action 1 :_ Intégrer `@capacitor/push-notifications`.
+  - _Action 2 :_ Configurer **FCM** (Firebase Cloud Messaging) pour Android + **APNs** pour iOS (certificats Apple).
+  - _Action 3 :_ Mettre à jour `src/lib/push-sender.ts` pour router vers FCM vs web push selon la plateforme.
+  - _Action 4 :_ Tester sur device réel (les notifs push ne fonctionnent pas en simulateur).
+
+- [ ] **Cap-3 : Polish natif**
+  - _Action 1 :_ Status bar styling (couleur, mode dark/light) via `@capacitor/status-bar`.
+  - _Action 2 :_ Désactiver le bounce scroll iOS (rubber banding) via CSS `overscroll-behavior: none`.
+  - _Action 3 :_ Haptic feedback sur actions clés (alerte VAR, pari confirmé) via `@capacitor/haptics`.
+  - _Action 4 :_ Configurer les deep links (`vartime://match/xxx`) pour les notifications.
+  - _Action 5 :_ Gérer le back button Android (fermer modales avant de quitter).
+
+- [ ] **Cap-4 : Préparation stores**
+  - _Action 1 :_ Générer screenshots 6.7" + 5.5" + iPad pour l'App Store, screenshots Android pour le Play Store.
+  - _Action 2 :_ Rédiger descriptions FR + EN pour les deux stores.
+  - _Action 3 :_ Héberger une **Privacy Policy** complète (données collectées : email Google OAuth, tokens push, scores).
+  - _Action 4 :_ Déclarer l'App Privacy (nutrition labels Apple) : données liées à l'utilisateur, tracking, etc.
+  - _Action 5 :_ Distribuer via **TestFlight** (beta iOS) + Internal Testing (Play Store) avant soumission publique.
+
+- [ ] **Cap-5 : Soumission & certification**
+  - _Action 1 :_ Soumettre sur Google Play Store (validation 1-3 jours, peu de risques).
+  - _Action 2 :_ Soumettre sur App Store Connect — prévoir 1-2 semaines de délai de review.
+  - _Action 3 :_ Gérer les retours Apple (voir note wording ci-dessous).
+
+- [ ] **Cap-6 : Wording store & UI — Revue anti-rejet Apple**
+  - _Contexte :_ Apple est strict sur le vocabulaire lié aux paris, même fictifs.
+  - _Action 1 :_ Dans les métadonnées store (titre, description, keywords) : bannir "pari" / "bet" → utiliser "pronostic", "prédiction", "défi entre amis".
+  - _Action 2 :_ Auditer l'UI de l'app : remplacer les occurrences visibles de "Paris VAR" par "Alertes VAR" ou "Défis VAR" dans les écrans critiques (lobby, profil, classement).
+  - _Action 3 :_ S'assurer que les Sifflets ne peuvent **jamais** être achetés avec de l'argent réel (aucun IAP monétaire) — condition sine qua non pour éviter les 30% Apple.
+  - _Action 4 :_ Préparer une justification écrite pour l'App Review Team : "jeu de pronostics avec monnaie fictive exclusivement gagnée en jouant, aucun argent réel impliqué".
+  - _Note risques :_ Classification 17+ probable imposée par Apple (gambling-adjacent). Play Store : aucun risque majeur.
+
+---
+
 - [ ] **Tâche 2X : Infrastructure i18n (Server & Client)**
   - _Détails :_ Le projet a besoin de supporter plusieurs langues (FR, EN, ES, DE, IT), mais l'architecture actuelle (un simple hook client `useLocale`) est incompatible avec Next.js App Router (Server Components).
   - _Action 1 :_ Mettre en place `next-intl` (qui gère l'App Router via le middleware pour détecter la langue du navigateur et injecter les traductions côté serveur).
