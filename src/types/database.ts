@@ -280,6 +280,7 @@ export interface Database {
           status: "starter" | "bench";
           player_id: string | null;
           shirt_number: string | null;
+          grid_position: string | null;
           created_at: string;
         };
         Insert: {
@@ -291,6 +292,7 @@ export interface Database {
           status?: "starter" | "bench";
           player_id?: string | null;
           shirt_number?: string | null;
+          grid_position?: string | null;
           created_at?: string;
         };
         Update: {
@@ -302,6 +304,7 @@ export interface Database {
           status?: "starter" | "bench";
           player_id?: string | null;
           shirt_number?: string | null;
+          grid_position?: string | null;
           created_at?: string;
         };
         Relationships: [];

@@ -739,6 +739,11 @@ export async function syncMatchLineups(
           numRaw != null && String(numRaw).trim() !== ""
             ? String(numRaw).trim().slice(0, 4)
             : null;
+        const gridRaw = pl?.grid;
+        const grid_position =
+          typeof gridRaw === "string" && gridRaw.trim() !== ""
+            ? gridRaw.trim()
+            : null;
         let player_id: string | null = null;
         try {
           player_id = await resolvePlayerOrGhost(admin, {
@@ -760,6 +765,7 @@ export async function syncMatchLineups(
           status,
           player_id,
           shirt_number,
+          grid_position,
         });
       }
     };
