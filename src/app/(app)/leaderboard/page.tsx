@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 export const metadata = { title: "Classement" };
+export const revalidate = 300;
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -13,8 +14,8 @@ export default async function LeaderboardPage() {
 
   const { data: rows } = await supabase
     .from("profiles")
-    .select("id, username, sifflets_balance, trust_score")
-    .order("sifflets_balance", { ascending: false })
+    .select("id, username, lifetime_points_earned, trust_score")
+    .order("lifetime_points_earned", { ascending: false })
     .limit(50);
 
   const players = rows ?? [];
@@ -63,7 +64,7 @@ export default async function LeaderboardPage() {
                     {player.trust_score >= MODERATOR_THRESHOLD && " 🛡️"}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400">
-                    {player.sifflets_balance.toLocaleString("fr-FR")} pts
+                    {player.lifetime_points_earned.toLocaleString("fr-FR")} pts
                   </p>
                 </div>
                 <span className="text-sm font-black text-zinc-500">
@@ -109,7 +110,7 @@ export default async function LeaderboardPage() {
                   )}
                 </p>
                 <span className="shrink-0 text-sm font-black text-zinc-400">
-                  {player.sifflets_balance.toLocaleString("fr-FR")} pts
+                  {player.lifetime_points_earned.toLocaleString("fr-FR")} pts
                 </span>
               </div>
             );
@@ -131,7 +132,7 @@ export default async function LeaderboardPage() {
               {me.username}
             </p>
             <span className="font-black text-green-400">
-              {me.sifflets_balance.toLocaleString("fr-FR")} pts
+              {me.lifetime_points_earned.toLocaleString("fr-FR")} pts
             </span>
           </div>
         </div>

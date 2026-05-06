@@ -10,7 +10,7 @@ export function SignInWithGoogleButton() {
         onSuccess={async (credentialResponse) => {
           if (credentialResponse.credential) {
             const supabase = createClient();
-            const { error } = await supabase.auth.signInWithIdToken({
+            const { data, error } = await supabase.auth.signInWithIdToken({
               provider: "google",
               token: credentialResponse.credential,
             });
@@ -18,15 +18,19 @@ export function SignInWithGoogleButton() {
               window.location.assign(
                 `/?error=oauth&message=${encodeURIComponent(error.message)}`,
               );
-            } else {
+            } else if (data?.session) {
               window.location.assign("/lobby");
+            } else {
+              window.location.assign(
+                "/?error=oauth&message=Session_non_cr%C3%A9%C3%A9e",
+              );
             }
           }
         }}
         onError={() => {
           window.location.assign("/?error=oauth&message=Google_Login_Failed");
         }}
-        useOneTap
+        useOneTap={process.env.NODE_ENV === "production"}
         shape="rectangular"
         size="large"
         theme="filled_black"

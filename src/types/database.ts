@@ -51,6 +51,7 @@ export interface Database {
           favorite_team_id: string | null;
           last_login_date: string | null;
           login_streak: number;
+          lifetime_points_earned: number;
         };
         Insert: {
           id: string;
@@ -68,6 +69,7 @@ export interface Database {
           favorite_team_id?: string | null;
           last_login_date?: string | null;
           login_streak?: number;
+          lifetime_points_earned?: number;
         };
         Update: {
           id?: string;
@@ -85,6 +87,7 @@ export interface Database {
           favorite_team_id?: string | null;
           last_login_date?: string | null;
           login_streak?: number;
+          lifetime_points_earned?: number;
         };
         Relationships: [];
       };

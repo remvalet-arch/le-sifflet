@@ -18,15 +18,34 @@ export const metadata = {
     "Parie en temps réel sur les décisions d'arbitre, grimpe au classement et braque tes potes dans tes ligues privées. 100% gratuit.",
 };
 
-export default async function LandingPage() {
+type LandingPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function LandingPage({ searchParams }: LandingPageProps) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (user) redirect("/lobby");
 
+  const sp = await searchParams;
+  const oauthError =
+    sp.error === "oauth"
+      ? decodeURIComponent(
+          typeof sp.message === "string"
+            ? sp.message.replace(/_/g, " ")
+            : "Connexion Google échouée.",
+        )
+      : null;
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_rgba(22,163,74,0.07)_0%,_transparent_55%)] text-white">
+      {oauthError && (
+        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-red-500/30 bg-red-900/80 px-4 py-2.5 text-sm font-bold text-red-300 shadow-xl backdrop-blur-sm">
+          ⚠️ {oauthError}
+        </div>
+      )}
       {/* ── Nav ── */}
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-6 sm:px-8">
         {/* VAR TIME logo — geste carré VAR */}

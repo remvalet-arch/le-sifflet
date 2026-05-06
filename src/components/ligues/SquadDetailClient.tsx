@@ -40,7 +40,7 @@ type ActivityItem = {
 type ApiPayload = {
   squad: SquadRow;
   leaderboard: LeaderboardRow[];
-  pot_commun: number;
+  total_xp_earned: number;
   period: Period;
   activity: ActivityItem[];
 };
@@ -104,7 +104,7 @@ export function SquadDetailClient({
     );
   }
 
-  const { squad, leaderboard, pot_commun, activity } = data;
+  const { squad, leaderboard, total_xp_earned, activity } = data;
 
   async function handleNudge() {
     setNudging(true);
@@ -188,9 +188,9 @@ export function SquadDetailClient({
           <p className="flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
             <span className="inline-flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-xl border border-green-500/20">
               <Wallet className="h-4 w-4" aria-hidden />
-              Pot commun :{" "}
+              XP total :{" "}
               <span className="font-black tabular-nums">
-                {pot_commun.toLocaleString("fr-FR")} Pts
+                {total_xp_earned.toLocaleString("fr-FR")} Pts
               </span>
             </span>
           </p>

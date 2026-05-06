@@ -401,7 +401,7 @@ export function VotingModal({
                   key={label}
                   onClick={() => setAmount(val)}
                   disabled={!canBet || expired}
-                  className={`h-10 rounded-xl border text-sm font-bold transition disabled:opacity-30 ${
+                  className={`min-h-[48px] rounded-xl border text-sm font-bold transition disabled:opacity-30 ${
                     amount === val
                       ? "border-green-500/50 bg-green-500/20 text-green-400"
                       : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white"

@@ -86,6 +86,13 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
                 </p>
               </button>
 
+              {/* Critère de débloquage toujours visible sur les badges verrouillés */}
+              {!isUnlocked && (
+                <p className="mt-1 px-1 text-center text-[8px] font-medium leading-tight text-zinc-700 line-clamp-2">
+                  {badge.description}
+                </p>
+              )}
+
               {/* Tooltip sur clic (mobile-friendly) */}
               {tooltip === badge.id && (
                 <div className="mt-1.5 rounded-xl border border-white/8 bg-zinc-800 px-3 py-2.5 text-center">

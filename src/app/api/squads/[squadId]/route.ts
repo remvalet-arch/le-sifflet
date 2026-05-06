@@ -91,7 +91,7 @@ export async function GET(
       return successResponse({
         squad,
         leaderboard: [] as LeaderboardRow[],
-        pot_commun: 0,
+        total_xp_earned: 0,
         period,
         activity: [],
       });
@@ -99,10 +99,24 @@ export async function GET(
 
     const adminSupabase = createAdminClient();
 
-    const { data: profiles, error: pErr } = await supabase
-      .from("profiles")
-      .select("id, username, xp, sifflets_balance, rank")
-      .in("id", memberIds);
+    const [{ data: profiles, error: pErr }, { data: bigWins }] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, username, xp, sifflets_balance, rank")
+          .in("id", memberIds),
+        adminSupabase
+          .from("pronos")
+          .select(
+            "user_id, points_earned, contre_pied_bonus, match_id, placed_at",
+          )
+          .in("user_id", memberIds)
+          .eq("status", "won")
+          .gt("points_earned", 100)
+          .order("points_earned", { ascending: false })
+          .limit(15),
+      ]);
+
     if (pErr) {
       console.error("Supabase Error:", pErr);
       return errorResponse(pErr.message, 500);
@@ -125,22 +139,15 @@ export async function GET(
       cutoffIso = cutoff.toISOString();
     }
 
-    // Pronos query
+    // Pronos query — filter on placed_at (not match start_time) for accurate period tracking
     let pronosQuery = adminSupabase
       .from("pronos")
-      .select("user_id, points_earned, matches!inner(start_time)")
+      .select("user_id, points_earned")
       .in("user_id", memberIds)
       .gt("points_earned", 0);
 
     if (cutoffIso) {
-      pronosQuery = pronosQuery.gte("matches.start_time", cutoffIso);
-    }
-
-    const { data: userPronos, error: wErr } = await pronosQuery;
-
-    if (wErr) {
-      console.error("Supabase Error (pronos):", wErr);
-      return errorResponse(wErr.message, 500);
+      pronosQuery = pronosQuery.gte("placed_at", cutoffIso);
     }
 
     // Bets query
@@ -154,7 +161,13 @@ export async function GET(
       betsQuery = betsQuery.gte("placed_at", cutoffIso);
     }
 
-    const { data: userBets, error: bErr } = await betsQuery;
+    const [{ data: userPronos, error: wErr }, { data: userBets, error: bErr }] =
+      await Promise.all([pronosQuery, betsQuery]);
+
+    if (wErr) {
+      console.error("Supabase Error (pronos):", wErr);
+      return errorResponse(wErr.message, 500);
+    }
 
     if (bErr) {
       console.error("Supabase Error (bets):", bErr);
@@ -191,20 +204,11 @@ export async function GET(
         (a, b) => b.xp - a.xp || a.username.localeCompare(b.username, "fr"),
       );
 
-    const pot_commun = leaderboard.reduce((s, m) => s + m.xp, 0);
+    const total_xp_earned = leaderboard.reduce((s, m) => s + m.xp, 0);
 
     const usernameById = new Map(
       (profiles ?? []).map((p) => [p.id, p.username]),
     );
-
-    const { data: bigWins } = await adminSupabase
-      .from("pronos")
-      .select("user_id, points_earned, contre_pied_bonus, match_id, placed_at")
-      .in("user_id", memberIds)
-      .eq("status", "won")
-      .gt("points_earned", 100)
-      .order("points_earned", { ascending: false })
-      .limit(15);
 
     const matchIds = [...new Set((bigWins ?? []).map((w) => w.match_id))];
     const matchMap: Map<string, { team_home: string; team_away: string }> =
@@ -240,7 +244,7 @@ export async function GET(
     return successResponse({
       squad,
       leaderboard,
-      pot_commun,
+      total_xp_earned,
       period,
       activity,
     });

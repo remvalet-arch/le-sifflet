@@ -20,6 +20,8 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
   const supabase = createClient();
 
   useEffect(() => {
+    let alive = true;
+
     async function loadFriends() {
       const { data, error } = await supabase
         .from("friend_requests")
@@ -32,12 +34,34 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
         )
         .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`);
 
-      if (!error && data) {
+      if (!error && data && alive) {
         setFriends(data as unknown as FriendRequest[]);
       }
-      setLoading(false);
+      if (alive) setLoading(false);
     }
+
     void loadFriends();
+
+    const channel = supabase
+      .channel(`friend-requests-${currentUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "friend_requests",
+          filter: `receiver_id=eq.${currentUserId}`,
+        },
+        () => {
+          void loadFriends();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      alive = false;
+      void supabase.removeChannel(channel);
+    };
   }, [currentUserId, supabase]);
 
   async function handleAction(id: string, action: "accepted" | "rejected") {

@@ -217,6 +217,134 @@ Agis en tant que Lead Backend et Game Designer.
 
 ---
 
+### 🚨 Sprint D : AUTH — "Réparer la Connexion Google"
+
+> Issus de l'audit V3. La connexion Google est fragile en production — race condition + useOneTap cassé.
+
+- [x] **D1 : Fix race condition — redirection avant persistance des cookies**
+  - _Problème :_ `window.location.assign("/lobby")` est appelé avant que les cookies Supabase soient écrits. Le middleware reçoit la requête sans session → redirection vers "/" → boucle infinie possible.
+  - _Fichier :_ `src/components/auth/SignInWithGoogleButton.tsx`
+  - _Action :_ Destructurer `{ data, error }` au lieu de `{ error }` dans `signInWithIdToken`. Rediriger uniquement si `data?.session` est défini.
+  - _Code :_
+    ```ts
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: credentialResponse.credential,
+    });
+    if (error) {
+      window.location.assign(
+        `/?error=oauth&message=${encodeURIComponent(error.message)}`,
+      );
+    } else if (data?.session) {
+      window.location.assign("/lobby");
+    } else {
+      window.location.assign("/?error=oauth&message=Session_Not_Created");
+    }
+    ```
+
+- [x] **D2 : Désactiver `useOneTap` en développement**
+  - _Problème :_ Le prop `useOneTap` sur `<GoogleLogin>` déclenche le prompt natif Google One Tap, qui ne fonctionne pas sur localhost/non-HTTPS et peut bloquer le widget standard.
+  - _Fichier :_ `src/components/auth/SignInWithGoogleButton.tsx`
+  - _Action :_ Remplacer `useOneTap` par `useOneTap={process.env.NODE_ENV === "production"}`.
+
+- [x] **D3 : Ajouter `NEXT_PUBLIC_GOOGLE_CLIENT_ID` au `.env.example`**
+  - _Problème :_ La variable est absente du fichier d'exemple — tout nouveau développeur est bloqué.
+  - _Fichier :_ `.env.example`
+  - _Action :_ Ajouter la ligne `NEXT_PUBLIC_GOOGLE_CLIENT_ID=` avec un commentaire explicatif.
+
+- [x] **D4 : Afficher les erreurs OAuth sur la page d'accueil**
+  - _Problème :_ La page `/` reçoit `?error=oauth&message=...` en query params mais ne les affiche pas — l'utilisateur voit juste la homepage sans explication.
+  - _Fichier :_ `src/app/page.tsx`
+  - _Action :_ Lire `searchParams.error` côté serveur et passer un message d'erreur au composant `HomeAuthCtas` pour l'afficher en toast ou en bannière.
+
+---
+
+### 🔴 Sprint E : PERFORMANCE — "Couper la Latence de 70%"
+
+> Issus de l'audit V3. Awaits séquentiels + absence d'index DB = latences de 1-3s inutiles.
+
+- [x] **E1 : Refactoriser `/profile/page.tsx` — Promise.all global + supprimer `select("*")`**
+  - _Problème :_ Le profil est fetchée en premier (await bloquant), puis les bets/pronos/badges. Le `select("*")` charge 15+ colonnes inutilisées. Total : +300-500ms.
+  - _Fichier :_ `src/app/(app)/profile/page.tsx`
+  - _Action :_ Tout regrouper dans un seul `Promise.all` : profil + bets + pronos + badges + userBadges (favoriteTeam fetchée ensuite si needed). Remplacer `select("*")` par les colonnes explicites.
+
+- [x] **E2 : Refactoriser `/match/[id]/page.tsx` — supprimer les awaits séquentiels**
+  - _Problème :_ `generateMetadata()` fetch le match une première fois. La page le re-fetch + profile + squad RPC en séquentiel. Total : +400-600ms.
+  - _Fichier :_ `src/app/(app)/match/[id]/page.tsx`
+  - _Action :_ Grouper match + auth + squad RPC dans un `Promise.all` initial. Ensuite profile + pronos squad dans un second `Promise.all`. Supprimer `generateMetadata` ou le mettre en cache.
+
+- [x] **E3 : Refactoriser `/api/squads/[squadId]/route.ts` — 8 requêtes → 3 batches parallèles**
+  - _Problème :_ L'API fait 8 allers-retours Supabase en série (membership → squad → pairs → profiles → pronos → bets → bigWins → matches). Total : +500-800ms.
+  - _Fichier :_ `src/app/api/squads/[squadId]/route.ts`
+  - _Action :_ Batch 1 (parallèle) : membership + squad + RPC. Batch 2 (parallèle, une fois memberIds connus) : profiles + pronos + bets + bigWins. Batch 3 : matches des bigWins.
+
+- [x] **E4 : Migration SQL — Index manquants sur les tables critiques**
+  - _Problème :_ Les requêtes sur `matches`, `alert_signals`, `pronos`, `bets` font des sequential scans — aucun index composite.
+  - _Action :_ Créer une migration `0066_perf_indexes.sql` avec :
+    ```sql
+    CREATE INDEX idx_matches_monitor ON matches(status, api_football_id) WHERE api_football_id IS NOT NULL;
+    CREATE INDEX idx_matches_competition_time ON matches(competition_id, start_time DESC);
+    CREATE INDEX idx_alert_signals ON alert_signals(match_id, action_type, created_at DESC);
+    CREATE INDEX idx_pronos_user_status ON pronos(user_id, status) WHERE points_earned > 0;
+    CREATE INDEX idx_bets_user_status ON bets(user_id, status);
+    ```
+
+- [x] **E5 : Ajouter ISR (`revalidate`) sur les pages Server Components statiques**
+  - _Problème :_ Toutes les pages sont en `force-dynamic` implicite — chaque visite refetch tout depuis Supabase.
+  - _Fichiers :_ `leaderboard/page.tsx`, `pronos/page.tsx`
+  - _Action :_ Ajouter `export const revalidate = 300` (leaderboard) et `export const revalidate = 60` (pronos).
+
+- [ ] **E6 : Supprimer la requête profil redondante dans `/lobby/page.tsx`**
+  - _Problème :_ Le lobby fetch `has_onboarded` séparément alors que le layout fetch déjà le profil complet.
+  - _Fichier :_ `src/app/(app)/lobby/page.tsx` + `src/app/(app)/layout.tsx`
+  - _Action :_ Ajouter `has_onboarded` au `select(...)` du layout et le passer via props ou supprimé si OnboardingTour peut être géré côté client.
+
+---
+
+### 🟠 Sprint F : DONNÉES & UX — "Corriger ce qui est faux"
+
+> Classements incorrects, labels trompeurs, frictions UX identifiées lors de l'audit V3.
+
+- [x] **F1 : Leaderboard global — classer par points gagnés (lifetime), pas par solde courant**
+  - _Problème :_ `leaderboard/page.tsx` classe par `sifflets_balance` — un joueur qui a tout dépensé est classé dernier même s'il a été le meilleur.
+  - _Action 1 :_ Créer une migration ajoutant `lifetime_points_earned INT DEFAULT 0` à `profiles`.
+  - _Action 2 :_ Créer un trigger ou RPC qui incrémente cette colonne à chaque résolution de prono/bet gagnant.
+  - _Action 3 :_ Changer le `order("sifflets_balance")` → `order("lifetime_points_earned")` dans `leaderboard/page.tsx`.
+
+- [x] **F2 : Leaderboard ligue — corriger le filtre de période (placed_at vs match start_time)**
+  - _Problème :_ Le filtre semaine/mois utilise `matches.start_time` du prono — un prono posé il y a 2 semaines sur un match de cette semaine est compté dans cette semaine.
+  - _Fichier :_ `src/app/api/squads/[squadId]/route.ts`
+  - _Action :_ Remplacer `.gte("matches.start_time", cutoffIso)` par `.gte("placed_at", cutoffIso)` pour les pronos ET les bets.
+
+- [x] **F3 : "Pot Commun" — libellé et sémantique trompeurs**
+  - _Problème :_ L'UI affiche "Pot commun : 50 000 Pts" — l'utilisateur croit qu'il s'agit d'un pool partageable. C'est en réalité la somme des gains de tous les membres.
+  - _Fichiers :_ `src/components/ligues/LiguesPageClient.tsx`, `src/app/api/squads/route.ts`
+  - _Action :_ Renommer le champ en `total_xp_earned` et l'afficher comme "🏆 50 000 XP cumulés".
+
+- [x] **F4 : AmisContent — séparer demandes reçues / envoyées + Realtime**
+  - _Problème :_ Le composant mélange les demandes envoyées et reçues dans une seule liste sans distinction. Pas de mise à jour en temps réel.
+  - _Fichier :_ `src/components/profile/AmisContent.tsx`
+  - _Action 1 :_ Séparer en deux sections : "Demandes reçues" (`receiver_id = currentUserId AND status = 'pending'`) et "Mes amis" (`status = 'accepted'`).
+  - _Action 2 :_ Ajouter une souscription Supabase Realtime sur `friend_requests` pour mise à jour live.
+
+- [x] **F5 : TrophyWall — afficher le critère de déblocage sur les badges verrouillés**
+  - _Problème :_ L'utilisateur voit un badge grisé mais ne sait pas comment le débloquer — friction de gamification.
+  - _Fichier :_ `src/components/profile/TrophyWall.tsx`
+  - _Action :_ Au tap/hover sur un badge verrouillé, afficher une bottom sheet ou tooltip avec `badge.description` (le critère).
+
+- [x] **F6 : Push-sender — ajouter logging des erreurs non-410**
+  - _Problème :_ Les erreurs transitoires (5xx, timeout, crypto fail) sont silencieuses — impossible de debugger pourquoi des notifications ne partent pas.
+  - _Fichier :_ `src/lib/push-sender.ts`
+  - _Action :_ Dans le `catch`, loguer toute erreur non-410 : `console.error("[push-sender] Failed:", sub.endpoint, err)`. Distinguer erreurs permanentes (400, 404) à nettoyer vs transitoires à ignorer.
+
+- [x] **F7 : VotingModal + Inputs Pronos — zones de tap < 48px + zoom iOS**
+  - _Problème 1 :_ Boutons OUI/NON dans `VotingModal.tsx` ont une hauteur < 48px sur certains états.
+  - _Problème 2 :_ Inputs score dans `PronosticsHubClient.tsx` ont `font-size < 16px` → zoom automatique iOS.
+  - _Action 1 :_ Ajouter `min-h-[48px]` sur tous les boutons interactifs de `VotingModal`.
+  - _Action 2 :_ Fixer `text-[16px]` (ou `text-base`) sur les `<ScoreInput>` pour neutraliser le zoom iOS.
+
+---
+
 ## 🧊 Backlog (À faire plus tard)
 
 - [x] **Refonte du flux de connexion Google (Sign-in with id_token)**

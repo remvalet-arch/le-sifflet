@@ -96,7 +96,9 @@ export default async function ProfilePage() {
   // Profil en premier pour obtenir favorite_team_id
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select(
+      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date",
+    )
     .eq("id", user.id)
     .single();
 

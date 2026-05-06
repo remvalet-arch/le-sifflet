@@ -45,17 +45,17 @@ export default async function MatchPage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const match = matchData as any; // Bypass TS error on missing relationship
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("sifflets_balance, trust_score")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: pairs }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("sifflets_balance, trust_score")
+      .eq("id", user.id)
+      .single(),
+    supabase.rpc("squad_members_for_my_squads"),
+  ]);
 
   const siffletsBalance = profile?.sifflets_balance ?? 0;
   const isModerator = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
-
-  // Récupération des membres de ligues pour afficher leurs pronos ("Le Vestiaire")
-  const { data: pairs } = await supabase.rpc("squad_members_for_my_squads");
 
   // On inclut AUSSI l'utilisateur courant pour qu'il puisse voir son propre prono dans le vestiaire !
   const memberIds = [
@@ -73,29 +73,22 @@ export default async function MatchPage({ params }: Props) {
   if (memberIds.length > 0) {
     const adminSupabase = createAdminClient();
 
-    // 1. On récupère les pronos
-    const { data: pronosData, error: pronosErr } = await adminSupabase
-      .from("pronos")
-      .select(
-        `
-        user_id,
-        prono_type,
-        prono_value,
-        points_earned
-      `,
-      )
-      .eq("match_id", id)
-      .in("user_id", memberIds);
+    const [{ data: pronosData, error: pronosErr }, { data: profilesData }] =
+      await Promise.all([
+        adminSupabase
+          .from("pronos")
+          .select("user_id, prono_type, prono_value, points_earned")
+          .eq("match_id", id)
+          .in("user_id", memberIds),
+        adminSupabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", memberIds),
+      ]);
 
     if (pronosErr) {
       console.error("Erreur récupération pronos vestiaire:", pronosErr);
     }
-
-    // 2. On récupère les profils associés séparément (car pronos.user_id pointe sur auth.users et non public.profiles)
-    const { data: profilesData } = await adminSupabase
-      .from("profiles")
-      .select("id, username, avatar_url")
-      .in("id", memberIds);
 
     const profilesMap = new Map((profilesData ?? []).map((p) => [p.id, p]));
 

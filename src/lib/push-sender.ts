@@ -69,6 +69,12 @@ export async function sendPushToUsers(
       } catch (err: unknown) {
         if ((err as { statusCode?: number }).statusCode === 410)
           expiredEndpoints.push(sub.endpoint);
+        else
+          console.error(
+            "Push notification failed for endpoint:",
+            sub.endpoint,
+            err,
+          );
       }
     }),
   );

@@ -3,6 +3,7 @@ import { PronosticsHubClient } from "@/components/pronos/PronosticsHubClient";
 import { LOBBY_TRACKED_LEAGUE_API_IDS } from "@/lib/constants/top-leagues";
 
 export const metadata = { title: "Pronos" };
+export const revalidate = 60;
 
 export default async function PronosPage() {
   const supabase = await createClient();
