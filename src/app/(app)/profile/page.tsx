@@ -1,4 +1,3 @@
-import { Target, TrendingUp, Trophy, Shield } from "lucide-react";
 import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
@@ -19,8 +18,6 @@ import type {
 } from "@/types/database";
 
 export const metadata = { title: "Mon Profil" };
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTrustGrade(score: number) {
   if (score >= 200)
@@ -72,7 +69,6 @@ function getKarmaBadge(score: number) {
   };
 }
 
-/** Emoji d'accroche — le libellé officiel vient de `profiles.rank` (XP en base). */
 function rankDisplayFromDb(rankLabel: string): {
   emoji: string;
   label: string;
@@ -84,8 +80,6 @@ function rankDisplayFromDb(rankLabel: string): {
   return { emoji: "🪑", label: rankLabel };
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
-
 export default async function ProfilePage() {
   const supabase = await createClient();
   const {
@@ -93,7 +87,6 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Profil en premier pour obtenir favorite_team_id
   const { data: profile } = await supabase
     .from("profiles")
     .select(
@@ -232,7 +225,6 @@ export default async function ProfilePage() {
         0,
       );
 
-  // ── Mon arbitrage stats ──────────────────────────────────────────────────────
   const exactScorePronos = pronos.filter((p) => p.prono_type === "exact_score");
   const exactResolved = exactScorePronos.filter(
     (p) => p.status === "won" || p.status === "lost",
@@ -243,7 +235,6 @@ export default async function ProfilePage() {
       ? Math.round((exactWon / exactResolved.length) * 100)
       : null;
 
-  // Best winning streak (consecutive won pronos, sorted by placed_at)
   const sortedPronos = [...pronos].sort(
     (a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime(),
   );
@@ -275,7 +266,7 @@ export default async function ProfilePage() {
         ).toISOString()
       : null;
 
-  const grade = getTrustGrade(trustScore);
+  void getTrustGrade(trustScore);
   const karma = getKarmaBadge(trustScore);
   const rank = rankDisplayFromDb(profile?.rank ?? "Arbitre de District");
   const xpTotal = profile?.xp ?? 0;
@@ -285,143 +276,39 @@ export default async function ProfilePage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
 
+      <ProfileHeader
+        username={profile?.username ?? "Joueur"}
+        avatarUrl={profile?.avatar_url ?? null}
+        favoriteTeam={favoriteTeam}
+        karma={karma}
+        rank={rank}
+        xpTotal={xpTotal}
+        balance={balance}
+        loginStreak={profile?.login_streak ?? 0}
+        lastLoginDate={profile?.last_login_date ?? null}
+      />
+
       <ProfileClient
         shortBets={shortEntries}
         pronos={pronoEntries}
         allBadges={allBadges ?? []}
         unlockedBadgeIds={unlockedBadgeIds}
         amisContent={<AmisContent currentUserId={user.id} />}
-        vestiaireContent={
-          <div className="flex flex-col gap-3">
-            <ProfileHeader
-              username={profile?.username ?? "Joueur"}
-              avatarUrl={profile?.avatar_url ?? null}
-              favoriteTeam={favoriteTeam}
-              karma={karma}
-              rank={rank}
-              xpTotal={xpTotal}
-              balance={balance}
-              loginStreak={profile?.login_streak ?? 0}
-              lastLoginDate={profile?.last_login_date ?? null}
-            />
-
-            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-                  Confiance
-                </span>
-                <span className={`text-[10px] font-black ${grade.color}`}>
-                  {grade.icon} {grade.label} · {trustScore}
-                </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-                <div
-                  className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-                  style={{
-                    width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {balance < REFILL_THRESHOLD && (
-              <RefillButton
-                isEligible={isRefillEligible}
-                nextRefillAt={nextRefillAt}
-              />
-            )}
-
-            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/60">
-              <div className="flex items-center divide-x divide-white/8">
-                <StatItem
-                  Icon={Target}
-                  label="Réussite"
-                  value={`${winRate}%`}
-                />
-                <StatItem
-                  Icon={TrendingUp}
-                  label="Gagnés"
-                  value={totalEarned.toLocaleString("fr-FR")}
-                />
-                <StatItem
-                  Icon={Trophy}
-                  label="Paris"
-                  value={String(totalBets)}
-                />
-              </div>
-            </div>
-
-            {/* Mon arbitrage */}
-            {totalMatchesPronoed > 0 && (
-              <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
-                <div className="px-5 py-3 border-b border-white/5">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                    Mon arbitrage
-                  </p>
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-white/5">
-                  <div className="flex flex-col items-center gap-1 px-3 py-4">
-                    <Target className="h-4 w-4 text-zinc-500" />
-                    <p className="text-base font-black text-white">
-                      {scoreAccuracy !== null ? `${scoreAccuracy}%` : "—"}
-                    </p>
-                    <p className="text-center text-[10px] font-semibold text-zinc-500">
-                      Scores exacts
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 px-3 py-4">
-                    <TrendingUp className="h-4 w-4 text-zinc-500" />
-                    <p className="text-base font-black text-white">
-                      {bestStreak}
-                    </p>
-                    <p className="text-center text-[10px] font-semibold text-zinc-500">
-                      Meilleure série
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 px-3 py-4">
-                    <Trophy className="h-4 w-4 text-zinc-500" />
-                    <p className="text-base font-black text-white">
-                      {totalMatchesPronoed}
-                    </p>
-                    <p className="text-center text-[10px] font-semibold text-zinc-500">
-                      Matchs pronostiqués
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {trustScore >= MODERATOR_THRESHOLD && (
-              <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
-                <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
-                <p className="text-xs font-bold text-yellow-400">
-                  Accès Modérateur activé — tu peux forcer les résultats VAR
-                </p>
-              </div>
-            )}
-          </div>
+        refillContent={
+          balance < REFILL_THRESHOLD ? (
+            <RefillButton isEligible={isRefillEligible} nextRefillAt={nextRefillAt} />
+          ) : null
         }
+        winRate={winRate}
+        totalBets={totalBets}
+        totalEarned={totalEarned}
+        xpTotal={xpTotal}
+        bestStreak={bestStreak}
+        trustScore={trustScore}
+        isModerateur={trustScore >= MODERATOR_THRESHOLD}
+        scoreAccuracy={scoreAccuracy}
+        totalMatchesPronoed={totalMatchesPronoed}
       />
     </main>
-  );
-}
-
-function StatItem({
-  Icon,
-  label,
-  value,
-}: {
-  Icon: React.ElementType;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
-      <Icon className="h-4 w-4 text-zinc-500" />
-      <p className="text-base font-black text-white">{value}</p>
-      <p className="text-center text-[10px] font-semibold text-zinc-500">
-        {label}
-      </p>
-    </div>
   );
 }

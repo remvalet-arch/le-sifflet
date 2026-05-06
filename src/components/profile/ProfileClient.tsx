@@ -1,11 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { TrophyWall } from "./TrophyWall";
 import type { BadgeRow, BetStatus, MarketEventType } from "@/types/database";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Lock } from "lucide-react";
-
-// ── Types plats sérialisables passés depuis le Server Component ───────────────
+import { Lock, Shield, Target, TrendingUp, Trophy, Zap } from "lucide-react";
 
 export type ShortBetEntry = {
   id: string;
@@ -37,11 +35,18 @@ type Props = {
   pronos: PronoEntry[];
   allBadges: BadgeRow[];
   unlockedBadgeIds: string[];
-  vestiaireContent?: React.ReactNode;
-  amisContent?: React.ReactNode;
+  amisContent: React.ReactNode;
+  refillContent: React.ReactNode;
+  winRate: number;
+  totalBets: number;
+  totalEarned: number;
+  xpTotal: number;
+  bestStreak: number;
+  trustScore: number;
+  isModerateur: boolean;
+  scoreAccuracy: number | null;
+  totalMatchesPronoed: number;
 };
-
-// ── Config labels ─────────────────────────────────────────────────────────────
 
 const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
   penalty_check: { label: "Péno ?", emoji: "📢" },
@@ -51,27 +56,26 @@ const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
   injury_sub: { label: "Changement", emoji: "🔄" },
   free_kick: { label: "Coup franc", emoji: "🎯" },
   corner: { label: "Corner", emoji: "🏁" },
+  stoppage_ht: { label: "Arrêts HT", emoji: "⏱️" },
+  stoppage_ft: { label: "Arrêts FT", emoji: "⏱️" },
 };
 
-const STATUS_BADGE = {
-  won: "bg-green-500/20 text-green-400 border-green-500/30",
-  lost: "bg-red-500/20 text-red-400 border-red-500/30",
-  pending_short: "bg-orange-500/15 text-orange-400 border-orange-500/25",
-  pending_prono: "bg-blue-500/15 text-blue-400 border-blue-500/25",
-} as const;
-
-function statusCls(status: string, kind: "short" | "prono") {
-  if (status === "won") return STATUS_BADGE.won;
-  if (status === "lost") return STATUS_BADGE.lost;
-  return kind === "short"
-    ? STATUS_BADGE.pending_short
-    : STATUS_BADGE.pending_prono;
+function statusCls(status: string) {
+  if (status === "won") return "border-green-500/30 bg-green-500/20 text-green-400";
+  if (status === "lost") return "border-red-500/30 bg-red-500/20 text-red-400";
+  return "border-amber-500/25 bg-amber-500/15 text-amber-400";
 }
 
 function statusLabel(status: string, kind: "short" | "prono") {
   if (status === "won") return "Gagné";
   if (status === "lost") return "Perdu";
-  return kind === "short" ? "⏳ VAR en cours" : "⏳ En attente du match";
+  return kind === "short" ? "VAR en cours" : "En attente";
+}
+
+function cardBorderCls(status: string) {
+  if (status === "won") return "border-l-4 border-l-green-500 border border-green-500/15 bg-green-500/5";
+  if (status === "lost") return "border-l-4 border-l-red-500 border border-red-500/10 bg-red-500/5";
+  return "border-l-4 border-l-amber-500/40 border border-white/6 bg-zinc-900";
 }
 
 function fmtDate(iso: string) {
@@ -111,230 +115,358 @@ function formatPronoValue(
   return value;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function getTrustGrade(score: number) {
+  if (score >= 200)
+    return { label: "Arbitre Élite", icon: "🏅", color: "text-yellow-400", bar: "bg-yellow-400", glow: "shadow-[0_0_12px_rgba(234,179,8,0.4)]" };
+  if (score >= 100)
+    return { label: "Arbitre Officiel", icon: "✅", color: "text-green-400", bar: "bg-green-500", glow: "shadow-[0_0_12px_rgba(34,197,94,0.4)]" };
+  if (score >= 50)
+    return { label: "Lanceur d'Alerte", icon: "⚡", color: "text-blue-400", bar: "bg-blue-400", glow: "shadow-[0_0_12px_rgba(59,130,246,0.4)]" };
+  return { label: "Carton Jaune", icon: "⚠️", color: "text-orange-400", bar: "bg-orange-400", glow: "shadow-[0_0_12px_rgba(249,115,22,0.4)]" };
+}
+
+const TABS = [
+  { value: "profil", icon: "⚽", label: "Profil" },
+  { value: "historique", icon: "📊", label: "Historique" },
+  { value: "badges", icon: "🏅", label: "Badges" },
+  { value: "amis", icon: "👥", label: "Amis" },
+] as const;
+
+type TabValue = (typeof TABS)[number]["value"];
 
 export function ProfileClient({
   shortBets,
   pronos,
   allBadges,
   unlockedBadgeIds,
-  vestiaireContent,
   amisContent,
+  refillContent,
+  winRate,
+  totalBets,
+  totalEarned,
+  bestStreak,
+  trustScore,
+  isModerateur,
+  scoreAccuracy,
+  totalMatchesPronoed,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<TabValue>("profil");
   const varCount = shortBets.length;
   const pronoCount = pronos.length;
   const trophyCount = unlockedBadgeIds.length;
+  const grade = getTrustGrade(trustScore);
+
+  const tabBadge = (value: TabValue): number | null => {
+    if (value === "historique") return varCount + pronoCount > 0 ? varCount + pronoCount : null;
+    if (value === "badges") return trophyCount > 0 ? trophyCount : null;
+    return null;
+  };
+
+  const winRateColor =
+    winRate >= 60 ? "text-green-400" : winRate >= 40 ? "text-amber-400" : "text-red-400";
+  const winRateGrad =
+    winRate >= 60
+      ? "from-green-500/15 to-green-500/5 border-green-500/20"
+      : winRate >= 40
+        ? "from-amber-500/15 to-amber-500/5 border-amber-500/20"
+        : "from-red-500/15 to-red-500/5 border-red-500/20";
 
   return (
-    <Tabs defaultValue="vestiaire" className="mt-4">
-      <TabsList className="w-full flex">
-        <TabsTrigger value="vestiaire" className="flex-1">
-          Vestiaire
-        </TabsTrigger>
-        <TabsTrigger value="historique" className="flex-1">
-          Historique
-          {varCount + pronoCount > 0 && (
-            <span className="ml-1.5 rounded bg-zinc-700 px-1 text-[9px]">
-              {varCount + pronoCount}
-            </span>
-          )}
-        </TabsTrigger>
-        <TabsTrigger value="trophees" className="flex-1">
-          Badges
-          {trophyCount > 0 && (
-            <span className="ml-1.5 rounded bg-zinc-700 px-1 text-[9px]">
-              {trophyCount}
-            </span>
-          )}
-        </TabsTrigger>
-        <TabsTrigger value="amis" className="flex-1">
-          Amis
-        </TabsTrigger>
-      </TabsList>
+    <div className="mt-4 flex flex-col gap-4">
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.value;
+          const badge = tabBadge(tab.value);
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setActiveTab(tab.value)}
+              className={`shrink-0 flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-wide transition-all ${
+                isActive
+                  ? "border-white/25 bg-zinc-800 text-white shadow-[0_0_12px_rgba(255,255,255,0.08)]"
+                  : "border-white/8 bg-zinc-900 text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+              {badge !== null && (
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[8px] font-black ${
+                    isActive ? "bg-zinc-900 text-white" : "bg-zinc-700 text-zinc-400"
+                  }`}
+                >
+                  {badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-      <TabsContent value="vestiaire" className="mt-4">
-        {vestiaireContent}
-      </TabsContent>
+      {activeTab === "profil" && (
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3">
+            <div className={`flex-1 rounded-2xl border bg-gradient-to-br p-4 ${winRateGrad}`}>
+              <p className={`text-4xl font-black tabular-nums ${winRateColor}`}>
+                {winRate}%
+              </p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-green-500/60">
+                Win Rate
+              </p>
+            </div>
+            <div className="flex-1 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/15 to-amber-500/5 p-4">
+              <p className="text-4xl font-black tabular-nums text-amber-400">
+                {totalEarned.toLocaleString("fr-FR")}
+              </p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-amber-500/60">
+                Points Gagnés
+              </p>
+            </div>
+          </div>
 
-      <TabsContent value="historique" className="mt-4 space-y-6">
-        <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
-          <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-          <p className="text-[11px] text-zinc-500">
-            Les pronostics des matchs à venir sont masqués pour éviter la
-            triche.
-          </p>
+          <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
+            <div className="flex divide-x divide-white/8">
+              <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
+                <Trophy className="h-4 w-4 text-zinc-500" />
+                <p className="text-base font-black text-white">{totalBets}</p>
+                <p className="text-center text-[10px] font-semibold text-zinc-500">Paris</p>
+              </div>
+              <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
+                <Zap className="h-4 w-4 text-zinc-500" />
+                <p className="text-base font-black text-white">{bestStreak}</p>
+                <p className="text-center text-[10px] font-semibold text-zinc-500">Série max</p>
+              </div>
+              <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
+                <Target className="h-4 w-4 text-zinc-500" />
+                <p className="text-base font-black text-white">{totalMatchesPronoed}</p>
+                <p className="text-center text-[10px] font-semibold text-zinc-500">Matchs</p>
+              </div>
+            </div>
+          </div>
+
+          {scoreAccuracy !== null && (
+            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
+              <div className="border-b border-white/5 px-5 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  Mon arbitrage
+                </p>
+              </div>
+              <div className="flex divide-x divide-white/5">
+                <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
+                  <Target className="h-4 w-4 text-zinc-500" />
+                  <p className="text-base font-black text-white">{scoreAccuracy}%</p>
+                  <p className="text-center text-[10px] font-semibold text-zinc-500">Scores exacts</p>
+                </div>
+                <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
+                  <TrendingUp className="h-4 w-4 text-zinc-500" />
+                  <p className="text-base font-black text-white">{bestStreak}</p>
+                  <p className="text-center text-[10px] font-semibold text-zinc-500">Meilleure série</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-white/8 bg-zinc-900 px-4 py-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wide text-zinc-500">
+                Score de confiance
+              </span>
+              <span className={`text-[10px] font-black ${grade.color} ${grade.glow} rounded-full px-2 py-0.5`}>
+                {grade.icon} {grade.label} · {trustScore}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
+                style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {refillContent}
+
+          {isModerateur && (
+            <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
+              <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
+              <p className="text-xs font-bold text-yellow-400">
+                Accès Modérateur activé — tu peux forcer les résultats VAR
+              </p>
+            </div>
+          )}
         </div>
-        <div>
-          <h3 className="mb-3 text-sm font-black uppercase text-zinc-500">
-            Pronostics
-          </h3>
-          {pronos.length === 0 ? (
-            <EmptyState
-              emoji="🎯"
-              text="Aucun prono enregistré pour l'instant."
-            />
+      )}
+
+      {activeTab === "historique" && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
+            <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+            <p className="text-[11px] text-zinc-500">
+              Les pronostics des matchs à venir sont masqués pour éviter la triche.
+            </p>
+          </div>
+
+          {pronos.length === 0 && shortBets.length === 0 ? (
+            <EmptyState emoji="📊" text="Aucun pari enregistré pour l'instant." />
           ) : (
-            <div className="flex flex-col gap-2">
-              {pronos.map((p) => {
-                const cls = statusCls(p.status, "prono");
-                const lbl = statusLabel(p.status, "prono");
-                const line = formatPronoValue(p.prono_type, p.prono_value);
-                return (
-                  <div
-                    key={p.id}
-                    className={`rounded-xl border ${p.status === "won" ? "border-green-500/50 bg-green-500/5 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : p.status === "lost" ? "border-red-500/20 bg-red-500/5" : "border-white/6 bg-zinc-900"} px-4 py-3`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-zinc-600">
-                          {fmtDate(p.placed_at)}
-                        </p>
-                        {p.teamHome && (
-                          <p className="truncate text-sm font-bold text-white">
-                            {p.teamHome} — {p.teamAway}
-                          </p>
-                        )}
-                        {p.prono_type === "exact_score" &&
-                        p.prono_value !== "🔒" ? (
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-lg font-black text-amber-400 shadow-inner">
-                              {p.prono_value.split("-")[0]}
+            <>
+              {pronos.length > 0 && (
+                <div>
+                  <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Pronostics
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {pronos.map((p) => {
+                      const line = formatPronoValue(p.prono_type, p.prono_value);
+                      const chipCls = statusCls(p.status);
+                      const lbl = statusLabel(p.status, "prono");
+                      return (
+                        <div
+                          key={p.id}
+                          className={`rounded-xl px-4 py-3 ${cardBorderCls(p.status)}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              {p.teamHome && (
+                                <p className="truncate text-sm font-bold text-white">
+                                  {p.teamHome} — {p.teamAway}
+                                </p>
+                              )}
+                              {p.prono_type === "exact_score" && p.prono_value !== "🔒" ? (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-base font-black text-amber-400 shadow-inner">
+                                    {p.prono_value.split("-")[0]}
+                                  </div>
+                                  <span className="font-bold text-zinc-600">-</span>
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-base font-black text-amber-400 shadow-inner">
+                                    {p.prono_value.split("-")[1]}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="mt-0.5 text-xs text-zinc-400">{line}</p>
+                              )}
+                              <p className="mt-1 text-[10px] text-zinc-600">{fmtDate(p.placed_at)}</p>
                             </div>
-                            <span className="text-zinc-600 font-bold">-</span>
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-lg font-black text-amber-400 shadow-inner">
-                              {p.prono_value.split("-")[1]}
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <span
+                                className={`rounded-full border px-2.5 py-0.5 text-[10px] font-black ${chipCls} ${p.status === "pending" ? "animate-pulse" : ""}`}
+                              >
+                                {p.status === "pending" && <span className="mr-1">·</span>}
+                                {lbl}
+                              </span>
+                              {p.status === "won" && (
+                                <span className="text-sm font-black text-green-400">
+                                  +{(p.points_earned > 0 ? p.points_earned : p.reward_amount).toLocaleString("fr-FR")} pts
+                                </span>
+                              )}
                             </div>
                           </div>
-                        ) : (
-                          <p className="mt-0.5 text-xs text-zinc-500">{line}</p>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span
-                          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}
+                          {p.status === "won" && p.contre_pied_bonus === 100 && (
+                            <div className="mt-1.5 flex items-center gap-1 text-[10px] font-black text-amber-400">
+                              💎 Le Braquage
+                              <span className="font-normal text-zinc-500">+100 pts contre-pied</span>
+                            </div>
+                          )}
+                          <div className="mt-1 text-[10px] text-zinc-600">
+                            Gratuit · gain potentiel{" "}
+                            <strong className="text-zinc-300">
+                              {p.reward_amount.toLocaleString("fr-FR")} Pts
+                            </strong>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {shortBets.length > 0 && (
+                <div>
+                  <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Paris VAR Live
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {shortBets.map((bet) => {
+                      const eCfg = bet.eventType
+                        ? (SHORT_LABELS[bet.eventType] ?? { label: bet.eventType, emoji: "⚡" })
+                        : { label: "—", emoji: "⚡" };
+                      const chipCls = statusCls(bet.status);
+                      const lbl = statusLabel(bet.status, "short");
+                      const reward = Math.round(Number(bet.potential_reward));
+                      return (
+                        <div
+                          key={bet.id}
+                          className={`rounded-xl px-4 py-3 ${cardBorderCls(bet.status)}`}
                         >
-                          {lbl}
-                        </span>
-                        {p.status === "won" && (
-                          <span className="text-sm font-black text-green-400">
-                            +
-                            {(p.points_earned > 0
-                              ? p.points_earned
-                              : p.reward_amount
-                            ).toLocaleString("fr-FR")}{" "}
-                            Pts
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {p.status === "won" && p.contre_pied_bonus === 100 && (
-                      <div className="mt-1.5 flex items-center gap-1 text-[10px] font-black text-amber-400">
-                        💎 Le Braquage
-                        <span className="font-normal text-zinc-500">
-                          +100 pts contre-pied
-                        </span>
-                      </div>
-                    )}
-                    <div className="mt-1.5 text-[10px] text-zinc-600">
-                      Gratuit · gain potentiel{" "}
-                      <strong className="text-zinc-300">
-                        {p.reward_amount.toLocaleString("fr-FR")} Pts
-                      </strong>
-                    </div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              {bet.teamHome && (
+                                <p className="truncate text-sm font-bold text-white">
+                                  {bet.teamHome} — {bet.teamAway}
+                                </p>
+                              )}
+                              <p className="mt-0.5 text-xs text-zinc-400">
+                                {eCfg.emoji} {eCfg.label}
+                              </p>
+                              <p className="mt-1 text-[10px] text-zinc-600">{fmtDate(bet.placed_at)}</p>
+                            </div>
+                            <span
+                              className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${chipCls} ${bet.status === "pending" ? "animate-pulse" : ""}`}
+                            >
+                              {bet.status === "pending" && <span className="mr-1">·</span>}
+                              {lbl}
+                              {bet.status === "won" && ` +${reward.toLocaleString("fr-FR")}`}
+                            </span>
+                          </div>
+                          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
+                            <span>
+                              Choix{" "}
+                              <strong className="font-black uppercase text-white">
+                                {bet.chosen_option === "🔒" ? "🔒 Masqué" : bet.chosen_option}
+                              </strong>
+                            </span>
+                            <span>·</span>
+                            <span>
+                              Mise <strong className="text-zinc-300">{bet.amount_staked} pts</strong>
+                            </span>
+                            <span>·</span>
+                            <span>
+                              Pot. <strong className="text-zinc-300">{reward} pts</strong>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
+      )}
 
-        <div>
-          <h3 className="mb-3 text-sm font-black uppercase text-zinc-500">
-            Paris VAR Live
-          </h3>
-          {shortBets.length === 0 ? (
-            <EmptyState emoji="📢" text="Aucun pari VAR pour l'instant." />
+      {activeTab === "badges" && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between px-1">
+            <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
+              Badges
+            </p>
+            <span className="text-[11px] font-bold text-zinc-400">
+              {unlockedBadgeIds.length}/{allBadges.length} débloqués
+            </span>
+          </div>
+          {allBadges.length === 0 ? (
+            <EmptyState emoji="🏅" text="Les trophées arrivent bientôt…" />
           ) : (
-            <div className="flex flex-col gap-2">
-              {shortBets.map((bet) => {
-                const eCfg = bet.eventType
-                  ? (SHORT_LABELS[bet.eventType] ?? {
-                      label: bet.eventType,
-                      emoji: "⚡",
-                    })
-                  : { label: "—", emoji: "⚡" };
-                const cls = statusCls(bet.status, "short");
-                const lbl = statusLabel(bet.status, "short");
-                const reward = Math.round(Number(bet.potential_reward));
-                return (
-                  <div
-                    key={bet.id}
-                    className="rounded-xl border border-white/6 bg-zinc-900 px-4 py-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-zinc-600">
-                          {fmtDate(bet.placed_at)}
-                        </p>
-                        {bet.teamHome && (
-                          <p className="truncate text-sm font-bold text-white">
-                            {bet.teamHome} — {bet.teamAway}
-                          </p>
-                        )}
-                        <p className="mt-0.5 text-xs text-zinc-500">
-                          {eCfg.emoji} {eCfg.label}
-                        </p>
-                      </div>
-                      <span
-                        className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${cls}`}
-                      >
-                        {lbl}
-                        {bet.status === "won" &&
-                          ` +${reward.toLocaleString("fr-FR")}`}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
-                      <span>
-                        Choix{" "}
-                        <strong className="font-black uppercase text-white">
-                          {bet.chosen_option === "🔒"
-                            ? "🔒 Masqué"
-                            : bet.chosen_option}
-                        </strong>
-                      </span>
-                      <span>·</span>
-                      <span>
-                        Mise{" "}
-                        <strong className="text-zinc-300">
-                          {bet.amount_staked} pts
-                        </strong>
-                      </span>
-                      <span>·</span>
-                      <span>
-                        Pot.{" "}
-                        <strong className="text-zinc-300">{reward} pts</strong>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <TrophyWall badges={allBadges} unlockedBadgeIds={unlockedBadgeIds} />
           )}
         </div>
-      </TabsContent>
+      )}
 
-      <TabsContent value="trophees" className="mt-4">
-        {allBadges.length === 0 ? (
-          <EmptyState emoji="🏅" text="Les trophées arrivent bientôt…" />
-        ) : (
-          <TrophyWall badges={allBadges} unlockedBadgeIds={unlockedBadgeIds} />
-        )}
-      </TabsContent>
-
-      <TabsContent value="amis" className="mt-4">
-        {amisContent}
-      </TabsContent>
-    </Tabs>
+      {activeTab === "amis" && (
+        <div>{amisContent}</div>
+      )}
+    </div>
   );
 }
 

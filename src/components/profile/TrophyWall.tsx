@@ -36,6 +36,15 @@ const BADGE_NEON: Record<string, string> = {
     "border-green-500   bg-green-500/10   text-green-400   shadow-[0_0_16px_rgba(34,197,94,0.35)]",
 };
 
+const BADGE_RING: Record<string, string> = {
+  oeil_de_faucon: "ring-cyan-500/60",
+  nostradamus: "ring-purple-500/60",
+  collina: "ring-yellow-500/60",
+  chat_noir: "ring-orange-500/60",
+  fidele: "ring-blue-500/60",
+  goleador: "ring-green-500/60",
+};
+
 type Props = {
   badges: BadgeRow[];
   unlockedBadgeIds: string[];
@@ -47,16 +56,32 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
 
   if (badges.length === 0) return null;
 
+  const pct = Math.round((unlocked.size / badges.length) * 100);
+
   return (
-    <section className="mt-6">
-      <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">
-        Mes Trophées
-      </h2>
+    <section className="mt-2">
+      <div className="mb-3">
+        <div className="mb-1.5 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+            Mes Trophées
+          </h2>
+          <span className="text-[10px] font-black text-zinc-400">
+            {unlocked.size}/{badges.length}
+          </span>
+        </div>
+        <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-[width] duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
       <div className="grid grid-cols-3 gap-3">
         {badges.map((badge) => {
           const isUnlocked = unlocked.has(badge.id);
           const Icon = BADGE_ICONS[badge.icon_name] ?? Trophy;
           const neon = BADGE_NEON[badge.slug] ?? "";
+          const ring = BADGE_RING[badge.slug] ?? "ring-white/20";
 
           return (
             <div key={badge.id} className="flex flex-col gap-0">
@@ -64,15 +89,14 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
                 onClick={() =>
                   setTooltip(tooltip === badge.id ? null : badge.id)
                 }
-                className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 px-2 py-4 text-center transition-all active:scale-95 ${
+                className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 px-2 py-5 text-center transition-all active:scale-95 ${
                   isUnlocked
                     ? neon
                     : "border-zinc-700 bg-zinc-900 text-zinc-600"
                 }`}
               >
-                {/* Icône */}
                 <div
-                  className={`relative ${isUnlocked ? "" : "grayscale opacity-40"}`}
+                  className={`relative ${isUnlocked ? `rounded-full ring-2 ${ring} animate-pulse` : "grayscale opacity-40"}`}
                 >
                   <Icon className="h-7 w-7" />
                   {!isUnlocked && (
@@ -86,14 +110,12 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
                 </p>
               </button>
 
-              {/* Critère de débloquage toujours visible sur les badges verrouillés */}
               {!isUnlocked && (
                 <p className="mt-1 px-1 text-center text-[8px] font-medium leading-tight text-zinc-700 line-clamp-2">
                   {badge.description}
                 </p>
               )}
 
-              {/* Tooltip sur clic (mobile-friendly) */}
               {tooltip === badge.id && (
                 <div className="mt-1.5 rounded-xl border border-white/8 bg-zinc-800 px-3 py-2.5 text-center">
                   <p className="text-xs font-semibold text-zinc-300">

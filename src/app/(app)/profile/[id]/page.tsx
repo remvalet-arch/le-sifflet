@@ -230,6 +230,34 @@ export default async function PublicProfilePage({
         0,
       );
 
+  const exactScorePronos = pronos.filter((p) => p.prono_type === "exact_score");
+  const exactResolved = exactScorePronos.filter(
+    (p) => p.status === "won" || p.status === "lost",
+  );
+  const exactWon = exactResolved.filter((p) => p.status === "won").length;
+  const scoreAccuracy =
+    exactResolved.length > 0
+      ? Math.round((exactWon / exactResolved.length) * 100)
+      : null;
+
+  const sortedPronos = [...pronos].sort(
+    (a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime(),
+  );
+  let bestStreak = 0;
+  let curStreak = 0;
+  for (const p of sortedPronos) {
+    if (p.status === "won") {
+      curStreak++;
+      bestStreak = Math.max(bestStreak, curStreak);
+    } else if (p.status === "lost") {
+      curStreak = 0;
+    }
+  }
+
+  const totalMatchesPronoed = new Set(
+    pronos.filter((p) => p.prono_type === "exact_score").map((p) => p.match_id),
+  ).size;
+
   const trustScore = profile.trust_score ?? 100;
   const grade = getTrustGrade(trustScore);
   const karma = getKarmaBadge(trustScore);
@@ -241,111 +269,122 @@ export default async function PublicProfilePage({
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
+      <div
+        className="relative mb-4 overflow-hidden rounded-2xl border border-white/8"
+        style={{ background: "linear-gradient(135deg, #064e3b 0%, #18181b 70%)" }}
+      >
+        <div
+          className="pointer-events-none absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative px-5 py-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ring-2 ring-white/20">
+              {avatar.startsWith("http") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatar}
+                  alt={profile.username}
+                  className="h-20 w-20 rounded-full object-cover"
+                />
+              ) : (
+                avatar
+              )}
+            </div>
+            <div className="min-w-0 flex-1 pt-1">
+              <p className="text-xl font-black text-white">{profile.username}</p>
+              <span
+                className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
+              >
+                {karma.emoji} {karma.label}
+              </span>
+              <p className="mt-1 text-xs text-zinc-500">
+                {rank.emoji} {rank.label}
+              </p>
+              <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
+                {xpTotal.toLocaleString("fr-FR")} XP
+              </p>
+              {favoriteTeam && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  {favoriteTeam.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={favoriteTeam.logo_url}
+                      alt={favoriteTeam.name}
+                      className="h-4 w-4 object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs">⚽</span>
+                  )}
+                  <span className="text-[11px] font-bold text-zinc-400">
+                    {favoriteTeam.name}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-2 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+              <span className="text-2xl font-black tabular-nums text-green-400">
+                {balance.toLocaleString("fr-FR")}
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
+                pts
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
+                Confiance
+              </span>
+              <span className={`text-[10px] font-black ${grade.color}`}>
+                {grade.icon} {grade.label} · {trustScore}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
+                style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        <StatCard Icon={Target} label="Réussite" value={`${winRate}%`} />
+        <StatCard
+          Icon={TrendingUp}
+          label="Gagnés"
+          value={totalEarned.toLocaleString("fr-FR")}
+        />
+        <StatCard
+          Icon={Trophy}
+          label="Résultats"
+          value={String(totalBets)}
+        />
+      </div>
+
+      <div className="mb-4">
+        <FriendButton profileId={id} currentUserId={user.id} />
+      </div>
+
       <ProfileClient
         shortBets={shortEntries}
         pronos={pronoEntries}
         allBadges={allBadges ?? []}
         unlockedBadgeIds={unlockedBadgeIds}
         amisContent={<AmisContent currentUserId={id} />}
-        vestiaireContent={
-          <div className="flex flex-col gap-3">
-            {/* Header lecture seule */}
-            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
-              <div className="flex items-center gap-4 px-5 py-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
-                  {avatar.startsWith("http") ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={avatar}
-                      alt={profile.username}
-                      className="h-14 w-14 rounded-full object-cover"
-                    />
-                  ) : (
-                    avatar
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-black text-white">{profile.username}</p>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
-                    >
-                      {karma.emoji} {karma.label}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {rank.emoji} {rank.label}
-                  </p>
-                  <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
-                    {xpTotal.toLocaleString("fr-FR")} XP
-                  </p>
-                  {favoriteTeam && (
-                    <div className="mt-1.5 flex items-center gap-1.5">
-                      {favoriteTeam.logo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={favoriteTeam.logo_url}
-                          alt={favoriteTeam.name}
-                          className="h-4 w-4 object-contain"
-                        />
-                      ) : (
-                        <span className="text-xs">⚽</span>
-                      )}
-                      <span className="text-[11px] font-bold text-zinc-400">
-                        {favoriteTeam.name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-black tabular-nums text-white">
-                    {balance.toLocaleString("fr-FR")}
-                  </p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-                    Pts
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Trust bar */}
-            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-                  Confiance
-                </span>
-                <span className={`text-[10px] font-black ${grade.color}`}>
-                  {grade.icon} {grade.label} · {trustScore}
-                </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-                <div
-                  className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-                  style={{
-                    width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2">
-              <StatCard Icon={Target} label="Réussite" value={`${winRate}%`} />
-              <StatCard
-                Icon={TrendingUp}
-                label="Gagnés"
-                value={totalEarned.toLocaleString("fr-FR")}
-              />
-              <StatCard
-                Icon={Trophy}
-                label="Résultats"
-                value={String(totalBets)}
-              />
-            </div>
-
-            <FriendButton profileId={id} currentUserId={user.id} />
-          </div>
-        }
+        refillContent={null}
+        winRate={winRate}
+        totalBets={totalBets}
+        totalEarned={totalEarned}
+        xpTotal={xpTotal}
+        bestStreak={bestStreak}
+        trustScore={trustScore}
+        isModerateur={trustScore >= MODERATOR_THRESHOLD}
+        scoreAccuracy={scoreAccuracy}
+        totalMatchesPronoed={totalMatchesPronoed}
       />
     </main>
   );
