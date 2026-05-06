@@ -86,6 +86,7 @@ export default async function PronosPage() {
           id: c.id,
           name: c.name,
           badge_url: c.badge_url,
+          api_football_league_id: c.api_football_league_id ?? null,
         }))}
       />
     </main>

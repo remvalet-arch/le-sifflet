@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import Link from "next/link";
 import {
   Bell,
   Check,
@@ -49,6 +50,7 @@ export type CompetitionStub = {
   id: string;
   name: string;
   badge_url: string | null;
+  api_football_league_id: number | null;
 };
 
 type ExistingProno = {
@@ -1219,43 +1221,67 @@ export function PronosticsHubClient({
               const sectionTotal = groupMatches.length;
               const allDone = sectionDone === sectionTotal;
 
+              const roundShort = groupMatches.find((m) => m.round_short)?.round_short ?? null;
+              const lobbyHref =
+                comp?.api_football_league_id && roundShort
+                  ? `/lobby?league=${comp.api_football_league_id}&round=${encodeURIComponent(roundShort)}`
+                  : null;
+
               return (
                 <div
                   key={sectionKey}
                   className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/40"
                 >
                   {/* Accordion header */}
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(sectionKey)}
-                    className="flex w-full items-center gap-2.5 px-4 py-3 text-left transition active:bg-white/5"
-                  >
-                    {comp?.badge_url?.startsWith("http") ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={comp.badge_url}
-                        alt={comp.name}
-                        className="h-5 w-5 shrink-0 object-contain"
-                      />
+                  <div className="flex w-full items-center gap-2.5 px-4 py-3">
+                    {/* Logo + nom → lien vers classement lobby */}
+                    {lobbyHref ? (
+                      <Link
+                        href={lobbyHref}
+                        className="flex min-w-0 flex-1 items-center gap-2.5 transition active:opacity-70"
+                      >
+                        {comp?.badge_url?.startsWith("http") ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={comp.badge_url}
+                            alt={comp.name}
+                            className="h-5 w-5 shrink-0 object-contain"
+                          />
+                        ) : (
+                          <span className="shrink-0 text-sm">🏆</span>
+                        )}
+                        <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300 underline-offset-2 hover:underline">
+                          {comp?.name ?? "Autre"}
+                        </span>
+                      </Link>
                     ) : (
-                      <span className="shrink-0 text-sm">🏆</span>
+                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                        <span className="shrink-0 text-sm">🏆</span>
+                        <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300">
+                          {comp?.name ?? "Autre"}
+                        </span>
+                      </div>
                     )}
-                    <span className="flex-1 text-[12px] font-black uppercase tracking-wide text-zinc-300">
-                      {comp?.name ?? "Autre"}
-                    </span>
-                    <span
-                      className={`shrink-0 text-[11px] font-bold tabular-nums ${
-                        allDone ? "text-green-400" : "text-zinc-500"
-                      }`}
+                    {/* Compteur + chevron toggle */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(sectionKey)}
+                      className="flex shrink-0 items-center gap-1.5 py-1 pl-2 transition active:opacity-70"
                     >
-                      {sectionDone}/{sectionTotal}
-                    </span>
-                    {isOpen ? (
-                      <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
-                    )}
-                  </button>
+                      <span
+                        className={`text-[11px] font-bold tabular-nums ${
+                          allDone ? "text-green-400" : "text-zinc-500"
+                        }`}
+                      >
+                        {sectionDone}/{sectionTotal}
+                      </span>
+                      {isOpen ? (
+                        <ChevronDown className="h-4 w-4 text-zinc-500" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-zinc-500" />
+                      )}
+                    </button>
+                  </div>
 
                   {/* Accordion body */}
                   {isOpen && (
