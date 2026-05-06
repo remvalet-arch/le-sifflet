@@ -600,6 +600,110 @@ Agis en tant que Lead Backend et Game Designer.
 
 ---
 
+### 🔴 Sprint L : ROBUSTESSE — "Bétonner avant le lancement"
+
+> Issus de l'audit CTO V3. Ces lacunes peuvent faire crasher silencieusement l'app ou exposer des failles en production. Aucune fonctionnalité nouvelle ici — uniquement du béton.
+
+- [ ] **L1 : Error Boundary global — `/src/app/error.tsx`**
+  - _Problème :_ Sans error boundary, n'importe quelle exception JS non catchée produit une page blanche sans message. L'utilisateur ne sait pas quoi faire.
+  - _Action :_ Créer `src/app/error.tsx` (error boundary niveau root) ET `src/app/(app)/error.tsx` (niveau app protégé). Afficher un message immersif avec bouton "Réessayer" et lien de retour vers le lobby.
+  - _Contenu :_ `"use client"` + `export default function Error({ error, reset })` — design dark cohérent avec le reste de l'app (fond zinc-900, bouton vert).
+
+- [ ] **L2 : Rate Limiting — Paris VAR (`/api/bet`)**
+  - _Problème :_ Un bug client ou un utilisateur malveillant peut envoyer des centaines de requêtes `/api/bet` par minute, contournant la limite parimutuel.
+  - _Action :_ Dans `/api/bet/route.ts`, vérifier via un compteur Redis ou en base (`bets` avec `placed_at > now() - interval '1 min'`) que l'utilisateur n'a pas posé > 10 paris dans la dernière minute. Retourner `errorResponse("Doucement l'arbitre…", 429)` si dépassement.
+  - _Note :_ Si pas de Redis disponible, utiliser une vérification Supabase simple : `count(*) from bets where user_id = $uid and placed_at > now() - interval '60 seconds'`.
+
+- [ ] **L3 : Rate Limiting — Alertes VAR (`/api/alert`)**
+  - _Problème :_ Un utilisateur peut spammer les alertes VAR — même si le marché ne s'ouvre qu'au seuil de 2 signaux, le comptage en DB peut être abusé.
+  - _Action :_ Dans `/api/alert/route.ts`, vérifier que l'utilisateur n'a pas posté > 5 alertes dans la dernière minute. Retourner `{ok: true}` silencieusement (pas d'erreur exposée) pour ne pas donner d'information à l'attaquant.
+
+- [ ] **L4 : Indicateur de connexion Realtime dans LiveRoom**
+  - _Problème :_ Si la souscription Supabase Realtime est droppée (réseau instable, mobile en arrière-plan), l'utilisateur voit des données figées sans le savoir. Il peut miser sur une cote obsolète.
+  - _Action :_ Dans `LiveRoom.tsx`, écouter l'état du channel Supabase (`.on('system', ...)` ou via le statut de subscribe). Afficher un badge discret `"🔴 Reconnexion..."` dans le coin supérieur quand `CHANNEL_ERROR` ou `CLOSED`, qui disparaît sur `SUBSCRIBED`.
+
+- [ ] **L5 : Logger centralisé — remplacer `console.log` prod**
+  - _Problème :_ Plusieurs routes admin et cron loguent avec `console.log` brut — pas de niveaux, pas de contexte structuré, difficile à filtrer en prod.
+  - _Action 1 :_ Créer `src/lib/logger.ts` exportant `log.info(service, msg, data?)`, `log.warn(...)`, `log.error(...)`. Format : `[${service}] ${level} — ${msg}` + JSON des data si présent.
+  - _Action 2 :_ Remplacer tous les `console.log` dans `/api/cron/match-monitor/route.ts`, `/api/alert/route.ts`, et les services de sync par `log.info(...)` ou `log.warn(...)`.
+
+- [ ] **L6 : Fix ARIA dans VotingModal**
+  - _Problème :_ `titleId` et `descId` sont définis (lignes ~123-124) mais jamais assignés aux éléments HTML (`aria-labelledby`, `aria-describedby`). La modal n'est pas accessible aux lecteurs d'écran.
+  - _Action :_ Dans `VotingModal.tsx`, ajouter `aria-labelledby={titleId}` sur le `<div role="dialog">` et `aria-describedby={descId}` sur l'élément de description. Vérifier que le focus trap fonctionne correctement (touche ESC + clic overlay).
+
+---
+
+### 🟠 Sprint M : REFACTOR ARCHITECTURE — "Nettoyer pour scaler"
+
+> Composants trop gros, couplage lâche, magic numbers — ces dettes ralentissent tous les développements futurs. À traiter avant d'ajouter de nouvelles features.
+
+- [ ] **M1 : Extraire `ScorerAllocationEditor` de `PronosticsHubClient`**
+  - _Problème :_ `PronosticsHubClient.tsx` fait 1 360 lignes — la logique de sélection de buteurs (joueurs, allocations, bunker) représente ~300 lignes auto-contenues.
+  - _Action :_ Créer `src/components/pronos/ScorerAllocationEditor.tsx` qui reçoit `{ players, homeTeam, awayTeam, value, onChange }`. Extraire toute la logique de `PlayerPickerSheet` + état d'allocation depuis `PronosticsHubClient`.
+
+- [ ] **M2 : Extraire `MatchFilterBar` de `PronosticsHubClient`**
+  - _Problème :_ La barre de filtres (compétition, date slider) est mélangée dans le même composant que la logique de saisie des pronos.
+  - _Action :_ Créer `src/components/pronos/MatchFilterBar.tsx` avec les props `{ competitions, selectedComp, onCompChange, dates, selectedDate, onDateChange, pronoedDates }`. Le `DateSlider` existant peut être réutilisé.
+
+- [ ] **M3 : Remplacer `window.dispatchEvent("sifflet:...")` par un Context React**
+  - _Problème :_ `LiveRoom.tsx` envoie des événements custom au `BottomNav.tsx` via `window.dispatchEvent(new CustomEvent("sifflet:drawer-available", ...))`. Couplage invisible, non typé, impossible à tester.
+  - _Action 1 :_ Créer `src/contexts/LiveRoomContext.tsx` avec `drawerAvailable: boolean` et `setDrawerAvailable(v: boolean)`.
+  - _Action 2 :_ Fournir le Context dans le layout `/(app)/layout.tsx`.
+  - _Action 3 :_ Remplacer les `window.dispatchEvent` dans `LiveRoom` par `setDrawerAvailable(true)` et les `window.addEventListener` dans `BottomNav` par `useContext(LiveRoomContext)`.
+
+- [ ] **M4 : Extraire les constantes magic numbers**
+  - _Action :_ Créer `src/lib/constants/alert.ts` avec `ALERT_THRESHOLD`, `ALERT_WINDOW_SECONDS`, `COOLDOWN_MINUTES`, `MIN_TRUST_ALERT_SCORE`. Créer `src/lib/constants/economy.ts` avec `REFILL_THRESHOLD`, `DAILY_REFILL_AMOUNT`, `MS_PER_DAY`. Remplacer toutes les valeurs hardcodées (voir TECH_BIBLE § 5.4).
+
+- [ ] **M5 : Décomposer `SquadDetailClient` en sous-composants**
+  - _Problème :_ `SquadDetailClient.tsx` fait 855 lignes avec 4 responsabilités distinctes : classement, chat, championnat, standings compétition.
+  - _Action :_ Extraire les composants suivants (chacun dans `src/components/ligues/`) :
+    - `SquadLeaderboard.tsx` — classement hybride + filtres temporels
+    - `SquadChat.tsx` — messages + Realtime (peut déjà exister — vérifier)
+    - `SquadChampionship.tsx` — tableau W/D/L, journée en cours, calendrier
+  - `SquadDetailClient` ne fait plus que la navigation entre onglets.
+
+---
+
+### 🟡 Sprint N : PAGES LÉGALES & COMPLÉTUDE — "Ce qui ne devrait pas manquer"
+
+> Prérequis pour la soumission App Store + conformité RGPD.
+
+- [ ] **N1 : Page `/rules` — Règles du Jeu**
+  - _Action :_ Créer `src/app/(app)/rules/page.tsx` (Server Component statique). Expliquer le mécanisme VAR, les Sifflets, le classement. Le lien existe déjà dans `TopBar.tsx` — la page est juste manquante.
+
+- [ ] **N2 : Page `/laws` — Lois IFAB**
+  - _Action :_ Créer `src/app/(app)/laws/page.tsx`. Contenu : les 17 lois du football avec explications immersives. Le lien existe déjà dans `TopBar.tsx` avec badge "IFAB".
+
+- [ ] **N3 : Pages légales publiques**
+  - _Action :_ Créer `src/app/cgu/page.tsx` (CGU) et `src/app/mentions-legales/page.tsx`. Contenu minimal suffisant pour les stores (données collectées : email Google, tokens push, scores de jeu — aucune donnée financière).
+  - _Action 2 :_ Fixer les liens `href="#"` du footer de `src/app/page.tsx` vers ces vraies URLs.
+
+- [ ] **N4 : Privacy Policy hébergée (prérequis App Store)**
+  - _Action :_ La privacy policy doit être accessible via une URL publique sans connexion. Utiliser `src/app/privacy/page.tsx` ou héberger sur une page Notion publique. Inclure : quelles données sont collectées, pourquoi, durée de conservation, droits RGPD.
+
+---
+
+### 🟢 Sprint O : TESTS & CI — "Ne pas régresser"
+
+> L'app n'a actuellement aucun test automatisé. Avant le lancement public, au moins les flux critiques doivent être couverts.
+
+- [ ] **O1 : Tests E2E — Flux de connexion Google**
+  - _Fichier :_ `tests/e2e/auth.spec.ts`
+  - _Action :_ Utiliser Playwright avec mock Google OAuth (via `page.route()` pour intercepter `signInWithIdToken`). Tester : login → redirect /lobby → TopBar visible avec balance.
+
+- [ ] **O2 : Tests E2E — Flux de prono**
+  - _Fichier :_ `tests/e2e/pronos.spec.ts`
+  - _Action :_ Utilisateur connecté → page pronos → sélectionner un match upcoming → saisir score 1-0 → valider → vérifier que le prono apparaît dans l'historique profil.
+
+- [ ] **O3 : Tests unitaires — Fonctions de calcul**
+  - _Fichiers :_ `src/lib/__tests__/`
+  - _Action :_ Tester `buildMatchGroups()` (profil historique), `stoppageResult()` (match-monitor), `formatPronoValue()` (ProfileClient), `getXpProgress()` (ProfileHeader). Utiliser Vitest (déjà dans les dépendances ou à installer).
+
+- [ ] **O4 : CI GitHub Actions**
+  - _Action :_ Créer `.github/workflows/ci.yml` qui lance `npm run ai:check` sur chaque PR. Optionnel : lancer les tests E2E en headless sur push vers main.
+
+---
+
 ### 📱 Sprint Cap : Application Mobile Native (Capacitor)
 
 > Transformer la PWA en vraie app iOS + Android via Capacitor (chargement URL distante — zéro réécriture Next.js).

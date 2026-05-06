@@ -147,7 +147,16 @@ export default async function PublicProfilePage({
   const eventMap = new Map<string, MarketEventRow>();
   const matchMap = new Map<
     string,
-    Pick<MatchRow, "id" | "team_home" | "team_away">
+    Pick<
+      MatchRow,
+      | "id"
+      | "team_home"
+      | "team_away"
+      | "home_score"
+      | "away_score"
+      | "status"
+      | "start_time"
+    >
   >();
   const pronoMatchIds = [...new Set(pronos.map((p) => p.match_id))];
 
@@ -164,14 +173,18 @@ export default async function PublicProfilePage({
     if (allMatchIds.length > 0) {
       const { data: matches } = await supabase
         .from("matches")
-        .select("id, team_home, team_away")
+        .select(
+          "id, team_home, team_away, home_score, away_score, status, start_time",
+        )
         .in("id", allMatchIds);
       (matches ?? []).forEach((m) => matchMap.set(m.id, m));
     }
   } else if (pronoMatchIds.length > 0) {
     const { data: matches } = await supabase
       .from("matches")
-      .select("id, team_home, team_away")
+      .select(
+        "id, team_home, team_away, home_score, away_score, status, start_time",
+      )
       .in("id", pronoMatchIds);
     (matches ?? []).forEach((m) => matchMap.set(m.id, m));
   }
@@ -182,6 +195,7 @@ export default async function PublicProfilePage({
     const isPending = b.status === "pending";
     return {
       id: b.id,
+      matchId: event?.match_id ?? "",
       status: b.status,
       chosen_option: isPending ? "🔒" : b.chosen_option,
       amount_staked: b.amount_staked,
@@ -190,6 +204,10 @@ export default async function PublicProfilePage({
       eventType: event?.type,
       teamHome: match?.team_home,
       teamAway: match?.team_away,
+      homeScore: match?.home_score ?? undefined,
+      awayScore: match?.away_score ?? undefined,
+      matchStatus: match?.status ?? undefined,
+      startTime: match?.start_time ?? undefined,
     };
   });
 
@@ -198,6 +216,7 @@ export default async function PublicProfilePage({
     const isPending = p.status === "pending";
     return {
       id: p.id,
+      matchId: p.match_id,
       status: p.status,
       prono_type: p.prono_type,
       prono_value: isPending ? "🔒" : p.prono_value,
@@ -207,6 +226,10 @@ export default async function PublicProfilePage({
       placed_at: p.placed_at,
       teamHome: match?.team_home,
       teamAway: match?.team_away,
+      homeScore: match?.home_score ?? undefined,
+      awayScore: match?.away_score ?? undefined,
+      matchStatus: match?.status ?? undefined,
+      startTime: match?.start_time ?? undefined,
     };
   });
 
@@ -271,7 +294,9 @@ export default async function PublicProfilePage({
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <div
         className="relative mb-4 overflow-hidden rounded-2xl border border-white/8"
-        style={{ background: "linear-gradient(135deg, #064e3b 0%, #18181b 70%)" }}
+        style={{
+          background: "linear-gradient(135deg, #064e3b 0%, #18181b 70%)",
+        }}
       >
         <div
           className="pointer-events-none absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
@@ -292,7 +317,9 @@ export default async function PublicProfilePage({
               )}
             </div>
             <div className="min-w-0 flex-1 pt-1">
-              <p className="text-xl font-black text-white">{profile.username}</p>
+              <p className="text-xl font-black text-white">
+                {profile.username}
+              </p>
               <span
                 className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
               >
@@ -344,7 +371,9 @@ export default async function PublicProfilePage({
             <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
               <div
                 className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-                style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
+                style={{
+                  width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
+                }}
               />
             </div>
           </div>
@@ -358,11 +387,7 @@ export default async function PublicProfilePage({
           label="Gagnés"
           value={totalEarned.toLocaleString("fr-FR")}
         />
-        <StatCard
-          Icon={Trophy}
-          label="Résultats"
-          value={String(totalBets)}
-        />
+        <StatCard Icon={Trophy} label="Résultats" value={String(totalBets)} />
       </div>
 
       <div className="mb-4">

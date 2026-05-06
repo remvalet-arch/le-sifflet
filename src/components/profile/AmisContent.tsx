@@ -143,8 +143,12 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
       >
         <Trophy className="h-5 w-5 shrink-0 text-emerald-400" />
         <div className="flex-1">
-          <p className="text-sm font-black text-white">Retrouve tes amis dans les ligues</p>
-          <p className="text-[11px] text-zinc-500">Rejoins une ligue pour défier tes potes 🏆</p>
+          <p className="text-sm font-black text-white">
+            Retrouve tes amis dans les ligues
+          </p>
+          <p className="text-[11px] text-zinc-500">
+            Rejoins une ligue pour défier tes potes 🏆
+          </p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
       </Link>
@@ -204,8 +208,12 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/50 px-6 py-10 text-center">
             <Users className="h-10 w-10 text-zinc-600" />
             <div>
-              <p className="text-sm font-bold text-zinc-400">Aucun ami pour l&apos;instant</p>
-              <p className="mt-1 text-xs text-zinc-600">Explore les ligues pour en trouver !</p>
+              <p className="text-sm font-bold text-zinc-400">
+                Aucun ami pour l&apos;instant
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">
+                Explore les ligues pour en trouver !
+              </p>
             </div>
             <Link
               href="/ligues"
@@ -226,7 +234,10 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
                   href={`/profile/${friend.id}`}
                   className="flex items-center gap-3 rounded-2xl border border-white/6 bg-zinc-900 px-4 py-3 transition hover:bg-zinc-800"
                 >
-                  <AvatarCircle avatarUrl={friend.avatar_url} username={friend.username} />
+                  <AvatarCircle
+                    avatarUrl={friend.avatar_url}
+                    username={friend.username}
+                  />
                   <span className="flex-1 font-black text-white">
                     {friend.username}
                   </span>

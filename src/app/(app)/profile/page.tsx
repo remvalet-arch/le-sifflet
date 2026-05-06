@@ -142,7 +142,16 @@ export default async function ProfilePage() {
   const eventMap = new Map<string, MarketEventRow>();
   const matchMap = new Map<
     string,
-    Pick<MatchRow, "id" | "team_home" | "team_away">
+    Pick<
+      MatchRow,
+      | "id"
+      | "team_home"
+      | "team_away"
+      | "home_score"
+      | "away_score"
+      | "status"
+      | "start_time"
+    >
   >();
 
   const pronoMatchIds = [...new Set(pronos.map((p) => p.match_id))];
@@ -161,14 +170,18 @@ export default async function ProfilePage() {
     if (allMatchIds.length > 0) {
       const { data: matches } = await supabase
         .from("matches")
-        .select("id, team_home, team_away")
+        .select(
+          "id, team_home, team_away, home_score, away_score, status, start_time",
+        )
         .in("id", allMatchIds);
       (matches ?? []).forEach((m) => matchMap.set(m.id, m));
     }
   } else if (pronoMatchIds.length > 0) {
     const { data: matches } = await supabase
       .from("matches")
-      .select("id, team_home, team_away")
+      .select(
+        "id, team_home, team_away, home_score, away_score, status, start_time",
+      )
       .in("id", pronoMatchIds);
     (matches ?? []).forEach((m) => matchMap.set(m.id, m));
   }
@@ -178,6 +191,7 @@ export default async function ProfilePage() {
     const match = event ? matchMap.get(event.match_id) : undefined;
     return {
       id: b.id,
+      matchId: event?.match_id ?? "",
       status: b.status,
       chosen_option: b.chosen_option,
       amount_staked: b.amount_staked,
@@ -186,6 +200,10 @@ export default async function ProfilePage() {
       eventType: event?.type,
       teamHome: match?.team_home,
       teamAway: match?.team_away,
+      homeScore: match?.home_score ?? undefined,
+      awayScore: match?.away_score ?? undefined,
+      matchStatus: match?.status ?? undefined,
+      startTime: match?.start_time ?? undefined,
     };
   });
 
@@ -193,6 +211,7 @@ export default async function ProfilePage() {
     const match = matchMap.get(p.match_id);
     return {
       id: p.id,
+      matchId: p.match_id,
       status: p.status,
       prono_type: p.prono_type,
       prono_value: p.prono_value,
@@ -202,6 +221,10 @@ export default async function ProfilePage() {
       placed_at: p.placed_at,
       teamHome: match?.team_home,
       teamAway: match?.team_away,
+      homeScore: match?.home_score ?? undefined,
+      awayScore: match?.away_score ?? undefined,
+      matchStatus: match?.status ?? undefined,
+      startTime: match?.start_time ?? undefined,
     };
   });
 
@@ -296,7 +319,10 @@ export default async function ProfilePage() {
         amisContent={<AmisContent currentUserId={user.id} />}
         refillContent={
           balance < REFILL_THRESHOLD ? (
-            <RefillButton isEligible={isRefillEligible} nextRefillAt={nextRefillAt} />
+            <RefillButton
+              isEligible={isRefillEligible}
+              nextRefillAt={nextRefillAt}
+            />
           ) : null
         }
         winRate={winRate}

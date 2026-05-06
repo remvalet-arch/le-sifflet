@@ -18,10 +18,24 @@ function getRankRing(rankLabel: string) {
   return "ring-2 ring-white/20";
 }
 
-function getXpProgress(xp: number): { level: string; pct: number; next: number } {
+function getXpProgress(xp: number): {
+  level: string;
+  pct: number;
+  next: number;
+} {
   if (xp >= 5000) return { level: "Boss", pct: 100, next: 5000 };
-  if (xp >= 2000) return { level: "Argent", pct: Math.round(((xp - 2000) / 3000) * 100), next: 5000 };
-  if (xp >= 500) return { level: "Bronze", pct: Math.round(((xp - 500) / 1500) * 100), next: 2000 };
+  if (xp >= 2000)
+    return {
+      level: "Argent",
+      pct: Math.round(((xp - 2000) / 3000) * 100),
+      next: 5000,
+    };
+  if (xp >= 500)
+    return {
+      level: "Bronze",
+      pct: Math.round(((xp - 500) / 1500) * 100),
+      next: 2000,
+    };
   return { level: "District", pct: Math.round((xp / 500) * 100), next: 500 };
 }
 
@@ -90,7 +104,9 @@ export function ProfileHeader({
     <>
       <div
         className="relative overflow-hidden rounded-2xl border border-white/8"
-        style={{ background: "linear-gradient(135deg, #064e3b 0%, #18181b 70%)" }}
+        style={{
+          background: "linear-gradient(135deg, #064e3b 0%, #18181b 70%)",
+        }}
       >
         <div
           className="pointer-events-none absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
@@ -128,7 +144,9 @@ export function ProfileHeader({
             </div>
 
             <div className="min-w-0 flex-1 pt-1">
-              <p className="text-xl font-black text-white leading-tight">{username}</p>
+              <p className="text-xl font-black text-white leading-tight">
+                {username}
+              </p>
               <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/8 px-2.5 py-0.5 text-[10px] font-black text-white/80">
                 {rank.emoji} {rank.label}
               </span>
@@ -158,7 +176,8 @@ export function ProfileHeader({
                 XP · {xpInfo.level}
               </span>
               <span className="text-[9px] font-black tabular-nums text-white/40">
-                {xpTotal.toLocaleString("fr-FR")} / {xpInfo.next.toLocaleString("fr-FR")}
+                {xpTotal.toLocaleString("fr-FR")} /{" "}
+                {xpInfo.next.toLocaleString("fr-FR")}
               </span>
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
@@ -190,7 +209,8 @@ export function ProfileHeader({
                     : "border border-white/10 bg-zinc-800 text-zinc-500 cursor-default"
                 }`}
               >
-                🔥 {streak}j{canClaimStreak && ` +${50 * Math.min(streak, 7)}pts`}
+                🔥 {streak}j
+                {canClaimStreak && ` +${50 * Math.min(streak, 7)}pts`}
               </button>
             )}
           </div>

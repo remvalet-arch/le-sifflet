@@ -129,12 +129,13 @@ export function TopBar({
 
       {/* Side sheet */}
       <aside
-        className={`fixed top-0 z-[60] flex h-full w-72 flex-col border-l border-white/8 bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className="fixed top-0 z-[60] flex h-full w-72 flex-col border-l border-white/8 bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out"
         style={{
           paddingTop: "env(safe-area-inset-top, 0px)",
           right: "max(0px, calc(50vw - 14rem))",
+          transform: open
+            ? "translateX(0)"
+            : "translateX(calc(100% + max(0px, calc(50vw - 14rem))))",
         }}
       >
         {/* Profile header */}

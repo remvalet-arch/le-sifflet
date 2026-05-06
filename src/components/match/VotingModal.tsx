@@ -628,13 +628,18 @@ function StoppageButtons({
             className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl border-2 py-3 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${colorCls}`}
           >
             {isLoading ? (
-              <LoaderCircle className="h-5 w-5 animate-spin text-white" aria-hidden />
+              <LoaderCircle
+                className="h-5 w-5 animate-spin text-white"
+                aria-hidden
+              />
             ) : (
               <>
                 <span className="text-xl font-black tabular-nums text-white">
                   {opt}
                 </span>
-                <span className="text-[9px] font-semibold text-white/50">min</span>
+                <span className="text-[9px] font-semibold text-white/50">
+                  min
+                </span>
                 <span
                   className={`text-xs font-black tabular-nums transition-colors ${oddsFlash ? "text-yellow-400" : ""}`}
                   aria-live="polite"

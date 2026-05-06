@@ -323,7 +323,9 @@ export async function GET(request: Request) {
         const opened = await openStoppageMarket(admin, m.id, "stoppage_ht");
         if (opened) summary.stoppageMarketsOpened += 1;
       } catch (err) {
-        summary.errors.push(`stoppage_ht open ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+        summary.errors.push(
+          `stoppage_ht open ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }
 
@@ -333,7 +335,9 @@ export async function GET(request: Request) {
         const opened = await openStoppageMarket(admin, m.id, "stoppage_ft");
         if (opened) summary.stoppageMarketsOpened += 1;
       } catch (err) {
-        summary.errors.push(`stoppage_ft open ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+        summary.errors.push(
+          `stoppage_ft open ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }
 
@@ -342,11 +346,18 @@ export async function GET(request: Request) {
       try {
         const result = stoppageResult(extra, elapsed, 45);
         if (result) {
-          const resolved = await resolveStoppageMarket(admin, m.id, "stoppage_ht", result);
+          const resolved = await resolveStoppageMarket(
+            admin,
+            m.id,
+            "stoppage_ht",
+            result,
+          );
           if (resolved) summary.stoppageMarketsResolved += 1;
         }
       } catch (err) {
-        summary.errors.push(`stoppage_ht resolve ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+        summary.errors.push(
+          `stoppage_ht resolve ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }
 
@@ -355,11 +366,18 @@ export async function GET(request: Request) {
       try {
         const result = stoppageResult(extra, elapsed, 90);
         if (result) {
-          const resolved = await resolveStoppageMarket(admin, m.id, "stoppage_ft", result);
+          const resolved = await resolveStoppageMarket(
+            admin,
+            m.id,
+            "stoppage_ft",
+            result,
+          );
           if (resolved) summary.stoppageMarketsResolved += 1;
         }
       } catch (err) {
-        summary.errors.push(`stoppage_ft resolve ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+        summary.errors.push(
+          `stoppage_ft resolve ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }
   }

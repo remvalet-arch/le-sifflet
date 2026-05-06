@@ -7,6 +7,7 @@ import { Lock, Shield, Target, TrendingUp, Trophy, Zap } from "lucide-react";
 
 export type ShortBetEntry = {
   id: string;
+  matchId: string;
   status: BetStatus;
   chosen_option: string;
   amount_staked: number;
@@ -15,10 +16,15 @@ export type ShortBetEntry = {
   eventType?: MarketEventType;
   teamHome?: string;
   teamAway?: string;
+  homeScore?: number;
+  awayScore?: number;
+  matchStatus?: string;
+  startTime?: string;
 };
 
 export type PronoEntry = {
   id: string;
+  matchId: string;
   status: "pending" | "won" | "lost";
   prono_type: "exact_score" | "scorer" | "scorer_allocation";
   prono_value: string;
@@ -28,6 +34,10 @@ export type PronoEntry = {
   placed_at: string;
   teamHome?: string;
   teamAway?: string;
+  homeScore?: number;
+  awayScore?: number;
+  matchStatus?: string;
+  startTime?: string;
 };
 
 type Props = {
@@ -61,21 +71,10 @@ const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
 };
 
 function statusCls(status: string) {
-  if (status === "won") return "border-green-500/30 bg-green-500/20 text-green-400";
+  if (status === "won")
+    return "border-green-500/30 bg-green-500/20 text-green-400";
   if (status === "lost") return "border-red-500/30 bg-red-500/20 text-red-400";
   return "border-amber-500/25 bg-amber-500/15 text-amber-400";
-}
-
-function statusLabel(status: string, kind: "short" | "prono") {
-  if (status === "won") return "Gagné";
-  if (status === "lost") return "Perdu";
-  return kind === "short" ? "VAR en cours" : "En attente";
-}
-
-function cardBorderCls(status: string) {
-  if (status === "won") return "border-l-4 border-l-green-500 border border-green-500/15 bg-green-500/5";
-  if (status === "lost") return "border-l-4 border-l-red-500 border border-red-500/10 bg-red-500/5";
-  return "border-l-4 border-l-amber-500/40 border border-white/6 bg-zinc-900";
 }
 
 function fmtDate(iso: string) {
@@ -117,12 +116,36 @@ function formatPronoValue(
 
 function getTrustGrade(score: number) {
   if (score >= 200)
-    return { label: "Arbitre Élite", icon: "🏅", color: "text-yellow-400", bar: "bg-yellow-400", glow: "shadow-[0_0_12px_rgba(234,179,8,0.4)]" };
+    return {
+      label: "Arbitre Élite",
+      icon: "🏅",
+      color: "text-yellow-400",
+      bar: "bg-yellow-400",
+      glow: "shadow-[0_0_12px_rgba(234,179,8,0.4)]",
+    };
   if (score >= 100)
-    return { label: "Arbitre Officiel", icon: "✅", color: "text-green-400", bar: "bg-green-500", glow: "shadow-[0_0_12px_rgba(34,197,94,0.4)]" };
+    return {
+      label: "Arbitre Officiel",
+      icon: "✅",
+      color: "text-green-400",
+      bar: "bg-green-500",
+      glow: "shadow-[0_0_12px_rgba(34,197,94,0.4)]",
+    };
   if (score >= 50)
-    return { label: "Lanceur d'Alerte", icon: "⚡", color: "text-blue-400", bar: "bg-blue-400", glow: "shadow-[0_0_12px_rgba(59,130,246,0.4)]" };
-  return { label: "Carton Jaune", icon: "⚠️", color: "text-orange-400", bar: "bg-orange-400", glow: "shadow-[0_0_12px_rgba(249,115,22,0.4)]" };
+    return {
+      label: "Lanceur d'Alerte",
+      icon: "⚡",
+      color: "text-blue-400",
+      bar: "bg-blue-400",
+      glow: "shadow-[0_0_12px_rgba(59,130,246,0.4)]",
+    };
+  return {
+    label: "Carton Jaune",
+    icon: "⚠️",
+    color: "text-orange-400",
+    bar: "bg-orange-400",
+    glow: "shadow-[0_0_12px_rgba(249,115,22,0.4)]",
+  };
 }
 
 const TABS = [
@@ -157,13 +180,18 @@ export function ProfileClient({
   const grade = getTrustGrade(trustScore);
 
   const tabBadge = (value: TabValue): number | null => {
-    if (value === "historique") return varCount + pronoCount > 0 ? varCount + pronoCount : null;
+    if (value === "historique")
+      return varCount + pronoCount > 0 ? varCount + pronoCount : null;
     if (value === "badges") return trophyCount > 0 ? trophyCount : null;
     return null;
   };
 
   const winRateColor =
-    winRate >= 60 ? "text-green-400" : winRate >= 40 ? "text-amber-400" : "text-red-400";
+    winRate >= 60
+      ? "text-green-400"
+      : winRate >= 40
+        ? "text-amber-400"
+        : "text-red-400";
   const winRateGrad =
     winRate >= 60
       ? "from-green-500/15 to-green-500/5 border-green-500/20"
@@ -193,7 +221,9 @@ export function ProfileClient({
               {badge !== null && (
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[8px] font-black ${
-                    isActive ? "bg-zinc-900 text-white" : "bg-zinc-700 text-zinc-400"
+                    isActive
+                      ? "bg-zinc-900 text-white"
+                      : "bg-zinc-700 text-zinc-400"
                   }`}
                 >
                   {badge}
@@ -207,7 +237,9 @@ export function ProfileClient({
       {activeTab === "profil" && (
         <div className="flex flex-col gap-3">
           <div className="flex gap-3">
-            <div className={`flex-1 rounded-2xl border bg-gradient-to-br p-4 ${winRateGrad}`}>
+            <div
+              className={`flex-1 rounded-2xl border bg-gradient-to-br p-4 ${winRateGrad}`}
+            >
               <p className={`text-4xl font-black tabular-nums ${winRateColor}`}>
                 {winRate}%
               </p>
@@ -230,17 +262,25 @@ export function ProfileClient({
               <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
                 <Trophy className="h-4 w-4 text-zinc-500" />
                 <p className="text-base font-black text-white">{totalBets}</p>
-                <p className="text-center text-[10px] font-semibold text-zinc-500">Paris</p>
+                <p className="text-center text-[10px] font-semibold text-zinc-500">
+                  Paris
+                </p>
               </div>
               <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
                 <Zap className="h-4 w-4 text-zinc-500" />
                 <p className="text-base font-black text-white">{bestStreak}</p>
-                <p className="text-center text-[10px] font-semibold text-zinc-500">Série max</p>
+                <p className="text-center text-[10px] font-semibold text-zinc-500">
+                  Série max
+                </p>
               </div>
               <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
                 <Target className="h-4 w-4 text-zinc-500" />
-                <p className="text-base font-black text-white">{totalMatchesPronoed}</p>
-                <p className="text-center text-[10px] font-semibold text-zinc-500">Matchs</p>
+                <p className="text-base font-black text-white">
+                  {totalMatchesPronoed}
+                </p>
+                <p className="text-center text-[10px] font-semibold text-zinc-500">
+                  Matchs
+                </p>
               </div>
             </div>
           </div>
@@ -255,13 +295,21 @@ export function ProfileClient({
               <div className="flex divide-x divide-white/5">
                 <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
                   <Target className="h-4 w-4 text-zinc-500" />
-                  <p className="text-base font-black text-white">{scoreAccuracy}%</p>
-                  <p className="text-center text-[10px] font-semibold text-zinc-500">Scores exacts</p>
+                  <p className="text-base font-black text-white">
+                    {scoreAccuracy}%
+                  </p>
+                  <p className="text-center text-[10px] font-semibold text-zinc-500">
+                    Scores exacts
+                  </p>
                 </div>
                 <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
                   <TrendingUp className="h-4 w-4 text-zinc-500" />
-                  <p className="text-base font-black text-white">{bestStreak}</p>
-                  <p className="text-center text-[10px] font-semibold text-zinc-500">Meilleure série</p>
+                  <p className="text-base font-black text-white">
+                    {bestStreak}
+                  </p>
+                  <p className="text-center text-[10px] font-semibold text-zinc-500">
+                    Meilleure série
+                  </p>
                 </div>
               </div>
             </div>
@@ -272,14 +320,18 @@ export function ProfileClient({
               <span className="text-[10px] font-black uppercase tracking-wide text-zinc-500">
                 Score de confiance
               </span>
-              <span className={`text-[10px] font-black ${grade.color} ${grade.glow} rounded-full px-2 py-0.5`}>
+              <span
+                className={`text-[10px] font-black ${grade.color} ${grade.glow} rounded-full px-2 py-0.5`}
+              >
                 {grade.icon} {grade.label} · {trustScore}
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
               <div
                 className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-                style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
+                style={{
+                  width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
+                }}
               />
             </div>
           </div>
@@ -298,151 +350,7 @@ export function ProfileClient({
       )}
 
       {activeTab === "historique" && (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
-            <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-            <p className="text-[11px] text-zinc-500">
-              Les pronostics des matchs à venir sont masqués pour éviter la triche.
-            </p>
-          </div>
-
-          {pronos.length === 0 && shortBets.length === 0 ? (
-            <EmptyState emoji="📊" text="Aucun pari enregistré pour l'instant." />
-          ) : (
-            <>
-              {pronos.length > 0 && (
-                <div>
-                  <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                    Pronostics
-                  </h3>
-                  <div className="flex flex-col gap-2">
-                    {pronos.map((p) => {
-                      const line = formatPronoValue(p.prono_type, p.prono_value);
-                      const chipCls = statusCls(p.status);
-                      const lbl = statusLabel(p.status, "prono");
-                      return (
-                        <div
-                          key={p.id}
-                          className={`rounded-xl px-4 py-3 ${cardBorderCls(p.status)}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              {p.teamHome && (
-                                <p className="truncate text-sm font-bold text-white">
-                                  {p.teamHome} — {p.teamAway}
-                                </p>
-                              )}
-                              {p.prono_type === "exact_score" && p.prono_value !== "🔒" ? (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-base font-black text-amber-400 shadow-inner">
-                                    {p.prono_value.split("-")[0]}
-                                  </div>
-                                  <span className="font-bold text-zinc-600">-</span>
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-base font-black text-amber-400 shadow-inner">
-                                    {p.prono_value.split("-")[1]}
-                                  </div>
-                                </div>
-                              ) : (
-                                <p className="mt-0.5 text-xs text-zinc-400">{line}</p>
-                              )}
-                              <p className="mt-1 text-[10px] text-zinc-600">{fmtDate(p.placed_at)}</p>
-                            </div>
-                            <div className="flex flex-col items-end gap-1 shrink-0">
-                              <span
-                                className={`rounded-full border px-2.5 py-0.5 text-[10px] font-black ${chipCls} ${p.status === "pending" ? "animate-pulse" : ""}`}
-                              >
-                                {p.status === "pending" && <span className="mr-1">·</span>}
-                                {lbl}
-                              </span>
-                              {p.status === "won" && (
-                                <span className="text-sm font-black text-green-400">
-                                  +{(p.points_earned > 0 ? p.points_earned : p.reward_amount).toLocaleString("fr-FR")} pts
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {p.status === "won" && p.contre_pied_bonus === 100 && (
-                            <div className="mt-1.5 flex items-center gap-1 text-[10px] font-black text-amber-400">
-                              💎 Le Braquage
-                              <span className="font-normal text-zinc-500">+100 pts contre-pied</span>
-                            </div>
-                          )}
-                          <div className="mt-1 text-[10px] text-zinc-600">
-                            Gratuit · gain potentiel{" "}
-                            <strong className="text-zinc-300">
-                              {p.reward_amount.toLocaleString("fr-FR")} Pts
-                            </strong>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {shortBets.length > 0 && (
-                <div>
-                  <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                    Paris VAR Live
-                  </h3>
-                  <div className="flex flex-col gap-2">
-                    {shortBets.map((bet) => {
-                      const eCfg = bet.eventType
-                        ? (SHORT_LABELS[bet.eventType] ?? { label: bet.eventType, emoji: "⚡" })
-                        : { label: "—", emoji: "⚡" };
-                      const chipCls = statusCls(bet.status);
-                      const lbl = statusLabel(bet.status, "short");
-                      const reward = Math.round(Number(bet.potential_reward));
-                      return (
-                        <div
-                          key={bet.id}
-                          className={`rounded-xl px-4 py-3 ${cardBorderCls(bet.status)}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              {bet.teamHome && (
-                                <p className="truncate text-sm font-bold text-white">
-                                  {bet.teamHome} — {bet.teamAway}
-                                </p>
-                              )}
-                              <p className="mt-0.5 text-xs text-zinc-400">
-                                {eCfg.emoji} {eCfg.label}
-                              </p>
-                              <p className="mt-1 text-[10px] text-zinc-600">{fmtDate(bet.placed_at)}</p>
-                            </div>
-                            <span
-                              className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black ${chipCls} ${bet.status === "pending" ? "animate-pulse" : ""}`}
-                            >
-                              {bet.status === "pending" && <span className="mr-1">·</span>}
-                              {lbl}
-                              {bet.status === "won" && ` +${reward.toLocaleString("fr-FR")}`}
-                            </span>
-                          </div>
-                          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
-                            <span>
-                              Choix{" "}
-                              <strong className="font-black uppercase text-white">
-                                {bet.chosen_option === "🔒" ? "🔒 Masqué" : bet.chosen_option}
-                              </strong>
-                            </span>
-                            <span>·</span>
-                            <span>
-                              Mise <strong className="text-zinc-300">{bet.amount_staked} pts</strong>
-                            </span>
-                            <span>·</span>
-                            <span>
-                              Pot. <strong className="text-zinc-300">{reward} pts</strong>
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <HistoriqueTab pronos={pronos} shortBets={shortBets} />
       )}
 
       {activeTab === "badges" && (
@@ -458,14 +366,300 @@ export function ProfileClient({
           {allBadges.length === 0 ? (
             <EmptyState emoji="🏅" text="Les trophées arrivent bientôt…" />
           ) : (
-            <TrophyWall badges={allBadges} unlockedBadgeIds={unlockedBadgeIds} />
+            <TrophyWall
+              badges={allBadges}
+              unlockedBadgeIds={unlockedBadgeIds}
+            />
           )}
         </div>
       )}
 
-      {activeTab === "amis" && (
-        <div>{amisContent}</div>
-      )}
+      {activeTab === "amis" && <div>{amisContent}</div>}
+    </div>
+  );
+}
+
+type MatchGroup = {
+  matchId: string;
+  teamHome: string;
+  teamAway: string;
+  homeScore?: number;
+  awayScore?: number;
+  matchStatus?: string;
+  startTime?: string;
+  lastBetAt: string;
+  pronos: PronoEntry[];
+  varBets: ShortBetEntry[];
+};
+
+function buildMatchGroups(
+  pronos: PronoEntry[],
+  shortBets: ShortBetEntry[],
+): MatchGroup[] {
+  const map = new Map<string, MatchGroup>();
+
+  function getOrCreate(
+    id: string,
+    teamHome?: string,
+    teamAway?: string,
+    homeScore?: number,
+    awayScore?: number,
+    matchStatus?: string,
+    startTime?: string,
+  ): MatchGroup {
+    if (!map.has(id)) {
+      map.set(id, {
+        matchId: id,
+        teamHome: teamHome ?? "?",
+        teamAway: teamAway ?? "?",
+        homeScore,
+        awayScore,
+        matchStatus,
+        startTime,
+        lastBetAt: "",
+        pronos: [],
+        varBets: [],
+      });
+    }
+    return map.get(id)!;
+  }
+
+  for (const p of pronos) {
+    const g = getOrCreate(
+      p.matchId || "unknown",
+      p.teamHome,
+      p.teamAway,
+      p.homeScore,
+      p.awayScore,
+      p.matchStatus,
+      p.startTime,
+    );
+    g.pronos.push(p);
+    if (!g.lastBetAt || p.placed_at > g.lastBetAt) g.lastBetAt = p.placed_at;
+  }
+
+  for (const b of shortBets) {
+    const id = b.matchId || "unknown";
+    const g = getOrCreate(
+      id,
+      b.teamHome,
+      b.teamAway,
+      b.homeScore,
+      b.awayScore,
+      b.matchStatus,
+      b.startTime,
+    );
+    g.varBets.push(b);
+    if (!g.lastBetAt || b.placed_at > g.lastBetAt) g.lastBetAt = b.placed_at;
+  }
+
+  return [...map.values()].sort((a, b) =>
+    b.lastBetAt.localeCompare(a.lastBetAt),
+  );
+}
+
+function matchStatusBadge(status?: string, startTime?: string) {
+  if (status === "live")
+    return (
+      <span className="rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white animate-pulse">
+        LIVE
+      </span>
+    );
+  if (status === "finished")
+    return (
+      <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-zinc-400">
+        FT
+      </span>
+    );
+  if (startTime) {
+    const d = new Date(startTime);
+    return (
+      <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[9px] font-semibold text-zinc-500">
+        {d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+      </span>
+    );
+  }
+  return null;
+}
+
+function HistoriqueTab({
+  pronos,
+  shortBets,
+}: {
+  pronos: PronoEntry[];
+  shortBets: ShortBetEntry[];
+}) {
+  const groups = buildMatchGroups(pronos, shortBets);
+
+  if (groups.length === 0) {
+    return (
+      <EmptyState emoji="📊" text="Aucun pari enregistré pour l'instant." />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
+        <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+        <p className="text-[11px] text-zinc-500">
+          Les pronostics des matchs à venir sont masqués.
+        </p>
+      </div>
+
+      {groups.map((g) => {
+        const allBets = [...g.pronos, ...g.varBets];
+        const wonCount = allBets.filter((b) => b.status === "won").length;
+        const lostCount = allBets.filter((b) => b.status === "lost").length;
+        const pendingCount = allBets.filter(
+          (b) => b.status === "pending",
+        ).length;
+
+        return (
+          <div
+            key={g.matchId}
+            className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900"
+          >
+            {/* Match header */}
+            <div className="flex items-center justify-between gap-2 border-b border-white/6 bg-zinc-800/60 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-white">
+                  {g.teamHome} <span className="text-zinc-500">vs</span>{" "}
+                  {g.teamAway}
+                </p>
+                {g.homeScore !== undefined && g.awayScore !== undefined && (
+                  <p className="mt-0.5 text-[11px] font-black tabular-nums text-zinc-400">
+                    {g.homeScore} – {g.awayScore}
+                  </p>
+                )}
+              </div>
+              <div className="shrink-0">
+                {matchStatusBadge(g.matchStatus, g.startTime)}
+              </div>
+            </div>
+
+            {/* Summary pills */}
+            <div className="flex gap-2 px-4 py-2.5 border-b border-white/5">
+              {wonCount > 0 && (
+                <span className="rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-0.5 text-[10px] font-black text-green-400">
+                  ✓ {wonCount} gagné{wonCount > 1 ? "s" : ""}
+                </span>
+              )}
+              {lostCount > 0 && (
+                <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[10px] font-black text-red-400">
+                  ✗ {lostCount} perdu{lostCount > 1 ? "s" : ""}
+                </span>
+              )}
+              {pendingCount > 0 && (
+                <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-black text-amber-400 animate-pulse">
+                  ⏳ {pendingCount} en attente
+                </span>
+              )}
+            </div>
+
+            {/* Individual bets */}
+            <div className="divide-y divide-white/5">
+              {g.pronos.map((p) => (
+                <PronoRow key={p.id} prono={p} />
+              ))}
+              {g.varBets.map((b) => (
+                <VarBetRow key={b.id} bet={b} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PronoRow({ prono: p }: { prono: PronoEntry }) {
+  const chipCls = statusCls(p.status);
+  const isScore = p.prono_type === "exact_score" && p.prono_value !== "🔒";
+  const line = formatPronoValue(p.prono_type, p.prono_value);
+  const earned = p.points_earned > 0 ? p.points_earned : p.reward_amount;
+
+  return (
+    <div
+      className={`flex items-center gap-3 px-4 py-3 ${p.status === "won" ? "bg-green-500/5" : p.status === "lost" ? "bg-red-500/5" : ""}`}
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-sm">
+        🎯
+      </div>
+      <div className="min-w-0 flex-1">
+        {isScore ? (
+          <p className="text-xs font-black text-white">
+            Score exact · {p.prono_value}
+          </p>
+        ) : (
+          <p className="truncate text-xs font-semibold text-zinc-300">{line}</p>
+        )}
+        <p className="mt-0.5 text-[10px] text-zinc-600">
+          {fmtDate(p.placed_at)}
+        </p>
+        {p.status === "won" && p.contre_pied_bonus === 100 && (
+          <p className="mt-0.5 text-[9px] font-black text-amber-400">
+            💎 Contre-pied +100 pts
+          </p>
+        )}
+      </div>
+      <div className="shrink-0 text-right">
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${chipCls} ${p.status === "pending" ? "animate-pulse" : ""}`}
+        >
+          {p.status === "pending" ? "⏳" : p.status === "won" ? "✓" : "✗"}
+        </span>
+        {p.status === "won" && (
+          <p className="mt-1 text-[11px] font-black text-green-400">
+            +{earned.toLocaleString("fr-FR")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VarBetRow({ bet: b }: { bet: ShortBetEntry }) {
+  const chipCls = statusCls(b.status);
+  const eCfg = b.eventType
+    ? (SHORT_LABELS[b.eventType] ?? { label: b.eventType, emoji: "⚡" })
+    : { label: "VAR", emoji: "⚡" };
+  const reward = Math.round(Number(b.potential_reward));
+
+  return (
+    <div
+      className={`flex items-center gap-3 px-4 py-3 ${b.status === "won" ? "bg-green-500/5" : b.status === "lost" ? "bg-red-500/5" : ""}`}
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-sm">
+        {eCfg.emoji}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold text-zinc-300">
+          {eCfg.label}
+        </p>
+        <p className="mt-0.5 text-[10px] text-zinc-600">
+          {b.chosen_option === "🔒" ? (
+            "🔒 Masqué"
+          ) : (
+            <span className="font-black uppercase text-white/70">
+              {b.chosen_option}
+            </span>
+          )}
+          {" · "}
+          {b.amount_staked} pts misés
+        </p>
+      </div>
+      <div className="shrink-0 text-right">
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${chipCls} ${b.status === "pending" ? "animate-pulse" : ""}`}
+        >
+          {b.status === "pending" ? "⏳" : b.status === "won" ? "✓" : "✗"}
+        </span>
+        {b.status === "won" && (
+          <p className="mt-1 text-[11px] font-black text-green-400">
+            +{reward.toLocaleString("fr-FR")}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

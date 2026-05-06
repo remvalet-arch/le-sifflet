@@ -19,4 +19,5 @@
 
 ## 🎨 UI & Tailwind
 
-- ... (Placeholders pour futures leçons)
+- **Prop interface cassée sur les pages publiques :** Quand on rewrite les props d'un composant partagé (ex: `ProfileClient`), penser à vérifier toutes les pages qui l'utilisent — pas seulement `/profile/page.tsx` mais aussi `/profile/[id]/page.tsx`. Un rename/suppression de prop génère une erreur TypeScript sur la page oubliée.
+- **Props optionnels pour rétro-compat :** Si une prop n'est plus affichée dans le nouveau design (ex: `karma` dans `ProfileHeader`) mais est encore passée depuis certaines pages, rendre la prop `optional` (`karma?`) plutôt que de la supprimer. Cela évite les erreurs TS sans casser les call-sites.
