@@ -1129,6 +1129,10 @@ export interface Database {
         Args: { p_match_id: string };
         Returns: { cancelled_pronos: number; match_id: string };
       };
+      reset_monthly_points: {
+        Args: Record<never, never>;
+        Returns: void;
+      };
     };
   };
 }
