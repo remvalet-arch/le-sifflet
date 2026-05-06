@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Target,
   Minus,
+  Share2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -628,16 +629,37 @@ function MatchPronoCard({
         )}
         <div className="ml-6 flex items-center justify-between mt-1 relative z-10">
           <p className="text-[11px] capitalize text-zinc-600">{relativeTime}</p>
-          {existingProno?.status === "won" && (
-            <span className="text-[11px] font-black text-green-400">
-              +
-              {(existingProno.points_earned! > 0
-                ? existingProno.points_earned!
-                : existingProno.reward_amount!
-              ).toLocaleString("fr-FR")}{" "}
-              Pts
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {existingProno?.status === "won" && (
+              <span className="text-[11px] font-black text-green-400">
+                +
+                {(existingProno.points_earned! > 0
+                  ? existingProno.points_earned!
+                  : existingProno.reward_amount!
+                ).toLocaleString("fr-FR")}{" "}
+                Pts
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                const text = `J'ai prédit ${match.team_home} ${homeScore}-${awayScore} ${match.team_away} sur VAR TIME — et toi ?`;
+                const url =
+                  typeof window !== "undefined" ? window.location.href : "";
+                if (typeof navigator !== "undefined" && navigator.share) {
+                  void navigator.share({ text, url });
+                } else {
+                  void navigator.clipboard.writeText(`${text} ${url}`);
+                  toast.success("Prono copié !");
+                }
+              }}
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-zinc-300 transition"
+              aria-label="Partager mon prono"
+            >
+              <Share2 className="h-3 w-3" />
+              Partager
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1089,14 +1111,18 @@ export function PronosticsHubClient({
 
   if (total === 0) {
     return (
-      <div className="rounded-2xl border border-white/8 bg-zinc-900/50 px-4 py-12 text-center">
-        <Target
-          className="mx-auto mb-3 h-10 w-10 text-zinc-700"
-          strokeWidth={1.5}
-        />
-        <p className="text-sm font-bold text-zinc-400">
-          Aucun match à venir dans les 7 prochains jours.
-        </p>
+      <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-12 text-center space-y-3">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-2xl">
+          🎯
+        </div>
+        <div>
+          <p className="text-sm font-black text-white">
+            Aucun match cette semaine
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Les pronos apparaîtront ici dès que des matchs sont programmés.
+          </p>
+        </div>
       </div>
     );
   }
@@ -1207,6 +1233,17 @@ export function PronosticsHubClient({
       )}
 
       {/* Competition accordions for selected day */}
+      {!selectedCompMap && (
+        <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
+          <p className="text-2xl mb-2">📅</p>
+          <p className="text-sm font-black text-white">
+            Pas de matchs ce jour-là
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Essaie un autre jour ou reviens plus tard.
+          </p>
+        </div>
+      )}
       {selectedCompMap && (
         <div className="flex flex-col gap-2">
           {Array.from(selectedCompMap.entries()).map(
@@ -1221,7 +1258,8 @@ export function PronosticsHubClient({
               const sectionTotal = groupMatches.length;
               const allDone = sectionDone === sectionTotal;
 
-              const roundShort = groupMatches.find((m) => m.round_short)?.round_short ?? null;
+              const roundShort =
+                groupMatches.find((m) => m.round_short)?.round_short ?? null;
               const lobbyHref =
                 comp?.api_football_league_id && roundShort
                   ? `/lobby?league=${comp.api_football_league_id}&round=${encodeURIComponent(roundShort)}`

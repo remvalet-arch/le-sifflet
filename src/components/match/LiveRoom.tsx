@@ -18,6 +18,7 @@ import { ActionDrawer } from "./ActionDrawer";
 import { MatchStats } from "./MatchStats";
 import { MatchNotificationBell } from "./MatchNotificationBell";
 import { LeaguePronosList } from "./LeaguePronosList";
+import { LiveRoomTutorial } from "./LiveRoomTutorial";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 
 export type SquadProno = {
@@ -347,6 +348,7 @@ export function LiveRoom({
 
   return (
     <>
+      <LiveRoomTutorial />
       {/* En-tête sticky : scoreboard + onglets */}
       <div
         className="sticky z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md"

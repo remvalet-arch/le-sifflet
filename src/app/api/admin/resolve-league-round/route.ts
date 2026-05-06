@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { sendPushToUsers } from "@/lib/push-sender";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,54 @@ export async function POST(request: Request) {
   });
 
   if (error) return errorResponse(error.message, 500);
+
+  // Fire-and-forget: send push if season just finished
+  const result = data as { season_finished?: boolean } | null;
+  if (result?.season_finished) {
+    void (async () => {
+      try {
+        const { data: season } = await admin
+          .from("squad_seasons")
+          .select("squad_id")
+          .eq("id", season_id)
+          .single();
+        if (!season?.squad_id) return;
+
+        const { data: standings } = await admin
+          .from("squad_standings")
+          .select("user_id, points")
+          .eq("season_id", season_id)
+          .order("points", { ascending: false })
+          .limit(1);
+
+        const { data: members } = await admin
+          .from("squad_members")
+          .select("user_id")
+          .eq("squad_id", season.squad_id);
+
+        const memberIds = (members ?? []).map((m) => m.user_id);
+        const champion = standings?.[0];
+
+        const { data: championProfile } = champion
+          ? await admin
+              .from("profiles")
+              .select("username")
+              .eq("id", champion.user_id)
+              .single()
+          : { data: null };
+
+        await sendPushToUsers(memberIds, {
+          title: "🏆 Saison terminée !",
+          body: championProfile
+            ? `${championProfile.username} est Champion de la ligue !`
+            : "Le championnat est terminé — découvre le podium !",
+          url: `/ligues/${season.squad_id}`,
+        });
+      } catch (e) {
+        console.error("[resolve-league-round] season-end push failed:", e);
+      }
+    })();
+  }
 
   return successResponse(data);
 }

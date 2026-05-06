@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { ProfileEditModal } from "./ProfileEditModal";
 
 type TeamInfo = { id: string; name: string; logo_url: string | null } | null;
@@ -14,6 +15,8 @@ export function ProfileHeader({
   rank,
   xpTotal,
   balance,
+  loginStreak,
+  lastLoginDate,
 }: {
   username: string;
   avatarUrl: string | null;
@@ -22,11 +25,46 @@ export function ProfileHeader({
   rank: { emoji: string; label: string };
   xpTotal: number;
   balance: number;
+  loginStreak?: number;
+  lastLoginDate?: string | null;
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [team, setTeam] = useState<TeamInfo>(initialTeam);
+  const [claimingStreak, setClaimingStreak] = useState(false);
+  const [streakClaimed, setStreakClaimed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return lastLoginDate === todayStr;
+  });
+
+  const streak = loginStreak ?? 0;
+  const canClaimStreak = streak > 0 && !streakClaimed;
+
+  async function handleClaimStreak() {
+    if (!canClaimStreak || claimingStreak) return;
+    setClaimingStreak(true);
+    try {
+      const res = await fetch("/api/claim-daily-streak", { method: "POST" });
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: { bonus: number };
+        error?: string;
+      };
+      if (!json.ok) {
+        toast.error(json.error ?? "Déjà réclamé !");
+        setStreakClaimed(true);
+      } else {
+        toast.success(`+${json.data!.bonus} Pts — Série de ${streak} jours !`);
+        setStreakClaimed(true);
+      }
+    } catch {
+      toast.error("Connexion perdue, réessaie !");
+    } finally {
+      setClaimingStreak(false);
+    }
+  }
 
   const avatar = avatarUrl ?? "🎽";
 
@@ -89,7 +127,7 @@ export function ProfileHeader({
             )}
           </div>
 
-          {/* Solde + bouton edit */}
+          {/* Solde + streak + bouton edit */}
           <div className="flex flex-col items-end gap-2">
             <div className="text-right">
               <p className="text-2xl font-black tabular-nums text-white">
@@ -99,6 +137,25 @@ export function ProfileHeader({
                 Pts
               </p>
             </div>
+            {streak > 0 && (
+              <button
+                type="button"
+                onClick={() => void handleClaimStreak()}
+                disabled={!canClaimStreak || claimingStreak}
+                className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-black transition ${
+                  canClaimStreak
+                    ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/30"
+                    : "bg-zinc-800 text-zinc-500 cursor-default"
+                }`}
+              >
+                🔥 {streak}j
+                {canClaimStreak && (
+                  <span className="text-[9px] font-bold opacity-70">
+                    +{50 * Math.min(streak, 7)}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setEditOpen(true)}

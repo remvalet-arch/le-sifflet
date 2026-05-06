@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
@@ -6,19 +7,35 @@ export const revalidate = 300;
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-export default async function LeaderboardPage() {
+type Props = { searchParams: Promise<{ mode?: string }> };
+
+export default async function LeaderboardPage({ searchParams }: Props) {
+  const { mode } = await searchParams;
+  const isMonthly = mode === "month";
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const scoreCol = isMonthly
+    ? "monthly_points_earned"
+    : "lifetime_points_earned";
+
   const { data: rows } = await supabase
     .from("profiles")
-    .select("id, username, lifetime_points_earned, trust_score")
-    .order("lifetime_points_earned", { ascending: false })
+    .select(`id, username, ${scoreCol}, trust_score`)
+    .order(scoreCol, { ascending: false })
     .limit(50);
 
-  const players = rows ?? [];
+  const players = (rows ?? []).map((p) => ({
+    ...p,
+    score: isMonthly
+      ? (((p as Record<string, unknown>).monthly_points_earned as number) ?? 0)
+      : (((p as Record<string, unknown>).lifetime_points_earned as number) ??
+        0),
+  }));
+
   const top3 = players.slice(0, 3);
   const rest = players.slice(3);
   const myRank = user ? players.findIndex((p) => p.id === user.id) : -1;
@@ -26,16 +43,44 @@ export default async function LeaderboardPage() {
 
   // Podium order: 2nd, 1st, 3rd
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
-  const podiumLabelPos = [1, 0, 2]; // maps podiumOrder index -> original rank
+  const podiumLabelPos = [1, 0, 2];
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-6 pb-8">
-      <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-        Classement
-      </h1>
-      <p className="mt-1 text-sm text-zinc-500">
-        Top 50 des meilleurs joueurs.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+            Classement
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Top 50 des meilleurs joueurs.
+          </p>
+        </div>
+
+        {/* Filter tabs */}
+        <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
+          <Link
+            href="/leaderboard"
+            className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
+              !isMonthly
+                ? "bg-amber-500 text-black"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            Général
+          </Link>
+          <Link
+            href="/leaderboard?mode=month"
+            className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
+              isMonthly
+                ? "bg-amber-500 text-black"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            Ce mois
+          </Link>
+        </div>
+      </div>
 
       {/* Podium */}
       {top3.length >= 3 && (
@@ -64,7 +109,7 @@ export default async function LeaderboardPage() {
                     {player.trust_score >= MODERATOR_THRESHOLD && " 🛡️"}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400">
-                    {player.lifetime_points_earned.toLocaleString("fr-FR")} pts
+                    {player.score.toLocaleString("fr-FR")} pts
                   </p>
                 </div>
                 <span className="text-sm font-black text-zinc-500">
@@ -110,7 +155,7 @@ export default async function LeaderboardPage() {
                   )}
                 </p>
                 <span className="shrink-0 text-sm font-black text-zinc-400">
-                  {player.lifetime_points_earned.toLocaleString("fr-FR")} pts
+                  {player.score.toLocaleString("fr-FR")} pts
                 </span>
               </div>
             );
@@ -132,7 +177,7 @@ export default async function LeaderboardPage() {
               {me.username}
             </p>
             <span className="font-black text-green-400">
-              {me.lifetime_points_earned.toLocaleString("fr-FR")} pts
+              {me.score.toLocaleString("fr-FR")} pts
             </span>
           </div>
         </div>

@@ -23,6 +23,9 @@ export const dynamic = "force-dynamic";
 /** Statuts API-Football : fin de rencontre → orchestrateur FT complet. */
 const END_STATUS_SHORT = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
 
+/** Statuts API-Football : match annulé ou reporté → remboursement des pronos. */
+const CANCEL_STATUS_SHORT = new Set(["CANC", "PST", "ABD"]);
+
 /** Statuts API-Football : match en cours → syncMatchEvents à chaque tick. */
 const LIVE_STATUS_SHORT = new Set(["1H", "2H", "HT", "ET", "BT", "P"]);
 
@@ -163,6 +166,7 @@ export async function GET(request: Request) {
     statsSyncCount: 0,
     lineupBackfillCount: 0,
     fullSyncOnEndCount: 0,
+    cancelledMatchCount: 0,
     errors: [] as string[],
   };
 
@@ -336,6 +340,20 @@ export async function GET(request: Request) {
     } catch (err) {
       summary.errors.push(
         `fullSync ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  // ── 5b. Matchs annulés / reportés — remboursement des pronos ─────────────
+  for (const m of active) {
+    const short = (shortByMatchId.get(m.id) ?? "").toUpperCase();
+    if (!CANCEL_STATUS_SHORT.has(short)) continue;
+    try {
+      await admin.rpc("cancel_match_pronos", { p_match_id: m.id });
+      summary.cancelledMatchCount += 1;
+    } catch (err) {
+      summary.errors.push(
+        `cancel ${m.id}: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
   }

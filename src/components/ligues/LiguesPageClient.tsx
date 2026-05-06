@@ -250,18 +250,36 @@ export function LiguesPageClient({ userId }: { userId: string }) {
           ))}
         </ul>
       ) : (
-        <div className="rounded-2xl border border-dashed border-zinc-700 px-5 py-8 text-center">
-          <p className="text-base font-black text-white">
-            Tu joues en solo pour l&apos;instant
-          </p>
-          <p className="mt-2 text-sm text-zinc-400">
-            Tu peux faire tes pronos et parier dans la LiveRoom contre toute la
-            communauté. Mais c&apos;est quand même plus fun de chambrer tes
-            potes.
-          </p>
-          <p className="mt-3 text-sm font-bold text-amber-400">
-            Crée une ligue ou rejoins-en une avec un code — c&apos;est gratuit !
-          </p>
+        <div className="rounded-2xl border border-dashed border-zinc-700 px-5 py-10 text-center space-y-3">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-3xl">
+            ⚽
+          </div>
+          <div>
+            <p className="text-base font-black text-white">
+              Tu joues en solo pour l&apos;instant
+            </p>
+            <p className="mt-1.5 text-sm text-zinc-400">
+              Chambrage entre potes, classement de ligue, mode 1vs1… crée ta
+              ligue ou rejoins celle d&apos;un ami !
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setWizardOpen(true)}
+              className="mx-auto flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-black text-black transition hover:bg-amber-400 active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" />
+              Créer une ligue
+            </button>
+            <button
+              type="button"
+              onClick={() => setJoinOpen(true)}
+              className="mx-auto text-sm font-bold text-amber-400 hover:underline"
+            >
+              J&apos;ai un code d&apos;invitation
+            </button>
+          </div>
         </div>
       )}
 

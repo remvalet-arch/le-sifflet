@@ -97,7 +97,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date",
+      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date, login_streak, last_login_date",
     )
     .eq("id", user.id)
     .single();
@@ -232,6 +232,36 @@ export default async function ProfilePage() {
         0,
       );
 
+  // ── Mon arbitrage stats ──────────────────────────────────────────────────────
+  const exactScorePronos = pronos.filter((p) => p.prono_type === "exact_score");
+  const exactResolved = exactScorePronos.filter(
+    (p) => p.status === "won" || p.status === "lost",
+  );
+  const exactWon = exactResolved.filter((p) => p.status === "won").length;
+  const scoreAccuracy =
+    exactResolved.length > 0
+      ? Math.round((exactWon / exactResolved.length) * 100)
+      : null;
+
+  // Best winning streak (consecutive won pronos, sorted by placed_at)
+  const sortedPronos = [...pronos].sort(
+    (a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime(),
+  );
+  let bestStreak = 0;
+  let curStreak = 0;
+  for (const p of sortedPronos) {
+    if (p.status === "won") {
+      curStreak++;
+      bestStreak = Math.max(bestStreak, curStreak);
+    } else if (p.status === "lost") {
+      curStreak = 0;
+    }
+  }
+
+  const totalMatchesPronoed = new Set(
+    pronos.filter((p) => p.prono_type === "exact_score").map((p) => p.match_id),
+  ).size;
+
   const REFILL_THRESHOLD = 500;
   // eslint-disable-next-line react-hooks/purity
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -271,6 +301,8 @@ export default async function ProfilePage() {
               rank={rank}
               xpTotal={xpTotal}
               balance={balance}
+              loginStreak={profile?.login_streak ?? 0}
+              lastLoginDate={profile?.last_login_date ?? null}
             />
 
             <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
@@ -318,6 +350,46 @@ export default async function ProfilePage() {
                 />
               </div>
             </div>
+
+            {/* Mon arbitrage */}
+            {totalMatchesPronoed > 0 && (
+              <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
+                <div className="px-5 py-3 border-b border-white/5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Mon arbitrage
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-white/5">
+                  <div className="flex flex-col items-center gap-1 px-3 py-4">
+                    <Target className="h-4 w-4 text-zinc-500" />
+                    <p className="text-base font-black text-white">
+                      {scoreAccuracy !== null ? `${scoreAccuracy}%` : "—"}
+                    </p>
+                    <p className="text-center text-[10px] font-semibold text-zinc-500">
+                      Scores exacts
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 px-3 py-4">
+                    <TrendingUp className="h-4 w-4 text-zinc-500" />
+                    <p className="text-base font-black text-white">
+                      {bestStreak}
+                    </p>
+                    <p className="text-center text-[10px] font-semibold text-zinc-500">
+                      Meilleure série
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 px-3 py-4">
+                    <Trophy className="h-4 w-4 text-zinc-500" />
+                    <p className="text-base font-black text-white">
+                      {totalMatchesPronoed}
+                    </p>
+                    <p className="text-center text-[10px] font-semibold text-zinc-500">
+                      Matchs pronostiqués
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {trustScore >= MODERATOR_THRESHOLD && (
               <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">

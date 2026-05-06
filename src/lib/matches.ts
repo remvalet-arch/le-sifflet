@@ -34,6 +34,10 @@ export function formatMatchStatus(status: MatchStatus): string {
       return "TERMINÉ";
     case "upcoming":
       return "À VENIR";
+    case "cancelled":
+      return "ANNULÉ";
+    case "postponed":
+      return "REPORTÉ";
   }
 }
 
@@ -44,6 +48,8 @@ const STATUS_ORDER: Record<MatchStatus, number> = {
   half_time: 1,
   upcoming: 2,
   finished: 3,
+  cancelled: 4,
+  postponed: 4,
 };
 
 /** Lobby : en cours d’abord, puis upcoming, puis finished ; puis start_time croissant. */

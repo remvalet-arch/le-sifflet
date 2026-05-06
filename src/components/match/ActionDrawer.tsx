@@ -74,6 +74,8 @@ const STATUS_LABELS: Record<MatchStatus, string> = {
   second_half: "2ème mi-temps",
   paused: "Interruption",
   finished: "Terminé",
+  cancelled: "Annulé",
+  postponed: "Reporté",
 };
 
 // ── Équipes MVP pour l'import rapide ─────────────────────────────────────────

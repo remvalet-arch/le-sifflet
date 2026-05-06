@@ -519,18 +519,18 @@ Agis en tant que Lead Backend et Game Designer.
 
 ### 🔴 Sprint H : RÉTENTION — "Ce qui fait revenir chaque jour"
 
-- [ ] **H1 : Streak & récompense quotidienne**
+- [x] **H1 : Streak & récompense quotidienne**
   - _Problème :_ Le `login_streak` existe en base mais n'est pas exploité côté UI. L'utilisateur n'a aucune incitation visuelle à revenir chaque jour.
   - _Action 1 :_ Sur la page profil / layout app, afficher un composant "Flamme du jour" avec le streak actuel et un bonus de Sifflets si l'utilisateur se connecte X jours consécutifs.
   - _Action 2 :_ Créer une migration ajoutant une colonne `streak_claimed_today BOOLEAN DEFAULT FALSE` (ou utiliser `last_login_date` existant) pour éviter les doubles attributions.
   - _Action 3 :_ Route API `POST /api/claim-daily-streak` qui vérifie le streak et crédite les Sifflets (ex: +50 pts × min(streak, 7)).
 
-- [ ] **H2 : Récap post-match**
+- [x] **H2 : Récap post-match**
   - _Problème :_ Quand un match se termine, les pronos sont résolus mais l'utilisateur ne voit pas de synthèse visuelle de sa performance.
   - _Action 1 :_ Créer une page ou bottom-sheet `/match/[id]/recap` accessible depuis la page match terminé : score final, points gagnés/perdus, classement dans la ligue mis à jour, ce que les autres membres de la squad ont eu.
   - _Action 2 :_ Ajouter un lien "Voir le récap" dans la push notification de fin de match (payload existant dans `finish-match/route.ts`).
 
-- [ ] **H3 : Rappel push "Tu n'as pas encore pronostiqué"**
+- [x] **H3 : Rappel push "Tu n'as pas encore pronostiqué"**
   - _Problème :_ Si l'utilisateur n'a pas pronostiqué avant un match de sa ligue, il n'a pas de raison d'entrer dans la LiveRoom.
   - _Action 1 :_ Cron 1h avant chaque match : chercher les membres de squads actives qui n'ont pas de prono pour ce match, leur envoyer `sendPushToUsers([uid], { title: "⏰ PSG – OM dans 1h", body: "Tu n'as pas encore pronostiqué — fonce !", url: "/pronos" })`.
   - _Action 2 :_ Créer la route cron `GET /api/cron/prono-reminders` avec guard `CRON_SECRET`, à brancher sur cron-job.org à H-1 des matchs.
@@ -539,19 +539,19 @@ Agis en tant que Lead Backend et Game Designer.
 
 ### 🟠 Sprint I : SOCIAL — "Ce qui fait inviter des amis"
 
-- [ ] **I1 : Partage de prono avant match**
+- [x] **I1 : Partage de prono avant match**
   - _Problème :_ Aucun loop viral — un utilisateur ne peut pas partager sa prédiction à ses amis hors de l'app.
   - _Action 1 :_ Sur la `MatchPronoCard` d'un prono soumis, ajouter un bouton "Partager mon prono".
   - _Action 2 :_ Utiliser `navigator.share()` sur mobile pour partager un texte : "J'ai prédit PSG 2-1 OM sur VAR TIME — et toi ? [lien]". Sur desktop, copier dans le presse-papiers.
   - _Action 3 :_ (Bonus) Générer une image OG dynamique via `next/og` avec le prono stylisé pour un partage visuel sur réseaux sociaux.
 
-- [ ] **I2 : Chat dans les ligues**
+- [x] **I2 : Chat dans les ligues**
   - _Problème :_ Les membres d'une squad ne peuvent pas communiquer dans l'app.
   - _Action 1 :_ Migration `squad_messages (id, squad_id, user_id, content, created_at)` avec RLS (membres lisent/écrivent dans leurs squads).
   - _Action 2 :_ Composant `SquadChat.tsx` dans `SquadDetailClient` : liste des messages + input, souscription Realtime sur `squad_messages`.
   - _Action 3 :_ Limiter à 200 caractères par message, 1 message par 3 secondes (anti-spam côté client).
 
-- [ ] **I3 : Cérémonie de fin de saison 1v1**
+- [x] **I3 : Cérémonie de fin de saison 1v1**
   - _Problème :_ Quand un championnat se termine, rien ne se passe — pas de podium, pas de trophée.
   - _Action 1 :_ Quand `squad_seasons.status` passe à `'finished'`, envoyer une push à tous les membres avec le podium final.
   - _Action 2 :_ Dans `SquadDetailClient`, si `championship.status === 'finished'`, afficher un écran de podium (Top 3 avec animations) au-dessus du tableau.
@@ -561,23 +561,23 @@ Agis en tant que Lead Backend et Game Designer.
 
 ### 🟡 Sprint J : COMPLÉTUDE PRODUIT — "Ce qui ne devrait pas manquer"
 
-- [ ] **J1 : Gestion des matchs reportés / annulés**
+- [x] **J1 : Gestion des matchs reportés / annulés**
   - _Problème :_ Si un match passe en `CANC` (annulé) ou `PST` (reporté) côté API-Football, les pronos restent en `pending` indéfiniment.
   - _Action 1 :_ Dans `match-monitor`, détecter les statuts `CANC`, `PST`, `ABD`, `AWD`, `WO`.
   - _Action 2 :_ Pour `CANC`/`PST` : appeler une nouvelle RPC `cancel_match_pronos(p_match_id)` qui passe les pronos en `cancelled` et rembourse les `reward_amount` aux joueurs.
   - _Action 3 :_ Afficher un badge "Reporté" / "Annulé" sur la MatchCard et la PronoCard concernées.
 
-- [ ] **J2 : Historique des saisons 1v1**
+- [x] **J2 : Historique des saisons 1v1**
   - _Problème :_ Une fois la saison 1v1 terminée, impossible de consulter les résultats passés dans la squad.
   - _Action 1 :_ Dans `SquadDetailClient`, ajouter un onglet ou section "Palmarès" listant les saisons terminées (`status = 'finished'`) avec le podium final de chacune.
   - _Action 2 :_ Modifier `GET /api/squads/[squadId]` pour retourner aussi les saisons `finished` (limitées aux 3 dernières).
 
-- [ ] **J3 : Saisons mensuelles du leaderboard global**
+- [x] **J3 : Saisons mensuelles du leaderboard global**
   - _Problème :_ Le leaderboard global `lifetime_points_earned` ne se réinitialise jamais — les premiers sont inamovibles, décourageant les nouveaux.
   - _Action 1 :_ Ajouter `monthly_points_earned INT DEFAULT 0` à `profiles`, remis à zéro le 1er de chaque mois via un cron.
   - _Action 2 :_ Sur `/leaderboard`, ajouter un filtre "Ce mois" qui classe par `monthly_points_earned` en plus du filtre "Général".
 
-- [ ] **J4 : Monitoring & fallback API-Football**
+- [x] **J4 : Monitoring & fallback API-Football**
   - _Problème :_ Si l'API-Football rate-limit ou tombe, le `match-monitor` échoue silencieusement sans alerte.
   - _Action 1 :_ Dans `match-monitor`, si le nombre d'erreurs consécutives dépasse 3, envoyer un email ou une notif push au compte admin.
   - _Action 2 :_ Exposer un endpoint `/api/admin/health` qui retourne le statut du dernier tick du monitor (timestamp, nb matchs actifs, nb erreurs).
@@ -586,15 +586,15 @@ Agis en tant que Lead Backend et Game Designer.
 
 ### 🟢 Sprint K : POLISH & UX — "Les finitions qui font la différence"
 
-- [ ] **K1 : Empty states soignés**
+- [x] **K1 : Empty states soignés**
   - _Action :_ Auditer et améliorer les écrans vides : lobby sans match du jour, ligue sans membres, onglet pronos sans compétition suivie, onglet amis vide. Chaque empty state doit avoir une illustration simple + un CTA actionnable.
 
-- [ ] **K2 : Tutoriel contextuel LiveRoom**
+- [x] **K2 : Tutoriel contextuel LiveRoom**
   - _Problème :_ Un nouvel utilisateur qui arrive sur un match live ne comprend pas le mécanisme Waze/VAR → taux de rebond élevé.
   - _Action 1 :_ Au premier accès à une LiveRoom (clé localStorage `hasSeenLiveRoomTutorial`), afficher un overlay 2 étapes : "1. Signale une action douteuse" → "2. Mise tes Sifflets en 90s".
   - _Action 2 :_ Intégrer ce tutoriel dans l'`OnboardingTour` existant comme étape 4 optionnelle.
 
-- [ ] **K3 : Dashboard stats joueur enrichi**
+- [x] **K3 : Dashboard stats joueur enrichi**
   - _Problème :_ `winrate`, `trust_score`, `login_streak` sont en base mais peu valorisés dans le profil.
   - _Action :_ Dans l'onglet "Vestiaire" du profil, ajouter un bloc "Mon arbitrage" avec : % de bonnes prédictions de score, meilleure série de pronos gagnants, ligue préférée (compétition avec le plus de pronos), total de matchs pronostiqués.
 

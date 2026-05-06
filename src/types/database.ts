@@ -4,7 +4,9 @@ export type MatchStatus =
   | "half_time"
   | "second_half"
   | "paused"
-  | "finished";
+  | "finished"
+  | "cancelled"
+  | "postponed";
 
 export type TimelineEventType =
   | "goal"
@@ -52,6 +54,7 @@ export interface Database {
           last_login_date: string | null;
           login_streak: number;
           lifetime_points_earned: number;
+          monthly_points_earned: number;
         };
         Insert: {
           id: string;
@@ -70,6 +73,7 @@ export interface Database {
           last_login_date?: string | null;
           login_streak?: number;
           lifetime_points_earned?: number;
+          monthly_points_earned?: number;
         };
         Update: {
           id?: string;
@@ -88,6 +92,7 @@ export interface Database {
           last_login_date?: string | null;
           login_streak?: number;
           lifetime_points_earned?: number;
+          monthly_points_earned?: number;
         };
         Relationships: [];
       };
@@ -451,6 +456,30 @@ export interface Database {
           user_id?: string;
           squad_id?: string;
           joined_at?: string;
+        };
+        Relationships: [];
+      };
+      squad_messages: {
+        Row: {
+          id: string;
+          squad_id: string;
+          user_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          squad_id: string;
+          user_id: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          squad_id?: string;
+          user_id?: string;
+          content?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -1096,6 +1125,10 @@ export interface Database {
           season_finished: boolean;
         };
       };
+      cancel_match_pronos: {
+        Args: { p_match_id: string };
+        Returns: { cancelled_pronos: number; match_id: string };
+      };
     };
   };
 }
@@ -1140,3 +1173,5 @@ export type FriendRequestRow =
   Database["public"]["Tables"]["friend_requests"]["Row"];
 export type FriendRequestInsert =
   Database["public"]["Tables"]["friend_requests"]["Insert"];
+export type SquadMessageRow =
+  Database["public"]["Tables"]["squad_messages"]["Row"];

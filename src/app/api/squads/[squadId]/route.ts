@@ -36,6 +36,14 @@ type ChampionshipData = {
   current_fixtures: ChampionshipFixture[];
 };
 
+type PastSeason = {
+  season_id: string;
+  ended_at: string | null;
+  champion_user_id: string | null;
+  champion_username: string | null;
+  champion_points: number;
+};
+
 type LeaderboardRow = {
   user_id: string;
   username: string;
@@ -344,6 +352,53 @@ export async function GET(
       }
     }
 
+    // ── Past seasons / Palmarès ─────────────────────────────────────────────
+    let past_seasons: PastSeason[] = [];
+    if (squad.game_mode === "braquage") {
+      const { data: finishedSeasons } = await adminSupabase
+        .from("squad_seasons")
+        .select("id, ended_at")
+        .eq("squad_id", squadId)
+        .eq("status", "finished")
+        .order("ended_at", { ascending: false })
+        .limit(3);
+
+      if (finishedSeasons && finishedSeasons.length > 0) {
+        const seasonIds = finishedSeasons.map((s) => s.id);
+        const { data: championsRaw } = await adminSupabase
+          .from("squad_standings")
+          .select("season_id, user_id, points")
+          .in("season_id", seasonIds)
+          .order("points", { ascending: false });
+
+        const topBySeasonId = new Map<
+          string,
+          { user_id: string; points: number }
+        >();
+        for (const c of championsRaw ?? []) {
+          if (!topBySeasonId.has(c.season_id)) {
+            topBySeasonId.set(c.season_id, {
+              user_id: c.user_id,
+              points: c.points,
+            });
+          }
+        }
+
+        past_seasons = finishedSeasons.map((s) => {
+          const champ = topBySeasonId.get(s.id);
+          return {
+            season_id: s.id,
+            ended_at: s.ended_at,
+            champion_user_id: champ?.user_id ?? null,
+            champion_username: champ
+              ? (usernameById.get(champ.user_id) ?? "???")
+              : null,
+            champion_points: champ?.points ?? 0,
+          };
+        });
+      }
+    }
+
     return successResponse({
       squad,
       leaderboard,
@@ -351,6 +406,7 @@ export async function GET(
       period,
       activity,
       championship,
+      past_seasons,
     });
   } catch (error) {
     console.error("Supabase Error:", error);

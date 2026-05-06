@@ -16,6 +16,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import type { SquadRow } from "@/types/database";
+import { SquadChat } from "./SquadChat";
 
 type LeaderboardRow = {
   user_id: string;
@@ -74,6 +75,14 @@ type ChampionshipData = {
   current_fixtures: ChampionshipFixture[];
 };
 
+type PastSeason = {
+  season_id: string;
+  ended_at: string | null;
+  champion_user_id: string | null;
+  champion_username: string | null;
+  champion_points: number;
+};
+
 type ApiPayload = {
   squad: SquadRow;
   leaderboard: LeaderboardRow[];
@@ -81,6 +90,7 @@ type ApiPayload = {
   period: Period;
   activity: ActivityItem[];
   championship: ChampionshipData | null;
+  past_seasons?: PastSeason[];
 };
 
 type ApiResponse<T> = { ok: boolean; data?: T; error?: string };
@@ -144,7 +154,14 @@ export function SquadDetailClient({
     );
   }
 
-  const { squad, leaderboard, total_xp_earned, activity, championship } = data;
+  const {
+    squad,
+    leaderboard,
+    total_xp_earned,
+    activity,
+    championship,
+    past_seasons,
+  } = data;
 
   async function handleNudge() {
     setNudging(true);
@@ -289,6 +306,69 @@ export function SquadDetailClient({
       {/* ── Vue Championnat 1v1 ─────────────────────────────────────────────── */}
       {championship ? (
         <div className="space-y-6">
+          {/* Podium de fin de saison */}
+          {championship.status === "finished" &&
+            championship.standings.length >= 1 && (
+              <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-5 text-center space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
+                  Saison terminée 🏆
+                </p>
+                <div className="flex items-end justify-center gap-4">
+                  {/* 2nd */}
+                  {championship.standings[1] && (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-12 w-12 flex items-center justify-center rounded-full bg-zinc-300 text-zinc-800 text-lg font-black">
+                        2
+                      </div>
+                      <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
+                        {championship.standings[1].user_id === currentUserId
+                          ? "Toi"
+                          : championship.standings[1].username}
+                      </p>
+                      <p className="text-[10px] text-zinc-500">
+                        {championship.standings[1].points} pts
+                      </p>
+                    </div>
+                  )}
+                  {/* 1st */}
+                  <div className="flex flex-col items-center gap-1 -mb-2">
+                    <div className="h-16 w-16 flex items-center justify-center rounded-full bg-yellow-500 text-yellow-900 text-2xl font-black shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+                      1
+                    </div>
+                    <p className="text-sm font-black text-yellow-300 max-w-[80px] truncate">
+                      {championship.standings[0].user_id === currentUserId
+                        ? "Toi 🎉"
+                        : championship.standings[0].username}
+                    </p>
+                    <p className="text-[10px] text-yellow-500">
+                      {championship.standings[0].points} pts
+                    </p>
+                  </div>
+                  {/* 3rd */}
+                  {championship.standings[2] && (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-700 text-amber-100 text-base font-black">
+                        3
+                      </div>
+                      <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
+                        {championship.standings[2].user_id === currentUserId
+                          ? "Toi"
+                          : championship.standings[2].username}
+                      </p>
+                      <p className="text-[10px] text-zinc-500">
+                        {championship.standings[2].points} pts
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {championship.standings[0].user_id === currentUserId && (
+                  <p className="text-xs font-bold text-yellow-400">
+                    Félicitations, tu es Champion de la ligue ! 🎊
+                  </p>
+                )}
+              </div>
+            )}
+
           {/* Section 1 — Tableau de championnat */}
           <div>
             <div className="mb-3 flex items-center gap-2">
@@ -680,6 +760,53 @@ export function SquadDetailClient({
           </div>
         </div>
       )}
+
+      {/* ── Palmarès ────────────────────────────────────────────────────────── */}
+      {past_seasons && past_seasons.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-yellow-400" aria-hidden />
+            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+              Palmarès
+            </h2>
+          </div>
+          <div className="flex flex-col gap-2">
+            {past_seasons.map((s, idx) => (
+              <div
+                key={s.season_id}
+                className="flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3"
+              >
+                <span className="text-2xl" aria-hidden>
+                  🏆
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white">
+                    Saison {past_seasons.length - idx}
+                  </p>
+                  <p className="text-xs text-zinc-400">
+                    Champion :{" "}
+                    <span className="font-black text-yellow-300">
+                      {s.champion_username ?? "—"}
+                    </span>{" "}
+                    · {s.champion_points} pts
+                  </p>
+                  {s.ended_at && (
+                    <p className="text-[10px] text-zinc-600">
+                      {new Date(s.ended_at).toLocaleDateString("fr-FR", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Chat ────────────────────────────────────────────────────────────── */}
+      <SquadChat squadId={squadId} currentUserId={currentUserId} />
 
       {isAdmin && squad.invite_code && (
         <div className="fixed bottom-24 left-0 right-0 z-40 mx-auto max-w-2xl px-4 pointer-events-none">
