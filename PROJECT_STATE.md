@@ -2,7 +2,7 @@
 
 > Documentation vivante. Ne documente que le **code et le schéma présents** dans ce dépôt (pas la roadmap produit seule).
 >
-> **Dernière mise à jour : Sprint Audit UX & Robustesse — Optimistic UI, Trust Score, PWA Offline, Sécurisation Pronos.**
+> **Dernière mise à jour : Sprint D/E/F — Auth race condition, Performance (Promise.all + ISR + indexes), Données (lifetime_points_earned, placed_at filter, total_xp_earned) — 2026-05-06.**
 
 ---
 
@@ -32,7 +32,7 @@
 
 ## 🗄️ Schéma de données (état des migrations)
 
-**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0047_alert_signals_replica_full.sql`** (47 migrations versionnées).
+**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0067_lifetime_points_earned.sql`** (67 migrations versionnées).
 
 ### Tables & objets notables (post-0033)
 
@@ -54,6 +54,26 @@
 | **0045**  | **`resolve_match_pronos(match_id)`** (SECURITY DEFINER, `service_role` uniquement) : match `finished` + scores → pronos `pending` → `won`/`lost`, crédit **`reward_amount`** + **45 XP** + **`rank = profile_rank_from_xp(xp)`** ; idempotent. **`profile_rank_from_xp`** : seuils 500 / 2000 / 5000 XP. **`resolve_event_parimutuel`** : **30 XP** + rank par pari gagné ; **8 XP** + rank sur bonus braquage. Appel depuis [`syncApiFootballMatch`](src/services/api-football-sync.ts) (match `finished`) et [`finish-match`](src/app/api/admin/finish-match/route.ts).                                                                                      |
 | **0046**  | **`place_prono`** : après insert `pronos`, **`INSERT … match_subscriptions` ON CONFLICT DO NOTHING** (auto-abonnement « smart notif » sans écraser un mute existant).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | **0047**  | **`alert_signals`** : **`REPLICA IDENTITY FULL`** (événements Realtime complets pour clients filtrant hors PK).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **0048**  | `league_standings` + `league_top_players` (classements / buteurs / passeurs API-Football par ligue). Alimentées par `scripts/import-league-history.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **0049**  | `league_standings.group_name` — support coupes européennes (Groupe A / League Phase).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **0050**  | `pronos.prono_type` étendu : `scorer_allocation` + index partiels + RPC **`place_match_prono`** (score exact + JSON buteurs).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **0051**  | Trigger `trust_score` sur `resolve_event` : +2 pts alerte vraie / −5 fake.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **0052**  | `place_prono` sécurisé : vérification statut `upcoming` avant insert.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **0053**  | `push_subscriptions` (endpoint TEXT, keys JSONB) — infrastructure Web Push VAPID.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **0054**  | Rattrapage idempotent `match_subscriptions` (prod sans 0040).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **0055**  | Fix définitif `place_match_prono` + `match_subscriptions` idempotent.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **0056**  | `squad_nudge_logs` — cooldown nudge pronos (30 min/squad) + sirène VAR (15 min/user).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **0057**  | `profiles.favorite_team_id` FK→`teams` + RPC **`update_profile`** (username / avatar / équipe).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **0058**  | `market_events.status` : statut `'closed'` (fenêtre 90s expirée, verdict en attente).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **0059**  | `pronos.points_earned` + `pronos.contre_pied_bonus` — moteur Contre-Pied (50 pts base + prime rareté 10/30/60/100 pts).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **0060**  | `matches.odds_home` / `odds_draw` / `odds_away` (cotes 1N2 API-Football).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **0061**  | Vue **`v_match_pronos_stats`** : stats communautaires par match (1N2 %, formes équipes).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **0062**  | Fix `v_match_pronos_stats` : bug dénominateur 100% résolu.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **0063**  | `friend_requests` (sender_id, receiver_id, status `pending`/`accepted`/`rejected`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **0064**  | `squads.game_mode` TEXT CHECK (`classic`/`braquage`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **0065**  | `profiles.last_login_date` DATE + `profiles.login_streak` INT — base badge "Fidèle au Poste".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **0066**  | Index composites performance : `pronos(user_id,match_id)`, `pronos(match_id,status)`, `bets(user_id,placed_at)`, `alert_signals(match_id,action_type,created_at)`, `market_events(match_id,status)`.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **0067**  | `profiles.lifetime_points_earned` INT DEFAULT 0 + triggers sur `pronos`/`bets` (incrémente à chaque résolution `won`) + backfill historique. Leaderboard classe par `lifetime_points_earned`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ### RPC métier (SECURITY DEFINER) — présents dans `database.ts`
 
@@ -146,19 +166,20 @@ Helpers : `patchMatchFromFixtureRow`, `mapApiFootballFixtureStatusShort`, mappin
 - Alignement vertical des contenus d’onglets **`mt-6`** ; shell **`bg-zinc-950`** (body + pages lobby / match).
 - [`VotingModal.tsx`](src/components/match/VotingModal.tsx) — timer 90 s, cotes **parimutuel** (`get_event_odds`), **slider + presets MIN/MOITIÉ/ALL IN**, **deux gros boutons** OUI/NON ; mention **« Braquage actif avec [nom] »** si squad sélectionnée.
 - [`ActionDrawer.tsx`](src/components/match/ActionDrawer.tsx) — alertes (types 0039), modération timeline, états match, sync TSDB.
-- **Ligues (squads)** : page [`/(app)/ligues`](<src/app/(app)/ligues/page.tsx>) + onglets **Mes ligues / Créer / Rejoindre** [`LiguesPageClient`](src/components/ligues/LiguesPageClient.tsx) ; détail [`/ligues/[squadId]`](<src/app/(app)/ligues/[squadId]/page.tsx>) + [`SquadDetailClient`](src/components/ligues/SquadDetailClient.tsx) (classement XP + Pts, pot commun). API [`GET/POST /api/squads`](src/app/api/squads/route.ts), [`GET /api/squads/[squadId]`](src/app/api/squads/[squadId]/route.ts), [`join`](src/app/api/squads/join/route.ts), [`leave`](src/app/api/squads/leave/route.ts). Ancienne URL **`/squads`** → redirect **`/ligues`**. [`BottomNav`](src/components/layout/BottomNav.tsx) : lien **Ligues** → `/ligues` (remplacé par le Super-Bouton sur match en direct).
+- **Ligues (squads)** : page [`/(app)/ligues`](<src/app/(app)/ligues/page.tsx>) + onglets **Mes ligues / Créer / Rejoindre** [`LiguesPageClient`](src/components/ligues/LiguesPageClient.tsx) ; détail [`/ligues/[squadId]`](<src/app/(app)/ligues/[squadId]/page.tsx>) + [`SquadDetailClient`](src/components/ligues/SquadDetailClient.tsx) (classement XP + Pts, **`total_xp_earned`** — somme gains membres). API [`GET/POST /api/squads`](src/app/api/squads/route.ts), [`GET /api/squads/[squadId]`](src/app/api/squads/[squadId]/route.ts), [`join`](src/app/api/squads/join/route.ts), [`leave`](src/app/api/squads/leave/route.ts). Ancienne URL **`/squads`** → redirect **`/ligues`**. [`BottomNav`](src/components/layout/BottomNav.tsx) : lien **Ligues** → `/ligues` (remplacé par le Super-Bouton sur match en direct).
 
 ### Autres pages app notables
 
-- **Profil** [`(app)/profile`](<src/app/(app)/profile/page.tsx>) — onglets **Paris VAR** / **Pronos** / **Trophées** ; badges [`badges.ts`](src/app/actions/badges.ts) alignés sur **`pronos`** pour score exact / buteur gagnants.
+- **Profil** [`(app)/profile`](<src/app/(app)/profile/page.tsx>) — onglets **Vestiaire / Historique / Trophées / Amis** ; badges [`badges.ts`](src/app/actions/badges.ts) alignés sur `pronos` ; `TrophyWall` : critères toujours visibles sur badges verrouillés ; `AmisContent` avec Realtime sur `friend_requests`.
 - **Admin résolution** [`admin/resolve`](src/app/admin/resolve/page.tsx) — événements **`market_events`** ouverts uniquement (plus de panneau paris long terme).
-- Leaderboard, règles, login, landing `/` ([`src/app/page.tsx`](src/app/page.tsx)) — VAR Time, tutoiement, hero + blocs gameplay, grades kop conservés.
+- **Leaderboard** [`(app)/leaderboard`](<src/app/(app)/leaderboard/page.tsx>) — classement par **`lifetime_points_earned`** (points cumulés depuis la création du compte, pas le solde courant) ; `revalidate = 300`.
+- Règles, login, landing `/` ([`src/app/page.tsx`](src/app/page.tsx)) — bannière d'erreur OAuth (`?error=oauth&message=...`) affichée si connexion Google échoue.
 
 ---
 
 ## ✅ Ce qui est implémenté et branché (résumé « prod code »)
 
-- Auth Google + garde middleware `/lobby`, `/match/*`, `/squads`, `/ligues`, `/profile`, `/leaderboard`.
+- Auth Google + garde middleware `/lobby`, `/match/*`, `/squads`, `/ligues`, `/profile`, `/leaderboard`. Race condition `signInWithIdToken` fixée (`data?.session` avant redirect) ; `useOneTap` conditionnel prod uniquement.
 - Lobby **8 ligues** (IDs Top 5 + UEFA), jour Paris, vue **`?league=&round=`** + `round_short` / `has_lineups`.
 - Cron **`match-monitor`** : fixtures batch + events live + heartbeat stats 5 min + backfill lineups + sync full FT.
 - **Stats match** en direct : table + UI + Realtime après sync.
@@ -203,12 +224,14 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 
 ---
 
-## 📌 Next Steps (backlog — **VAR TIME economy**)
+## 📌 Next Steps (backlog)
 
-1. **Avatars personnalisés** — `avatar_url` en UI profil (`<img>` dans TopBar + SquadDetail) ; upload via Storage Supabase ou URL externe.
-2. **Classement global ("Board des sifflets")** — vue publique des meilleurs `sifflets_balance` / XP, mise à jour quotidienne.
-3. **Migrations SQL en attente (prod)** — appliquer **`0055_fix_place_match_prono.sql`**, **`0056_squad_nudges.sql`**, et **`0059_contre_pied_bonus.sql`** dans l’éditeur SQL Supabase.
-4. **`long_term_bets` (legacy)** — option DROP si plus aucune ligne en base.
+1. **Migrations SQL en attente (prod)** — appliquer **`0062` → `0067`** dans le Supabase SQL Editor avant tout déploiement.
+2. **Push "VAR Résolue"** — Les gagnants/perdants ne reçoivent jamais de notification après la résolution. Frein rétention #1. (voir TECH_BIBLE Pilier 2 §2.3)
+3. **Push "Fin de match + résultats pronos"** — idem après `resolve_match_pronos`.
+4. **Badge "Fidèle au Poste"** — migration 0065 est en place mais `checkAndUnlockBadges` n’a pas encore de case pour `login_streak_3`.
+5. **Nettoyage fichiers orphelins** — ~22 fichiers `test-*.js` / `fix-ts.js` à la racine (voir TECH_BIBLE §4.1).
+6. **`long_term_bets` (legacy)** — DROP si plus aucune ligne en base.
 
 ---
 
@@ -252,4 +275,31 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 - **Formule asymptotique** : `convertOddToPoints(odd, maxPoints)` dans `src/lib/odds.ts` ; constantes `SCORER_DEFAULT_ODDS` / `SCORER_MAX_POINTS` / `EXACT_SCORE_DEFAULT_ODD` ; `PolymarketTab` utilise la formule pour l'affichage des gains potentiels et `p_reward_amount`.
 - **Page Règles du jeu** : refonte complète (deux sections : Pronos + LiveRoom), bouton Retour /lobby, lien dans le burger déjà branché (`/rules`).
 
-_Fin du document — mise à jour 2026-05-05 (sprint Viralité & Économie)._
+### Sprint D/E/F — Auth · Performance · Données (2026-05-06)
+
+**Sprint D — Auth "Réparer la Connexion Google"**
+
+- `SignInWithGoogleButton` : destructuring `{ data, error }`, redirect uniquement si `data?.session` (race condition cookie).
+- `useOneTap={process.env.NODE_ENV === "production"}` (évite le prompt Google sur localhost).
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` ajouté à `.env.example`.
+- Page d'accueil `/` : bannière d'erreur OAuth si `?error=oauth&message=…` dans l'URL.
+
+**Sprint E — Performance "Couper la Latence de 70%"**
+
+- `profile/page.tsx` : `select("*")` → colonnes explicites.
+- `match/[id]/page.tsx` : profile + RPC `squad_members_for_my_squads` en `Promise.all` ; pronos + profils admin en second batch parallèle.
+- `squads/[squadId]/route.ts` : profiles + bigWins en batch 1 parallèle, pronos + bets en batch 2 parallèle.
+- Migration `0066_perf_indexes.sql` : 5 index composites sur `pronos`, `bets`, `alert_signals`, `market_events`.
+- ISR : `revalidate = 300` (leaderboard), `revalidate = 60` (pronos).
+
+**Sprint F — Données & UX "Corriger ce qui est faux"**
+
+- Migration `0067_lifetime_points_earned.sql` + triggers + backfill → leaderboard classe par gains cumulés réels.
+- `squads/[squadId]/route.ts` : filtre période sur `placed_at` (plus `matches.start_time`) → historique ligue correct.
+- `pot_commun` renommé `total_xp_earned` dans l'API et le client (`SquadDetailClient` affiche "XP total").
+- `AmisContent` : Realtime channel `friend_requests` (rechargement live sur nouvelles demandes).
+- `TrophyWall` : description toujours visible sous les badges verrouillés (sans tap).
+- `push-sender.ts` : `console.error` pour les erreurs non-410.
+- `VotingModal` : quick-bet buttons `h-10` → `min-h-[48px]`.
+
+_Fin du document — mise à jour 2026-05-06 (sprint D/E/F)._

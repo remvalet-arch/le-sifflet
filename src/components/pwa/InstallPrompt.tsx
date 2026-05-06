@@ -4,31 +4,55 @@ import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
+const LS_KEY = "pwa_install_last_shown";
+// Mobile : re-propose après 7 jours. Desktop : 30 jours.
+const SNOOZE_DAYS_MOBILE = 7;
+const SNOOZE_DAYS_DESKTOP = 30;
+
+function isSnoozed(isMobile: boolean): boolean {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const daysSince = (Date.now() - Number(raw)) / 86_400_000;
+    return daysSince < (isMobile ? SNOOZE_DAYS_MOBILE : SNOOZE_DAYS_DESKTOP);
+  } catch {
+    return false;
+  }
+}
+
+function snooze(): void {
+  try {
+    localStorage.setItem(LS_KEY, String(Date.now()));
+  } catch {
+    // localStorage indisponible (mode privé strict) — on ignore
+  }
+}
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(true); // default to true so it doesn't flash
+  const [isStandalone, setIsStandalone] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if running on iOS
     const ua = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(ua);
+    const isMobileDevice =
+      /android|iphone|ipad|ipod/.test(ua) ||
+      window.matchMedia("(pointer: coarse)").matches;
 
-    // Check if already installed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nav = window.navigator as any;
     const isInstalled =
       window.matchMedia("(display-mode: standalone)").matches ||
       nav.standalone === true;
 
-    // Wait a tick before setting state to avoid "Calling setState synchronously within an effect" warning
-    // even though it's the mount effect, the linter is strict.
     setTimeout(() => {
       setIsIOS(isIosDevice);
+      setIsMobile(isMobileDevice);
       setIsStandalone(isInstalled);
     }, 0);
 
-    // Listen for beforeinstallprompt (Android/Chrome)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -44,8 +68,12 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (isStandalone) return;
+    if (isSnoozed(isMobile)) return;
 
     const timer = setTimeout(() => {
+      // Marque immédiatement pour ne pas re-montrer lors du prochain chargement
+      snooze();
+
       toast(
         <div className="flex flex-col gap-2">
           <span className="font-bold">Installe VAR Time 📺</span>
@@ -86,7 +114,7 @@ export function InstallPrompt() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [isStandalone, deferredPrompt, isIOS]);
+  }, [isStandalone, isMobile, deferredPrompt, isIOS]);
 
   return null;
 }

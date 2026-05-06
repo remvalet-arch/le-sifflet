@@ -1,6 +1,6 @@
 # 📖 BIBLE TECHNIQUE — VAR TIME (Le Sifflet) — V2
 
-> Audit CTO • 2026-05-06 • Base : commit `9c7c335` • 64 migrations Supabase • 42 composants client
+> Audit CTO • 2026-05-06 • Base : commit `9c7c335` → **mis à jour sprint D/E/F** • 67 migrations Supabase • 42 composants client
 
 ---
 
@@ -197,15 +197,19 @@ Pour chaque squad ayant des parieurs dans les 2 camps :
 **Route :** `GET /api/squads/[squadId]?period=week|month|general`
 
 ```
-Source 1 : pronos.points_earned > 0  (filtré par start_time si period ≠ general)
+Source 1 : pronos.points_earned > 0  (filtré par placed_at si period ≠ general)  ← FIXÉ (était start_time)
 Source 2 : bets.potential_reward - bets.amount_staked  (si status = 'won')
            filtré par placed_at si period ≠ general
 
 Tri : xp_période DESC, username ASC
-pot_commun = SUM de tous les xp_période des membres
+total_xp_earned = SUM de tous les xp_période des membres  ← RENOMMÉ (était pot_commun)
 ```
 
-> Le champ `xp` du leaderboard est une **métrique calculée sur la période** (≠ `profiles.xp` global cumulatif). Intentionnel mais absent de l'interface — source de confusion.
+> Le champ `xp` du leaderboard est une **métrique calculée sur la période** (≠ `profiles.xp` global cumulatif). Intentionnel.
+
+> ✅ **Fix sprint F2** : le filtre période utilise désormais `placed_at` (date du prono posé) et non `matches.start_time` — évite de compter dans la semaine courante un prono posé la semaine passée sur un match récent.
+
+> ✅ **Fix sprint F3** : `pot_commun` renommé `total_xp_earned` dans l'API et l'UI ("XP total : X Pts").
 
 ---
 
@@ -285,19 +289,28 @@ pot_commun = SUM de tous les xp_période des membres
 
 ```
 ✅ Promise.all([profiles, bets, pronos, badges, user_badges])  ← 5 requêtes parallèles
-❌ await teams...          ← Séquentiel si favorite_team_id (dépend du profil)
-❌ await market_events...  ← Séquentiel (dépend des IDs de bets)
-❌ await matches...        ← Séquentiel (dépend des IDs d'events)
+✅ select("*") → colonnes explicites (sprint E1)
+⚠️ await teams...          ← Séquentiel si favorite_team_id (dépend du profil, acceptable)
+⚠️ await market_events...  ← Séquentiel (dépend des IDs de bets, acceptable)
+⚠️ await matches...        ← Séquentiel (dépend des IDs d'events, acceptable)
 ```
 
-Fix : inclure `teams` dans le `Promise.all` (le profil revient avec `favorite_team_id`).
+**Page Match (`/match/[id]/page.tsx`) :**
+
+```
+✅ Promise.all([match, auth])  ← batch 1
+✅ Promise.all([profile, squad_members_rpc])  ← batch 2 (sprint E2)
+✅ Promise.all([pronosData, profilesData])  ← batch 3 admin (sprint E2)
+```
 
 **Route Squad (`/api/squads/[squadId]/route.ts`) :**
 
 ```
+✅ Promise.all([profiles, bigWins])  ← batch parallèle (sprint E3)
+✅ Promise.all([pronos, bets])  ← batch parallèle (sprint E3)
 ⚠️ squad_members_for_my_squads() → Renvoie TOUS les squads de l'user puis filtre côté JS
-   Fix : créer RPC squad_members_for_squad(squad_id) ciblée
-⚠️ bigWins → matchIds → matches : 2 requêtes séquentielles (acceptable mais optimisable)
+   Fix potentiel : créer RPC squad_members_for_squad(squad_id) ciblée
+⚠️ bigWins → matchIds → matches : 2 requêtes séquentielles (acceptable)
 ```
 
 ---

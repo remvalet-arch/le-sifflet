@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchRow } from "@/types/database";
 import { AdminEventCard } from "./AdminEventCard";
+import { ForceResolvePastMatchesButton } from "./ForceResolvePastMatchesButton";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 export const metadata = { title: "Admin — Résolution" };
@@ -85,10 +86,16 @@ export default async function AdminResolvePage() {
           )}
         </section>
 
-        <p className="text-center text-xs text-white/35">
-          Les pronos gratuits sont résolus automatiquement à la fin du match
-          (sync API-Football / admin fin de match).
-        </p>
+        <section>
+          <h2 className="mb-1 text-sm font-black uppercase tracking-widest text-zinc-400">
+            🔁 Rattrapage des matchs terminés
+          </h2>
+          <p className="mb-4 text-xs text-white/40">
+            Résout en lot tous les pronos et paris long terme encore en attente
+            sur des matchs déjà terminés.
+          </p>
+          <ForceResolvePastMatchesButton />
+        </section>
       </div>
     </main>
   );
