@@ -157,7 +157,7 @@ export function ProfileEditModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-[60] flex items-end justify-center"
       role="dialog"
       aria-modal="true"
     >

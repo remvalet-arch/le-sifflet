@@ -104,7 +104,7 @@ export function PlayerPickerSheet({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-black/70 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[55] bg-black/70 transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={handleClose}
@@ -112,7 +112,7 @@ export function PlayerPickerSheet({
 
       {/* Sheet */}
       <div
-        className={`fixed bottom-0 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 flex-col rounded-t-3xl bg-zinc-900 shadow-2xl transition-transform duration-300 ${
+        className={`fixed bottom-0 left-1/2 z-[60] flex w-full max-w-md -translate-x-1/2 flex-col rounded-t-3xl bg-zinc-900 shadow-2xl transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ height: "80vh", maxHeight: "620px" }}

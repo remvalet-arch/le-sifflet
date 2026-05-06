@@ -958,6 +958,28 @@ function getDayFullLabel(dayKey: string): string {
   return format(date, "EEEE d MMMM", { locale: fr });
 }
 
+/**
+ * Agrège tous les pronos d'un match en un seul objet pour l'affichage.
+ * Si au moins un prono est gagné → status "won" + somme des points gagnés.
+ * Sinon → prono le plus significatif (exact_score en priorité).
+ */
+function compositeProno(
+  pronos: ExistingProno[],
+  matchId: string,
+): ExistingProno | null {
+  const mp = pronos.filter((p) => p.match_id === matchId);
+  if (mp.length === 0) return null;
+  const wonPronos = mp.filter((p) => p.status === "won");
+  if (wonPronos.length > 0) {
+    const totalPoints = wonPronos.reduce(
+      (sum, p) => sum + (p.points_earned ?? 0),
+      0,
+    );
+    return { ...wonPronos[0], points_earned: totalPoints };
+  }
+  return mp.find((p) => p.prono_type === "exact_score") ?? mp[0];
+}
+
 export function PronosticsHubClient({
   matches,
   existingPronos,
@@ -1244,10 +1266,7 @@ export function PronosticsHubClient({
                           <MatchPronoCard
                             key={m.id}
                             match={m}
-                            existingProno={
-                              existingPronos.find((p) => p.match_id === m.id) ??
-                              null
-                            }
+                            existingProno={compositeProno(existingPronos, m.id)}
                             existingScore={p?.score ?? null}
                             existingScorers={p?.scorers ?? null}
                             onSubmittedChange={(submitted) => {

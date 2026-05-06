@@ -283,7 +283,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
       {/* Join bottom sheet */}
       {joinOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end"
+          className="fixed inset-0 z-[60] flex items-end"
           onClick={() => setJoinOpen(false)}
         >
           <div

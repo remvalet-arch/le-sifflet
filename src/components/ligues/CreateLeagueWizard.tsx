@@ -74,7 +74,7 @@ export function CreateLeagueWizard({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 sm:items-center sm:justify-center sm:bg-black/80 sm:backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex flex-col bg-zinc-950 sm:items-center sm:justify-center sm:bg-black/80 sm:backdrop-blur-sm">
       <div className="flex h-full w-full flex-col sm:h-auto sm:max-w-md sm:rounded-3xl sm:border sm:border-white/10 sm:bg-zinc-950 sm:shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
         {/* Progress Bar */}
         <div className="h-1.5 w-full bg-zinc-800">
