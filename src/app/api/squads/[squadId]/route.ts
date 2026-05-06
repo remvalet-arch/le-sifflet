@@ -6,6 +6,8 @@ type LeaderboardRow = {
   user_id: string;
   username: string;
   xp: number;
+  pronos_xp: number;
+  var_xp: number;
   sifflets_balance: number;
   rank: string;
 };
@@ -31,8 +33,13 @@ export async function GET(
     if (!squadId) return errorResponse("squadId requis", 400);
 
     const url = new URL(request.url);
+    const periodParam = url.searchParams.get("period");
     const period =
-      url.searchParams.get("period") === "week" ? "week" : "general";
+      periodParam === "week"
+        ? "week"
+        : periodParam === "month"
+          ? "month"
+          : "general";
 
     const supabase = await createClient();
     const {
@@ -101,52 +108,72 @@ export async function GET(
       return errorResponse(pErr.message, 500);
     }
 
-    const weeklyXpByUser: Map<string, number> = new Map();
-    if (period === "week") {
+    const xpByUser: Map<string, number> = new Map();
+    const pronosXpByUser: Map<string, number> = new Map();
+    const varXpByUser: Map<string, number> = new Map();
+
+    let cutoffIso: string | null = null;
+    if (period === "week" || period === "month") {
       const now = new Date();
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-      monday.setHours(0, 0, 0, 0);
-
-      const { data: weekPronos, error: wErr } = await adminSupabase
-        .from("pronos")
-        .select("user_id, points_earned, matches!inner(start_time)")
-        .in("user_id", memberIds)
-        .gte("matches.start_time", monday.toISOString())
-        .gt("points_earned", 0);
-
-      if (wErr) {
-        console.error("Supabase Error (pronos):", wErr);
-        return errorResponse(wErr.message, 500);
+      const cutoff = new Date(now);
+      if (period === "week") {
+        cutoff.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      } else {
+        cutoff.setDate(1);
       }
+      cutoff.setHours(0, 0, 0, 0);
+      cutoffIso = cutoff.toISOString();
+    }
 
-      const { data: weekBets, error: bErr } = await adminSupabase
-        .from("bets")
-        .select("user_id, potential_reward, amount_staked, placed_at")
-        .in("user_id", memberIds)
-        .gte("placed_at", monday.toISOString())
-        .eq("status", "won");
+    // Pronos query
+    let pronosQuery = adminSupabase
+      .from("pronos")
+      .select("user_id, points_earned, matches!inner(start_time)")
+      .in("user_id", memberIds)
+      .gt("points_earned", 0);
 
-      if (bErr) {
-        console.error("Supabase Error (bets):", bErr);
-        return errorResponse(bErr.message, 500);
-      }
+    if (cutoffIso) {
+      pronosQuery = pronosQuery.gte("matches.start_time", cutoffIso);
+    }
 
-      for (const p of weekPronos ?? []) {
-        weeklyXpByUser.set(
-          p.user_id,
-          (weeklyXpByUser.get(p.user_id) ?? 0) + p.points_earned,
-        );
-      }
+    const { data: userPronos, error: wErr } = await pronosQuery;
 
-      for (const b of weekBets ?? []) {
-        const netGain = b.potential_reward - b.amount_staked;
-        if (netGain > 0) {
-          weeklyXpByUser.set(
-            b.user_id,
-            (weeklyXpByUser.get(b.user_id) ?? 0) + netGain,
-          );
-        }
+    if (wErr) {
+      console.error("Supabase Error (pronos):", wErr);
+      return errorResponse(wErr.message, 500);
+    }
+
+    // Bets query
+    let betsQuery = adminSupabase
+      .from("bets")
+      .select("user_id, potential_reward, amount_staked, placed_at")
+      .in("user_id", memberIds)
+      .eq("status", "won");
+
+    if (cutoffIso) {
+      betsQuery = betsQuery.gte("placed_at", cutoffIso);
+    }
+
+    const { data: userBets, error: bErr } = await betsQuery;
+
+    if (bErr) {
+      console.error("Supabase Error (bets):", bErr);
+      return errorResponse(bErr.message, 500);
+    }
+
+    for (const p of userPronos ?? []) {
+      pronosXpByUser.set(
+        p.user_id,
+        (pronosXpByUser.get(p.user_id) ?? 0) + p.points_earned,
+      );
+      xpByUser.set(p.user_id, (xpByUser.get(p.user_id) ?? 0) + p.points_earned);
+    }
+
+    for (const b of userBets ?? []) {
+      const netGain = b.potential_reward - b.amount_staked;
+      if (netGain > 0) {
+        varXpByUser.set(b.user_id, (varXpByUser.get(b.user_id) ?? 0) + netGain);
+        xpByUser.set(b.user_id, (xpByUser.get(b.user_id) ?? 0) + netGain);
       }
     }
 
@@ -154,7 +181,9 @@ export async function GET(
       .map((p) => ({
         user_id: p.id,
         username: p.username,
-        xp: period === "week" ? (weeklyXpByUser.get(p.id) ?? 0) : (p.xp ?? 0),
+        xp: xpByUser.get(p.id) ?? 0,
+        pronos_xp: pronosXpByUser.get(p.id) ?? 0,
+        var_xp: varXpByUser.get(p.id) ?? 0,
         sifflets_balance: p.sifflets_balance ?? 0,
         rank: p.rank ?? "—",
       }))
@@ -162,7 +191,7 @@ export async function GET(
         (a, b) => b.xp - a.xp || a.username.localeCompare(b.username, "fr"),
       );
 
-    const pot_commun = leaderboard.reduce((s, m) => s + m.sifflets_balance, 0);
+    const pot_commun = leaderboard.reduce((s, m) => s + m.xp, 0);
 
     const usernameById = new Map(
       (profiles ?? []).map((p) => [p.id, p.username]),

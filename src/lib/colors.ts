@@ -1,4 +1,4 @@
-const MIN_DISTANCE = 60;
+const MIN_DISTANCE = 160;
 const FALLBACK_LIGHT = "#FFFFFF";
 const FALLBACK_DARK = "#111827";
 

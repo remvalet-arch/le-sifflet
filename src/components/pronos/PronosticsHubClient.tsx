@@ -30,6 +30,8 @@ type MatchStub = {
   competition_id: string | null;
   round_short: string | null;
   status: string;
+  home_score?: number | null;
+  away_score?: number | null;
   odds_home?: number | null;
   odds_draw?: number | null;
   odds_away?: number | null;
@@ -53,6 +55,9 @@ type ExistingProno = {
   match_id: string;
   prono_type: string;
   prono_value: string;
+  points_earned?: number | null;
+  reward_amount?: number | null;
+  status?: string | null;
 };
 
 type ScorerEntry = { name: string; goals: number };
@@ -318,11 +323,13 @@ function ScorerSlot({
 
 function MatchPronoCard({
   match,
+  existingProno,
   existingScore,
   existingScorers,
   onSubmittedChange,
 }: {
   match: MatchStub;
+  existingProno: ExistingProno | null;
   existingScore: { home: string; away: string } | null;
   existingScorers: ScorersAlloc | null;
   onSubmittedChange: (submitted: boolean) => void;
@@ -468,11 +475,104 @@ function MatchPronoCard({
   const kickoff = new Date(match.start_time);
   const relativeTime = formatRelative(kickoff, new Date(), { locale: fr });
 
+  const homeAgg = aggregateSlots(homeSlots);
+  const awayAgg = aggregateSlots(awaySlots);
+  const hasScorers = homeAgg.length > 0 || awayAgg.length > 0;
+
+  // Finished match result card
+  if (match.status === "finished") {
+    const hasScore = match.home_score != null && match.away_score != null;
+    const isWon = existingProno?.status === "won";
+    const isLost = existingProno?.status === "lost";
+    const pointsEarned =
+      (existingProno?.points_earned ?? 0) > 0
+        ? existingProno!.points_earned!
+        : (existingProno?.reward_amount ?? 0);
+    const hasProno = existingScore != null;
+
+    return (
+      <div
+        className={`rounded-2xl border px-4 py-4 ${
+          isWon
+            ? "border-green-500/30 bg-green-500/5 shadow-[0_0_12px_rgba(34,197,94,0.08)]"
+            : isLost
+              ? "border-red-500/20 bg-zinc-900/50"
+              : "border-zinc-700/30 bg-zinc-900/40"
+        }`}
+      >
+        {/* Round label */}
+        <div className="mb-3 flex items-center justify-between">
+          {match.round_short && (
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              {match.round_short}
+            </span>
+          )}
+          <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-zinc-500">
+            FT
+          </span>
+        </div>
+
+        {/* Teams + score */}
+        <div className="flex items-center gap-2">
+          {/* Home team */}
+          <div className="flex flex-1 flex-col items-center text-center">
+            <TeamLogo logo={match.home_team_logo} name={match.team_home} />
+            <span className="mt-1.5 line-clamp-1 text-xs font-bold text-zinc-300">
+              {match.team_home}
+            </span>
+          </div>
+
+          {/* Score block */}
+          <div className="flex shrink-0 flex-col items-center gap-1.5 px-2">
+            {hasScore ? (
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-black tabular-nums text-white">
+                  {match.home_score}
+                </span>
+                <span className="text-xl font-black text-zinc-600">-</span>
+                <span className="text-3xl font-black tabular-nums text-white">
+                  {match.away_score}
+                </span>
+              </div>
+            ) : (
+              <span className="text-lg font-bold text-zinc-500">? - ?</span>
+            )}
+
+            {hasProno && (
+              <p className="text-[11px] text-zinc-500">
+                Prono : {existingScore!.home}-{existingScore!.away}
+              </p>
+            )}
+
+            {isWon && pointsEarned > 0 ? (
+              <span className="rounded-full border border-green-500/30 bg-green-500/15 px-3 py-0.5 text-[11px] font-black text-green-400">
+                +{pointsEarned.toLocaleString("fr-FR")} Pts
+              </span>
+            ) : isLost ? (
+              <span className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-0.5 text-[11px] font-bold text-zinc-500">
+                Perdu
+              </span>
+            ) : !hasProno ? (
+              <span className="rounded-full border border-zinc-700/50 bg-zinc-800/60 px-3 py-0.5 text-[11px] font-bold text-zinc-600">
+                Pas de prono
+              </span>
+            ) : null}
+          </div>
+
+          {/* Away team */}
+          <div className="flex flex-1 flex-col items-center text-center">
+            <TeamLogo logo={match.away_team_logo} name={match.team_away} />
+            <span className="mt-1.5 line-clamp-1 text-xs font-bold text-zinc-300">
+              {match.team_away}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Compact submitted card
   if (submitted) {
-    const homeAgg = aggregateSlots(homeSlots);
-    const awayAgg = aggregateSlots(awaySlots);
-    const hasScorers = homeAgg.length > 0 || awayAgg.length > 0;
     const scorerText = [
       homeAgg
         .map((e) => (e.goals > 1 ? `${e.name} (×${e.goals})` : e.name))
@@ -485,14 +585,25 @@ function MatchPronoCard({
       .join(" / ");
 
     return (
-      <div className="flex flex-col gap-0.5 rounded-2xl border border-green-500/20 bg-zinc-900/50 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Check className="h-4 w-4 shrink-0 text-green-400" />
-          <span className="flex-1 text-sm font-bold text-white">
-            {match.team_home}{" "}
-            <span className="font-black text-whistle">
-              {homeScore}–{awayScore}
-            </span>{" "}
+      <div
+        className={`flex flex-col gap-0.5 rounded-2xl border ${existingProno?.status === "won" ? "border-green-500/50 bg-green-500/5 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : existingProno?.status === "lost" ? "border-red-500/20 bg-red-500/5" : "border-green-500/20 bg-zinc-900/50"} px-4 py-3 relative overflow-hidden`}
+      >
+        {existingProno?.status && (
+          <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-black/20 to-transparent pointer-events-none" />
+        )}
+        <div className="flex items-center gap-2 relative z-10">
+          <Check
+            className={`h-4 w-4 shrink-0 ${existingProno?.status === "lost" ? "text-red-400" : "text-green-400"}`}
+          />
+          <span className="flex-1 text-sm font-bold text-white flex items-center gap-2">
+            {match.team_home}
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-amber-400 shadow-inner">
+              {homeScore}
+            </div>
+            <span className="text-zinc-600 font-bold">-</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-amber-400 shadow-inner">
+              {awayScore}
+            </div>
             {match.team_away}
           </span>
           {!isLocked && (
@@ -509,11 +620,23 @@ function MatchPronoCard({
           )}
         </div>
         {hasScorers && (
-          <p className="ml-6 text-[11px] text-zinc-500">{scorerText}</p>
+          <p className="ml-6 text-[11px] text-zinc-500 relative z-10">
+            {scorerText}
+          </p>
         )}
-        <p className="ml-6 text-[11px] capitalize text-zinc-600">
-          {relativeTime}
-        </p>
+        <div className="ml-6 flex items-center justify-between mt-1 relative z-10">
+          <p className="text-[11px] capitalize text-zinc-600">{relativeTime}</p>
+          {existingProno?.status === "won" && (
+            <span className="text-[11px] font-black text-green-400">
+              +
+              {(existingProno.points_earned! > 0
+                ? existingProno.points_earned!
+                : existingProno.reward_amount!
+              ).toLocaleString("fr-FR")}{" "}
+              Pts
+            </span>
+          )}
+        </div>
       </div>
     );
   }
@@ -742,7 +865,18 @@ function MatchPronoCard({
         )}
 
         {/* Submit / locked */}
-        {isLocked ? (
+        {match.status === "first_half" ||
+        match.status === "second_half" ||
+        match.status === "half_time" ||
+        match.status === "paused" ? (
+          <a
+            href={`/match/${match.id}`}
+            className="mt-4 flex w-full animate-pulse items-center justify-center gap-2 rounded-xl bg-red-600 py-4 text-sm font-black uppercase tracking-wide text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] transition hover:bg-red-500 active:scale-[0.98]"
+          >
+            <span className="h-2 w-2 rounded-full bg-white" />
+            REJOINDRE LE STADE
+          </a>
+        ) : isLocked ? (
           <div className="mt-4 flex w-full items-center justify-center rounded-xl bg-zinc-800/50 py-3 text-sm font-black uppercase tracking-wide text-zinc-500">
             Le match a commencé, pronos fermés 🔒
           </div>
@@ -871,13 +1005,17 @@ export function PronosticsHubClient({
     compMap.get(compId)!.push(m);
   }
 
-  // Selected day: first day that has at least one pending prono, else first day
+  // Selected day: first day with an upcoming match missing a prono, else first day
   const [selectedDay, setSelectedDay] = useState<string>(() => {
     return (
       dayOrder.find((dk) => {
         const cm = dayMap.get(dk)!;
         return Array.from(cm.values()).some((ms) =>
-          ms.some((m) => pronoByMatchId.get(m.id)?.score == null),
+          ms.some(
+            (m) =>
+              m.status === "upcoming" &&
+              pronoByMatchId.get(m.id)?.score == null,
+          ),
         );
       }) ??
       dayOrder[0] ??
@@ -1106,6 +1244,10 @@ export function PronosticsHubClient({
                           <MatchPronoCard
                             key={m.id}
                             match={m}
+                            existingProno={
+                              existingPronos.find((p) => p.match_id === m.id) ??
+                              null
+                            }
                             existingScore={p?.score ?? null}
                             existingScorers={p?.scorers ?? null}
                             onSubmittedChange={(submitted) => {

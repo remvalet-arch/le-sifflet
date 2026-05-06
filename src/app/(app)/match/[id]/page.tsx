@@ -23,10 +23,7 @@ export default async function MatchPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [
-    matchResponse,
-    authResponse,
-  ] = await Promise.all([
+  const [matchResponse, authResponse] = await Promise.all([
     supabase
       .from("matches")
       .select(
@@ -38,7 +35,9 @@ export default async function MatchPage({ params }: Props) {
   ]);
 
   const { data: matchData, error } = matchResponse;
-  const { data: { user } } = authResponse;
+  const {
+    data: { user },
+  } = authResponse;
 
   if (error || !matchData) notFound();
   if (!user) return null;
@@ -57,13 +56,10 @@ export default async function MatchPage({ params }: Props) {
 
   // Récupération des membres de ligues pour afficher leurs pronos ("Le Vestiaire")
   const { data: pairs } = await supabase.rpc("squad_members_for_my_squads");
-  
+
   // On inclut AUSSI l'utilisateur courant pour qu'il puisse voir son propre prono dans le vestiaire !
   const memberIds = [
-    ...new Set([
-      ...(pairs ?? []).map((p) => p.user_id),
-      user.id,
-    ]),
+    ...new Set([...(pairs ?? []).map((p) => p.user_id), user.id]),
   ];
 
   let squadPronos: {
@@ -76,16 +72,18 @@ export default async function MatchPage({ params }: Props) {
 
   if (memberIds.length > 0) {
     const adminSupabase = createAdminClient();
-    
+
     // 1. On récupère les pronos
     const { data: pronosData, error: pronosErr } = await adminSupabase
       .from("pronos")
-      .select(`
+      .select(
+        `
         user_id,
         prono_type,
         prono_value,
         points_earned
-      `)
+      `,
+      )
       .eq("match_id", id)
       .in("user_id", memberIds);
 
@@ -99,9 +97,7 @@ export default async function MatchPage({ params }: Props) {
       .select("id, username, avatar_url")
       .in("id", memberIds);
 
-    const profilesMap = new Map(
-      (profilesData ?? []).map((p) => [p.id, p])
-    );
+    const profilesMap = new Map((profilesData ?? []).map((p) => [p.id, p]));
 
     // 3. On fusionne les deux
     squadPronos = (pronosData ?? []).map((p) => ({

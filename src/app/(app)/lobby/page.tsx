@@ -3,7 +3,7 @@ import { CalendarX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MatchListSkeleton } from "@/components/lobby/MatchCardSkeleton";
 import { MatchLobby } from "@/components/lobby/MatchLobby";
-import { Onboarding } from "@/components/onboarding/Onboarding";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import {
   fetchLobbyMatchesByRound,
   fetchLobbyMatchesForParisDayWithFallback,
@@ -121,7 +121,7 @@ export default async function LobbyPage({ searchParams }: PageProps) {
         </Suspense>
       </main>
 
-      {needsOnboarding && <Onboarding />}
+      {needsOnboarding && <OnboardingTour />}
     </>
   );
 }

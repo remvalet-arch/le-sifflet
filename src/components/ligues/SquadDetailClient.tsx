@@ -10,6 +10,7 @@ import {
   Wallet,
   ChevronLeft,
   Flame,
+  Share2,
 } from "lucide-react";
 import type { SquadRow } from "@/types/database";
 
@@ -17,11 +18,13 @@ type LeaderboardRow = {
   user_id: string;
   username: string;
   xp: number;
+  pronos_xp: number;
+  var_xp: number;
   sifflets_balance: number;
   rank: string;
 };
 
-type Period = "general" | "week";
+type Period = "general" | "week" | "month";
 
 type ActivityItem = {
   user_id: string;
@@ -54,7 +57,7 @@ export function SquadDetailClient({
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [nudging, setNudging] = useState(false);
-  const [period, setPeriod] = useState<Period>("general");
+  const [period, setPeriod] = useState<"general" | "week" | "month">("general");
 
   useEffect(() => {
     let alive = true;
@@ -133,8 +136,36 @@ export function SquadDetailClient({
     }
   }
 
+  function handleShare() {
+    if (!squad.invite_code) return;
+
+    const myUsername = leaderboard.find(
+      (m) => m.user_id === currentUserId,
+    )?.username;
+    const from = myUsername ?? "Un pote";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const message = `Hey ! ⚽ ${from} t'invite à rejoindre sa ligue "${squad.name}" sur VAR TIME.\n\nRentre ce code pour intégrer le vestiaire : ${squad.invite_code}\n\nLien: ${origin}/ligues`;
+
+    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      navigator
+        .share({
+          title: `Rejoins ${squad.name} sur VAR TIME`,
+          text: message,
+        })
+        .catch(() => {
+          void navigator.clipboard.writeText(message);
+          toast.success("Message copié !");
+        });
+    } else {
+      void navigator.clipboard.writeText(message);
+      toast.success("Message copié !");
+    }
+  }
+
+  const isAdmin = squad.owner_id === currentUserId;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 relative min-h-screen">
       <Link
         href="/ligues"
         className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
@@ -143,16 +174,19 @@ export function SquadDetailClient({
         Mes ligues
       </Link>
 
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-xl mt-4">
+        {/* Premium Blur Effect using standard emojis or avatars */}
+        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-amber-500/20 blur-3xl" />
+
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80 relative z-10">
           {squad.is_private ? "Ligue privée" : "Publique"}
         </p>
-        <h1 className="text-2xl font-black tracking-tight text-white">
+        <h1 className="text-3xl font-black tracking-tight text-white relative z-10 mt-1 mb-4">
           {squad.name}
         </h1>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
           <p className="flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-xl border border-green-500/20">
               <Wallet className="h-4 w-4" aria-hidden />
               Pot commun :{" "}
               <span className="font-black tabular-nums">
@@ -164,7 +198,7 @@ export function SquadDetailClient({
             type="button"
             onClick={handleNudge}
             disabled={nudging}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800/80 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 disabled:opacity-50 border border-white/5 backdrop-blur-md"
           >
             {nudging ? (
               <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -185,7 +219,7 @@ export function SquadDetailClient({
             </h2>
           </div>
           <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
-            {(["general", "week"] as const).map((p) => (
+            {(["general", "month", "week"] as const).map((p) => (
               <button
                 key={p}
                 type="button"
@@ -196,7 +230,11 @@ export function SquadDetailClient({
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                {p === "general" ? "Général" : "Cette semaine"}
+                {p === "general"
+                  ? "Général"
+                  : p === "month"
+                    ? "Mois"
+                    : "Semaine"}
               </button>
             ))}
           </div>
@@ -204,7 +242,7 @@ export function SquadDetailClient({
         <p className="mb-3 text-xs text-zinc-500">
           {period === "general"
             ? "XP total (puis pseudo). Solde Pts affiché pour le fun du vestiaire."
-            : "Points gagnés depuis lundi (Pronos + Paris Live)."}
+            : `Points gagnés depuis le début ${period === "month" ? "du mois" : "de la semaine"} (Pronos + Paris Live).`}
         </p>
         <ol className="flex flex-col gap-2">
           {leaderboard.map((row, idx) => {
@@ -215,8 +253,12 @@ export function SquadDetailClient({
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
                       idx === 0
-                        ? "bg-amber-500 text-black"
-                        : "bg-zinc-800 text-zinc-400"
+                        ? "bg-yellow-500 text-yellow-900 border-2 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
+                        : idx === 1
+                          ? "bg-zinc-300 text-zinc-800 border-2 border-zinc-200 shadow-[0_0_10px_rgba(212,212,216,0.3)]"
+                          : idx === 2
+                            ? "bg-amber-700 text-amber-100 border-2 border-amber-600 shadow-[0_0_10px_rgba(180,83,9,0.3)]"
+                            : "bg-zinc-800 text-zinc-400"
                     }`}
                   >
                     {idx + 1}
@@ -235,9 +277,14 @@ export function SquadDetailClient({
                     {row.xp.toLocaleString("fr-FR")}{" "}
                     {period === "general" ? "XP" : "pts"}
                   </p>
-                  <p className="text-[10px] font-bold text-zinc-500">
-                    {row.sifflets_balance.toLocaleString("fr-FR")} Pts
-                  </p>
+                  <div className="flex gap-2 justify-end mt-0.5">
+                    <span className="text-[10px] font-bold text-green-400">
+                      🎯 {row.pronos_xp.toLocaleString("fr-FR")}
+                    </span>
+                    <span className="text-[10px] font-bold text-blue-400">
+                      ⚡ {row.var_xp.toLocaleString("fr-FR")}
+                    </span>
+                  </div>
                 </div>
               </>
             );
@@ -308,6 +355,18 @@ export function SquadDetailClient({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {isAdmin && squad.invite_code && (
+        <div className="fixed bottom-24 left-0 right-0 z-40 mx-auto max-w-2xl px-4 pointer-events-none">
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-sm font-black uppercase tracking-wide text-zinc-950 shadow-[0_10px_40px_rgba(255,255,255,0.2)] transition active:scale-[0.98] pointer-events-auto"
+          >
+            <Share2 className="h-5 w-5" />
+            Partager l&apos;invitation
+          </button>
         </div>
       )}
     </div>

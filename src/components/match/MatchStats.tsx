@@ -144,7 +144,7 @@ export const MatchStats = memo(function MatchStats({
     : isHexColor(homeTeamPrimaryColor)
       ? homeTeamPrimaryColor
       : null;
-  
+
   const resolvedHomeSecondary = isHexColor(homeTeamSecondaryColor)
     ? homeTeamSecondaryColor
     : null;
@@ -154,7 +154,7 @@ export const MatchStats = memo(function MatchStats({
     : isHexColor(awayTeamPrimaryColor)
       ? awayTeamPrimaryColor
       : null;
-      
+
   const resolvedAwaySecondary = isHexColor(awayTeamSecondaryColor)
     ? awayTeamSecondaryColor
     : null;

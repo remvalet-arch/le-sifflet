@@ -30,6 +30,17 @@ export async function resolveEvent(
   });
   if (error) throw new Error(error.message);
 
+  // Annule le cooldown VAR du match pour permettre une nouvelle alerte immédiate
+  if (event) {
+    const { error: cooldownErr } = await admin
+      .from("matches")
+      .update({ alert_cooldown_until: null })
+      .eq("id", event.match_id);
+    if (cooldownErr) {
+      console.error("[resolve] Reset cooldown failed:", cooldownErr.message);
+    }
+  }
+
   // ── Effet Domino ─────────────────────────────────────────────────────────────
   if (event && result === "oui") {
     const chainType = CHAIN_MAP[event.type as MarketEventType];

@@ -5,6 +5,8 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { getApiFootballSeasonYear } from "@/lib/api-football-client";
+import { sendPushToMatchSubscribers } from "@/lib/push-sender";
+import { checkAndUnlockBadges } from "@/app/actions/badges";
 
 export async function POST(request: NextRequest) {
   // ── Guard modérateur ────────────────────────────────────────────────────────
@@ -74,6 +76,27 @@ export async function POST(request: NextRequest) {
   if (pronoErr) {
     console.warn(`[finish-match] resolve_match_pronos: ${pronoErr.message}`);
   }
+
+  // Push fin de match + badges pronos gagnants (fire-and-forget)
+  void (async () => {
+    await sendPushToMatchSubscribers(match_id, {
+      title: "⏱ Match terminé !",
+      body: `${match.team_home} ${match.home_score ?? 0}–${match.away_score ?? 0} ${match.team_away} — Résultats pronos disponibles`,
+      url: `/match/${match_id}`,
+    });
+
+    const { data: wonPronos } = await admin
+      .from("pronos")
+      .select("user_id")
+      .eq("match_id", match_id)
+      .eq("status", "won");
+    const pronoWinnerIds = [
+      ...new Set((wonPronos ?? []).map((p) => p.user_id)),
+    ];
+    if (pronoWinnerIds.length > 0) {
+      await Promise.all(pronoWinnerIds.map((uid) => checkAndUnlockBadges(uid)));
+    }
+  })();
 
   // Async hub stats sync — ne bloque pas la réponse
   void (async () => {

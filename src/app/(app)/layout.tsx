@@ -3,6 +3,35 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/TopBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 
+async function trackLoginStreak(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<void> {
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("last_login_date, login_streak")
+    .eq("id", userId)
+    .single();
+
+  if (!p) return;
+
+  const last = p.last_login_date as string | null;
+  if (last === todayStr) return; // Déjà loggé aujourd'hui
+
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const newStreak = last === yesterday ? (p.login_streak ?? 0) + 1 : 1;
+
+  await supabase
+    .from("profiles")
+    .update({ last_login_date: todayStr, login_streak: newStreak })
+    .eq("id", userId);
+}
+
 export default async function AppLayout({
   children,
 }: {
@@ -22,6 +51,8 @@ export default async function AppLayout({
     .single();
 
   if (error || !profile) redirect("/?error=profile");
+
+  void trackLoginStreak(supabase, user.id);
 
   return (
     <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden bg-zinc-950 shadow-2xl">

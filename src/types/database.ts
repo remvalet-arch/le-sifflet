@@ -49,6 +49,8 @@ export interface Database {
           rank: string;
           updated_at: string | null;
           favorite_team_id: string | null;
+          last_login_date: string | null;
+          login_streak: number;
         };
         Insert: {
           id: string;
@@ -64,6 +66,8 @@ export interface Database {
           rank?: string;
           updated_at?: string | null;
           favorite_team_id?: string | null;
+          last_login_date?: string | null;
+          login_streak?: number;
         };
         Update: {
           id?: string;
@@ -79,6 +83,8 @@ export interface Database {
           rank?: string;
           updated_at?: string | null;
           favorite_team_id?: string | null;
+          last_login_date?: string | null;
+          login_streak?: number;
         };
         Relationships: [];
       };
@@ -300,6 +306,7 @@ export interface Database {
           invite_code: string | null;
           owner_id: string;
           created_at: string;
+          game_mode: string;
         };
         Insert: {
           id?: string;
@@ -308,6 +315,7 @@ export interface Database {
           invite_code?: string | null;
           owner_id: string;
           created_at?: string;
+          game_mode?: string;
         };
         Update: {
           id?: string;
@@ -316,6 +324,7 @@ export interface Database {
           invite_code?: string | null;
           owner_id?: string;
           created_at?: string;
+          game_mode?: string;
         };
         Relationships: [];
       };
@@ -823,6 +832,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      friend_requests: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          status: "pending" | "accepted" | "rejected";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          receiver_id: string;
+          status?: "pending" | "accepted" | "rejected";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          sender_id?: string;
+          receiver_id?: string;
+          status?: "pending" | "accepted" | "rejected";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_match_pronos_stats: {
@@ -978,3 +1014,7 @@ export type LeagueStandingRow =
   Database["public"]["Tables"]["league_standings"]["Row"];
 export type LeagueTopPlayerRow =
   Database["public"]["Tables"]["league_top_players"]["Row"];
+export type FriendRequestRow =
+  Database["public"]["Tables"]["friend_requests"]["Row"];
+export type FriendRequestInsert =
+  Database["public"]["Tables"]["friend_requests"]["Insert"];

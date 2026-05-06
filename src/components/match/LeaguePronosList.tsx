@@ -18,8 +18,7 @@ export function LeaguePronosList({
 }: Props) {
   // Déterminer si les pronos sont dévoilés
   const hasStarted =
-    matchStatus !== "upcoming" &&
-    new Date() >= new Date(startTime);
+    matchStatus !== "upcoming" && new Date() >= new Date(startTime);
 
   if (!hasStarted) {
     return (
@@ -31,8 +30,8 @@ export function LeaguePronosList({
           Vestiaire Verrouillé
         </h3>
         <p className="max-w-xs text-sm text-zinc-400">
-          Les pronos de tes amis seront dévoilés ici au coup d'envoi pour éviter
-          la triche. Suspense... 🤫
+          Les pronos de tes amis seront dévoilés ici au coup d&apos;envoi pour
+          éviter la triche. Suspense... 🤫
         </p>
       </div>
     );
@@ -69,7 +68,7 @@ export function LeaguePronosList({
     } else if (prono.prono_type === "scorer_allocation") {
       try {
         userEntry.scorers = JSON.parse(prono.prono_value);
-      } catch (e) {
+      } catch {
         // Ignorer silencieusement si le JSON est mal formé
       }
     }
@@ -81,7 +80,7 @@ export function LeaguePronosList({
     return (
       <div className="mx-4 mt-6 flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-zinc-900/50 p-8 text-center">
         <p className="text-sm font-bold text-zinc-500">
-          Aucun membre de tes ligues n'a pronostiqué ce match.
+          Aucun membre de tes ligues n&apos;a pronostiqué ce match.
         </p>
       </div>
     );
@@ -119,30 +118,39 @@ export function LeaguePronosList({
           </div>
 
           <div className="flex flex-col gap-2 rounded-xl bg-zinc-950/50 p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase text-zinc-500">
+            <div className="flex flex-col items-center justify-center">
+              <span className="text-xs font-bold uppercase text-zinc-500 mb-2">
                 Score exact
               </span>
-              <span className="font-black text-amber-400">
-                {user.score ? user.score : "—"}
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-lg font-black text-amber-400 shadow-inner">
+                  {user.score ? user.score.split("-")[0] : "-"}
+                </div>
+                <span className="text-zinc-600 font-bold">-</span>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-lg font-black text-amber-400 shadow-inner">
+                  {user.score ? user.score.split("-")[1] : "-"}
+                </div>
+              </div>
             </div>
 
             {user.scorers &&
-              (user.scorers.home.length > 0 || user.scorers.away.length > 0) && (
+              (user.scorers.home.length > 0 ||
+                user.scorers.away.length > 0) && (
                 <div className="mt-1 border-t border-white/5 pt-2">
                   <span className="mb-2 block text-[10px] font-bold uppercase text-zinc-600">
                     Buteurs
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {[...user.scorers.home, ...user.scorers.away].map((s, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1 rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 text-[11px] font-medium text-zinc-300"
-                      >
-                        ⚽ {s.name} {s.goals > 1 ? `(x${s.goals})` : ""}
-                      </span>
-                    ))}
+                    {[...user.scorers.home, ...user.scorers.away].map(
+                      (s, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 text-[11px] font-medium text-zinc-300"
+                        >
+                          ⚽ {s.name} {s.goals > 1 ? `(x${s.goals})` : ""}
+                        </span>
+                      ),
+                    )}
                   </div>
                 </div>
               )}

@@ -3,6 +3,8 @@ import "./globals.css";
 import { ToasterProvider } from "@/components/providers/ToasterProvider";
 import { ServiceWorkerRegister } from "@/components/providers/ServiceWorkerRegister";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -43,18 +45,23 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="fr" className="h-full antialiased">
+    <html lang={locale} className="h-full antialiased">
       <body className="min-h-full bg-zinc-950 text-zinc-50 font-sans">
-        {children}
-        <ServiceWorkerRegister />
-        <InstallPrompt />
-        <ToasterProvider />
+        <NextIntlClientProvider messages={messages}>
+          {children}
+          <ServiceWorkerRegister />
+          <InstallPrompt />
+          <ToasterProvider />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

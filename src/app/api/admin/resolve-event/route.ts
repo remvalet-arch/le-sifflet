@@ -4,7 +4,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { resolveEvent } from "@/lib/resolve-event";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
+import { sendPushToMatchSubscribers } from "@/lib/push-sender";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+
+const EVENT_LABEL: Record<string, string> = {
+  penalty_check: "Penalty en discussion",
+  penalty_outcome: "Résultat penalty",
+  var_goal: "But sous VAR",
+  red_card: "Carton rouge",
+  injury_sub: "Blessure / Remplacement",
+  free_kick: "Coup franc dangereux",
+  corner: "Corner",
+};
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -33,6 +44,15 @@ export async function POST(request: NextRequest) {
     return errorResponse("Paramètres invalides", 400);
   }
 
+  const adminClient = createAdminClient();
+
+  // Récupère match_id + type avant résolution pour le push
+  const { data: eventRow } = await adminClient
+    .from("market_events")
+    .select("match_id, type")
+    .eq("id", body.event_id)
+    .single();
+
   try {
     await resolveEvent(body.event_id, body.result as "oui" | "non");
   } catch (err) {
@@ -42,15 +62,24 @@ export async function POST(request: NextRequest) {
     return errorResponse(msg);
   }
 
-  // Vérification badges pour tous les parieurs sur cet événement (fire-and-forget)
+  // Push notification + badges (fire-and-forget)
   void (async () => {
-    const adminClient = createAdminClient();
     const { data: bets } = await adminClient
       .from("bets")
       .select("user_id")
       .eq("event_id", body.event_id!);
     const uniqueUserIds = [...new Set((bets ?? []).map((b) => b.user_id))];
     await Promise.all(uniqueUserIds.map((uid) => checkAndUnlockBadges(uid)));
+
+    if (eventRow) {
+      const label = EVENT_LABEL[eventRow.type] ?? "Événement VAR";
+      const verdict = body.result === "oui" ? "✅ Confirmé" : "❌ Annulé";
+      await sendPushToMatchSubscribers(eventRow.match_id, {
+        title: `⚡ VAR Résolue — ${verdict}`,
+        body: `${label} — découvre tes gains !`,
+        url: `/match/${eventRow.match_id}`,
+      });
+    }
   })();
 
   return successResponse({ resolved: true });

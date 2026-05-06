@@ -37,9 +37,5 @@ export function HomeAuthCtas() {
     );
   }
 
-  return (
-    <SignInWithGoogleButton className={btnClass}>
-      Continuer avec Google
-    </SignInWithGoogleButton>
-  );
+  return <SignInWithGoogleButton />;
 }

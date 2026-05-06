@@ -5,9 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+
 export function BottomNav() {
   const pathname = usePathname();
   const [superVisible, setSuperVisible] = useState(false);
+  const t = useTranslations("Navigation");
 
   useEffect(() => {
     const onAvailable = (e: Event) => {
@@ -26,17 +29,19 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className={`relative grid h-16 ${isMatchPage ? "grid-cols-5" : "grid-cols-4"}`}>
+      <div
+        className={`relative grid h-16 ${isMatchPage ? "grid-cols-5" : "grid-cols-4"}`}
+      >
         <TabLink
           href="/lobby"
           Icon={Landmark}
-          label="Stade"
+          label={t("stade")}
           pathname={pathname}
         />
         <TabLink
           href="/pronos"
           Icon={Target}
-          label="Pronos"
+          label={t("pronos")}
           pathname={pathname}
         />
 
@@ -68,13 +73,13 @@ export function BottomNav() {
         <TabLink
           href="/ligues"
           Icon={Users}
-          label="Ligues"
+          label={t("ligues")}
           pathname={pathname}
         />
         <TabLink
           href="/profile"
           Icon={User}
-          label="Profil"
+          label={t("profil")}
           pathname={pathname}
         />
       </div>

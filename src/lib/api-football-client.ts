@@ -22,10 +22,17 @@ function getApiFootballKey(): string {
   return key;
 }
 
+const MAX_RETRIES = 3;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Appel HTTP JSON vers API-Football v3 (api-sports.io).
+ * Retry automatique : 3 tentatives max, délai exponentiel 100ms × 2^attempt.
  * @param endpoint chemin relatif, ex. `"teams"` ou `"/fixtures"`
- * @param params query string (déjà encodée via `URLSearchParams`)
+ * @param params query string
  */
 export async function fetchApiFootball<T = unknown>(
   endpoint: string,
@@ -40,17 +47,43 @@ export async function fetchApiFootball<T = unknown>(
     }
   }
 
-  const res = await fetch(url.toString(), {
-    headers: {
-      "x-apisports-key": key,
-      "x-apisports-host": "v3.football.api-sports.io",
-    },
-    cache: "no-store",
-  });
+  let lastError: Error = new Error("Unknown error");
 
-  if (!res.ok) {
-    throw new Error(`API-Football HTTP ${String(res.status)} sur ${path}`);
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      await delay(100 * Math.pow(2, attempt));
+    }
+    try {
+      const res = await fetch(url.toString(), {
+        headers: {
+          "x-apisports-key": key,
+          "x-apisports-host": "v3.football.api-sports.io",
+        },
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        // Ne pas retrier les 4xx (erreur client)
+        if (res.status >= 400 && res.status < 500) {
+          throw new Error(
+            `API-Football HTTP ${String(res.status)} sur ${path}`,
+          );
+        }
+        lastError = new Error(
+          `API-Football HTTP ${String(res.status)} sur ${path}`,
+        );
+        continue;
+      }
+
+      return res.json() as Promise<T>;
+    } catch (err) {
+      if (err instanceof Error) {
+        lastError = err;
+        // Ne pas retrier les erreurs 4xx relancées ci-dessus
+        if (lastError.message.includes(" 4")) throw lastError;
+      }
+    }
   }
 
-  return res.json() as Promise<T>;
+  throw lastError;
 }

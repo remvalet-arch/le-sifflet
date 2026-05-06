@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
 function generateCode(): string {
@@ -73,6 +74,37 @@ export async function GET() {
       ]),
     );
 
+    const adminSupabase = createAdminClient();
+
+    const { data: userPronos } = await adminSupabase
+      .from("pronos")
+      .select("user_id, points_earned")
+      .in("user_id", userIds)
+      .gt("points_earned", 0);
+
+    const { data: userBets } = await adminSupabase
+      .from("bets")
+      .select("user_id, potential_reward, amount_staked")
+      .in("user_id", userIds)
+      .eq("status", "won");
+
+    const totalPointsMap = new Map<string, number>();
+    for (const p of userPronos ?? []) {
+      totalPointsMap.set(
+        p.user_id,
+        (totalPointsMap.get(p.user_id) ?? 0) + p.points_earned,
+      );
+    }
+    for (const b of userBets ?? []) {
+      const netGain = b.potential_reward - b.amount_staked;
+      if (netGain > 0) {
+        totalPointsMap.set(
+          b.user_id,
+          (totalPointsMap.get(b.user_id) ?? 0) + netGain,
+        );
+      }
+    }
+
     const squadsPayload = (squads ?? []).map((s) => {
       const members = membersInSquads
         .filter((m) => m.squad_id === s.id)
@@ -81,14 +113,11 @@ export async function GET() {
           return {
             user_id: m.user_id,
             username: p?.username ?? "?",
-            xp: p?.xp ?? 0,
+            xp: totalPointsMap.get(m.user_id) ?? 0,
             sifflets_balance: p?.sifflets_balance ?? 0,
           };
         });
-      const pot_commun = members.reduce(
-        (sum, m) => sum + m.sifflets_balance,
-        0,
-      );
+      const pot_commun = members.reduce((sum, m) => sum + m.xp, 0);
       return {
         ...s,
         members,

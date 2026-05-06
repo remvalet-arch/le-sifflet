@@ -15,7 +15,11 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
   ] = await Promise.all([
     supabase.from("badges").select("*"),
     supabase.from("user_badges").select("badge_id").eq("user_id", userId),
-    supabase.from("profiles").select("trust_score").eq("id", userId).single(),
+    supabase
+      .from("profiles")
+      .select("trust_score, login_streak")
+      .eq("id", userId)
+      .single(),
     supabase
       .from("bets")
       .select("id, status, event_id")
@@ -85,6 +89,7 @@ export async function checkAndUnlockBadges(userId: string): Promise<string[]> {
         );
         break;
       case "login_streak_3":
+        shouldUnlock = (profile?.login_streak ?? 0) >= 3;
         break;
     }
 

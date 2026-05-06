@@ -32,16 +32,22 @@ export function ProfileHeader({
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
-        <div className="flex items-center gap-4 px-5 py-4">
-          {/* Avatar */}
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
+      <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
+        {/* Blurred ambient glow */}
+        <div
+          className="pointer-events-none absolute -top-6 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-amber-500 opacity-20 blur-3xl"
+          aria-hidden
+        />
+
+        <div className="relative flex items-center gap-4 px-5 py-5">
+          {/* Avatar — aggrandi */}
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ring-2 ring-white/8">
             {avatar.startsWith("http") ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatar}
                 alt={username}
-                className="h-14 w-14 rounded-full object-cover"
+                className="h-20 w-20 rounded-full object-cover"
               />
             ) : (
               avatar
@@ -51,7 +57,7 @@ export function ProfileHeader({
           {/* Info */}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-black text-white">{username}</p>
+              <p className="text-lg font-black text-white">{username}</p>
               <span
                 className={`rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
               >
@@ -64,7 +70,6 @@ export function ProfileHeader({
             <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
               {xpTotal.toLocaleString("fr-FR")} XP
             </p>
-            {/* Club favori */}
             {team && (
               <div className="mt-1.5 flex items-center gap-1.5">
                 {team.logo_url ? (

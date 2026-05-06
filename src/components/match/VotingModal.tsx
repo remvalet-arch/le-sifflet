@@ -186,6 +186,11 @@ export function VotingModal({
   const [optimisticVote, setOptimisticVote] = useState<"oui" | "non" | null>(
     null,
   );
+  const [betConfirmed, setBetConfirmed] = useState<{
+    option: "oui" | "non";
+    multiplier: number;
+    staked: number;
+  } | null>(null);
 
   async function handleVote(v: "oui" | "non") {
     if (voteLoading || expired || !canBet || oddsLoading) return;
@@ -215,9 +220,9 @@ export function VotingModal({
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
-      toast.success("Pari enregistré !");
       onBetSuccess(staked);
-      setTimeout(() => onClose(), 600);
+      setBetConfirmed({ option: v, multiplier, staked });
+      setTimeout(() => onClose(), 1800);
     } catch {
       setOptimisticVote(null);
       toast.error("Connexion perdue, réessaie !");
@@ -283,7 +288,25 @@ export function VotingModal({
         aria-describedby={descId}
         className="animate-modal-sheet w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl sm:animate-modal-center"
       >
-        <div className="px-6 pb-6 pt-5">
+        {betConfirmed && (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+            <span className="text-5xl">⚡</span>
+            <p className="text-xl font-black uppercase tracking-tight text-white">
+              Pari enregistré !
+            </p>
+            <p className="text-sm text-zinc-400">
+              {betConfirmed.staked} Sifflets · Cote ×
+              {betConfirmed.multiplier.toFixed(2)}
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+              Gain potentiel :{" "}
+              <span className="text-green-400">
+                {Math.floor(betConfirmed.staked * betConfirmed.multiplier)} Pts
+              </span>
+            </p>
+          </div>
+        )}
+        <div className={betConfirmed ? "hidden" : "px-6 pb-6 pt-5"}>
           <p id={descId} className="sr-only">
             Parie des Sifflets contre toute la communauté. Les points des
             joueurs qui se trompent financent les gains de ceux qui ont le bon

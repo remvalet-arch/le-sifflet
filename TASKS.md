@@ -10,299 +10,216 @@
 
 ---
 
-## 🏃 Sprint Actuel (Audit UX & Robustesse "Le Sifflet")
+### 🔴 Sprint 1 : BUGS CRITIQUES & MÉCANIQUES DE BASE
 
-- [x] **Tâche 1 : Optimistic UI sur le VotingModal**
-  - _Détails :_ Actuellement, lors d'un pari via `/api/bet`, le bouton affiche un `LoaderCircle` et le code attend la réponse du serveur (await fetch). Sur un réseau bondé au stade, ça paraît lent.
-  - _Action :_ Modifier `src/components/match/VotingModal.tsx`. Dès le clic sur OUI ou NON, masquer immédiatement les deux boutons et afficher un design "Pari validé" (avec un effet de chargement discret en fond si on attend la confirmation, mais la décision est verrouillée visuellement sans latence).
+- [x] **Fix 1 : Le Bug Mathématique des 100% (Stats Pronos)**
+  - _Problème :_ Les statistiques donnent des aberrations (ex: 0% + 0% + 50%). Le dénominateur (total) est déconnecté des vrais votes.
+  - _Action :_ Dans le calcul de répartition 1N2, force le calcul local : `const actualTotal = votes1 + votesN + votes2;`. Si `actualTotal === 0`, renvoie `0%, 0%, 0%`. Sinon, applique la méthode du plus grand reste : `pct1 = Math.round((votes1/actualTotal)*100); pct2 = Math.round((votesN/actualTotal)*100); pct3 = 100 - pct1 - pct2;`.
 
-- [x] **Tâche 2 : RSA du Parieur (Filet de sécurité)**
-  - _Détails :_ Si un joueur tombe à zéro ou presque (moins de 10 Sifflets pour la mise minimale), il ne peut plus jouer.
-  - _Action :_ Créer une route `/api/claim-rsa` ou l'intégrer au chargement du match, qui vérifie `sifflets_balance`. S'il est à 0, utiliser `service_role` (via admin client) pour lui recréditer 50 Sifflets avec un toast "L'arbitre te fait une fleur, revoilà 50 Sifflets 💸".
+- [x] **Fix 2 : Le Color Clash des Maillots (Feuille de match)**
+  - _Problème :_ Arsenal vs Atlético affiche tout en rouge.
+  - _Action :_ Récupère `primary_color` et `secondary_color` des deux équipes. L'équipe Extérieure (Away) utilise sa couleur primaire SAUF si elle contraste mal avec la couleur Domicile. Dans ce cas, elle utilise sa couleur secondaire, ou un fallback (#FFFFFF ou #111827).
 
-- [x] **Tâche 3 : Cotes Flottantes (UX Transparency)**
-  - _Détails :_ L'UI indique "Cote" mais comme c'est du parimutuel, c'est une cote projetée qui va bouger.
-  - _Action :_ Dans `VotingModal.tsx`, modifier tous les labels "Cote" par "~Cote" (ou "Cote estimée"). Ajouter une infobulle explicative (un `<span title="...">`) sur le mot "Cote" disant : _"Cote parimutuelle : elle s'ajuste selon les mises de tous les joueurs jusqu'à la fin du chrono."_
+- [x] **Fix 3 : Le Cooldown de la VAR**
+  - _Action :_ Modifie la logique d'alerte VAR. Si l'événement VAR précédent créé par l'utilisateur a le statut "résolu" (via admin/resolve), annule le cooldown. Il doit pouvoir relancer une alerte immédiatement.
 
-- [x] **Tâche 4 : Trust Score (Anti-Trolls Waze)**
-  - _Détails :_ Empêcher les utilisateurs de spammer de fausses alertes. Actuellement, l'API `/api/alert` vérifie `trust_score` avec `MIN_TRUST_SCORE = 50`. Mais ce score n'est jamais mis à jour !
-  - _Action :_ Modifier la RPC `resolve_event` (dans `0006_resolve_event.sql` ou son successeur si une migration a été ajoutée) ou créer une nouvelle fonction Postgres pour : +2 points de confiance pour chaque pari/alerte "gagnant/vrai", -5 points si l'alerte était une "fake news" (Option "NON" a gagné).
+---
 
-- [x] **Tâche 5 : Vraie PWA Offline-First (Manifest.json)**
-  - _Détails :_ Il n'y a pas de `manifest.json` à la racine `public/`, et le `sw.js` fait un bypass de cache explicite. En cas de perte de 4G, on a la page du dinosaure.
-  - _Action :_ Générer un `manifest.json` (icônes, standalone, theme_color `pitch-900`). Modifier `sw.js` ou utiliser `next-pwa` (via package) pour cacher la landing page et les assets statiques, afin d'afficher une belle page "Hors-ligne : l'arbitre demande la VAR" plutôt qu'une erreur réseau.
+### 🔵 Sprint 2 : SOCIAL & PROFILS (INSPIRATION MPP)
 
-- [x] **Tâche 6 : Écran de chargement anti-écran blanc (Splash Screen & loading.tsx)**
-  - _Détails :_ L'application affiche un écran blanc lors du démarrage (au moment du check d'authentification ou du chargement du lobby). Le logo est désormais "VAR" plutôt qu'un sifflet.
-  - _Action 1 :_ Ajouter un fichier `src/app/loading.tsx` et `src/app/(app)/loading.tsx` contenant un UI de chargement "Mobile-first" élégant (fond `bg-pitch-900`, icône d'écran/VAR animée en pulse avec `<MonitorPlay />` ou `<Tv />` de `lucide-react`).
-  - _Action 2 :_ Ajouter les balises meta `apple-touch-startup-image` et `theme-color` dans le layout principal pour forcer un Splash Screen natif sur iOS/Android.
+- [x] **Feature 1 : Le Profil Public & Système d'Amis**
+  - _Action 1 :_ Rend les joueurs cliquables dans le classement de la ligue (`href="/profile/[id]"`).
+  - _Action 2 :_ Crée un système d'ajout d'amis façon MPG (table `friends` ou `friend_requests`). Ajoute un bouton "Ajouter en ami" sur le profil public.
+  - _Action 3 :_ Crée un système de chat entre amis / joueurs d'une ligue (inspiration mpg)
+- [x] **Feature 2 : Refonte du Profil via Onglets (Tabs)**
+  - _Action :_ Modifie la vue Profil avec 4 onglets (utilise shadcn/ui Tabs) :
+    1. **Vestiaire** : Stats globales, rang.
+    2. **Historique** : Résumé des points gagnés (Pronos Score/Buteurs - Prono VAR) mets la Liste des pronostics.
+    3. badges
+    4. Amis
 
-- [x] **Tâche 7 : Clarification du bouton "VAR" (Call To Action)**
-  - _Détails :_ Actuellement, le bouton central de la BottomNav (l'icône qui dessine un rectangle avec les doigts) n'est pas assez intuitif pour les nouveaux utilisateurs.
-  - _Action :_ Remplacer le terme/concept "VAR" du bouton central dans `BottomNav` ou le Drawer par "Signaler une erreur", "Faute !" ou "Appeler la VAR" avec un label textuel clair en dessous ou un badge. Utiliser éventuellement une icône plus parlante (sifflet, drapeau, ou écran VAR).
+- [x] **Feature 3 : Sécurité Anti-Triche des Pronos**
+  - _Action :_ Dans l'onglet "Ses Pronos" d'un profil public, masque les scores des matchs "Non Commencés" (NS). Affiche un carré gris avec un cadenas 🔒 pour empêcher le copiage.
 
-- [x] **Tâche 8 : Verrouillage temporel des Pronostics**
-  - _Détails :_ Il est actuellement possible de placer des pronostics (score exact, buteur) via le `PronosticsHubClient` ou `PolymarketTab` même si un match a déjà commencé (statut `live`) ou est terminé (`finished`).
-  - _Action :_ Dans l'interface utilisateur, désactiver/griser les champs de pronostics avec un message clair ("Le match a commencé, pronos fermés") si `match.status !== "upcoming"`. Appliquer également cette validation côté backend dans la RPC `place_match_prono` (ou la route associée) pour rejeter silencieusement la triche API.
+---
 
-- [x] **Tâche 9 : Optimisation Desktop (Vue centrée mobile-first)**
-  - _Détails :_ Le site est une PWA Mobile-First, mais s'il est ouvert sur grand écran (PC/Mac), l'interface s'étire probablement sur toute la largeur, ce qui brise le design.
-  - _Action :_ Dans `src/app/layout.tsx` (ou `src/app/(app)/layout.tsx`), encapsuler le rendu `children` dans un conteneur qui force la largeur maximale à celle d'un mobile avec un fond sombre/flouté de chaque côté (façon Instagram/TikTok sur web). Ex: `<div className="mx-auto max-w-md min-h-screen bg-zinc-950 shadow-2xl overflow-hidden relative">`. Centrer également la BottomNav.
+### 🟡 Sprint 3 : UX/UI PREMIUM & GAMIFICATION
 
-- [x] **Tâche 10 : Refonte Identité PWA & Installation (README)**
-  - _Détails :_ Le logo actuel (`icon-192.png`) semble être un placeholder par défaut, le `manifest` n'a pas les bons chemins si on change l'icône, et le `README.md` contient toujours le texte générique de Next.js au lieu des instructions pour installer et contribuer à "VAR Time".
-  - _Action 1 (Design) :_ L'IA ne pouvant pas créer de vraies images complexes, générer au moins un fichier SVG propre représentant une "TV VAR" (ou un écran de contrôle simple et stylisé sur fond vert) et le sauvegarder en tant que `public/icon.svg`. Le déclarer dans le `manifest.webmanifest`.
-  - _Action 2 (Documentation) :_ Réécrire intégralement le `README.md`. Il doit contenir : Le nom du projet (VAR Time), le concept (Second écran communautaire), la stack (Next.js 16, Supabase, Tailwind), et les étapes d'installation (cloner, `.env.local`, npm install, db_reset, et les commandes V-Coder comme `npm run ai:verify`).
-  - _Action 3 (UX PWA) :_ Ajouter un petit composant UI (un bandeau ou un Toast qui apparaît après 5 secondes) invitant l'utilisateur sur Safari/Chrome mobile à "Ajouter VAR Time à l'écran d'accueil" pour une meilleure expérience.
+- [ ] **Design 1 : Gamification du Classement & Filtres Temporels**
+  - _Action 1 :_ Dans `LeagueLeaderboard`, ajoute un filtre temporel (Semaine, Mois, Général). Le classement filtré doit calculer la somme des `points_earned` sur la période, et non l'XP total.
+  - _Action 2 :_ Différencie visuellement le Top 3 (Or pour le 1, Argent pour le 2, Bronze pour le 3) et ajoute un indicateur de tendance (flèche rouge/verte) à côté des points si les données le permettent.
 
-## 🏃 Sprint "Identité & Rétention" (Profil & Push)
+- [x] **Design 2 : Les Cartes de Pronostics (PronoCard)**
+  - _Action 1 :_ Remplace le texte "Mon pronostic : X - Y" par deux gros carrés design (ex: `w-10 h-10 bg-zinc-800 rounded`) contenant les scores.
+  - _Action 2 :_ Si le match est terminé, ajoute un feedback visuel : bordure/lueur verte si le prono a rapporté des points, rouge/grise si perdu. Affiche les points gagnés en gros, en vert en dessous.
 
-- [x] **Tâche 11 : Personnalisation du Profil Joueur**
-  - _Détails :_ Actuellement le profil est en lecture seule (souvent nom complet Google).
-  - _Action 1 :_ Bottom sheet "Modifier" dans `ProfileHeader` (modal conditionnel, `PATCH /api/profile`). ✓
-  - _Action 2 :_ Sélecteur de 20 emojis avatar + input username (3-25 chars, regex, unicité vérifiée serveur). ✓
-  - _Action 3 :_ Recherche de club (debounce 300 ms, filtre `api_football_id NOT NULL`), `favorite_team_id` sur `profiles` (migration `0057`), logo affiché dans le header. ✓
+- [x] **Design 3 : Hiérarchie et Respiration (Ligues)**
+  - _Action :_ Sur les listes de ligues, agrandis le titre, réduis la taille des métadonnées (membres, rang) et augmente le padding interne (`p-5`) pour faire respirer l'interface.
 
-- [x] **Tâche 12 : Infrastructure Web Push Native (VAPID)**
-  - _Détails :_ Remplacer l'idée de Firebase par le standard natif VAPID + `web-push` (plus léger pour une PWA).
-  - _Action 1 :_ Ajouter la table `push_subscriptions` (`user_id`, `endpoint`, `keys`).
-  - _Action 2 :_ Ajouter une modale/toast d'Opt-In au moment où l'utilisateur valide son _tout premier_ pronostic (pour déclencher `Notification.requestPermission()`).
-  - _Action 3 :_ Implémenter le stockage de la souscription via Server Action.
+---
 
-- [x] **Tâche 13 : Smart Mute & Alertes Automatiques (Le Cycle du Match)**
-  - _Détails :_ Le backend envoie les push, mais le téléphone doit filtrer intelligemment.
-  - _Action 1 :_ Smart Mute dans `sw.js` — skip notif si app ouverte en premier plan. ✓
-  - _Action 2 :_ Push envoyé aux abonnés du match lors de l'ouverture d'un `market_event` (VAR). ✓
-  - _Note :_ Action 3 (notif Club Favori 15min avant coup d'envoi) reportée à Tâche 11 une fois `favorite_team_id` en place.
+### 🟢 Sprint 4 : INFRASTRUCTURE (NOTIFICATIONS PWA)
 
-- [x] **Tâche 14 : Prévoir une croix pour fermer la modale d'invitation au téléchargement PWA**
-  - _Détails :_ La modale est insistante, et surtout sur desktop, on ne peut pas la fermer. Croix ajoutée + durée portée à 15 s.
+- [x] **Setup : Push Notifications Web (Natif)**
+  - _Action 1 :_ Crée une migration pour une table `push_subscriptions`.
+  - _Action 2 :_ Configure le Service Worker PWA pour écouter l'événement `push` et afficher la notification.
+  - _Action 3 :_ Ajoute un bouton "Activer les notifications" appelant `Notification.requestPermission()`.
+  - _Action 4 :_ Installe `web-push` côté backend et crée une route API de test. Indique-moi la commande pour générer les clés VAPID.
 
-- [x] **Tâche 15 : Le Buzzer Social (Interactions de Ligue)**
-  - _Détails :_ Outils pour harceler gentiment ses potes.
-  - _Action 1 :_ Route `/api/squads/nudge` — push aux membres sans prono sur matchs à venir (cooldown 30 min). ✓
-  - _Action 2 :_ Bouton "Nudge pronos" dans `SquadDetailClient`. ✓
-  - _Action 3 :_ Bouton "Sirène VAR" dans `LiveRoom` (onglet Kop, match en direct, cooldown 15 min par user). ✓
+### 🟣 Sprint 5 : ONBOARDING & TUTORIEL (Style MPP)
 
-- [x] **Tâche 16 : Investigation & Fix : Crash d'affichage Europa/Conference League**
-  - _Détails :_ Sur les matchs d'Europa ou Conference League, un problème d'affichage survient. Probablement dû à des équipes non synchronisées en base de données.
-  - _Action :_ `LeagueHubBoundary` (Error Boundary React class) ajouté autour de chaque `LeagueHub` dans `MatchLobby` (Top 5 + coupes UEFA). Correction du cast `team_side` null dans `goalsFromTimeline` (filtre + assertion explicite). En cas d'erreur d'affichage, un fallback "Données indisponibles" remplace le crash. ✓
+Nous voulons créer un flux d'onboarding immersif pour la première connexion, en nous inspirant de MPP.
 
-- [x] **Tâche 17 : UX Pronos : Mise à jour en temps réel du compteur sans refresh**
-  - _Détails :_ Après la validation d'un pronostic, le compteur (ex: "0/1 matchs pronostiqués") ne s'actualise pas instantanément. L'utilisateur doit rafraîchir la page pour voir "1/1".
-  - _Action :_ Ajout d'un état `localSubmittedIds` dans `PronosticsHubClient`. Le callback `onSubmittedChange` met à jour ce set en plus de `submittedCount`, et la fonction `isMatchDone` combine les deux sources pour que tous les compteurs (barre globale, pills de jours, accordéons par compétition) se mettent à jour instantanément.
+Agis en tant que Lead Frontend et Expert UX.
 
-- [x] **Tâche 18 : Refonte Anti-Triche VAR (Sécurité Backend Parimutuel)**
-  - _Détails :_ Le système de vote Waze/VAR est déjà "Optimistic" et bien pensé côté Front, mais il faut blinder les failles IPTV côté Serveur (Postgres/RPC).
-  - _Action 1 (Auto-Lock Strict 90s) :_ Déjà implémenté dans `0011_place_bet_v2.sql` — le serveur rejette si `created_at < now() - interval '90 seconds'`. ✓
-  - _Action 2 (Status Intermédiaire) :_ Migration `0058` : ajout de `'closed'` au CHECK constraint. Fonction `close_expired_market_events()` appelée à chaque tick du cron. Events passés 90s → `open` → `closed` (en attente verdict). ✓
-  - _Action 3 (Le Temps Mort du Juge) :_ `MIN_AGE_SECONDS` porté à 6 min dans `verify-event/route.ts`. ✓
-  - _Action 4 (Cooldown Anti-Spam) :_ `COOLDOWN_MINUTES` porté à 5 min dans `alert/route.ts`. ✓
+- [x] **Feature 1 : Le gestionnaire d'Onboarding**
+  - _Action :_ Crée un composant `OnboardingTour.tsx` (rendu à la racine, z-index très élevé). Utilise le `localStorage` (`hasCompletedOnboarding`) pour qu'il ne s'affiche qu'une fois. Gère un état `step` (1 à 3).
 
-- [x] **Tâche 19 :Multilangue (i18n)**
-  - _Détails :_ Le projet a besoin de supporter plusieurs langues.
-  - _Action :_ Ajout de ES, DE, IT dans `translations.ts`. Mise à jour du type guard dans `useLocale.ts`. Sélecteur de langue dans `TopBar.tsx` étendu à 5 boutons (FR EN ES DE IT).
+- [x] **Feature 2 : Le Design des Étapes (Spotlight)**
+  - _Action 1 :_ Assombris tout l'écran (`bg-black/80`).
+  - _Action 2 :_ Étape 1 ("Pronos") : Affiche une modale centrée ou en bottom-sheet. Titre : "FAIS TES PRONOS". Texte : "Saisis tes pronos et découvre ton classement après chaque match 🤩". Bouton : "J'ai compris". Laisse l'icône "Pronos" de la BottomNav visible par-dessus le voile noir (via z-index ou une copie visuelle) pour créer un effet "Spotlight".
+  - _Action 3 :_ Étape 2 ("Ligues") : Même logique, focus sur l'icône Ligues. Titre : "REJOINS LES LIGUES AVEC TES POTES".
 
-- [x] **Tâche 23 : Polish UX & Navigation (Frontend)**
-  - _Détails :_ Amélioration de l'expérience utilisateur sur les écrans vides et formatage des données brutes affichées.
-  - _Action 1 (Empty State du Lobby) :_ Fait : Ajout de la vue "La VAR dort" et CTA Pronos dans `MatchLobby.tsx`. ✓
-  - _Action 2 (Filtre Europe Conditionnel) :_ Fait : Filtrage via `activeCupIds` et rendu sélectif de `cupsToDisplay`. ✓
-  - _Action 3 (Formatage JSON Profil) :_ Fait : Extraction propre via la fonction utilitaire `formatPronoValue` implémentée. ✓
+- [x] **Feature 3 : L'écran Notifications**
+  - _Action :_ Étape 3 (Plein écran). Ajoute une belle illustration (ex: un arbitre ou un sifflet). Titre : "ACTIVE TES NOTIFS !". Texte : "Pour ne rater aucune VAR ni les résultats de tes potes.".
+  - _Boutons :_ CTA principal "Activer les notifs" (déclenche le push API configuré dans l'Epic 4). Bouton secondaire texte simple : "Plus tard".
 
-- [x] **Amélioration UX de l'Invitation (Viralité type MPG)**
-  - _Détails :_ Actuellement, le bouton pour copier le code d'invitation à une ligue copie uniquement le code brut. Nous voulons transformer cela en un message d'invitation complet, chaleureux et engageant, prêt à être collé sur WhatsApp ou SMS.
-  - _Action 1 (Modification du presse-papiers) :_ Cibler le composant gérant l'affichage et la copie du code de la ligue (ex: `LeagueHeader.tsx` ou `InviteModal.tsx`). Modifier l'appel à `navigator.clipboard.writeText()`.
-  - _Action 2 (Template String Dynamique) :_ Remplacer le code brut par une chaîne de caractères formatée intégrant les variables du joueur et de la ligue. Exemple : `"Hey ! ⚽ [MonPseudo] t'invite à rejoindre sa ligue [Nom de la Ligue] sur VAR TIME. Rentre ce code d'activation pour intégrer le vestiaire : [CODE_INVITATION]"`
-  - _Action 3 (Props & Fallback) :_ S'assurer que le composant de copie a bien accès au profil de l'utilisateur courant (pour le pseudo) et au nom de la ligue. Prévoir un fallback sécurisé (ex: `"Un pote t'invite..."`) si le pseudo n'est pas encore chargé.
-  - _Action 4 (Feedback Visuel) :_ S'assurer que le petit toast de confirmation affiche bien "Message d'invitation copié !" au lieu de "Code copié".
+---
 
-- [x] **Implémentation du Moteur de Points (Système "Contre-Pied")**
-  - _Détails :_ Le calcul des points d'un prono gagnant combine : La cote de base (1N2) + La Prime de "Contre-Pied" (calculée dynamiquement selon les autres joueurs) + Le bonus des buteurs trouvés.
-  - _Action 1 (Mise à jour Schema) :_ Dans la table `pronos`, ajouter un champ `points_earned` (int) et `contre_pied_bonus` (int).
-  - _Action 2 (Calcul de la Prime de Contre-Pied) :_ Créer une fonction `calculateContrePiedBonus(exactScoreCount, totalCorrectResultCount)`. On calcule le % de joueurs ayant le score exact PARMI ceux ayant trouvé la bonne issue (1N2).
-    - Si > 40% = +10 pts (Le Minimum Syndical)
-    - Si entre 15% et 40% = +30 pts (Le Joli Coup)
-    - Si entre 5% et 15% = +60 pts (Le Visionnaire)
-    - Si < 5% = +100 pts (Le Braquage)
-    - (Fallback : si `totalCorrectResultCount` < 5 joueurs, appliquer un bonus par défaut de +30 pts pour éviter des stats faussées au lancement).
-  - _Action 3 (Le Script de Résolution) :_ Écrire la fonction `resolveMatchPronos(matchId)` déclenchée à la fin du match.
-    - 1. Déterminer l'issue réelle (1, N ou 2) et le score réel.
-    - 2. Récupérer tous les pronos du match. Compter ceux avec le bon 1N2 et ceux avec le score exact.
-    - 3. Boucler sur les pronos pour attribuer les points : `Points = (Bonne Issue ? 50 pts de base) + Prime de Contre-Pied + (Points Buteurs)`.
-  - _Action 4 (Affichage UX) :_ Dans la page Profil ou Vestiaire, si le joueur a touché le bonus max (< 5%), afficher un badge stylisé : "💎 Le Braquage (+100 pts)".
-  - [x] **Mise à jour du Moteur de Cotes (Formule Asymptotique)**
-  - _Détails :_ Le calcul des points se fera via une fonction mathématique qui plafonne les gains maximums pour préserver l'économie du jeu, tout en restant indexé sur les vraies cotes de l'API.
-  - _Action 1 (Mise à jour de la fonction) :_ Remplacer la logique dans `convertOddToPoints(odd: number)`.
-    - Utiliser la formule : `Math.round(MAX_POINTS * (1 - (1 / odd)))`
-    - Pour les paris 1N2, définir `MAX_POINTS = 220`.
-    - Pour les Buteurs, définir un plafond plus bas (car on peut en cumuler plusieurs), ex: `MAX_POINTS = 150`.
-  - _Action 2 (Gestion des cas extrêmes) :_ Ajouter un plancher de sécurité. Si la formule donne un résultat `< 10`, forcer le retour à `10` points minimum. Si `odd` est manquant ou inférieur à 1, retourner un fallback de `50` points.
-  - _Action 3 (UI et Affichage) :_ Côté front-end, s'assurer que ces points sont bien affichés partout où le joueur fait un choix (boutons de score, modale des buteurs) pour qu'il connaisse son gain potentiel avant de valider.
+### 🟠 Sprint 6 : REFONTE UX DE L'ONGLET PRONOS (Slider 10 Jours)
 
-  - [x] **Création de la page "Règles du Jeu" & Menu Burger**
-  - _Détails :_ Ajouter une page explicative avec un design propre et aéré (typographie lisible, icônes) pour expliquer comment gagner des points via les pronos et les paris Live.
-  - _Action 1 (Création de la page) :_ Créer le fichier `src/app/(app)/rules/page.tsx` (ou `regles`).
-  - _Action 2 (Intégration du contenu) :_ Coder l'UI de la page en divisant le contenu en deux grandes sections (cartes ou accordéons) : "🎯 Les Pronos (Score & Buteurs)" et "🚨 La LiveRoom (Paris VAR)". Utiliser le système de "Prime de Contre-Pied" et expliquer le pari mutuel.
-  - _Action 3 (Lien dans le Menu Burger) :_ Cibler le composant du Menu Burger (ex: `Sidebar.tsx` ou `BurgerMenu.tsx`). Ajouter une entrée de menu avec une icône (ex: `BookOpen` ou `Info`) intitulée "Règles du jeu" qui pointe vers la nouvelle route.
-  - _Action 4 (Accessibilité) :_ S'assurer que la page dispose d'un bouton "Retour" propre dans le header (Mobile-First) pour revenir au Lobby ou fermer la page facilement.
+Nous devons remplacer l'affichage actuel des pronostics par un calendrier horizontal glissant sur 10 jours, exactement comme l'UI de Mon Petit Prono.
 
-- [x] **Suite moteur de côtes**
-      j'ai ajouté manuellement les colonnes `odds_home`, `odds_draw` et `odds_away` à ma table `matches` dans Supabase.
+Agis en tant que Lead Frontend.
 
-Nous devons maintenant créer le script qui va peupler ces colonnes.
+- [x] **Feature 1 : Le Date Slider (Sélecteur horizontal)**
+  - _Action 1 :_ En haut de la page Pronos, crée un composant `DateSlider.tsx` scrollable horizontalement (`overflow-x-auto`, `snap-x`, masquer la scrollbar).
+  - _Action 2 :_ Génère un tableau de 10 dates strictes : J-4 (Passé) jusqu'à J+5 (Futur), en incluant J0 (Aujourd'hui).
+  - _Action 3 :_ UI des dates : Affiche le jour court (ex: "mer.", "jeu.") et le numéro du jour ("28", "29"). Pour Aujourd'hui, utilise un fond distinctif (ex: `bg-blue-600` ou notre couleur primaire) avec le texte "Auj.".
+  - _Action 4 :_ Gère un état `selectedDate` (par défaut sur Aujourd'hui).
 
-- [x] **Création du Script de Sync des Cotes**
-  - _Action 1 :_ Crée un fichier `scripts/sync-odds.ts` (ou ajoute la logique à notre script d'import existant).
-  - _Action 2 :_ Le script doit chercher dans Supabase les matchs à venir (statut non commencé) dont `odds_home` est `NULL`.
-  - _Action 3 :_ Pour ces matchs, fais un appel à l'endpoint `/odds` d'API-Football.
-  - _Action 4 :_ Récupère les cotes du marché "Match Winner" (1N2) et mets à jour les colonnes `odds_home`, `odds_draw`, `odds_away` dans Supabase.
-  - _Action 5 :_ Assure-toi que l'interface et le système de calcul de points (`src/lib/odds.ts`) utilisent bien ces colonnes si elles sont présentes, avant de basculer sur le fallback des postes.
+- [x] **Feature 2 : Filtrage et Affichage des Matchs**
+  - _Action 1 :_ La liste des matchs en dessous doit se filtrer automatiquement en fonction de `selectedDate`.
+  - _Action 2 :_ Si un joueur navigue sur une date passée (J-1 à J-4), assure-toi que les cartes de pronos affichent les résultats terminés et les points gagnés (Epic 3). S'il n'y a pas de match à cette date, affiche un bel empty state ("Pas de matchs ce jour-là").
 
-[x] **Mise à jours de la landing page**
-nous devons mettre à jour notre page d'accueil (`src/app/page.tsx`), mais en conservant absolument son excellente structure actuelle, son copywriting (notamment l'accroche des 55%) et ses composants UI (GamePanel, KopRankStep).
+### 🟤 Sprint 7 : TUNNEL DE CRÉATION DE LIGUE & HUB
 
-L'objectif est de remplacer les éléments factices par nos vraies captures d'écran et d'intégrer nos nouvelles mécaniques de jeu. Agis en tant que Lead Frontend.
+Nous voulons refondre l'expérience de création et de gestion des ligues pour la rendre aussi fluide que celle de Mon Petit Prono. Fini les formulaires longs, place à un "Wizard" (tunnel étape par étape).
 
-- [x] **Étape 1 : Remplacement du Mockup par de vraies images**
-  - _Détails :_ Dans la Hero Section, retire le composant custom `<PhoneMockup />`.
-  - _Action :_ `PhoneMockup` conservé mais refondu : affiche désormais un lobby (onglets L1/PL/UCL/ESP, liste de 3 matchs dont 1 LIVE) à la place de l'interface de pari.
+Agis en tant que Lead Frontend et Expert UX.
 
-- [x] **Étape 2 : Intégration du concept de "Contre-Pied"**
-  - _Détails :_ Nous avons un nouveau système de cotes dynamiques inspiré du pari mutuel, appelé le "Contre-Pied".
-  - _Action :_ Panel "Bunker" → "Le Contre-Pied" avec icon `Shuffle` et nouveau body.
+- [x] **Feature 1 : Le Wizard de Création (`CreateLeagueWizard.tsx`)**
+  - _Action 1 :_ Remplace le formulaire de création actuel par un composant à étapes multiples.
+  - _Action 2 :_ Ajoute une barre de progression stylisée en haut de la modale/page.
+  - _Action 3 (Étape 1) :_ "Le Nom". Un grand input textuel centré. Bouton "Suivant".
+  - _Action 4 (Étape 2) :_ "Le Logo". Affiche une grille de 6 à 8 "Avatars/Logos" par défaut (utilise des emojis stylisés avec fond de couleur ou des icônes Lucide) ET un bouton "Uploader" pour ceux qui veulent une image perso.
+  - _Action 5 (Étape 3) :_ "Le Mode". Deux grandes cartes cliquables (ex: "Classique" vs "Braquage communautaire").
+  - _Action 6 :_ Sur la dernière étape, le bouton devient "Créer ma Ligue" et déclenche l'insertion Supabase.
 
-- [x] **Étape 3 : Mise à jour visuelle de la section "Pas qu'un excité du direct"**
-  - _Détails :_ Cette section parle des pronos d'avant-match.
-  - _Action :_ Icônes `Target`/`Calendar` remplacées par deux mini-cartes CSS (lobby + profil) superposées avec rotation, sans dépendance à des screenshots réels.
+- [x] **Feature 2 : Le bouton "Partager" (Viralité)**
+  - _Action :_ Sur la page de détail d'une ligue (la vue d'une ligue spécifique), ajoute un bouton "Partager l'invitation" massif, fixé en bas de l'écran (sticky bottom) pour les admins.
+  - _Logique :_ Ce bouton utilise l'API native `navigator.share()` sur mobile (qui ouvre le menu de partage WhatsApp/SMS de l'OS) pour envoyer un texte : "Rejoins ma ligue VAR TIME ! Code : XYZ123. Lien : [url]".
 
-- [x] **Étape 4 : Ajustement du Copywriting des Sifflets**
-  - _Détails :_ Dans la section "Trois étapes", ajuste légèrement le texte du panel "Sifflets".
-  - _Action :_ Texte mis à jour : "Les points gagnés (Sifflets) s'adaptent dynamiquement aux vraies cotes des matchs. C'est ton trésor de guerre pour miser quand la VAR s'ouvre."
+- [x] **Feature 3 : L'en-tête Premium (Blurred Header)**
+  - _Action :_ Sur la page d'une ligue, récupère le logo/avatar de la ligue. Utilise-le en arrière-plan tout en haut de la page avec un fort effet de flou et un overlay sombre (via le style en ligne pour l'url, ex: `style={{ backgroundImage: '...' }}` et classes `bg-cover opacity-50 blur-xl`). Positionne les infos de la ligue par-dessus de manière nette.
 
-- [x] **Affichage des Gains Potentiels (Match Card)**
+### 🟢 Sprint 8 : L'ADN VAR TIME & MODES DE JEU
 
-- _Détails :_ Afficher dynamiquement les points à gagner en fonction du score saisi par l'utilisateur, en tenant compte de notre formule asymptotique pour le 1N2 et de notre prime mystère "Contre-Pied" pour le score exact.
-- _Action 1 (Détection du 1N2) :_ Dans le composant où l'utilisateur saisit son score, crée un état dérivé. Si Score Domicile > Score Extérieur, c'est un "1". Si Égalité, c'est "N". Sinon, c'est "2".
-- _Action 2 (Calcul UI des points de base) :_ Récupère les vraies cotes du match (`odds_home`, `odds_draw`, `odds_away`) passées en props. Utilise notre fonction utilitaire `convertOddToPoints(odd)` pour afficher le gain potentiel de l'issue choisie.
-- _Action 3 (Design du Feedback) :_ Sous les inputs de score, affiche une petite zone de feedback dynamique.
-  - Exemple de rendu : `Gain de base : 29 pts (Victoire Domicile)`
-- _Action 4 (Badge "Contre-Pied") :_ À côté ou en dessous du gain de base, ajoute un petit badge stylisé (ex: texte doré ou bordure brillante) mentionnant : `+ Jusqu'à 100 pts (Prime Contre-Pied)`.
-- _Action 5 (Fallback) :_ Si les cotes de l'API ne sont pas encore disponibles pour ce match (`odds_home` est `NULL`), affiche des gains génériques (ex: 50 pts) avec un petit texte "Cotes en attente".
+Nous devons nous assurer que les fonctionnalités uniques de VAR TIME (Paris en direct, Stats Live) sont au cœur de l'expérience, et que le système de classement prend bien en compte notre modèle hybride.
 
-- [x] **Refonte UI Match Card Pronos (Style MPG)**
-  - _Détails :_ Rapprocher l'UI de saisie des pronostics du design de référence (compact, riche en données avant saisie).
-  - _Action 1 (UI Gains 1N2 statiques) :_ Sous les deux inputs de score (qui doivent adopter un style carré/arrondi minimaliste), afficher une rangée de 3 petites pilules sombres. Ces pilules affichent les gains potentiels de base (1, N, 2) calculés via les cotes `odds_*`. Retirer la zone de feedback dynamique sous les inputs qu'on avait faite précédemment.
-  - _Action 2 (Stats Communauté %) :_ Sous les pilules de gains, afficher la répartition (en pourcentage) des pronostics de la communauté pour le 1, N, et 2. Cela nécessite d'adapter le backend (création d'une Vue SQL ou modification de RPC) pour remonter les aggrégations de `pronos` par match.
-  - _Action 3 (Forme des équipes / Form Guide) :_ Sous le nom des équipes, afficher 5 petites pastilles circulaires (Vert = V, Gris = N, Rouge = D) correspondant aux 5 derniers résultats. Nécessite de créer une fonction RPC ou d'enrichir l'endpoint pour récupérer l'historique récent (`last_5_matches`) de chaque équipe.
-  - _Action 4 (Feedback de sélection) :_ Lorsqu'un utilisateur tape un score (ex: 2-1), la pilule correspondante au résultat induit (le "1" dans ce cas) doit s'illuminer ou se mettre en surbrillance pour valider visuellement son choix de gain.
+Agis en tant que Lead Backend et Game Designer.
 
-Suite à nos premiers tests utilisateurs en conditions réelles, nous avons une série d'ajustements UX/UI à faire.
+- [x] **Feature 1 : Le Calcul Hybride du Classement (Ligue)**
+  - _Action :_ Dans la fonction (RPC ou API) qui calcule les points d'un utilisateur pour le `LeagueLeaderboard`, assure-toi d'additionner STRICTEMENT deux sources : les points gagnés via les pronostics (`pronos.points_earned`) ET les points gagnés via les alertes VAR (`live_bets.points_earned`). Le "Pot Commun" de la ligue et le score individuel doivent refléter cette somme.
 
-Agis en tant que Lead Frontend et résous ces tickets :
+- [x] **Feature 2 : La Passerelle vers le "Stade" (Live)**
+  - _Action :_ Dans le nouvel onglet Pronos (celui avec le Slider 10 jours de l'Epic 6), ajoute une condition visuelle forte : si un match est "En cours" (Live), remplace les scores simples par un bouton ou une bannière clignotante "🔴 REJOINDRE LE STADE". Ce bouton doit rediriger l'utilisateur vers la page détaillée du match (`/match/[id]`) où se trouvent les statistiques live et le bouton d'alerte VAR.
 
-- [x] **Ticket 1 : Safe Area des Alertes (UI)**
-  - _Détails :_ Sur mobile, les notifications/alertes en haut de l'écran sont tronquées par l'appareil photo (encoche / Dynamic Island).
-  - _Action :_ Appliquer les utilitaires de Safe Area sur le conteneur global des toasts/alertes. Utiliser `pt-[env(safe-area-inset-top)]` ou ajouter un margin-top suffisant (`mt-12` ou `mt-16`) pour que les alertes s'affichent sous l'encoche de l'OS.
+- [x] **Feature 3 : Préparation des Modes de Jeu (Base de données)**
+  - _Action 1 :_ Ajoute une migration pour la table `leagues` afin d'y insérer une colonne `game_mode` (type string ou enum, défaut: 'classic').
+  - _Action 2 :_ Dans l'étape 3 du Wizard de création de ligue (Epic 7), intègre le choix du mode visuellement : une carte "Classique (Pot commun & Classement général)" et une carte "1vs1 (Championnat - Prochainement)". Stocke la valeur sélectionnée dans la nouvelle colonne lors de la création.
 
-- [x] **Ticket 2 : Bouton "Valider" conditionnel (UX)**
-  - _Détails :_ Sur la page de pronostics, l'utilisateur ne doit pas pouvoir (ou penser pouvoir) valider un prono vide.
-  - _Action :_ Dans le composant de saisie du score, le bouton "Valider les pronos" doit être en état `disabled` (grisé, non cliquable) ou carrément masqué tant que les champs de score (Domicile ET Extérieur) n'ont pas été remplis.
+---
 
-- [x] **Ticket 3 : Buteurs Optionnels (Progressive Disclosure)**
-  - _Détails :_ Afficher directement la liste/saisie des buteurs donne l'impression aux joueurs que c'est obligatoire. C'est trop intrusif.
-  - _Action :_ Masquer par défaut l'interface de sélection des buteurs. Remplacer par un bouton discret type `+ Ajouter un buteur (Optionnel)`. Au clic, déplier l'interface de sélection des buteurs.
+### 🔴 Sprint A : RÉTENTION — "Remettre le cœur à battre"
 
-- [x] **Ticket 4 : Timing d'affichage des matchs "Upcoming"**
-  - _Détails :_ Actuellement, les matchs semblent passer en statut "imminent" 15 minutes avant. C'est trop court pour se préparer.
-  - _Action :_ Trouver la constante ou la requête (côté front ou back) qui gère le seuil d'affichage des matchs à venir. Passer ce délai de `15` minutes à `45` minutes avant le coup d'envoi.
+> Issus de l'audit CTO (TECH_BIBLE.md). Ces bugs silencieux cassent les boucles de rétention fondamentales.
 
-Nous devons affiner notre Game Design et l'UX de nos Ligues privées. Nous avons statué sur le fonctionnement suivant : l'économie de la LiveRoom (Alerte VAR) repose sur un Pot Commun GLOBAL (toute l'application), mais les Ligues privées servent de classement et de lieu de "chambrage" entre amis.
-Agis en tant que Lead Product Manager & Frontend Developer pour réaliser ces tâches :
+- [x] **A1 : Push Notification — Résolution VAR**
+  - _Problème :_ Un utilisateur qui parie sur une VAR ne reçoit aucune notification de résultat s'il a quitté l'app.
+  - _Action :_ Dans `/api/admin/resolve-event/route.ts`, après l'appel à `resolveEvent()`, appeler `sendPushToMatchSubscribers(matchId, payload)` pour tous les abonnés du match.
+  - _Payload :_ `{ title: "⚡ VAR Résolue !", body: "Résultat : {OUI/NON} — découvre tes gains !", url: "/match/{matchId}" }`
+  - _Note :_ Récupérer le `match_id` depuis `market_events` (déjà fetchée dans resolveEvent).
 
-- [x] **Ticket 1 : Mise à jour du Copywriting (Pot Global)**
-  - _Détails :_ Les textes actuels laissent penser qu'on prend l'argent de ses amis. Il faut corriger ça.
-  - _Action :_ Sur la page d'accueil, la page `/rules`, et d'éventuelles modales d'info dans la LiveRoom, mets à jour le texte du "Pari Mutuel".
-  - _Nouveau texte type :_ "Tu joues contre le reste de l'application. Les points des joueurs de toute la communauté qui se trompent financent les gains de ceux qui ont le bon flair !"
+- [x] **A2 : Push Notification — Fin de match + Résultats Pronos**
+  - _Problème :_ Le match se termine, les pronos sont résolus, personne n'est notifié.
+  - _Action :_ Dans `/api/admin/finish-match/route.ts`, après la double résolution (`resolve_long_term_bets` + `resolve_match_pronos`), appeler `sendPushToMatchSubscribers(match_id, payload)`.
+  - _Payload :_ `{ title: "⏱ Match terminé !", body: "{home} {homeScore}–{awayScore} {away} — Résultats pronos disponibles", url: "/match/{matchId}" }`
 
-- [x] **Ticket 2 : Filtres de Classement dans la Ligue (Semaine / Saison)**
-  - _Détails :_ Pour garder l'enjeu frais, le classement de la ligue ne doit pas juste être un cumul absolu depuis le début de l'année.
-  - _Action :_ Dans l'écran d'une Ligue (`LeagueDetails` ou `LeagueRanking`), ajoute un système de filtre/onglets simple au-dessus du classement : "Cette Semaine" (ou "Ce Mois") et "Général". Assure-toi que la requête Supabase correspondante calcule les points gagnés (ou l'évolution du solde) sur la période sélectionnée.
+- [x] **A3 : Badges — Vérification après résolution des Pronos**
+  - _Problème :_ `checkAndUnlockBadges` n'est appelé qu'après une résolution VAR ou une visite profil. Les badges "Nostradamus" et "Goleador" ne se déclenchent pas en temps réel.
+  - _Action :_ Dans `/api/admin/finish-match/route.ts`, après `resolve_match_pronos`, récupérer les user_ids des pronos gagnés (`status = 'won'`) et appeler `Promise.all(userIds.map(uid => checkAndUnlockBadges(uid)))` en fire-and-forget.
 
-- [x] **Ticket 3 : Le Fil d'Actualité / Mur des Légendes (UI Ligue)**
-  - _Détails :_ Il faut que les exploits des joueurs soient visibles par leurs amis pour créer de la jalousie et du chambrage.
-  - _Action :_ Dans l'écran de la Ligue, ajoute une section "Derniers exploits" ou "Activité" sous le classement.
-  - _Affichage :_ Récupère les derniers pronos ou paris VAR gagnés avec un gros gain (ex: > 100 pts) par les membres de cette ligue. Affiche-les sous forme de petite timeline ou de cartes discrètes. Ex: "🔥 Thomas a braqué +150 pts sur le score de Brest !" ou "🚨 Alex a pris +80 pts sur la VAR de PSG-OM".
+- [x] **A4 : Nouveau Cron — Import quotidien des matchs (cron-job.org)**
+  - _Problème :_ L'import du calendrier API-Football est 100% manuel (route admin). Si personne ne l'appelle, les matchs de demain n'apparaissent pas.
+  - _Action :_ Sur **cron-job.org**, créer un nouveau job appelant `GET /api/admin/sync-apifootball-fixtures?date=YYYY-MM-DD` chaque jour à 6h00 UTC avec la date du jour suivant (J+1). La route est déjà sécurisée par Bearer CRON_SECRET.
+  - _Note :_ cron-job.org permet les paramètres dynamiques via des variables de date — vérifier la documentation.
 
-- [x] **Ticket 4 : Clarification du bouton "Rejoindre/Créer une ligue" (Solo UX)**
-  - _Détails :_ Un joueur sans ligue doit comprendre qu'il peut quand même jouer.
-  - _Action :_ Si l'utilisateur n'a aucune ligue, l'encart vide ("Empty State") sur la page des ligues doit être accueillant. Explique : "Tu peux faire tes pronos et jouer dans la LiveRoom en solo contre la communauté. Mais c'est plus fun de chambrer tes potes. Crée ta ligue !".
+---
 
-- [x] **Ticket 5 : Mise à jour du Copywriting des Règles**
-  - _Détails :_ La page `/rules` doit être alignée avec notre vraie économie.
-  - _Action :_ Mettre à jour les textes pour expliquer clairement la différence :
-    1. Le Vainqueur (1N2) et les Buteurs rapportent des points basés sur les cotes réelles du match (plus c'est risqué, plus ça rapporte).
-    2. Le Score Exact déclenche la prime "Contre-Pied / Braquage" : un bonus qui dépend du pourcentage d'autres joueurs ayant trouvé ce score (le but est de surprendre la communauté).
-- [x] **Améliorations UX & Leaderboard Dynamique**
-- _Détails :_ Refonte du classement pour inclure des filtres temporels, création de profils publics et correction du "color clash" sur les feuilles de match.
-- _Action 1 (Leaderboard Périodique) :_ Dans la vue de la Ligue (`LeagueLeaderboard.tsx`), ajouter un filtre temporel (Saison, Mois, Semaine). Modifier la requête Supabase (ou créer une RPC `get_league_standings_by_period`) pour calculer le classement non pas sur l'XP global, mais sur la somme des points gagnés (`points_earned`) via les tables `pronos` et `live_bets` sur la période donnée.
-- _Action 2 (Profils Publics) :_ Rendre les joueurs cliquables dans le classement de la ligue. Créer une route dynamique `src/app/(app)/profile/[id]/page.tsx`. Réutiliser la structure visuelle de la page Profil actuelle, mais en mode "Lecture Seule" (fetcher les données du `userId` ciblé, masquer les boutons d'édition, les paramètres et l'email).
-- _Action 3 (Anti-Color Clash Maillots) :_ Dans le composant affichant la feuille de match / compositions (`MatchLineups.tsx` ou équivalent), créer une fonction utilitaire `resolveTeamColors(homeColor, awayColor)`. Si les deux couleurs (Hex ou noms) sont identiques ou trop similaires, forcer la couleur de l'équipe Extérieure (Away) sur un fallback lisible (ex: `#FFFFFF` avec bordure, ou la couleur secondaire de l'API si elle existe).
+### 🟠 Sprint B : FIABILITÉ — "Soigner la Dette"
 
-- [x] **Filtrage Anti-Triche sur les Profils Publics**
-- _Détails :_ Les utilisateurs ne doivent voir que les pronostics/paris DÉJÀ RÉSOLUS des autres joueurs, pour éviter le copiage avant le début d'un match. Le filtrage doit se faire côté serveur.
-- _Action 1 (Historique des Pronos 1N2/Buteurs) :_ Dans la requête Supabase qui récupère l'historique du profil cible, ajouter un filtre strict : ne récupérer le prono QUE SI le match est terminé (ex: vérifier le statut du match `FT`, `AET`, `PEN` ou s'assurer que la colonne `points_earned` n'est pas `null`).
-- _Action 2 (Historique des Paris VAR) :_ Même logique pour les `live_bets` : ne remonter que les paris dont le statut est clôturé/résolu.
-- _Action 3 (UX/UI Info) :_ Sur la page du profil public, dans l'onglet ou la section "Historique", ajouter un petit message ou tooltip informatif (ex: 🔒 _Les pronostics des matchs à venir sont masqués pour éviter la triche._) pour que l'utilisateur comprenne pourquoi les derniers choix de son ami n'apparaissent pas.
+> Corrections de fond pour un code sain. Peut être traité en parallèle par l'IA.
 
-- [x] **Correction du positionnement du FAB (Floating Action Button)**
-  - _Action 1 (Localisation) :_ Trouve le composant qui rend ce bouton vert (probablement dans `BottomNav.tsx`, `Layout.tsx`, ou `MatchLayout.tsx`).
-  - _Action 2 (Fix CSS) :_ Assure-toi que la Bottom Navigation utilise bien `pb-[env(safe-area-inset-bottom)]` pour gérer les écrans d'iPhone.
-  - _Action 3 (Élévation du bouton) :_ Si le bouton est supposé flotter AU-DESSUS de la barre, donne-lui les classes suivantes : `fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50`. Ajuste le `4rem` selon la hauteur réelle de ta barre de navigation.
-  - _Action 4 (Alternative d'intégration) :_ Si le bouton est censé être INTÉGRÉ au centre de la barre de navigation (comme sur Instagram ou TikTok), place-le en `absolute -top-6 left-1/2 -translate-x-1/2` DANS le conteneur `relative` de la Bottom Nav, avec un `z-50`.
-  - _Action 5 (Apparence) :_ Vérifie qu'il a bien un `shadow-lg`, une bordure (ex: `border-4 border-zinc-950` pour l'isoler visuellement de la barre) et garde son glow vert.
+- [x] **B1 : Nettoyage — Suppression des fichiers de debug racine**
+  - _Action :_ Supprimer les 13 fichiers `.js` à la racine : `test-squad-route.js` (×9), `test-pronos-admin.js`, `test-query.js`, `test-squad-members.js`, `test-squads.js`, `fix-ts.js`, `test-supabase.ts`.
+  - _Action 2 :_ Supprimer les scripts de test dans `/scripts/` non référencés dans `package.json` : `test_limit.ts`, `test_players.ts`, `test_players_2.ts`, `test_players_team_id.ts`, `test_missing_players.ts`, `test_matching.ts`, `test_rpc.ts`, `inspect_players.ts`.
 
-Agis en tant que Lead UI/UX Developer.
+- [x] **B2 : Badge "Fidèle au Poste" — Implémenter la logique login streak**
+  - _Problème :_ Le `case "login_streak_3"` dans `src/app/actions/badges.ts:87` est vide — le badge ne peut jamais être débloqué.
+  - _Action 1 :_ Créer une migration ajoutant `last_login_date DATE` et `login_streak INT DEFAULT 0` à `profiles`.
+  - _Action 2 :_ Dans le layout `/(app)/layout.tsx` (ou une Server Action de login), mettre à jour ces colonnes à chaque visite : si `last_login_date = hier`, incrémenter `login_streak`; si > hier, remettre à 1.
+  - _Action 3 :_ Dans `badges.ts`, implémenter le case : `shouldUnlock = profile.login_streak >= 3`.
 
-- [x] **Tâche 1 : Résolution stricte du Color Clash (Compo & Stats)**
-  - _Le bug :_ Actuellement, si Arsenal joue contre l'Atlético, les barres de statistiques et les maillots sont tous rouges, c'est illisible.
-  - _Action 1 :_ Ouvre les composants `MatchStats.tsx` ET `MatchLineups.tsx` (ou les fichiers qui gèrent ces onglets).
-  - _Action 2 :_ Crée une logique locale AVANT le return : compare les codes couleurs Hex (ou les noms) des deux équipes. Si `color_secndary === awayColor` (ou s'ils sont trop proches, comme deux nuances de rouge), force `color_primary = '#ffffff'` (blanc) ou `#d1d5db` (gris clair) pour le reste du rendu de ce composant.
-  - _Action 3 :_ Applique bien cette variable `color_secondary` sécurisée aux barres de progression des statistiques (`w-full bg-[color]`) et aux points/maillots des compositions.
+- [x] **B3 : Types — Ajouter `friend_requests` à `database.ts` + supprimer les `any`**
+  - _Problème :_ `src/components/profile/AmisContent.tsx` utilise `any` car la table `friend_requests` est absente de `src/types/database.ts`.
+  - _Action 1 :_ Ajouter le type `FriendRequestRow`/`FriendRequestInsert` dans `src/types/database.ts` en miroir de la migration `0063_friends.sql`.
+  - _Action 2 :_ Remplacer tous les `any` dans `AmisContent.tsx` par le type strict.
 
-- [x] **Tâche 2 : Refonte de la BottomNav (Style TikTok/Instagram)**
-  - _Le bug :_ Le bouton vert est coupé en bas de l'écran car il gère mal la safe-area.
-  - _Action 1 :_ Ouvre le fichier de la navigation du bas (ex: `BottomNav.tsx` ou `MobileNav.tsx`).
-  - _Action 2 :_ Supprime l'ancien composant du bouton vert flottant qui traînait dans le Layout.
-  - _Action 3 :_ Refonds la `BottomNav` pour y intégrer le bouton d'Alerte VAR au centre exact. Utilise un flex/grid layout symétrique. Par exemple, à gauche : "Stade" et "Pronos". Au centre : Le bouton vert d'Alerte VAR (en absolute, `-top-6`, avec un `z-50`, arrondi, glow vert, `border-4 border-zinc-950` pour créer un effet de découpe avec la nav en dessous). À droite : "Ligues" et "Profil".
-  - _Action 4 :_ Assure-toi que la barre de navigation globale a bien un `pb-[env(safe-area-inset-bottom)]` pour l'iPhone.
+- [x] **B4 : Push Notification — Nouveau membre dans une ligue**
+  - _Action :_ Dans `/api/squads/join/route.ts`, après l'insert dans `squad_members`, récupérer le `created_by` (admin de la squad) et lui envoyer `sendPushToUsers([adminId], { title: "🎉 Nouveau membre !", body: "{username} a rejoint ta ligue !", url: "/ligues/{squadId}" })`.
 
-  Claude, nous devons faire un nettoyage radical. Les correctifs précédents pour la BottomNav et les couleurs des équipes n'ont pas fonctionné. Oublie les anciens hacks CSS, nous allons implémenter des solutions robustes et simplifier l'UX.
+---
 
-Agis en tant que Lead Frontend et Expert UI/UX.
+### 🟡 Sprint C : OPTIMISATION — "Polir & Scaler"
 
-- [x] **Tâche 1 : L'algorithme des Couleurs de Maillots**
-  - _Contexte :_ La table `teams` contient `primary_color` et `secondary_color`.
-  - _Règle métier :_ L'équipe à domicile (Home) a TOUJOURS la priorité sur sa `primary_color`. L'équipe à l'extérieur (Away) utilise sa `primary_color` SAUF si elle est trop similaire à celle de Home. Dans ce cas, elle passe sur sa `secondary_color`. Si c'est toujours illisible, utiliser `#FFFFFF` (blanc) ou `#111827` (noir).
-  - _Action 1 :_ Crée un fichier utilitaire `src/lib/colors.ts`.
-  - _Action 2 :_ Écris une fonction `hasGoodContrast(hex1: string, hex2: string): boolean` qui calcule la distance des couleurs ou la luminance pour savoir si deux couleurs se confondent.
-  - _Action 3 :_ Écris une fonction `resolveMatchColors(homePrimary, homeSecondary, awayPrimary, awaySecondary)` qui applique la règle métier décrite ci-dessus et renvoie `{ finalHomeColor, finalAwayColor }`.
-  - _Action 4 :_ Implémente cette fonction dans `MatchStats.tsx` et `MatchLineups.tsx` pour que les barres de progression et les points/maillots utilisent ces couleurs corrigées.
+> Améliore la qualité sans impact utilisateur immédiat.
 
-- [x] **Tâche 2 : Refonte Radicale de la BottomNav**
-  - _Contexte :_ L'UX est trop chargée et le bouton flottant "VAR" bug à cause des positions `absolute`/`fixed` sur Safari mobile.
-  - _Action 1 :_ Ouvre `BottomNav.tsx` (ou le composant de navigation mobile principal) et supprime tout le code CSS complexe de positionnement du bouton VAR.
-  - _Action 2 :_ Remplace le conteneur principal par une simple grille : `<nav className="grid h-16 grid-cols-5 bg-zinc-900 border-t border-white/10 pb-[env(safe-area-inset-bottom)] relative z-50">`
-  - _Action 3 :_ Place les éléments dans cet ordre :
-    - Col 1 : Stade/Matchs (Icône)
-    - Col 2 : Pronos (Icône)
-    - Col 3 (Le bouton VAR au centre) : Oublie le `absolute`. Utilise simplement un flex item centré, avec une marge négative pour le faire ressortir : `<div className="flex items-start justify-center -mt-5"><button className="h-14 w-14 rounded-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] border-4 border-zinc-950 flex items-center justify-center">🚨</button></div>`
-    - Col 4 : Classement/Ligues (Icône)
-    - Col 5 : Profil (Icône)
-  - _Action 4 :_ Enlève les textes sous les icônes si ça surcharge trop, garde uniquement des icônes claires (Lucide React) pour un look "App Native" très épuré.
+- [x] **C1 : UX — Séparation Pronos / VAR dans le Leaderboard**
+  - _Problème :_ Le classement affiche un seul score global. La dualité des mécaniques (pronos + VAR) est invisible pour l'utilisateur.
+  - _Action :_ Dans `SquadDetailClient.tsx`, modifier l'affichage du `LeaderboardRow` pour afficher 2 sous-scores : `🎯 {pronosXp} pts` et `⚡ {varXp} pts`. Modifier la route `/api/squads/[squadId]` pour retourner `pronos_xp` et `var_xp` séparément (en plus du total).
+
+- [x] **C2 : UX — Dot "pronos saisis" sur le Date Slider**
+  - _Problème :_ Sur la page Pronos, l'utilisateur ne sait pas visuellement pour quelles dates il a déjà pronostiqué.
+  - _Action :_ Dans `PronosticsHubClient.tsx`, après le fetch des pronos, calculer un `Set<string>` des dates avec pronos existants. Dans le `DateSlider`, afficher un petit dot `w-1.5 h-1.5 rounded-full bg-green-400` sous la date si elle est dans ce Set.
+
+- [x] **C3 : UX — Overlay post-pari VAR**
+  - _Problème :_ Après confirmation d'un pari, la VotingModal se ferme sans transition ni feedback.
+  - _Action :_ Dans `VotingModal.tsx`, après le succès de `fetch("/api/bet")`, afficher pendant 1.8s un état "confirmed" dans la modal avant de fermer : `"⚡ Pari enregistré · Cote : x{multiplier}"`. Utiliser un `setTimeout(() => onClose(), 1800)` déclenché sur succès.
+
+- [x] **C4 : Perf — Optimisation requête `favoriteTeam` page Profil**
+  - _Problème :_ La requête `teams` est séquentielle après le `Promise.all` initial (`profile/page.tsx:126-133`).
+  - _Action :_ Récupérer le profil en premier (`await supabase.from("profiles")...`), puis lancer le `Promise.all` avec la requête `teams` incluse si `profile.favorite_team_id` est défini.
+
+- [x] **C5 : Code — Retry/backoff sur `fetchApiFootball`**
+  - _Problème :_ Un timeout réseau sur l'API-Football n'est pas retried — les données du tick sont simplement perdues.
+  - _Action :_ Dans `src/lib/api-football-client.ts`, entourer le `fetch` d'une boucle retry (max 3 tentatives, délai `100ms × 2^attempt`). Lever une exception après le 3ème échec.
+
+---
 
 ## 🧊 Backlog (À faire plus tard)
 
-- [ ] **Refonte du flux de connexion Google (Sign-in with id_token)**
+- [x] **Refonte du flux de connexion Google (Sign-in with id_token)**
 - _Détails :_ Le frontend doit récupérer l'ID Token depuis Google directement, puis l'envoyer à Supabase via `signInWithIdToken`.
 - _Action 1 (Installation) :_ Si besoin, installe la librairie `@react-oauth/google` pour faciliter l'intégration du bouton Google côté client dans Next.js, ou utilise le SDK natif Google Identity.
 - _Action 2 (Provider) :_ Entoure l'application (ou la page de login) avec le `GoogleOAuthProvider` en utilisant la variable d'environnement `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.

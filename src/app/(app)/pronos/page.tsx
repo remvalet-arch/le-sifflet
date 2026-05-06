@@ -13,9 +13,8 @@ export default async function PronosPage() {
 
   // eslint-disable-next-line react-hooks/purity
   const nowMs = Date.now();
-  const sevenDaysLater = new Date(
-    nowMs + 7 * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const fourDaysAgo = new Date(nowMs - 4 * 24 * 60 * 60 * 1000).toISOString();
+  const fiveDaysLater = new Date(nowMs + 5 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: competitions } = await supabase
     .from("competitions")
@@ -27,7 +26,7 @@ export default async function PronosPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, team_home, team_away, home_team_id, away_team_id, home_team_logo, away_team_logo, start_time, competition_id, round_short, status, odds_home, odds_draw, odds_away",
+      "id, team_home, team_away, home_team_id, away_team_id, home_team_logo, away_team_logo, start_time, competition_id, round_short, status, odds_home, odds_draw, odds_away, home_score, away_score",
     )
     .in("status", [
       "upcoming",
@@ -35,11 +34,13 @@ export default async function PronosPage() {
       "half_time",
       "second_half",
       "paused",
+      "finished",
     ] as const)
     .in("competition_id", competitionIds)
-    .lte("start_time", sevenDaysLater)
+    .gte("start_time", fourDaysAgo)
+    .lte("start_time", fiveDaysLater)
     .order("start_time", { ascending: true })
-    .limit(50);
+    .limit(100);
 
   const matchIds = (matches ?? []).map((m) => m.id);
   const [{ data: existingPronos }, { data: stats }] =
@@ -47,7 +48,9 @@ export default async function PronosPage() {
       ? await Promise.all([
           supabase
             .from("pronos")
-            .select("match_id, prono_type, prono_value")
+            .select(
+              "match_id, prono_type, prono_value, points_earned, reward_amount, status",
+            )
             .eq("user_id", user.id)
             .in("match_id", matchIds)
             .in("prono_type", ["exact_score", "scorer_allocation"]),

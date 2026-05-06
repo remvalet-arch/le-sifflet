@@ -1,4 +1,5 @@
 import { Target, TrendingUp, Trophy, Shield } from "lucide-react";
+import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
 import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
@@ -92,14 +93,20 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Profil en premier pour obtenir favorite_team_id
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
   const [
-    { data: profile },
     { data: rawShortBets },
     { data: rawPronos },
     { data: allBadges },
     { data: userBadgesData },
+    { data: favoriteTeamData },
   ] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
       .from("bets")
       .select("*")
@@ -114,22 +121,20 @@ export default async function ProfilePage() {
       .limit(30),
     supabase.from("badges").select("*").order("created_at"),
     supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
+    profile?.favorite_team_id
+      ? supabase
+          .from("teams")
+          .select("id, name, logo_url")
+          .eq("id", profile.favorite_team_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
-  // Fetch favorite team if set
-  let favoriteTeam: {
+  const favoriteTeam: {
     id: string;
     name: string;
     logo_url: string | null;
-  } | null = null;
-  if (profile?.favorite_team_id) {
-    const { data: team } = await supabase
-      .from("teams")
-      .select("id, name, logo_url")
-      .eq("id", profile.favorite_team_id)
-      .maybeSingle();
-    favoriteTeam = team ?? null;
-  }
+  } | null = favoriteTeamData ?? null;
 
   void checkAndUnlockBadges(user.id);
 
@@ -248,70 +253,86 @@ export default async function ProfilePage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
 
-      <ProfileHeader
-        username={profile?.username ?? "Joueur"}
-        avatarUrl={profile?.avatar_url ?? null}
-        favoriteTeam={favoriteTeam}
-        karma={karma}
-        rank={rank}
-        xpTotal={xpTotal}
-        balance={balance}
-      />
-
-      <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-            Confiance
-          </span>
-          <span className={`text-[10px] font-black ${grade.color}`}>
-            {grade.icon} {grade.label} · {trustScore}
-          </span>
-        </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-            style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
-          />
-        </div>
-      </div>
-
-      {balance < REFILL_THRESHOLD && (
-        <RefillButton
-          isEligible={isRefillEligible}
-          nextRefillAt={nextRefillAt}
-        />
-      )}
-
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <StatCard Icon={Target} label="Réussite" value={`${winRate}%`} />
-        <StatCard
-          Icon={TrendingUp}
-          label="Gagnés"
-          value={totalEarned.toLocaleString("fr-FR")}
-        />
-        <StatCard Icon={Trophy} label="Paris" value={String(totalBets)} />
-      </div>
-
-      {trustScore >= MODERATOR_THRESHOLD && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
-          <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
-          <p className="text-xs font-bold text-yellow-400">
-            Accès Modérateur activé — tu peux forcer les résultats VAR
-          </p>
-        </div>
-      )}
-
       <ProfileClient
         shortBets={shortEntries}
         pronos={pronoEntries}
         allBadges={allBadges ?? []}
         unlockedBadgeIds={unlockedBadgeIds}
+        amisContent={<AmisContent currentUserId={user.id} />}
+        vestiaireContent={
+          <div className="flex flex-col gap-3">
+            <ProfileHeader
+              username={profile?.username ?? "Joueur"}
+              avatarUrl={profile?.avatar_url ?? null}
+              favoriteTeam={favoriteTeam}
+              karma={karma}
+              rank={rank}
+              xpTotal={xpTotal}
+              balance={balance}
+            />
+
+            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                  Confiance
+                </span>
+                <span className={`text-[10px] font-black ${grade.color}`}>
+                  {grade.icon} {grade.label} · {trustScore}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
+                  style={{
+                    width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {balance < REFILL_THRESHOLD && (
+              <RefillButton
+                isEligible={isRefillEligible}
+                nextRefillAt={nextRefillAt}
+              />
+            )}
+
+            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/60">
+              <div className="flex items-center divide-x divide-white/8">
+                <StatItem
+                  Icon={Target}
+                  label="Réussite"
+                  value={`${winRate}%`}
+                />
+                <StatItem
+                  Icon={TrendingUp}
+                  label="Gagnés"
+                  value={totalEarned.toLocaleString("fr-FR")}
+                />
+                <StatItem
+                  Icon={Trophy}
+                  label="Paris"
+                  value={String(totalBets)}
+                />
+              </div>
+            </div>
+
+            {trustScore >= MODERATOR_THRESHOLD && (
+              <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
+                <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
+                <p className="text-xs font-bold text-yellow-400">
+                  Accès Modérateur activé — tu peux forcer les résultats VAR
+                </p>
+              </div>
+            )}
+          </div>
+        }
       />
     </main>
   );
 }
 
-function StatCard({
+function StatItem({
   Icon,
   label,
   value,
@@ -321,7 +342,7 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-3.5">
+    <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
       <Icon className="h-4 w-4 text-zinc-500" />
       <p className="text-base font-black text-white">{value}</p>
       <p className="text-center text-[10px] font-semibold text-zinc-500">

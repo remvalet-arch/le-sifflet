@@ -31,8 +31,14 @@ export type SquadProno = {
 type Tab = "kop" | "compo" | "stats" | "vestiaire";
 
 export type LiveRoomMatchRow = MatchRow & {
-  home_team?: { color_primary: string | null; color_secondary: string | null } | null;
-  away_team?: { color_primary: string | null; color_secondary: string | null } | null;
+  home_team?: {
+    color_primary: string | null;
+    color_secondary: string | null;
+  } | null;
+  away_team?: {
+    color_primary: string | null;
+    color_secondary: string | null;
+  } | null;
 };
 
 type Props = {

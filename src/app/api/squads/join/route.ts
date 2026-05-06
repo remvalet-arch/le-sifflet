@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { sendPushToUsers } from "@/lib/push-sender";
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,6 +60,25 @@ export async function POST(request: NextRequest) {
       console.error("Supabase Error:", error);
       return errorResponse(error.message, 500);
     }
+
+    // Notifie le créateur de la ligue (fire-and-forget)
+    void (async () => {
+      const [{ data: joiner }, { data: owner }] = await Promise.all([
+        supabase.from("profiles").select("username").eq("id", user.id).single(),
+        supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", squad.owner_id)
+          .single(),
+      ]);
+      if (owner && owner.id !== user.id) {
+        await sendPushToUsers([owner.id], {
+          title: "🎉 Nouveau membre !",
+          body: `${joiner?.username ?? "Quelqu'un"} a rejoint ta ligue ${squad.name} !`,
+          url: `/ligues/${squad.id}`,
+        });
+      }
+    })();
 
     return successResponse({ squad });
   } catch (error) {

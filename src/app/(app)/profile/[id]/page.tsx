@@ -1,4 +1,5 @@
-import { Target, TrendingUp, Trophy, Lock } from "lucide-react";
+import { Target, TrendingUp, Trophy } from "lucide-react";
+import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import type {
@@ -12,6 +13,7 @@ import type {
   MatchRow,
   PronoRow,
 } from "@/types/database";
+import { FriendButton } from "@/components/profile/FriendButton";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 function getTrustGrade(score: number) {
@@ -112,14 +114,12 @@ export default async function PublicProfilePage({
       .from("bets")
       .select("*")
       .eq("user_id", id)
-      .neq("status", "pending")
       .order("placed_at", { ascending: false })
       .limit(30),
     supabase
       .from("pronos")
       .select("*")
       .eq("user_id", id)
-      .neq("status", "pending")
       .order("placed_at", { ascending: false })
       .limit(30),
     supabase.from("badges").select("*").order("created_at"),
@@ -179,10 +179,11 @@ export default async function PublicProfilePage({
   const shortEntries: ShortBetEntry[] = shortBets.map((b) => {
     const event = eventMap.get(b.event_id);
     const match = event ? matchMap.get(event.match_id) : undefined;
+    const isPending = b.status === "pending";
     return {
       id: b.id,
       status: b.status,
-      chosen_option: b.chosen_option,
+      chosen_option: isPending ? "🔒" : b.chosen_option,
       amount_staked: b.amount_staked,
       potential_reward: Number(b.potential_reward),
       placed_at: b.placed_at,
@@ -194,11 +195,12 @@ export default async function PublicProfilePage({
 
   const pronoEntries: PronoEntry[] = pronos.map((p) => {
     const match = matchMap.get(p.match_id);
+    const isPending = p.status === "pending";
     return {
       id: p.id,
       status: p.status,
       prono_type: p.prono_type,
-      prono_value: p.prono_value,
+      prono_value: isPending ? "🔒" : p.prono_value,
       reward_amount: p.reward_amount,
       points_earned: p.points_earned,
       contre_pied_bonus: p.contre_pied_bonus,
@@ -239,107 +241,111 @@ export default async function PublicProfilePage({
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
-      {/* Header lecture seule */}
-      <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
-        <div className="flex items-center gap-4 px-5 py-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
-            {avatar.startsWith("http") ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatar}
-                alt={profile.username}
-                className="h-14 w-14 rounded-full object-cover"
-              />
-            ) : (
-              avatar
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-black text-white">{profile.username}</p>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
-              >
-                {karma.emoji} {karma.label}
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-zinc-500">
-              {rank.emoji} {rank.label}
-            </p>
-            <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
-              {xpTotal.toLocaleString("fr-FR")} XP
-            </p>
-            {favoriteTeam && (
-              <div className="mt-1.5 flex items-center gap-1.5">
-                {favoriteTeam.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={favoriteTeam.logo_url}
-                    alt={favoriteTeam.name}
-                    className="h-4 w-4 object-contain"
-                  />
-                ) : (
-                  <span className="text-xs">⚽</span>
-                )}
-                <span className="text-[11px] font-bold text-zinc-400">
-                  {favoriteTeam.name}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-black tabular-nums text-white">
-              {balance.toLocaleString("fr-FR")}
-            </p>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-              Pts
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Trust bar */}
-      <div className="mt-3 overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-            Confiance
-          </span>
-          <span className={`text-[10px] font-black ${grade.color}`}>
-            {grade.icon} {grade.label} · {trustScore}
-          </span>
-        </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-            style={{ width: `${Math.min(100, (trustScore / 1000) * 100)}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <StatCard Icon={Target} label="Réussite" value={`${winRate}%`} />
-        <StatCard
-          Icon={TrendingUp}
-          label="Gagnés"
-          value={totalEarned.toLocaleString("fr-FR")}
-        />
-        <StatCard Icon={Trophy} label="Résultats" value={String(totalBets)} />
-      </div>
-
-      {/* Anti-triche disclaimer */}
-      <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
-        <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-        <p className="text-[11px] text-zinc-500">
-          Les pronostics des matchs à venir sont masqués pour éviter la triche.
-        </p>
-      </div>
-
       <ProfileClient
         shortBets={shortEntries}
         pronos={pronoEntries}
         allBadges={allBadges ?? []}
         unlockedBadgeIds={unlockedBadgeIds}
+        amisContent={<AmisContent currentUserId={id} />}
+        vestiaireContent={
+          <div className="flex flex-col gap-3">
+            {/* Header lecture seule */}
+            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
+              <div className="flex items-center gap-4 px-5 py-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl">
+                  {avatar.startsWith("http") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatar}
+                      alt={profile.username}
+                      className="h-14 w-14 rounded-full object-cover"
+                    />
+                  ) : (
+                    avatar
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-black text-white">{profile.username}</p>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[9px] font-black ${karma.cls}`}
+                    >
+                      {karma.emoji} {karma.label}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {rank.emoji} {rank.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
+                    {xpTotal.toLocaleString("fr-FR")} XP
+                  </p>
+                  {favoriteTeam && (
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      {favoriteTeam.logo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={favoriteTeam.logo_url}
+                          alt={favoriteTeam.name}
+                          className="h-4 w-4 object-contain"
+                        />
+                      ) : (
+                        <span className="text-xs">⚽</span>
+                      )}
+                      <span className="text-[11px] font-bold text-zinc-400">
+                        {favoriteTeam.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-black tabular-nums text-white">
+                    {balance.toLocaleString("fr-FR")}
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                    Pts
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Trust bar */}
+            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 px-5 py-3">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+                  Confiance
+                </span>
+                <span className={`text-[10px] font-black ${grade.color}`}>
+                  {grade.icon} {grade.label} · {trustScore}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
+                  style={{
+                    width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2">
+              <StatCard Icon={Target} label="Réussite" value={`${winRate}%`} />
+              <StatCard
+                Icon={TrendingUp}
+                label="Gagnés"
+                value={totalEarned.toLocaleString("fr-FR")}
+              />
+              <StatCard
+                Icon={Trophy}
+                label="Résultats"
+                value={String(totalBets)}
+              />
+            </div>
+
+            <FriendButton profileId={id} currentUserId={user.id} />
+          </div>
+        }
       />
     </main>
   );
