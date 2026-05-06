@@ -345,6 +345,160 @@ Agis en tant que Lead Backend et Game Designer.
 
 ---
 
+---
+
+### 🏆 Sprint G : MODE 1v1 — "Championnat entre amis"
+
+> Implémentation complète du mode `game_mode = 'braquage'` (1vs1 type MPG).
+> Chaque week-end, chaque membre affronte un adversaire désigné par le calendrier.
+> On gagne le "match" si ses points pronos sur la semaine dépassent ceux de l'adversaire.
+> Victoire = 3 pts | Nul = 1 pt | Défaite = 0 pt.
+
+- [ ] **G1 : Migration — Tables du mode championnat**
+  - _Action :_ Créer `supabase/migrations/0069_league_championship.sql` avec :
+    ```sql
+    -- Saison d'un championnat privé (1 par squad en mode braquage)
+    CREATE TABLE public.league_seasons (
+      id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      squad_id     uuid NOT NULL REFERENCES public.squads(id) ON DELETE CASCADE,
+      status       text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'finished')),
+      total_rounds integer NOT NULL DEFAULT 0,
+      current_round integer NOT NULL DEFAULT 0,
+      started_at   timestamptz,
+      ended_at     timestamptz,
+      created_at   timestamptz NOT NULL DEFAULT now()
+    );
+
+    -- Calendrier généré (un fixture = une confrontation entre deux membres pour une semaine)
+    CREATE TABLE public.league_fixtures (
+      id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      season_id       uuid NOT NULL REFERENCES public.league_seasons(id) ON DELETE CASCADE,
+      round_number    integer NOT NULL,
+      week_start      date NOT NULL,  -- Lundi de la semaine
+      home_member_id  uuid NOT NULL REFERENCES public.profiles(id),
+      away_member_id  uuid NOT NULL REFERENCES public.profiles(id),
+      home_points     integer,        -- NULL = non résolu
+      away_points     integer,
+      winner_id       uuid REFERENCES public.profiles(id),  -- NULL = nul ou non résolu
+      status          text NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'active', 'finished'))
+    );
+
+    -- Classement du championnat (W/D/L/Pts cumulés)
+    CREATE TABLE public.league_standings (
+      season_id   uuid NOT NULL REFERENCES public.league_seasons(id) ON DELETE CASCADE,
+      user_id     uuid NOT NULL REFERENCES public.profiles(id),
+      played      integer NOT NULL DEFAULT 0,
+      won         integer NOT NULL DEFAULT 0,
+      drawn       integer NOT NULL DEFAULT 0,
+      lost        integer NOT NULL DEFAULT 0,
+      points      integer NOT NULL DEFAULT 0,   -- 3W + 1D + 0L
+      pronos_pts  integer NOT NULL DEFAULT 0,   -- total points pronos accumulés
+      PRIMARY KEY (season_id, user_id)
+    );
+
+    -- Index
+    CREATE INDEX ON public.league_fixtures(season_id, round_number);
+    CREATE INDEX ON public.league_fixtures(week_start);
+    CREATE INDEX ON public.league_standings(season_id, points DESC);
+
+    -- RLS : lecture pour les membres de la squad, écriture service_role uniquement
+    ALTER TABLE public.league_seasons ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.league_fixtures ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.league_standings ENABLE ROW LEVEL SECURITY;
+
+    -- Membres lisent leurs propres saisons via squad_members
+    CREATE POLICY "league_seasons_read" ON public.league_seasons FOR SELECT
+      USING (EXISTS (SELECT 1 FROM public.squad_members sm WHERE sm.squad_id = league_seasons.squad_id AND sm.user_id = auth.uid()));
+    CREATE POLICY "league_fixtures_read" ON public.league_fixtures FOR SELECT
+      USING (EXISTS (SELECT 1 FROM public.league_seasons ls JOIN public.squad_members sm ON sm.squad_id = ls.squad_id WHERE ls.id = league_fixtures.season_id AND sm.user_id = auth.uid()));
+    CREATE POLICY "league_standings_read" ON public.league_standings FOR SELECT
+      USING (EXISTS (SELECT 1 FROM public.league_seasons ls JOIN public.squad_members sm ON sm.squad_id = ls.squad_id WHERE ls.id = league_standings.season_id AND sm.user_id = auth.uid()));
+    ```
+  - _Types :_ Ajouter `LeagueSeasonRow`, `LeagueFixtureRow`, `LeagueStandingRow` dans `src/types/database.ts`.
+
+- [ ] **G2 : API — Démarrage de saison (`POST /api/squads/[squadId]/start-season`)**
+  - _Route :_ `src/app/api/squads/[squadId]/start-season/route.ts`
+  - _Auth :_ Uniquement le `owner_id` de la squad.
+  - _Validations :_
+    - `game_mode === 'braquage'`
+    - Aucune saison `active` déjà en cours
+    - Nombre de membres pair, entre 2 et 18
+  - _Algorithme (round-robin "cercle tournant") :_ Pour N membres :
+    ```ts
+    // Fix le membre[0], rotate les membres[1..N-1] sur N-1 rounds
+    // Ex : 4 membres → 3 rounds aller + 3 rounds retour = 6 rounds
+    // Chaque round = une semaine calendaire à partir du lundi suivant la création
+    ```
+  - _Action :_
+    1. Charger les membres (`squad_members`)
+    2. Générer les `N-1` rounds aller (algo cercle tournant), puis dupliquer en inversant home/away pour les retours
+    3. Calculer `week_start` de chaque round = lundi de la semaine `startDate + (roundIndex × 7 jours)`
+    4. INSERT `league_seasons` (status: 'active', total_rounds, started_at)
+    5. INSERT bulk `league_fixtures`
+    6. INSERT `league_standings` (un row par membre, tout à zéro)
+  - _Réponse :_ `{ season_id, total_rounds, fixtures_count }`
+
+- [ ] **G3 : RPC + API — Résolution hebdomadaire d'un round**
+  - _Déclenchement :_ Cron (cron-job.org) ou endpoint admin `POST /api/admin/resolve-league-round`
+  - _Logique :_
+    1. Trouver les `league_fixtures` dont `status = 'active'` et `week_start <= NOW() - 7j` (semaine révolue)
+    2. Pour chaque fixture : calculer les points pronos de chaque membre sur la semaine du fixture :
+       ```sql
+       SELECT SUM(p.points_earned)
+       FROM pronos p
+       JOIN matches m ON m.id = p.match_id
+       WHERE p.user_id = $member_id
+         AND p.status = 'won'
+         AND m.start_time >= $week_start
+         AND m.start_time < $week_start + INTERVAL '7 days'
+       ```
+    3. Comparer → déterminer `winner_id` (ou nul si égalité)
+    4. UPDATE `league_fixtures` (home_points, away_points, winner_id, status: 'finished')
+    5. UPDATE `league_standings` : +3 au gagnant, +1 à chacun si nul, +pronos_pts pour les deux
+    6. Si tous les rounds sont `finished` → passer `league_seasons.status` à `'finished'`
+  - _Route :_ `src/app/api/admin/resolve-league-round/route.ts` (guard modérateur)
+  - _RPC SQL :_ `resolve_league_round(p_season_id uuid, p_round_number integer) RETURNS jsonb`
+
+- [ ] **G4 : API — Retourner le championnat dans `GET /api/squads/[squadId]`**
+  - _Condition :_ Si `squad.game_mode === 'braquage'` et qu'une saison active existe.
+  - _Action :_ Ajouter au payload de réponse existant :
+    ```ts
+    championship: {
+      season_id: string;
+      current_round: number;
+      total_rounds: number;
+      standings: { user_id, username, played, won, drawn, lost, points, pronos_pts }[];
+      current_fixtures: { round_number, home_member, away_member, week_start, status, home_points, away_points }[];
+    } | null
+    ```
+  - Les standings sont triés par points DESC, puis pronos_pts DESC (goal average).
+
+- [ ] **G5 : UI — Vue championnat dans `SquadDetailClient.tsx`**
+  - _Condition :_ Afficher la vue championnat si `data.championship != null`, sinon la vue classique (classement XP).
+  - _Section 1 — Tableau de championnat :_ Colonnes : `#` | Joueur | J | V | N | D | Pts. Gras pour l'utilisateur connecté. Top 3 coloré (or/argent/bronze).
+  - _Section 2 — Journée en cours :_ Liste des confrontations du round actuel avec score provisoire (points pronos en temps réel si semaine en cours) ou score final si résolu. Mettre en avant le match de l'utilisateur connecté ("Ton match cette semaine").
+  - _Section 3 — Calendrier complet :_ Accordion par journée, affichant toutes les confrontations.
+
+- [ ] **G6 : UI — Démarrage de saison (admin squad)**
+  - _Condition :_ Afficher un CTA "Lancer le championnat" sur la page de la squad si :
+    - `squad.game_mode === 'braquage'`
+    - Aucune saison active (`championship === null`)
+    - L'utilisateur est l'`owner_id`
+  - _Flow :_
+    1. Modale de confirmation affichant : liste des membres, nombre de rounds calculé, date de début estimée
+    2. Warning si le nombre de membres est impair ou < 2 (bloquer)
+    3. Bouton "Lancer" → `POST /api/squads/[squadId]/start-season`
+    4. Toast succès + rafraîchissement de la page
+  - _Note :_ Une fois lancé, plus aucun membre ne peut rejoindre la ligue (le bouton "Rejoindre" doit être désactivé si une saison est active).
+
+- [ ] **G7 : Intégration match-monitor — Avancement automatique des rounds**
+  - _Action :_ Dans `src/app/api/cron/match-monitor/route.ts`, ajouter une étape après la résolution FT :
+    1. Vérifier si des `league_fixtures` ont `status = 'active'` et `week_start <= now() - 7j`
+    2. Si oui, appeler `resolve_league_round` pour chacun (fire-and-forget)
+  - _Note :_ Ajouter `week_start` dans la query des fixtures actifs pour ne déclencher la résolution qu'en fin de semaine.
+
+---
+
 ## 🧊 Backlog (À faire plus tard)
 
 - [x] **Refonte du flux de connexion Google (Sign-in with id_token)**
