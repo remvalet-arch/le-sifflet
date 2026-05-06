@@ -21,7 +21,9 @@ export type MarketEventType =
   | "red_card"
   | "injury_sub"
   | "free_kick"
-  | "corner";
+  | "corner"
+  | "stoppage_ht"
+  | "stoppage_ft";
 export type MarketEventStatus = "open" | "closed" | "locked" | "resolved";
 export type BetStatus = "pending" | "won" | "lost";
 export type AlertActionType =

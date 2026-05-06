@@ -53,34 +53,38 @@ const EVENT_CONFIG: Record<
     yes: "OUI",
     no: "NON",
   },
+  stoppage_ht: {
+    question: "Combien de minutes d'arrêt à la mi-temps ?",
+    emoji: "⏱️",
+    yes: "",
+    no: "",
+  },
+  stoppage_ft: {
+    question: "Combien de minutes d'arrêt en fin de match ?",
+    emoji: "⏱️",
+    yes: "",
+    no: "",
+  },
 };
 
-type PoolOdds = { oui: number; non: number };
+const STOPPAGE_OPTIONS = ["1", "2", "3", "4", "5", "6+"] as const;
+const DEFAULT_ODD = 2;
 
-const DEFAULT_POOL: PoolOdds = { oui: 2, non: 2 };
-
-type Props = {
-  event: MarketEventRow;
-  siffletsBalance: number;
-  onClose: () => void;
-  onBetSuccess: (amountStaked: number) => void;
-  squadId?: string | null;
-  squadName?: string | null;
-};
+function isStoppageType(type: MarketEventType): boolean {
+  return type === "stoppage_ht" || type === "stoppage_ft";
+}
 
 function parseOddsRows(
   rows: { option: string; implied_multiplier: number }[] | null,
-): PoolOdds {
-  if (!rows?.length) return DEFAULT_POOL;
-  let oui = DEFAULT_POOL.oui;
-  let non = DEFAULT_POOL.non;
+): Record<string, number> {
+  if (!rows?.length) return {};
+  const result: Record<string, number> = {};
   for (const r of rows) {
     const m = Number(r.implied_multiplier);
     if (!Number.isFinite(m) || m < 1) continue;
-    if (r.option === "oui") oui = m;
-    if (r.option === "non") non = m;
+    result[r.option] = m;
   }
-  return { oui, non };
+  return result;
 }
 
 function collectFocusable(root: HTMLElement): HTMLElement[] {
@@ -97,6 +101,15 @@ function collectFocusable(root: HTMLElement): HTMLElement[] {
   );
 }
 
+type Props = {
+  event: MarketEventRow;
+  siffletsBalance: number;
+  onClose: () => void;
+  onBetSuccess: (amountStaked: number) => void;
+  squadId?: string | null;
+  squadName?: string | null;
+};
+
 export function VotingModal({
   event,
   siffletsBalance,
@@ -109,8 +122,9 @@ export function VotingModal({
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleId = `vote-title-${event.id}`;
   const descId = `vote-desc-${event.id}`;
+  const isStoppage = isStoppageType(event.type);
 
-  const [poolOdds, setPoolOdds] = useState<PoolOdds>(DEFAULT_POOL);
+  const [poolOdds, setPoolOdds] = useState<Record<string, number>>({});
   const [oddsLoading, setOddsLoading] = useState(true);
   const [oddsFlash, setOddsFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,7 +139,10 @@ export function VotingModal({
     }
     const next = parseOddsRows(data ?? null);
     setPoolOdds((prev) => {
-      if (prev.oui !== next.oui || prev.non !== next.non) {
+      const changed = Object.keys({ ...prev, ...next }).some(
+        (k) => prev[k] !== next[k],
+      );
+      if (changed) {
         setOddsFlash(true);
         if (flashTimer.current) clearTimeout(flashTimer.current);
         flashTimer.current = setTimeout(() => setOddsFlash(false), 280);
@@ -182,20 +199,19 @@ export function VotingModal({
     return Math.min(Math.max(10, v), siffletsBalance);
   }
 
-  const [voteLoading, setVoteLoading] = useState<"oui" | "non" | null>(null);
-  const [optimisticVote, setOptimisticVote] = useState<"oui" | "non" | null>(
-    null,
-  );
+  const [voteLoading, setVoteLoading] = useState<string | null>(null);
+  const [optimisticVote, setOptimisticVote] = useState<string | null>(null);
   const [betConfirmed, setBetConfirmed] = useState<{
-    option: "oui" | "non";
+    option: string;
+    label: string;
     multiplier: number;
     staked: number;
   } | null>(null);
 
-  async function handleVote(v: "oui" | "non") {
+  async function handleVote(v: string) {
     if (voteLoading || expired || !canBet || oddsLoading) return;
     const staked = clamp(amount);
-    const multiplier = poolOdds[v];
+    const multiplier = poolOdds[v] ?? DEFAULT_ODD;
     setVoteLoading(v);
     setOptimisticVote(v);
     try {
@@ -221,7 +237,8 @@ export function VotingModal({
         return;
       }
       onBetSuccess(staked);
-      setBetConfirmed({ option: v, multiplier, staked });
+      const label = isStoppage ? `${v} min` : v;
+      setBetConfirmed({ option: v, label, multiplier, staked });
       setTimeout(() => onClose(), 1800);
     } catch {
       setOptimisticVote(null);
@@ -424,11 +441,9 @@ export function VotingModal({
             />
           </div>
 
-          {/* OUI / NON — one-tap */}
+          {/* Boutons de vote */}
           {optimisticVote ? (
-            <div
-              className={`flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border-2 ${optimisticVote === "oui" ? "border-green-500/50 bg-green-500/10 text-green-400" : "border-blue-500/50 bg-blue-500/10 text-blue-400"}`}
-            >
+            <div className="flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-green-500/50 bg-green-500/10 text-green-400">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black uppercase tracking-wide">
                   Pari Validé !
@@ -441,66 +456,29 @@ export function VotingModal({
                 )}
               </div>
               <span className="text-sm font-bold opacity-80">
-                Option : {optimisticVote === "oui" ? cfg.yes : cfg.no}
+                {isStoppage ? `${optimisticVote} min` : optimisticVote}
               </span>
             </div>
+          ) : isStoppage ? (
+            <StoppageButtons
+              options={STOPPAGE_OPTIONS}
+              poolOdds={poolOdds}
+              oddsFlash={oddsFlash}
+              amount={amount}
+              disabled={!!voteLoading || expired || !canBet || oddsLoading}
+              voteLoading={voteLoading}
+              onVote={(v) => void handleVote(v)}
+            />
           ) : (
-            <div className="grid grid-cols-2 gap-3" aria-busy={oddsLoading}>
-              {(["oui", "non"] as const).map((v) => {
-                const odd = poolOdds[v];
-                const gain = Math.floor(amount * odd);
-                const isLoading = voteLoading === v;
-                const label = v === "oui" ? cfg.yes : cfg.no;
-                return (
-                  <button
-                    type="button"
-                    key={v}
-                    onClick={() => {
-                      void handleVote(v);
-                    }}
-                    disabled={
-                      !!voteLoading || expired || !canBet || oddsLoading
-                    }
-                    aria-label={`${label}, cote estimée ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
-                    className={`flex h-24 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
-                      v === "oui"
-                        ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
-                        : "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20"
-                    }`}
-                  >
-                    {isLoading ? (
-                      <LoaderCircle
-                        className="h-6 w-6 animate-spin text-white"
-                        aria-hidden
-                      />
-                    ) : (
-                      <>
-                        <span className="text-xl font-black uppercase tracking-wide text-white">
-                          {label}
-                        </span>
-                        <span
-                          className={`text-sm font-black tabular-nums transition-colors ${
-                            oddsFlash
-                              ? "text-yellow-400"
-                              : v === "oui"
-                                ? "text-green-400"
-                                : "text-blue-400"
-                          }`}
-                          aria-live="polite"
-                        >
-                          ~×{odd.toFixed(2)}
-                        </span>
-                        <span
-                          className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}
-                        >
-                          +{gain.toLocaleString("fr-FR")} pts
-                        </span>
-                      </>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <BinaryButtons
+              cfg={cfg}
+              poolOdds={poolOdds}
+              oddsFlash={oddsFlash}
+              amount={amount}
+              disabled={!!voteLoading || expired || !canBet || oddsLoading}
+              voteLoading={voteLoading}
+              onVote={(v) => void handleVote(v)}
+            />
           )}
 
           <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
@@ -530,6 +508,147 @@ export function VotingModal({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function BinaryButtons({
+  cfg,
+  poolOdds,
+  oddsFlash,
+  amount,
+  disabled,
+  voteLoading,
+  onVote,
+}: {
+  cfg: { yes: string; no: string };
+  poolOdds: Record<string, number>;
+  oddsFlash: boolean;
+  amount: number;
+  disabled: boolean;
+  voteLoading: string | null;
+  onVote: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {(["oui", "non"] as const).map((v) => {
+        const odd = poolOdds[v] ?? DEFAULT_ODD;
+        const gain = Math.floor(amount * odd);
+        const isLoading = voteLoading === v;
+        const label = v === "oui" ? cfg.yes : cfg.no;
+        return (
+          <button
+            type="button"
+            key={v}
+            onClick={() => onVote(v)}
+            disabled={disabled}
+            aria-label={`${label}, cote estimée ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
+            className={`flex h-24 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+              v === "oui"
+                ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
+                : "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20"
+            }`}
+          >
+            {isLoading ? (
+              <LoaderCircle
+                className="h-6 w-6 animate-spin text-white"
+                aria-hidden
+              />
+            ) : (
+              <>
+                <span className="text-xl font-black uppercase tracking-wide text-white">
+                  {label}
+                </span>
+                <span
+                  className={`text-sm font-black tabular-nums transition-colors ${
+                    oddsFlash
+                      ? "text-yellow-400"
+                      : v === "oui"
+                        ? "text-green-400"
+                        : "text-blue-400"
+                  }`}
+                  aria-live="polite"
+                >
+                  ~×{odd.toFixed(2)}
+                </span>
+                <span
+                  className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}
+                >
+                  +{gain.toLocaleString("fr-FR")} pts
+                </span>
+              </>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const OPTION_COLORS = [
+  "border-violet-500/60 bg-violet-500/10 hover:border-violet-500 hover:bg-violet-500/20 text-violet-400",
+  "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20 text-blue-400",
+  "border-cyan-500/60 bg-cyan-500/10 hover:border-cyan-500 hover:bg-cyan-500/20 text-cyan-400",
+  "border-teal-500/60 bg-teal-500/10 hover:border-teal-500 hover:bg-teal-500/20 text-teal-400",
+  "border-amber-500/60 bg-amber-500/10 hover:border-amber-500 hover:bg-amber-500/20 text-amber-400",
+  "border-red-500/60 bg-red-500/10 hover:border-red-500 hover:bg-red-500/20 text-red-400",
+];
+
+function StoppageButtons({
+  options,
+  poolOdds,
+  oddsFlash,
+  amount,
+  disabled,
+  voteLoading,
+  onVote,
+}: {
+  options: readonly string[];
+  poolOdds: Record<string, number>;
+  oddsFlash: boolean;
+  amount: number;
+  disabled: boolean;
+  voteLoading: string | null;
+  onVote: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {options.map((opt, idx) => {
+        const odd = poolOdds[opt] ?? DEFAULT_ODD;
+        const gain = Math.floor(amount * odd);
+        const isLoading = voteLoading === opt;
+        const colorCls = OPTION_COLORS[idx % OPTION_COLORS.length]!;
+        return (
+          <button
+            type="button"
+            key={opt}
+            onClick={() => onVote(opt)}
+            disabled={disabled}
+            aria-label={`${opt} minute${opt === "1" ? "" : "s"}, cote estimée ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
+            className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl border-2 py-3 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${colorCls}`}
+          >
+            {isLoading ? (
+              <LoaderCircle className="h-5 w-5 animate-spin text-white" aria-hidden />
+            ) : (
+              <>
+                <span className="text-xl font-black tabular-nums text-white">
+                  {opt}
+                </span>
+                <span className="text-[9px] font-semibold text-white/50">min</span>
+                <span
+                  className={`text-xs font-black tabular-nums transition-colors ${oddsFlash ? "text-yellow-400" : ""}`}
+                  aria-live="polite"
+                >
+                  ×{odd.toFixed(2)}
+                </span>
+                <span className="text-[9px] font-bold text-white/40">
+                  +{gain >= 1000 ? `${Math.floor(gain / 1000)}k` : gain} pts
+                </span>
+              </>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

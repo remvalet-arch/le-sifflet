@@ -16,7 +16,9 @@ import {
   syncMatchLineups,
 } from "@/services/api-football-sync";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
-import type { MatchStatus } from "@/types/database";
+import { resolveEvent } from "@/lib/resolve-event";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { MatchStatus, Database } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,68 @@ function eventsInterMatchDelayMs(): number {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function stoppageResult(
+  extra: number | null,
+  elapsed: number | null,
+  baseMinute: number,
+): string | null {
+  if (extra != null && extra > 0) {
+    const n = Math.max(1, Math.round(extra));
+    return n >= 6 ? "6+" : String(n);
+  }
+  if (elapsed != null && elapsed > baseMinute) {
+    const n = Math.max(1, elapsed - baseMinute);
+    return n >= 6 ? "6+" : String(n);
+  }
+  return null;
+}
+
+type Admin = SupabaseClient<Database>;
+
+async function openStoppageMarket(
+  admin: Admin,
+  matchId: string,
+  type: "stoppage_ht" | "stoppage_ft",
+): Promise<boolean> {
+  const { data } = await admin
+    .from("market_events")
+    .select("id")
+    .eq("match_id", matchId)
+    .eq("type", type)
+    .in("status", ["open", "closed", "resolved"])
+    .maybeSingle();
+  if (data?.id) return false;
+  const { error } = await admin.from("market_events").insert({
+    match_id: matchId,
+    type,
+    status: "open",
+    initiators: [],
+  });
+  return !error;
+}
+
+async function resolveStoppageMarket(
+  admin: Admin,
+  matchId: string,
+  type: "stoppage_ht" | "stoppage_ft",
+  result: string,
+): Promise<boolean> {
+  const { data } = await admin
+    .from("market_events")
+    .select("id")
+    .eq("match_id", matchId)
+    .eq("type", type)
+    .in("status", ["open", "closed"])
+    .maybeSingle();
+  if (!data?.id) return false;
+  try {
+    await resolveEvent(data.id, result);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function verifyCronBearer(request: Request): boolean {
@@ -163,6 +227,8 @@ export async function GET(request: Request) {
     eventsSyncCount: 0,
     apiMarketEventsOpened: 0,
     apiMarketEventsResolved: 0,
+    stoppageMarketsOpened: 0,
+    stoppageMarketsResolved: 0,
     statsSyncCount: 0,
     lineupBackfillCount: 0,
     fullSyncOnEndCount: 0,
@@ -194,6 +260,8 @@ export async function GET(request: Request) {
 
   // ── 1. Fixture batch : mise à jour score / statut / minute ────────────────
   const shortByMatchId = new Map<string, string>();
+  const extraByMatchId = new Map<string, number | null>();
+  const elapsedByMatchId = new Map<string, number | null>();
   const idsBatchSize = 20;
 
   for (let i = 0; i < withFixture.length; i += idsBatchSize) {
@@ -221,6 +289,11 @@ export async function GET(request: Request) {
       const short = fixtureApiStatusShortFromRow(row);
       shortByMatchId.set(matchId, short);
 
+      const fixtureStatus = (row.fixture as Record<string, unknown> | undefined)
+        ?.status as Record<string, unknown> | undefined;
+      extraByMatchId.set(matchId, num(fixtureStatus?.extra) ?? null);
+      elapsedByMatchId.set(matchId, num(fixtureStatus?.elapsed) ?? null);
+
       const patch = patchMatchFromFixtureRow(row);
       const { error: upErr } = await admin
         .from("matches")
@@ -235,6 +308,59 @@ export async function GET(request: Request) {
         away: patch.away_score ?? 0,
       });
       summary.matchesPatchedFromFixture += 1;
+    }
+  }
+
+  // ── 1b. Paris arrêts de jeu (stoppage_ht / stoppage_ft) ─────────────────
+  for (const m of withFixture) {
+    const short = (shortByMatchId.get(m.id) ?? "").toUpperCase();
+    const elapsed = elapsedByMatchId.get(m.id) ?? null;
+    const extra = extraByMatchId.get(m.id) ?? null;
+
+    // Ouvrir stoppage_ht à la 41e minute de la 1ère mi-temps
+    if (short === "1H" && elapsed != null && elapsed >= 41) {
+      try {
+        const opened = await openStoppageMarket(admin, m.id, "stoppage_ht");
+        if (opened) summary.stoppageMarketsOpened += 1;
+      } catch (err) {
+        summary.errors.push(`stoppage_ht open ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    // Ouvrir stoppage_ft à la 86e minute de la 2ème mi-temps
+    if (short === "2H" && elapsed != null && elapsed >= 86) {
+      try {
+        const opened = await openStoppageMarket(admin, m.id, "stoppage_ft");
+        if (opened) summary.stoppageMarketsOpened += 1;
+      } catch (err) {
+        summary.errors.push(`stoppage_ft open ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    // Résoudre stoppage_ht quand le match passe en HT
+    if (short === "HT") {
+      try {
+        const result = stoppageResult(extra, elapsed, 45);
+        if (result) {
+          const resolved = await resolveStoppageMarket(admin, m.id, "stoppage_ht", result);
+          if (resolved) summary.stoppageMarketsResolved += 1;
+        }
+      } catch (err) {
+        summary.errors.push(`stoppage_ht resolve ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    // Résoudre stoppage_ft quand le match se termine
+    if (END_STATUS_SHORT.has(short)) {
+      try {
+        const result = stoppageResult(extra, elapsed, 90);
+        if (result) {
+          const resolved = await resolveStoppageMarket(admin, m.id, "stoppage_ft", result);
+          if (resolved) summary.stoppageMarketsResolved += 1;
+        }
+      } catch (err) {
+        summary.errors.push(`stoppage_ft resolve ${m.id}: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
   }
 

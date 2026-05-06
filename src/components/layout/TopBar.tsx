@@ -76,7 +76,7 @@ export function TopBar({
   return (
     <>
       <header
-        className="fixed top-0 z-50 w-full max-w-md border-b border-white/8 bg-zinc-950/95 backdrop-blur-xl"
+        className="fixed left-1/2 top-0 z-50 w-full max-w-md -translate-x-1/2 border-b border-white/8 bg-zinc-950/95 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="flex h-14 items-center justify-between px-4">
@@ -129,10 +129,13 @@ export function TopBar({
 
       {/* Side sheet */}
       <aside
-        className={`fixed right-0 top-0 z-[60] flex h-full w-72 flex-col border-l border-white/8 bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed top-0 z-[60] flex h-full w-72 flex-col border-l border-white/8 bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        style={{
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          right: "max(0px, calc(50vw - 14rem))",
+        }}
       >
         {/* Profile header */}
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">

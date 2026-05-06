@@ -8,7 +8,7 @@ const CHAIN_MAP: Partial<Record<MarketEventType, MarketEventType>> = {
 
 export async function resolveEvent(
   eventId: string,
-  result: "oui" | "non",
+  result: string,
 ): Promise<{
   winners: number;
   total_paid: number;

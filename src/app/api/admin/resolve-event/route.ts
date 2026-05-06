@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     result?: string;
   };
 
-  if (!body.event_id || !body.result || !["oui", "non"].includes(body.result)) {
+  if (!body.event_id || !body.result || body.result.trim() === "") {
     return errorResponse("Paramètres invalides", 400);
   }
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   try {
-    await resolveEvent(body.event_id, body.result as "oui" | "non");
+    await resolveEvent(body.event_id, body.result);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Erreur inconnue";
     if (msg.includes("event_not_open"))
