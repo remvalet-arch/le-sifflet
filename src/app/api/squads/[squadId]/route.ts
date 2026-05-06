@@ -2,6 +2,40 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
+type ChampionshipStanding = {
+  user_id: string;
+  username: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  pronos_pts: number;
+};
+
+type ChampionshipFixture = {
+  id: string;
+  round_number: number;
+  week_start: string;
+  home_member_id: string;
+  home_username: string;
+  away_member_id: string;
+  away_username: string;
+  home_points: number | null;
+  away_points: number | null;
+  winner_id: string | null;
+  status: string;
+};
+
+type ChampionshipData = {
+  season_id: string;
+  status: string;
+  current_round: number;
+  total_rounds: number;
+  standings: ChampionshipStanding[];
+  current_fixtures: ChampionshipFixture[];
+};
+
 type LeaderboardRow = {
   user_id: string;
   username: string;
@@ -241,12 +275,82 @@ export async function GET(
       .filter((x): x is ActivityItem => x !== null)
       .slice(0, 10);
 
+    // ── Championship data (mode braquage) ─────────────────────────────────────
+    let championship: ChampionshipData | null = null;
+    if (squad.game_mode === "braquage") {
+      const { data: season } = await adminSupabase
+        .from("squad_seasons")
+        .select("id, status, current_round, total_rounds")
+        .eq("squad_id", squadId)
+        .in("status", ["pending", "active", "finished"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (season) {
+        const [{ data: standingsRaw }, { data: fixturesRaw }] =
+          await Promise.all([
+            adminSupabase
+              .from("squad_standings")
+              .select("user_id, played, won, drawn, lost, points, pronos_pts")
+              .eq("season_id", season.id)
+              .order("points", { ascending: false }),
+            adminSupabase
+              .from("squad_fixtures")
+              .select(
+                "id, round_number, week_start, home_member_id, away_member_id, home_points, away_points, winner_id, status",
+              )
+              .eq("season_id", season.id)
+              .eq("round_number", season.current_round),
+          ]);
+
+        const standings: ChampionshipStanding[] = (standingsRaw ?? []).map(
+          (s) => ({
+            user_id: s.user_id,
+            username: usernameById.get(s.user_id) ?? "???",
+            played: s.played,
+            won: s.won,
+            drawn: s.drawn,
+            lost: s.lost,
+            points: s.points,
+            pronos_pts: s.pronos_pts,
+          }),
+        );
+
+        const current_fixtures: ChampionshipFixture[] = (fixturesRaw ?? []).map(
+          (f) => ({
+            id: f.id,
+            round_number: f.round_number,
+            week_start: f.week_start,
+            home_member_id: f.home_member_id,
+            home_username: usernameById.get(f.home_member_id) ?? "???",
+            away_member_id: f.away_member_id,
+            away_username: usernameById.get(f.away_member_id) ?? "???",
+            home_points: f.home_points,
+            away_points: f.away_points,
+            winner_id: f.winner_id,
+            status: f.status,
+          }),
+        );
+
+        championship = {
+          season_id: season.id,
+          status: season.status,
+          current_round: season.current_round,
+          total_rounds: season.total_rounds,
+          standings,
+          current_fixtures,
+        };
+      }
+    }
+
     return successResponse({
       squad,
       leaderboard,
       total_xp_earned,
       period,
       activity,
+      championship,
     });
   } catch (error) {
     console.error("Supabase Error:", error);

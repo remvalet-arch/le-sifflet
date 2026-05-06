@@ -49,6 +49,29 @@ const LIVE_RULES = [
   },
 ];
 
+const CHAMPIONSHIP_RULES = [
+  {
+    emoji: "📅",
+    title: "Un adversaire par semaine",
+    body: "En mode 1vs1, le propriétaire de la ligue génère un calendrier round-robin complet (aller + retour). Chaque semaine, tu es automatiquement opposé à un membre différent. Le planning est calculé dès le lancement du championnat.",
+  },
+  {
+    emoji: "🎯",
+    title: "Tes points pronos = ton score du match",
+    body: "Ton « score » hebdomadaire correspond à la somme des points gagnés via tes pronos (score exact, buteurs) sur tous les matchs de la semaine. Pas de paris VAR ici : c'est la régularité de tes pronostics qui fait la différence.",
+  },
+  {
+    emoji: "🏆",
+    title: "Victoire, Nul, Défaite",
+    body: "À la fin de la semaine, le joueur avec le plus de points pronos remporte le « match ». Victoire = 3 pts au classement, Match nul (égalité) = 1 pt chacun, Défaite = 0 pt. En cas d'égalité parfaite dans le classement général, les points pronos totaux servent de goal average.",
+  },
+  {
+    emoji: "🔒",
+    title: "La ligue se ferme au lancement",
+    body: "Dès que le championnat est lancé, plus aucun joueur ne peut rejoindre la ligue. Le nombre de membres doit être pair (2 à 18) pour que le calendrier soit équilibré.",
+  },
+];
+
 export default function RulesPage() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-10 pt-4">
@@ -97,7 +120,7 @@ export default function RulesPage() {
       </section>
 
       {/* Section LiveRoom */}
-      <section>
+      <section className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <span>🚨</span> La LiveRoom (Paris VAR)
         </h2>
@@ -106,6 +129,33 @@ export default function RulesPage() {
             <div
               key={rule.title}
               className="rounded-2xl border border-white/8 bg-zinc-900 p-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 text-xl" aria-hidden>
+                  {rule.emoji}
+                </span>
+                <div>
+                  <h3 className="font-black text-white">{rule.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+                    {rule.body}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section Championnat 1v1 */}
+      <section>
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          <span>⚔️</span> Le Mode Championnat 1vs1
+        </h2>
+        <div className="flex flex-col gap-3">
+          {CHAMPIONSHIP_RULES.map((rule) => (
+            <div
+              key={rule.title}
+              className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-4"
             >
               <div className="flex items-start gap-3">
                 <span className="shrink-0 text-xl" aria-hidden>

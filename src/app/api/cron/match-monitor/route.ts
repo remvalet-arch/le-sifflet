@@ -340,5 +340,35 @@ export async function GET(request: Request) {
     }
   }
 
+  // ── 6. Résolution automatique des rounds de championnat 1v1 ──────────────
+  void (async () => {
+    const cutoff = new Date();
+    cutoff.setUTCDate(cutoff.getUTCDate() - 7);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    const { data: overdueFixtures } = await admin
+      .from("squad_fixtures")
+      .select("season_id, round_number")
+      .eq("status", "active")
+      .lte("week_start", cutoffStr);
+
+    if (!overdueFixtures || overdueFixtures.length === 0) return;
+
+    const seen = new Set<string>();
+    for (const f of overdueFixtures) {
+      const key = `${f.season_id}:${f.round_number}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      try {
+        await admin.rpc("resolve_squad_round", {
+          p_season_id: f.season_id,
+          p_round_number: f.round_number,
+        });
+      } catch (err) {
+        console.error("[monitor] resolve_squad_round error:", err);
+      }
+    }
+  })();
+
   return successResponse(summary);
 }

@@ -331,6 +331,111 @@ export interface Database {
         };
         Relationships: [];
       };
+      squad_seasons: {
+        Row: {
+          id: string;
+          squad_id: string;
+          status: "pending" | "active" | "finished";
+          total_rounds: number;
+          current_round: number;
+          started_at: string | null;
+          ended_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          squad_id: string;
+          status?: "pending" | "active" | "finished";
+          total_rounds?: number;
+          current_round?: number;
+          started_at?: string | null;
+          ended_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          squad_id?: string;
+          status?: "pending" | "active" | "finished";
+          total_rounds?: number;
+          current_round?: number;
+          started_at?: string | null;
+          ended_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      squad_fixtures: {
+        Row: {
+          id: string;
+          season_id: string;
+          round_number: number;
+          week_start: string;
+          home_member_id: string;
+          away_member_id: string;
+          home_points: number | null;
+          away_points: number | null;
+          winner_id: string | null;
+          status: "upcoming" | "active" | "finished";
+        };
+        Insert: {
+          id?: string;
+          season_id: string;
+          round_number: number;
+          week_start: string;
+          home_member_id: string;
+          away_member_id: string;
+          home_points?: number | null;
+          away_points?: number | null;
+          winner_id?: string | null;
+          status?: "upcoming" | "active" | "finished";
+        };
+        Update: {
+          id?: string;
+          season_id?: string;
+          round_number?: number;
+          week_start?: string;
+          home_member_id?: string;
+          away_member_id?: string;
+          home_points?: number | null;
+          away_points?: number | null;
+          winner_id?: string | null;
+          status?: "upcoming" | "active" | "finished";
+        };
+        Relationships: [];
+      };
+      squad_standings: {
+        Row: {
+          season_id: string;
+          user_id: string;
+          played: number;
+          won: number;
+          drawn: number;
+          lost: number;
+          points: number;
+          pronos_pts: number;
+        };
+        Insert: {
+          season_id: string;
+          user_id: string;
+          played?: number;
+          won?: number;
+          drawn?: number;
+          lost?: number;
+          points?: number;
+          pronos_pts?: number;
+        };
+        Update: {
+          season_id?: string;
+          user_id?: string;
+          played?: number;
+          won?: number;
+          drawn?: number;
+          lost?: number;
+          points?: number;
+          pronos_pts?: number;
+        };
+        Relationships: [];
+      };
       squad_members: {
         Row: {
           user_id: string;
@@ -983,6 +1088,14 @@ export interface Database {
         Args: { p_xp: number };
         Returns: string;
       };
+      resolve_squad_round: {
+        Args: { p_season_id: string; p_round_number: number };
+        Returns: {
+          resolved_fixtures: number;
+          round_number: number;
+          season_finished: boolean;
+        };
+      };
     };
   };
 }
@@ -1017,6 +1130,12 @@ export type LeagueStandingRow =
   Database["public"]["Tables"]["league_standings"]["Row"];
 export type LeagueTopPlayerRow =
   Database["public"]["Tables"]["league_top_players"]["Row"];
+export type SquadSeasonRow =
+  Database["public"]["Tables"]["squad_seasons"]["Row"];
+export type SquadFixtureRow =
+  Database["public"]["Tables"]["squad_fixtures"]["Row"];
+export type SquadStandingRow =
+  Database["public"]["Tables"]["squad_standings"]["Row"];
 export type FriendRequestRow =
   Database["public"]["Tables"]["friend_requests"]["Row"];
 export type FriendRequestInsert =

@@ -235,8 +235,8 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
               step="03"
               Icon={Users}
               color="yellow"
-              title="Squads"
-              body="Le vestiaire, c'est chez toi. Invite tes potes, et braque leur cagnotte à la 90ème."
+              title="Ligues"
+              body="Mode Classique ou Championnat 1vs1 : invite tes potes, génère un calendrier complet, et prouve chaque semaine que tu es le meilleur pronostiqueur du vestiaire."
             />
             <GamePanel
               step="04"
@@ -284,8 +284,8 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
               step="03"
               Icon={Swords}
               color="blue"
-              title="Braquage"
-              body="En direct, quand la modale tombe, tu joues contre toute la communauté : les Sifflets des joueurs qui se trompent financent les gains de ceux qui ont le bon flair !"
+              title="Braquage ou 1vs1"
+              body="Parie en direct contre la communauté quand la VAR s'ouvre — ou lance un Championnat 1vs1 dans ta ligue et affronte un pote différent chaque semaine."
             />
           </div>
 

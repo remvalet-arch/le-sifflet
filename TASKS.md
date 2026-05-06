@@ -45,7 +45,7 @@
 
 ### 🟡 Sprint 3 : UX/UI PREMIUM & GAMIFICATION
 
-- [ ] **Design 1 : Gamification du Classement & Filtres Temporels**
+- [x] **Design 1 : Gamification du Classement & Filtres Temporels**
   - _Action 1 :_ Dans `LeagueLeaderboard`, ajoute un filtre temporel (Semaine, Mois, Général). Le classement filtré doit calculer la somme des `points_earned` sur la période, et non l'XP total.
   - _Action 2 :_ Différencie visuellement le Top 3 (Or pour le 1, Argent pour le 2, Bronze pour le 3) et ajoute un indicateur de tendance (flèche rouge/verte) à côté des points si les données le permettent.
 
@@ -294,7 +294,7 @@ Agis en tant que Lead Backend et Game Designer.
   - _Fichiers :_ `leaderboard/page.tsx`, `pronos/page.tsx`
   - _Action :_ Ajouter `export const revalidate = 300` (leaderboard) et `export const revalidate = 60` (pronos).
 
-- [ ] **E6 : Supprimer la requête profil redondante dans `/lobby/page.tsx`**
+- [x] **E6 : Supprimer la requête profil redondante dans `/lobby/page.tsx`**
   - _Problème :_ Le lobby fetch `has_onboarded` séparément alors que le layout fetch déjà le profil complet.
   - _Fichier :_ `src/app/(app)/lobby/page.tsx` + `src/app/(app)/layout.tsx`
   - _Action :_ Ajouter `has_onboarded` au `select(...)` du layout et le passer via props ou supprimé si OnboardingTour peut être géré côté client.
@@ -354,8 +354,9 @@ Agis en tant que Lead Backend et Game Designer.
 > On gagne le "match" si ses points pronos sur la semaine dépassent ceux de l'adversaire.
 > Victoire = 3 pts | Nul = 1 pt | Défaite = 0 pt.
 
-- [ ] **G1 : Migration — Tables du mode championnat**
+- [x] **G1 : Migration — Tables du mode championnat**
   - _Action :_ Créer `supabase/migrations/0069_league_championship.sql` avec :
+
     ```sql
     -- Saison d'un championnat privé (1 par squad en mode braquage)
     CREATE TABLE public.league_seasons (
@@ -414,9 +415,10 @@ Agis en tant que Lead Backend et Game Designer.
     CREATE POLICY "league_standings_read" ON public.league_standings FOR SELECT
       USING (EXISTS (SELECT 1 FROM public.league_seasons ls JOIN public.squad_members sm ON sm.squad_id = ls.squad_id WHERE ls.id = league_standings.season_id AND sm.user_id = auth.uid()));
     ```
+
   - _Types :_ Ajouter `LeagueSeasonRow`, `LeagueFixtureRow`, `LeagueStandingRow` dans `src/types/database.ts`.
 
-- [ ] **G2 : API — Démarrage de saison (`POST /api/squads/[squadId]/start-season`)**
+- [x] **G2 : API — Démarrage de saison (`POST /api/squads/[squadId]/start-season`)**
   - _Route :_ `src/app/api/squads/[squadId]/start-season/route.ts`
   - _Auth :_ Uniquement le `owner_id` de la squad.
   - _Validations :_
@@ -438,7 +440,7 @@ Agis en tant que Lead Backend et Game Designer.
     6. INSERT `league_standings` (un row par membre, tout à zéro)
   - _Réponse :_ `{ season_id, total_rounds, fixtures_count }`
 
-- [ ] **G3 : RPC + API — Résolution hebdomadaire d'un round**
+- [x] **G3 : RPC + API — Résolution hebdomadaire d'un round**
   - _Déclenchement :_ Cron (cron-job.org) ou endpoint admin `POST /api/admin/resolve-league-round`
   - _Logique :_
     1. Trouver les `league_fixtures` dont `status = 'active'` et `week_start <= NOW() - 7j` (semaine révolue)
@@ -459,7 +461,7 @@ Agis en tant que Lead Backend et Game Designer.
   - _Route :_ `src/app/api/admin/resolve-league-round/route.ts` (guard modérateur)
   - _RPC SQL :_ `resolve_league_round(p_season_id uuid, p_round_number integer) RETURNS jsonb`
 
-- [ ] **G4 : API — Retourner le championnat dans `GET /api/squads/[squadId]`**
+- [x] **G4 : API — Retourner le championnat dans `GET /api/squads/[squadId]`**
   - _Condition :_ Si `squad.game_mode === 'braquage'` et qu'une saison active existe.
   - _Action :_ Ajouter au payload de réponse existant :
     ```ts
@@ -473,13 +475,13 @@ Agis en tant que Lead Backend et Game Designer.
     ```
   - Les standings sont triés par points DESC, puis pronos_pts DESC (goal average).
 
-- [ ] **G5 : UI — Vue championnat dans `SquadDetailClient.tsx`**
+- [x] **G5 : UI — Vue championnat dans `SquadDetailClient.tsx`**
   - _Condition :_ Afficher la vue championnat si `data.championship != null`, sinon la vue classique (classement XP).
   - _Section 1 — Tableau de championnat :_ Colonnes : `#` | Joueur | J | V | N | D | Pts. Gras pour l'utilisateur connecté. Top 3 coloré (or/argent/bronze).
   - _Section 2 — Journée en cours :_ Liste des confrontations du round actuel avec score provisoire (points pronos en temps réel si semaine en cours) ou score final si résolu. Mettre en avant le match de l'utilisateur connecté ("Ton match cette semaine").
   - _Section 3 — Calendrier complet :_ Accordion par journée, affichant toutes les confrontations.
 
-- [ ] **G6 : UI — Démarrage de saison (admin squad)**
+- [x] **G6 : UI — Démarrage de saison (admin squad)**
   - _Condition :_ Afficher un CTA "Lancer le championnat" sur la page de la squad si :
     - `squad.game_mode === 'braquage'`
     - Aucune saison active (`championship === null`)
@@ -491,7 +493,7 @@ Agis en tant que Lead Backend et Game Designer.
     4. Toast succès + rafraîchissement de la page
   - _Note :_ Une fois lancé, plus aucun membre ne peut rejoindre la ligue (le bouton "Rejoindre" doit être désactivé si une saison est active).
 
-- [ ] **G7 : Intégration match-monitor — Avancement automatique des rounds**
+- [x] **G7 : Intégration match-monitor — Avancement automatique des rounds**
   - _Action :_ Dans `src/app/api/cron/match-monitor/route.ts`, ajouter une étape après la résolution FT :
     1. Vérifier si des `league_fixtures` ont `status = 'active'` et `week_start <= now() - 7j`
     2. Si oui, appeler `resolve_league_round` pour chacun (fire-and-forget)

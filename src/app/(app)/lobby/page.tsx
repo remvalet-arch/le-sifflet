@@ -10,6 +10,7 @@ import {
   parseLobbyRoundParams,
 } from "@/lib/lobby-queries";
 import { formatParisYmdLongFr } from "@/lib/paris-day";
+// OnboardingTour gère son propre état via localStorage — pas besoin de requête DB ici.
 
 export const metadata = { title: "Stade" };
 
@@ -91,21 +92,6 @@ export default async function LobbyPage({ searchParams }: PageProps) {
   const roundContext = parseLobbyRoundParams(sp);
   const viewMode = roundContext != null ? "round" : "day";
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profileData } = user
-    ? await supabase
-        .from("profiles")
-        .select("has_onboarded")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
-
-  const needsOnboarding = profileData?.has_onboarded === false;
-
   return (
     <>
       <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
@@ -121,7 +107,7 @@ export default async function LobbyPage({ searchParams }: PageProps) {
         </Suspense>
       </main>
 
-      {needsOnboarding && <OnboardingTour />}
+      <OnboardingTour />
     </>
   );
 }

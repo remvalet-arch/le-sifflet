@@ -208,14 +208,11 @@ export function CreateLeagueWizard({
                     <h3
                       className={`font-black text-lg ${mode === "braquage" ? "text-purple-400" : "text-white"}`}
                     >
-                      1vs1{" "}
-                      <span className="ml-2 text-[9px] uppercase tracking-widest bg-zinc-800 px-2 py-0.5 rounded-full border border-white/10 text-zinc-400">
-                        Prochainement
-                      </span>
+                      1vs1
                     </h3>
                     <p className="text-sm text-zinc-400 mt-1">
-                      Saison en Championnat. Un adversaire par week-end.
-                      Interdit pour le moment.
+                      Saison en Championnat. Un adversaire par week-end, le
+                      meilleur pronostiqueur remporte le match.
                     </p>
                   </div>
                 </button>
