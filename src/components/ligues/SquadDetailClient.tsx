@@ -350,7 +350,7 @@ export function SquadDetailClient({
                             {isMe ? "Toi" : s.username}
                           </p>
                           <p className="text-[10px] text-zinc-500">
-                            {s.pronos_pts.toLocaleString("fr-FR")} pts pronos
+                            {s.pronos_pts.toLocaleString("fr-FR")} pts cumulés
                           </p>
                         </td>
                         <td className="px-2 py-2.5 text-center text-zinc-400">

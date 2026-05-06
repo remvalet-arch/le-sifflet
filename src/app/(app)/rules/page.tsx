@@ -57,8 +57,8 @@ const CHAMPIONSHIP_RULES = [
   },
   {
     emoji: "🎯",
-    title: "Tes points pronos = ton score du match",
-    body: "Ton « score » hebdomadaire correspond à la somme des points gagnés via tes pronos (score exact, buteurs) sur tous les matchs de la semaine. Pas de paris VAR ici : c'est la régularité de tes pronostics qui fait la différence.",
+    title: "Pronos + Paris VAR = ton score de la semaine",
+    body: "Ton « score » hebdomadaire cumule deux sources : tes points de pronos (score exact, buteurs) ET tes gains nets sur les paris VAR en direct (OUI/NON). Tout ce que tu gagnes pendant la semaine compte — régularité avant match ET flair en live.",
   },
   {
     emoji: "🏆",
