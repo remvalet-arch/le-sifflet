@@ -854,6 +854,161 @@ Agis en tant que Lead Backend et Game Designer.
 
 ---
 
+### 🚨 Sprint UX5 : BLOQUANTS AVANT LANCEMENT — "L'app ne doit jamais sembler vide ou cassée"
+
+> Issu de l'audit UX agent du 07/05/2026. Ces points créent une impression de "l'app est cassée" ou "il n'y a rien à faire ici" pour un premier utilisateur. À corriger avant tout lancement public.
+
+- [ ] **UX5-1 : Redirect auto DIRECT → Pronos quand aucun match live**
+  - _Problème :_ L'onglet "DIRECT" est l'onglet par défaut du Stade. En dehors des soirées de matchs (soit ~80% du temps), l'utilisateur ouvre l'app et tombe immédiatement sur l'empty state "La VAR dort". Premier réflexe : "L'app est cassée" ou "il n'y a rien à faire ici".
+  - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, au montage du composant, vérifier si `directRows.length === 0`. Si oui, switcher automatiquement l'onglet actif vers `"l1"` (ou le premier onglet avec des matchs). Si aucun onglet n'a de matchs ce jour-là, basculer vers l'onglet `"pronos"` via un `Link` redirect ou une navigation programmatique vers `/pronos`. Ajouter éventuellement un bandeau discret "Aucun match en direct — on t'a redirigé vers tes Pronos".
+
+- [ ] **UX5-2 : Empty state Pronos — remplacer le fantôme par un vrai skeleton loader**
+  - _Problème :_ L'onglet Pronos à l'ouverture affiche "ENTRÉE SUR LE TERRAIN..." avec un écran presque vide. L'utilisateur ne sait pas si c'est un loader ou un empty state final — impression de page cassée.
+  - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx` ou la page `src/app/(app)/pronos/page.tsx`, détecter l'état `loading` et afficher des **skeleton cards** animées (placeholders gris `animate-pulse`, 3 fausses cartes de match avec hauteur réaliste). Le texte "ENTRÉE SUR LE TERRAIN..." peut subsister comme titre d'en-tête mais ne doit jamais être l'unique élément visible.
+
+- [ ] **UX5-3 : "La VAR dort" — enrichir avec 2 CTAs sortants**
+  - _Problème :_ L'empty state du Stade n'a qu'un seul CTA "FAIRE MES PRONOS". Un seul choix = trop sec, et certains utilisateurs n'ont pas de match à pronostiquer non plus.
+  - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, dans le bloc empty state "La VAR dort", ajouter sous le bouton "FAIRE MES PRONOS" deux actions secondaires en `flex gap-2` : un bouton "Voir le classement" (`href="/leaderboard"`) et un bouton "Mes ligues" (`href="/ligues"`). Style : bordure simple `border border-white/15 bg-zinc-900`, texte `text-xs font-black text-zinc-400`.
+
+- [ ] **UX5-4 : Hub stats Stade — retirer Classement/Résultats officiels, garder Buteurs**
+  - _Problème :_ Les onglets "Classement" (classement officiel Ligue 1) et "Résultats" dans le hub stats dilue la proposition de valeur de l'app. Un utilisateur qui veut le classement Ligue 1 va sur L'Équipe, pas sur VAR TIME. Ça transforme l'app en "app d'actu foot générique" au lieu de "app de pronos et paris".
+  - _Action :_ Dans `src/components/lobby/LeagueHub.tsx` (ou le composant contenant les onglets Résultats / Classement / Buteurs / Passeurs), **masquer ou supprimer les onglets "Classement" et "Résultats"**. Garder uniquement "Buteurs" et "Passeurs" car ils sont directement utiles pour les pronos buteurs. Si l'onglet "Classement" est utilisé par <5% des sessions (à vérifier avec Vercel Analytics), le supprimer définitivement. Mettre "Buteurs" comme premier onglet par défaut.
+
+- [ ] **UX5-5 : Avatars profil — gater les avatars par rang d'Arbitre**
+  - _Problème :_ La modale "Modifier mon profil" affiche ~20 avatars en grille 4×5 → paralysie de choix. De plus, le backlog prévoit des "avatars personnalisés par rang" — autant l'implémenter maintenant plutôt que d'avoir une grille plate.
+  - _Action :_ Dans `src/components/profile/ProfileEditModal.tsx`, restructurer la grille d'avatars en 4 niveaux débloqués progressivement selon le `rank` de l'utilisateur (ou son `xp`) :
+    - Niveau 1 (tous) : 4-5 avatars de base (ballon ⚽, sifflet 🎯, maillot, carton 🟨, terrain)
+    - Niveau 2 (Lanceur d'Alerte, xp ≥ 50) : +4 avatars (lion 🦁, aigle 🦅, renard 🦊, ours 🐻)
+    - Niveau 3 (Arbitre Officiel, xp ≥ 100) : +4 avatars (trophée 🏆, médaille 🏅, couronne 👑, étoile ⭐)
+    - Niveau 4 (Arbitre Élite, xp ≥ 200) : +4 avatars exclusifs (dorés, animés ou stylisés 💎🔥⚡🌟)
+    Les avatars verrouillés sont **visibles mais grisés** avec un petit badge "Arbitre Officiel requis" — visible = désir, verrouillé = motivation de progression.
+
+---
+
+### ⚠️ Sprint UX6 : FRICTIONS MAJEURES — "Les données doivent travailler pour l'utilisateur"
+
+> Corrections à apporter pendant la phase bêta. Ces points ne cassent pas l'expérience mais créent des confusions ou des opportunités manquées de feedback émotionnel.
+
+- [ ] **UX6-1 : Stats communautaires Pronos — masquer si trop peu de votes**
+  - _Problème :_ Les 3 stats communautaires "0% / 0% / 0%" affichées sous chaque match dans le hub Pronos donnent l'impression que personne ne joue à l'app. C'est particulièrement destructeur en bêta avec peu d'utilisateurs.
+  - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx`, dans le bloc des Community Percentages, ajouter une condition : si `(match.community_stats?.total_pronos ?? 0) < 10`, remplacer les 3 chiffres `%` par le message `"⚡ Sois le premier à pronostiquer"` (centré, `text-[10px] text-amber-400 font-black`). Au-delà de 10 votes, afficher normalement les pourcentages.
+
+- [ ] **UX6-2 : Labels récompenses Pronos — rendre le gain potentiel explicite**
+  - _Problème :_ Les chiffres "113 pts / 152 pts / 157 pts" sous les boutons de pronostic ne sont pas accompagnés d'un contexte clair. Un utilisateur ne comprend pas instinctivement que c'est ce qu'il gagnera **si son prono est correct** pour ce résultat précis.
+  - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx`, dans le `MatchPronoCard`, modifier le layout des cotes pills. Le label déjà présent `"pts"` (ajouté en UX4-2) peut être enrichi : au lieu de juste `"pts"`, afficher `"pts si correct"` en `text-[8px]`. Alternativement, ajouter un bandeau contextuel sous les 3 pills : `"Si ton pronostic est bon → tu empoches {max(pts1,ptsN,pts2)} pts max"` en `text-[9px] text-zinc-500 text-center` (affiché uniquement avant soumission).
+
+- [ ] **UX6-3 : Historique profil — inverser le tri (résolus d'abord)**
+  - _Problème :_ L'historique affiche les pronos "en attente" en premier. Comme la majorité des pronos sont souvent en attente (matchs futurs), l'utilisateur scrolle sans jamais voir ses gains. Le dopamine hit est enterré.
+  - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, dans la liste `pronos` et `shortBets` du tab "Historique", trier en mettant les entrées avec `status === "won"` ou `status === "lost"` en premier, les `"pending"` en dernier. Dans chaque groupe, conserver l'ordre chronologique inverse (le plus récent d'abord). Renforcer visuellement : bordure gauche `border-l-2 border-green-500` pour `won`, `border-l-2 border-red-500` pour `lost`, neutre pour `pending`.
+
+- [ ] **UX6-4 : Historique profil — bloc résumé "7 derniers jours"**
+  - _Problème :_ L'utilisateur doit scroller tout l'historique pour comprendre sa performance récente. Il n'y a pas de vue synthétique immédiate.
+  - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, en haut du tab "Historique" (avant la liste), ajouter un bloc résumé `"📊 Tes 7 derniers jours"` calculé côté client depuis la prop `pronos` + `shortBets` : filtrer les entrées des 7 derniers jours, compter won / lost / pending, sommer les `points_earned`. Afficher : `"+320 pts · 5 gagnés · 3 perdus · 2 en attente"` en `text-sm font-black` avec couleur verte si gain net positif, rouge sinon.
+
+- [ ] **UX6-5 : Corriger le chip de grade trompeur dans le hero Profil**
+  - _Problème :_ Le chip affiché dans le hero du profil (ex: "Arbitre Élite") correspond au grade **maximum** du système plutôt qu'au grade **actuel** de l'utilisateur, ou est mal connecté aux données. Un utilisateur "Arbitre de District" qui voit "Arbitre Élite" sur son profil est confus.
+  - _Action :_ Dans `src/components/profile/ProfileHeader.tsx`, vérifier la fonction `getTrustGradeCompact(score)` et s'assurer qu'elle affiche bien le grade de l'utilisateur courant (pas le grade suivant ni le grade max). Si un indicateur de progression est souhaité, ajouter sous le chip actuel un `"→ Prochain : [grade suivant]"` en `text-[9px] text-zinc-500` seulement s'il existe un grade supérieur. Ne pas afficher le grade max si l'utilisateur n'y est pas encore.
+
+- [ ] **UX6-6 : Solde "Pts" dans le header — plus visible, plus contrasté**
+  - _Problème :_ Le solde de Sifflets (ex: "955 pts") affiché dans la TopBar est petit, peu contrasté sur fond sombre. C'est pourtant LA métrique centrale de l'app — l'équivalent du "solde de compte" dans une app bancaire ou de gaming.
+  - _Action :_ Dans `src/components/layout/TopBar.tsx`, augmenter la taille du solde : passer de `text-sm` à `text-base font-black`. Augmenter le contraste de la couleur (utiliser `text-whistle` au lieu de `text-zinc-300` ou similaire). Rendre l'élément **cliquable** → ouvre une mini-modale ou redirige vers `/profile` avec l'onglet "Profil" actif. Ajouter une **animation de pulse** (`animate-ping` pendant 2s) quand le solde augmente en temps réel (écoute du Realtime `profiles` déjà branché).
+
+- [ ] **UX6-7 : Leaderboard ligue — corriger les couleurs médailles**
+  - _Problème :_ La médaille bronze (#3 du classement) est affichée en orange ambre — la même teinte que l'accent principal de l'app. Confusion entre "c'est une couleur d'interface" et "c'est une médaille". L'orange est aussi utilisé pour le joueur courant (bordure surlignée), ce qui amplifie la confusion.
+  - _Action :_ Dans `src/components/ligues/SquadLeaderboard.tsx`, remplacer la classe Tailwind de la pastille bronze (idx === 2) par une vraie couleur bronze : `bg-amber-700 text-amber-100 border-amber-600` → utiliser plutôt `bg-[#CD7F32] text-white border-[#A0522D] shadow-[0_0_10px_rgba(205,127,50,0.3)]`. Vérifier que les positions 4+ restent en gris neutre `bg-zinc-800 text-zinc-400` sans aucun orange.
+
+- [ ] **UX6-8 : Leaderboard ligue — label "XP total" → "Points cumulés"**
+  - _Problème :_ Le chip "XP total : 2 383 Pts" dans l'en-tête du classement ligue mélange deux notions : "XP" (progression de rang individuel) et "Pts" (monnaie virtuelle). Dans le contexte ligue, on parle de points gagnés en commun, pas d'XP individuel.
+  - _Action :_ Dans `src/components/ligues/SquadDetailClient.tsx`, remplacer le label "XP total :" par "Points cumulés :" (ou "Cagnotte cumulée :"). Vérifier aussi dans `src/components/ligues/SquadLeaderboard.tsx` que le label de la colonne de score en mode `period === "general"` est cohérent (déjà corrigé en "pts" mais vérifier la description texte associée).
+
+---
+
+### ✨ Sprint UX7 : POLISH LANCEMENT — "Les micro-détails qui font la différence"
+
+> À traiter en parallèle du lancement ou juste après. Ces points améliorent la qualité perçue sans débloquer de nouvelle fonctionnalité.
+
+- [ ] **UX7-1 : Hero profil — version compacte sur les onglets non-PROFIL**
+  - _Problème :_ Le bandeau hero du profil (avatar + pseudo + stats) occupe ~40% de la hauteur d'écran et est répété identiquement sur les onglets Historique, Badges et Amis. Il pousse le contenu utile sous la ligne de flottaison.
+  - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, détecter `activeTab !== "profil"`. Quand ce n'est pas l'onglet Profil, passer le `<ProfileHeader>` en mode compact (prop `compact={true}`) : n'afficher que le pseudo, le solde et le badge de grade sur une seule ligne de 60px environ, sans l'XP bar ni les stat cards. L'onglet PROFIL garde le hero pleine taille. Gérer la prop `compact?: boolean` dans `ProfileHeader.tsx` pour conditionner les éléments affichés.
+
+- [ ] **UX7-2 : Badge HISTORIQUE — pastille whistle (jaune) au lieu de gris**
+  - _Problème :_ Le badge "35" sur l'onglet HISTORIQUE dans les tabs du profil est un rond gris peu visible. C'est un signal de progression important (35 paris/pronos en attente ou résolus) qui passe inaperçu.
+  - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, dans le rendu des tabs pills, modifier la couleur du badge de l'onglet "historique" : utiliser `bg-whistle text-pitch-900` (jaune sur vert foncé) au lieu du gris actuel. Appliquer uniquement si le badge correspond à des entrées **en attente** (pas résolus) pour signaler une action à faire.
+
+- [ ] **UX7-3 : Cards matchs futurs Stade — compte-à-rebours ou heure de coup d'envoi**
+  - _Problème :_ Les cartes de matchs "à venir" dans le Stade affichent un score vide. Sur mobile, ça ressemble à une carte vide ou cassée. L'attente doit être exploitée comme opportunité d'engagement.
+  - _Action :_ Dans `src/components/lobby/MatchCard.tsx`, si le match a `status === "upcoming"` et que `start_time` est dans les prochaines 24h, afficher à la place du score vide un compte-à-rebours dynamique "Dans Xh Xmin" (calculé côté client) avec une pastille verte pulsante `🟢`. Si le match est dans plus de 24h, afficher juste l'heure locale "À 20:45" avec un emoji 🕐. Utiliser `useEffect` + `setInterval` pour le compte-à-rebours.
+
+- [ ] **UX7-4 : BottomNav — indicateur LIVE urgence si match en cours**
+  - _Problème :_ Quand un match est en cours en direct, rien dans la BottomNav ne l'indique. Un utilisateur revenant sur l'app ne sait pas qu'il y a quelque chose à faire maintenant.
+  - _Action :_ Dans `src/components/layout/BottomNav.tsx`, si l'utilisateur a une `match_subscription` active sur un match actuellement `live` (requête légère au montage ou via Supabase Realtime), afficher une pastille rouge `animate-pulse` sur l'icône STADE du BottomNav. Alternative plus simple et sans requête : si l'URL courante n'est pas `/lobby` et que l'heure locale est dans une plage typique de match (18h-23h en semaine), afficher la pastille conditionnellement. Prioriser la solution Realtime si le coût perf est acceptable.
+
+- [ ] **UX7-5 : Bouton "Quitter" ligue — rendre discret**
+  - _Problème :_ Le bouton "Quitter" sur les cartes de ligue dans `LiguesPageClient.tsx` a autant de visibilité qu'une action principale alors que c'est une action de dernière instance destructive.
+  - _Action :_ Dans `src/components/ligues/LiguesPageClient.tsx`, réduire la visibilité du bouton "Quitter" : passer en `text-[10px] text-zinc-600 font-medium` (texte seul, sans fond coloré), positionné en bas à droite de la carte ligue. Ou mieux, déplacer l'action dans un menu trois points `MoreVertical` (Lucide) qui affiche un dropdown avec "Partager le code" + "Quitter la ligue" (en rouge). La confirmation `window.confirm()` déjà en place reste.
+
+- [ ] **UX7-6 : Gradient fade tabs Stade — vérifier que "La Liga" est bien coupé**
+  - _Problème :_ L'agent UX rapporte que sur les captures d'écran de Stade, "LA LIGA" apparaît encore coupé sans aucun fade visible. Le sprint UX2-1 avait ajouté le gradient, mais il se peut qu'il soit mal positionné ou que le `z-index` ou `overflow` l'écrase.
+  - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, vérifier visuellement que le gradient `bg-gradient-to-l from-zinc-950` est bien visible sur le dernier onglet visible. S'assurer que le conteneur parent n'a pas `overflow: hidden` qui bloquerait le gradient. Si nécessaire, augmenter la largeur du gradient fade de `w-12` à `w-16` et vérifier qu'il est `z-10` pour passer par-dessus les tabs.
+
+---
+
+### 🌍 Sprint P : PERSONNALISATION — "Mes ligues, mon app"
+
+> Réduire la friction de pronostiquer en filtrant le contenu sur les compétitions que l'utilisateur suit vraiment. Préférence globale appliquée à Pronos + Stade + Push. Comportement par défaut pour un nouvel utilisateur : déduction depuis le `favorite_team_id` (club de cœur) → puis `Accept-Language` → fallback Ligue 1 + UCL. Les préférences s'appliquent partout (Pronos, Stade, Push).
+
+- [ ] **P1 : Migration `preferred_competitions` sur profiles**
+  - _Action 1 :_ Créer `supabase/migrations/0078_preferred_competitions.sql` :
+    - Ajouter colonne `preferred_competitions UUID[] DEFAULT ARRAY[]::UUID[]` sur `profiles`
+    - Ajouter index GIN : `CREATE INDEX idx_profiles_preferred_competitions ON profiles USING GIN (preferred_competitions);`
+    - Backfill : pour chaque profil existant avec `favorite_team_id` non null, déduire la ligue domestique du club via `teams.competition_id` et la mettre dans `preferred_competitions`
+    - Ajouter aussi l'ID de la Champions League à tous les profils backfillés
+  - _Action 2 :_ Mettre à jour `src/types/database.ts` — ajouter `preferred_competitions: string[] | null` sur `ProfileRow` (Insert + Update).
+  - _Action 3 :_ Étendre la RPC `update_profile` (`supabase/migrations/0079_update_profile_preferred.sql`) pour accepter le paramètre `p_preferred_competitions UUID[]` (optionnel — ne touche pas si NULL).
+
+- [ ] **P2 : Détection automatique de la langue → ligues par défaut**
+  - _Contexte :_ Pour les nouveaux utilisateurs sans `favorite_team_id`, déduire les ligues par défaut depuis la langue navigateur. Mapping : `fr` → Ligue 1 + UCL, `en` → Premier League + UCL, `es` → La Liga + UCL, `de` → Bundesliga + UCL, `it` → Serie A + UCL, autre → UCL seulement.
+  - _Action 1 :_ Créer `src/lib/default-competitions.ts` exportant `getDefaultCompetitionsByLocale(locale: string): string[]`. Les UUIDs Supabase des compétitions sont référencés depuis une constante `src/lib/constants/competitions.ts` (mapping `api_football_league_id` → UUID Supabase, hardcodé et commenté).
+  - _Action 2 :_ Dans le callback d'auth (`src/app/auth/callback/route.ts`), après création du profil, si `preferred_competitions` est vide : lire `headers().get('accept-language')`, appeler `getDefaultCompetitionsByLocale()`, écrire en DB via le client admin.
+  - _Ordre de priorité :_ Club de cœur → Langue → Fallback Ligue 1 + UCL.
+
+- [ ] **P3 : Composant `CompetitionFilter` réutilisable**
+  - _Action 1 :_ Créer `src/components/shared/CompetitionFilter.tsx` (Client Component) :
+    - Props : `competitions: CompetitionRow[]`, `selectedIds: string[]`, `onChange: (ids: string[]) => void`, `showCounts?: Record<string, number>`
+    - UI : rangée scrollable horizontale (`overflow-x-auto snap-x`), gradient fade à droite (pattern UX2-1)
+    - Chip "TOUTES" en premier (sélectionne/désélectionne tout)
+    - Chips suivantes : drapeau emoji + nom court + compteur si > 0 (ex: `🇫🇷 L1 (3)`)
+    - État actif : `bg-whistle text-pitch-900` ; inactif : `bg-zinc-800/90 text-zinc-400`
+  - _Action 2 :_ Créer hook `src/hooks/usePreferredCompetitions.ts` :
+    - Lit `profile.preferred_competitions` au mount (passé en prop depuis la page Server Component)
+    - Expose `preferences` + `setPreferences(ids)` (appelle `PUT /api/profile`, optimistic update, rollback sur erreur, toast Sonner).
+
+- [ ] **P4 : Intégration dans le Hub Pronos**
+  - _Action 1 :_ Dans `src/components/pronos/PronosticsHubClient.tsx`, insérer `<CompetitionFilter />` **entre le `DateSlider` et la liste des matchs** (pas au-dessus du DateSlider — ordre : barre progression → DateSlider → filtre compétitions → accordéon matchs).
+  - _Action 2 :_ Filtrer le tableau de matchs côté client : `match.competition_id IN selectedCompetitionIds` quand le filtre actif n'est pas "TOUTES".
+  - _Action 3 :_ Mettre à jour la barre de progression "X/Y pronostiqués" pour refléter uniquement les matchs du filtre actif (ex: "8/12 sur tes ligues" vs "25/72 tous").
+  - _Action 4 :_ Empty state si filtre actif + 0 match ce jour : "Aucun match {noms des ligues filtrées} ce jour-là — essaie une autre date ou élargis tes ligues." + bouton "Voir tous les matchs" (reset filtre).
+
+- [ ] **P5 : Intégration dans le Stade (Lobby)**
+  - _Action 1 :_ Dans `src/components/lobby/MatchLobby.tsx`, réordonner les onglets de ligues : les compétitions présentes dans `preferredCompetitions` de l'utilisateur apparaissent EN PREMIER (après "DIRECT"), les autres après. Passer les préférences depuis la page Server Component (`src/app/(app)/lobby/page.tsx` qui lit `profile.preferred_competitions`).
+  - _Action 2 :_ Onglet "DIRECT" : si plusieurs matchs live, afficher en priorité ceux des ligues suivies — les autres en repli sous un séparateur discret "Autres compétitions".
+  - _Action 3 :_ Empty state "La VAR dort" : personnaliser → "Aucun match {Ligue 1 ou Champions League} en direct. Tes prochains matchs : {liste 2-3 prochains matchs des ligues suivies}."
+
+- [ ] **P6 : Filtrage des push notifications**
+  - _Action 1 :_ Dans `src/lib/push-sender.ts`, fonction `sendPushToMatchSubscribers(matchId, payload)` : avant d'envoyer à un destinataire, vérifier que `match.competition_id` figure dans `profile.preferred_competitions`. Sinon, skip silencieux.
+  - _Action 2 :_ Idem pour `POST /api/squads/nudge` (nudge pronos) : ne réveille pas un user dont la compétition du match n'est pas dans ses préférences.
+  - _Note :_ La sirène VAR (`POST /api/squads/var-alert`) est une action sociale explicite d'un membre de la ligue — ne pas filtrer.
+
+- [ ] **P7 : UI de gestion des préférences**
+  - _Action 1 :_ Dans la modale "Modifier mon profil" (`src/components/profile/ProfileEditModal.tsx`), ajouter une section "MES LIGUES" sous "CLUB DE CŒUR" — liste de chips toggle pour les 8 compétitions disponibles, état initial depuis `profile.preferred_competitions`.
+  - _Action 2 :_ Inclure `preferred_competitions` dans l'appel `update_profile` au submit du formulaire.
+  - _Action 3 (bonus) :_ Ajouter un bouton "⚙️ Mes ligues" à droite du `CompetitionFilter` dans Pronos qui ouvre directement la section "MES LIGUES" de la modale profil (deep-link).
+
+- [ ] **P8 : Onboarding préférences pour nouveaux utilisateurs**
+  - _Action :_ Dans `src/components/onboarding/OnboardingTour.tsx`, insérer une étape "Choisis tes ligues" (déclenchée si `preferred_competitions` est vide ET l'utilisateur a moins de 24h d'ancienneté) : grille de 8 cards compétition avec drapeau + nom, pré-cochées selon la langue détectée (P2). Bouton "C'est parti !" → écrit en DB puis ferme l'onboarding.
+
+---
+
 ## 💡 Rappel des Commandes pour l'IA
 
 - `npm run ai:check` : Formate, vérifie le typage (TS) et les règles de code (ESLint). **A faire à chaque fin de tâche.**
