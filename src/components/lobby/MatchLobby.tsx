@@ -65,13 +65,13 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   const trimmed = (url ?? "").trim();
   if (trimmed.startsWith("https://") && isNextImageRemoteLogoUrl(trimmed)) {
     return (
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/10 p-0.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
         <Image
           src={trimmed}
           alt={alt}
           width={24}
           height={24}
-          className="h-full w-full object-contain drop-shadow-sm"
+          className="h-full w-full object-contain"
           sizes="24px"
         />
       </div>
@@ -79,13 +79,9 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   }
   if (trimmed.startsWith("http")) {
     return (
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/10 p-0.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={trimmed}
-          alt={alt}
-          className="h-full w-full object-contain drop-shadow-sm"
-        />
+        <img src={trimmed} alt={alt} className="h-full w-full object-contain" />
       </div>
     );
   }
