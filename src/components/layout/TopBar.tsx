@@ -90,23 +90,24 @@ export function TopBar({
             </span>
           </Link>
 
-          {/* Balance — flash vert quand le solde augmente */}
-          <div
-            className={`rounded-full border px-3 py-1 text-sm font-black tabular-nums transition-all duration-500 ${
+          {/* Balance — flash vert quand le solde augmente, clique → profil */}
+          <Link
+            href="/profile"
+            className={`rounded-full border px-3 py-1 text-base font-black tabular-nums transition-all duration-500 ${
               flash
                 ? "border-green-400 bg-green-400/20 text-green-300 shadow-lg shadow-green-400/30"
-                : "border-green-500/30 bg-green-500/10 text-green-400"
+                : "border-whistle/40 bg-whistle/10 text-whistle"
             }`}
           >
             {balance.toLocaleString("fr-FR")}
             <span
               className={`ml-1 text-xs font-normal transition-colors duration-500 ${
-                flash ? "text-green-300/80" : "text-green-400/60"
+                flash ? "text-green-300/80" : "text-whistle/60"
               }`}
             >
               pts
             </span>
-          </div>
+          </Link>
 
           {/* Burger */}
           <button

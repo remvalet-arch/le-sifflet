@@ -13,6 +13,7 @@ import {
   Wallet,
   ChevronRight,
   LogOut,
+  MoreVertical,
   X,
 } from "lucide-react";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
@@ -44,6 +45,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
   const [tick, setTick] = useState(0);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+  const [menuOpenSquadId, setMenuOpenSquadId] = useState<string | null>(null);
 
   const loadSquads = useCallback(() => {
     void fetch("/api/squads")
@@ -238,16 +240,36 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                       </span>
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => void handleLeave(s)}
-                    disabled={submitting}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-[11px] font-bold text-zinc-500 transition-colors hover:border-red-500/40 hover:bg-red-500/20 hover:text-red-400 disabled:opacity-40"
-                    title="Quitter la ligue"
-                  >
-                    <LogOut className="h-3 w-3" />
-                    Quitter
-                  </button>
+                  <div className="relative ml-auto">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMenuOpenSquadId(
+                          menuOpenSquadId === s.id ? null : s.id,
+                        )
+                      }
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-zinc-800/60 text-zinc-500 hover:text-zinc-300"
+                      aria-label="Plus d'options"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                    {menuOpenSquadId === s.id && (
+                      <div className="absolute right-0 top-full z-20 mt-1 min-w-[160px] overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpenSquadId(null);
+                            void handleLeave(s);
+                          }}
+                          disabled={submitting}
+                          className="flex w-full items-center gap-2 px-4 py-3 text-left text-[12px] font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-40"
+                        >
+                          <LogOut className="h-3.5 w-3.5" />
+                          Quitter la ligue
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </li>

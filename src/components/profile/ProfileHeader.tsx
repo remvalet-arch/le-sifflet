@@ -75,6 +75,7 @@ export function ProfileHeader({
   loginStreak,
   lastLoginDate,
   trustScore,
+  compact = false,
 }: {
   username: string;
   avatarUrl: string | null;
@@ -86,6 +87,7 @@ export function ProfileHeader({
   loginStreak?: number;
   lastLoginDate?: string | null;
   trustScore?: number;
+  compact?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const [username, setUsername] = useState(initialUsername);
@@ -127,6 +129,63 @@ export function ProfileHeader({
     } finally {
       setClaimingStreak(false);
     }
+  }
+
+  if (compact) {
+    return (
+      <div className="mb-3 flex h-14 items-center gap-3 rounded-xl border border-white/8 bg-zinc-900/80 px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg">
+          {avatar.startsWith("http") ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatar}
+              alt={username}
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            avatar
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-black text-white">{username}</p>
+          <p className="text-[10px] font-bold text-zinc-500">
+            {rank.emoji} {rank.label}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEditOpen(true)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-zinc-500 hover:text-white"
+          aria-label="Modifier le profil"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        {editOpen && (
+          <ProfileEditModal
+            onClose={() => setEditOpen(false)}
+            initialUsername={username}
+            initialAvatarUrl={avatarUrl}
+            initialTeamId={team?.id ?? null}
+            initialTeamName={team?.name ?? null}
+            initialTeamLogo={team?.logo_url ?? null}
+            xp={xpTotal}
+            onSaved={(data) => {
+              setUsername(data.username);
+              setAvatarUrl(data.avatar_url);
+              setTeam(
+                data.favorite_team_id
+                  ? {
+                      id: data.favorite_team_id,
+                      name: data.team_name ?? "",
+                      logo_url: data.team_logo,
+                    }
+                  : null,
+              );
+            }}
+          />
+        )}
+      </div>
+    );
   }
 
   return (
@@ -262,6 +321,7 @@ export function ProfileHeader({
           initialTeamId={team?.id ?? null}
           initialTeamName={team?.name ?? null}
           initialTeamLogo={team?.logo_url ?? null}
+          xp={xpTotal}
           onSaved={(data) => {
             setUsername(data.username);
             setAvatarUrl(data.avatar_url);

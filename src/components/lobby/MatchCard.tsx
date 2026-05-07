@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { MatchRow } from "@/lib/matches";
 import { formatMatchStatus, isLobbyLiveStatus } from "@/lib/matches";
 import { LiveBadge } from "@/components/lobby/LiveBadge";
+import { MatchCardCountdown } from "@/components/lobby/MatchCardCountdown";
 import {
   formatMatchDateTimeParis,
   formatMatchTime,
@@ -118,6 +119,12 @@ export function MatchCard({
   const when = formatMatchDateTimeParis(match.start_time);
   const kickoffTime = formatMatchTime(match.start_time);
   const lineupsFlag = hasLineups ?? match.has_lineups;
+  // eslint-disable-next-line react-hooks/purity
+  const msUntilKickoff = new Date(match.start_time).getTime() - Date.now();
+  const isWithin24h =
+    match.status === "upcoming" &&
+    msUntilKickoff > 0 &&
+    msUntilKickoff < 86_400_000;
   const goalsForScore = sortedGoalLinesForScore(goalEvents);
 
   /** Centre de la carte : score imposant + minute / statut — sans ligne buteurs (elle est en dessous de la grille). */
@@ -174,10 +181,15 @@ export function MatchCard({
       ) : (
         scoreCenterClassic
       )
+    ) : isWithin24h ? (
+      <MatchCardCountdown startTime={match.start_time} />
     ) : (
-      <span className="shrink-0 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm font-black uppercase tracking-wider text-zinc-400 sm:text-base">
-        vs
-      </span>
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-base">🕐</span>
+        <span className="text-[11px] font-black tabular-nums text-zinc-400">
+          {kickoffTime}
+        </span>
+      </div>
     );
 
   const metaRowMpg = isLive ? null : isFinished ? (

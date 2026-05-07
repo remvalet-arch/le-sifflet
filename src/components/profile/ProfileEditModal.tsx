@@ -4,30 +4,36 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { X, Search, LoaderCircle, Check } from "lucide-react";
+import { X, Search, LoaderCircle, Check, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const AVATARS = [
-  "⚽",
-  "🥅",
-  "🏟️",
-  "🎽",
-  "👕",
-  "🏆",
-  "🎯",
-  "👑",
-  "🦁",
-  "🐯",
-  "🦊",
-  "🐺",
-  "🦅",
-  "🐻",
-  "⚡",
-  "🔥",
-  "💪",
-  "🛡️",
-  "📢",
-  "🎪",
+type AvatarTier = { emoji: string; minXp: number };
+
+const AVATAR_TIERS: AvatarTier[] = [
+  // Tier 1 — District (0 xp)
+  { emoji: "⚽", minXp: 0 },
+  { emoji: "🥅", minXp: 0 },
+  { emoji: "🏟️", minXp: 0 },
+  { emoji: "🎽", minXp: 0 },
+  { emoji: "👕", minXp: 0 },
+  // Tier 2 — Bronze (500 xp)
+  { emoji: "🦁", minXp: 500 },
+  { emoji: "🐯", minXp: 500 },
+  { emoji: "🦊", minXp: 500 },
+  { emoji: "🐺", minXp: 500 },
+  { emoji: "🦅", minXp: 500 },
+  // Tier 3 — Argent (2000 xp)
+  { emoji: "⚡", minXp: 2000 },
+  { emoji: "🔥", minXp: 2000 },
+  { emoji: "💪", minXp: 2000 },
+  { emoji: "🎯", minXp: 2000 },
+  { emoji: "🏆", minXp: 2000 },
+  // Tier 4 — Boss (5000 xp)
+  { emoji: "👑", minXp: 5000 },
+  { emoji: "🛡️", minXp: 5000 },
+  { emoji: "🐻", minXp: 5000 },
+  { emoji: "📢", minXp: 5000 },
+  { emoji: "🎪", minXp: 5000 },
 ];
 
 type TeamResult = { id: string; name: string; logo_url: string | null };
@@ -47,6 +53,7 @@ export function ProfileEditModal({
   initialTeamId,
   initialTeamName,
   initialTeamLogo,
+  xp = 0,
   onSaved,
 }: {
   onClose: () => void;
@@ -55,6 +62,7 @@ export function ProfileEditModal({
   initialTeamId: string | null;
   initialTeamName: string | null;
   initialTeamLogo: string | null;
+  xp?: number;
   onSaved: (data: {
     username: string;
     avatar_url: string | null;
@@ -216,21 +224,44 @@ export function ProfileEditModal({
               Avatar
             </p>
             <div className="grid grid-cols-5 gap-2">
-              {AVATARS.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setAvatar(e)}
-                  className={`flex h-12 w-full items-center justify-center rounded-xl text-2xl transition ${
-                    avatar === e
-                      ? "bg-whistle/20 ring-2 ring-whistle"
-                      : "bg-zinc-900 hover:bg-zinc-800"
-                  }`}
-                >
-                  {e}
-                </button>
-              ))}
+              {AVATAR_TIERS.map(({ emoji, minXp }) => {
+                const locked = xp < minXp;
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    disabled={locked}
+                    onClick={() => !locked && setAvatar(emoji)}
+                    title={
+                      locked
+                        ? `Débloqué à ${minXp.toLocaleString("fr-FR")} pts`
+                        : undefined
+                    }
+                    className={`relative flex h-12 w-full items-center justify-center rounded-xl text-2xl transition ${
+                      locked
+                        ? "cursor-not-allowed bg-zinc-900/40 opacity-40"
+                        : avatar === emoji
+                          ? "bg-whistle/20 ring-2 ring-whistle"
+                          : "bg-zinc-900 hover:bg-zinc-800"
+                    }`}
+                  >
+                    {locked ? (
+                      <>
+                        <span className="opacity-30">{emoji}</span>
+                        <Lock className="absolute bottom-1 right-1 h-2.5 w-2.5 text-zinc-500" />
+                      </>
+                    ) : (
+                      emoji
+                    )}
+                  </button>
+                );
+              })}
             </div>
+            {xp < 5000 && (
+              <p className="mt-2 text-[10px] text-zinc-600">
+                🔒 Gagne des pts pour débloquer de nouveaux avatars
+              </p>
+            )}
           </section>
 
           {/* ── Équipe favorite ──────────────────────────────────────────── */}

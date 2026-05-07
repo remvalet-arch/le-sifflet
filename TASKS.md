@@ -858,30 +858,30 @@ Agis en tant que Lead Backend et Game Designer.
 
 > Issu de l'audit UX agent du 07/05/2026. Ces points créent une impression de "l'app est cassée" ou "il n'y a rien à faire ici" pour un premier utilisateur. À corriger avant tout lancement public.
 
-- [ ] **UX5-1 : Redirect auto DIRECT → Pronos quand aucun match live**
+- [x] **UX5-1 : Redirect auto DIRECT → Pronos quand aucun match live**
   - _Problème :_ L'onglet "DIRECT" est l'onglet par défaut du Stade. En dehors des soirées de matchs (soit ~80% du temps), l'utilisateur ouvre l'app et tombe immédiatement sur l'empty state "La VAR dort". Premier réflexe : "L'app est cassée" ou "il n'y a rien à faire ici".
   - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, au montage du composant, vérifier si `directRows.length === 0`. Si oui, switcher automatiquement l'onglet actif vers `"l1"` (ou le premier onglet avec des matchs). Si aucun onglet n'a de matchs ce jour-là, basculer vers l'onglet `"pronos"` via un `Link` redirect ou une navigation programmatique vers `/pronos`. Ajouter éventuellement un bandeau discret "Aucun match en direct — on t'a redirigé vers tes Pronos".
 
-- [ ] **UX5-2 : Empty state Pronos — remplacer le fantôme par un vrai skeleton loader**
+- [x] **UX5-2 : Empty state Pronos — remplacer le fantôme par un vrai skeleton loader**
   - _Problème :_ L'onglet Pronos à l'ouverture affiche "ENTRÉE SUR LE TERRAIN..." avec un écran presque vide. L'utilisateur ne sait pas si c'est un loader ou un empty state final — impression de page cassée.
   - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx` ou la page `src/app/(app)/pronos/page.tsx`, détecter l'état `loading` et afficher des **skeleton cards** animées (placeholders gris `animate-pulse`, 3 fausses cartes de match avec hauteur réaliste). Le texte "ENTRÉE SUR LE TERRAIN..." peut subsister comme titre d'en-tête mais ne doit jamais être l'unique élément visible.
 
-- [ ] **UX5-3 : "La VAR dort" — enrichir avec 2 CTAs sortants**
+- [x] **UX5-3 : "La VAR dort" — enrichir avec 2 CTAs sortants**
   - _Problème :_ L'empty state du Stade n'a qu'un seul CTA "FAIRE MES PRONOS". Un seul choix = trop sec, et certains utilisateurs n'ont pas de match à pronostiquer non plus.
   - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, dans le bloc empty state "La VAR dort", ajouter sous le bouton "FAIRE MES PRONOS" deux actions secondaires en `flex gap-2` : un bouton "Voir le classement" (`href="/leaderboard"`) et un bouton "Mes ligues" (`href="/ligues"`). Style : bordure simple `border border-white/15 bg-zinc-900`, texte `text-xs font-black text-zinc-400`.
 
-- [ ] **UX5-4 : Hub stats Stade — retirer Classement/Résultats officiels, garder Buteurs**
+- [x] **UX5-4 : Hub stats Stade — retirer Classement/Résultats officiels, garder Buteurs**
   - _Problème :_ Les onglets "Classement" (classement officiel Ligue 1) et "Résultats" dans le hub stats dilue la proposition de valeur de l'app. Un utilisateur qui veut le classement Ligue 1 va sur L'Équipe, pas sur VAR TIME. Ça transforme l'app en "app d'actu foot générique" au lieu de "app de pronos et paris".
   - _Action :_ Dans `src/components/lobby/LeagueHub.tsx` (ou le composant contenant les onglets Résultats / Classement / Buteurs / Passeurs), **masquer ou supprimer les onglets "Classement" et "Résultats"**. Garder uniquement "Buteurs" et "Passeurs" car ils sont directement utiles pour les pronos buteurs. Si l'onglet "Classement" est utilisé par <5% des sessions (à vérifier avec Vercel Analytics), le supprimer définitivement. Mettre "Buteurs" comme premier onglet par défaut.
 
-- [ ] **UX5-5 : Avatars profil — gater les avatars par rang d'Arbitre**
+- [x] **UX5-5 : Avatars profil — gater les avatars par rang d'Arbitre**
   - _Problème :_ La modale "Modifier mon profil" affiche ~20 avatars en grille 4×5 → paralysie de choix. De plus, le backlog prévoit des "avatars personnalisés par rang" — autant l'implémenter maintenant plutôt que d'avoir une grille plate.
   - _Action :_ Dans `src/components/profile/ProfileEditModal.tsx`, restructurer la grille d'avatars en 4 niveaux débloqués progressivement selon le `rank` de l'utilisateur (ou son `xp`) :
     - Niveau 1 (tous) : 4-5 avatars de base (ballon ⚽, sifflet 🎯, maillot, carton 🟨, terrain)
     - Niveau 2 (Lanceur d'Alerte, xp ≥ 50) : +4 avatars (lion 🦁, aigle 🦅, renard 🦊, ours 🐻)
     - Niveau 3 (Arbitre Officiel, xp ≥ 100) : +4 avatars (trophée 🏆, médaille 🏅, couronne 👑, étoile ⭐)
     - Niveau 4 (Arbitre Élite, xp ≥ 200) : +4 avatars exclusifs (dorés, animés ou stylisés 💎🔥⚡🌟)
-    Les avatars verrouillés sont **visibles mais grisés** avec un petit badge "Arbitre Officiel requis" — visible = désir, verrouillé = motivation de progression.
+      Les avatars verrouillés sont **visibles mais grisés** avec un petit badge "Arbitre Officiel requis" — visible = désir, verrouillé = motivation de progression.
 
 ---
 
@@ -889,35 +889,35 @@ Agis en tant que Lead Backend et Game Designer.
 
 > Corrections à apporter pendant la phase bêta. Ces points ne cassent pas l'expérience mais créent des confusions ou des opportunités manquées de feedback émotionnel.
 
-- [ ] **UX6-1 : Stats communautaires Pronos — masquer si trop peu de votes**
+- [x] **UX6-1 : Stats communautaires Pronos — masquer si trop peu de votes**
   - _Problème :_ Les 3 stats communautaires "0% / 0% / 0%" affichées sous chaque match dans le hub Pronos donnent l'impression que personne ne joue à l'app. C'est particulièrement destructeur en bêta avec peu d'utilisateurs.
   - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx`, dans le bloc des Community Percentages, ajouter une condition : si `(match.community_stats?.total_pronos ?? 0) < 10`, remplacer les 3 chiffres `%` par le message `"⚡ Sois le premier à pronostiquer"` (centré, `text-[10px] text-amber-400 font-black`). Au-delà de 10 votes, afficher normalement les pourcentages.
 
-- [ ] **UX6-2 : Labels récompenses Pronos — rendre le gain potentiel explicite**
+- [x] **UX6-2 : Labels récompenses Pronos — rendre le gain potentiel explicite**
   - _Problème :_ Les chiffres "113 pts / 152 pts / 157 pts" sous les boutons de pronostic ne sont pas accompagnés d'un contexte clair. Un utilisateur ne comprend pas instinctivement que c'est ce qu'il gagnera **si son prono est correct** pour ce résultat précis.
   - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx`, dans le `MatchPronoCard`, modifier le layout des cotes pills. Le label déjà présent `"pts"` (ajouté en UX4-2) peut être enrichi : au lieu de juste `"pts"`, afficher `"pts si correct"` en `text-[8px]`. Alternativement, ajouter un bandeau contextuel sous les 3 pills : `"Si ton pronostic est bon → tu empoches {max(pts1,ptsN,pts2)} pts max"` en `text-[9px] text-zinc-500 text-center` (affiché uniquement avant soumission).
 
-- [ ] **UX6-3 : Historique profil — inverser le tri (résolus d'abord)**
+- [x] **UX6-3 : Historique profil — inverser le tri (résolus d'abord)**
   - _Problème :_ L'historique affiche les pronos "en attente" en premier. Comme la majorité des pronos sont souvent en attente (matchs futurs), l'utilisateur scrolle sans jamais voir ses gains. Le dopamine hit est enterré.
   - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, dans la liste `pronos` et `shortBets` du tab "Historique", trier en mettant les entrées avec `status === "won"` ou `status === "lost"` en premier, les `"pending"` en dernier. Dans chaque groupe, conserver l'ordre chronologique inverse (le plus récent d'abord). Renforcer visuellement : bordure gauche `border-l-2 border-green-500` pour `won`, `border-l-2 border-red-500` pour `lost`, neutre pour `pending`.
 
-- [ ] **UX6-4 : Historique profil — bloc résumé "7 derniers jours"**
+- [x] **UX6-4 : Historique profil — bloc résumé "7 derniers jours"**
   - _Problème :_ L'utilisateur doit scroller tout l'historique pour comprendre sa performance récente. Il n'y a pas de vue synthétique immédiate.
   - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, en haut du tab "Historique" (avant la liste), ajouter un bloc résumé `"📊 Tes 7 derniers jours"` calculé côté client depuis la prop `pronos` + `shortBets` : filtrer les entrées des 7 derniers jours, compter won / lost / pending, sommer les `points_earned`. Afficher : `"+320 pts · 5 gagnés · 3 perdus · 2 en attente"` en `text-sm font-black` avec couleur verte si gain net positif, rouge sinon.
 
-- [ ] **UX6-5 : Corriger le chip de grade trompeur dans le hero Profil**
+- [x] **UX6-5 : Corriger le chip de grade trompeur dans le hero Profil**
   - _Problème :_ Le chip affiché dans le hero du profil (ex: "Arbitre Élite") correspond au grade **maximum** du système plutôt qu'au grade **actuel** de l'utilisateur, ou est mal connecté aux données. Un utilisateur "Arbitre de District" qui voit "Arbitre Élite" sur son profil est confus.
   - _Action :_ Dans `src/components/profile/ProfileHeader.tsx`, vérifier la fonction `getTrustGradeCompact(score)` et s'assurer qu'elle affiche bien le grade de l'utilisateur courant (pas le grade suivant ni le grade max). Si un indicateur de progression est souhaité, ajouter sous le chip actuel un `"→ Prochain : [grade suivant]"` en `text-[9px] text-zinc-500` seulement s'il existe un grade supérieur. Ne pas afficher le grade max si l'utilisateur n'y est pas encore.
 
-- [ ] **UX6-6 : Solde "Pts" dans le header — plus visible, plus contrasté**
+- [x] **UX6-6 : Solde "Pts" dans le header — plus visible, plus contrasté**
   - _Problème :_ Le solde de Sifflets (ex: "955 pts") affiché dans la TopBar est petit, peu contrasté sur fond sombre. C'est pourtant LA métrique centrale de l'app — l'équivalent du "solde de compte" dans une app bancaire ou de gaming.
   - _Action :_ Dans `src/components/layout/TopBar.tsx`, augmenter la taille du solde : passer de `text-sm` à `text-base font-black`. Augmenter le contraste de la couleur (utiliser `text-whistle` au lieu de `text-zinc-300` ou similaire). Rendre l'élément **cliquable** → ouvre une mini-modale ou redirige vers `/profile` avec l'onglet "Profil" actif. Ajouter une **animation de pulse** (`animate-ping` pendant 2s) quand le solde augmente en temps réel (écoute du Realtime `profiles` déjà branché).
 
-- [ ] **UX6-7 : Leaderboard ligue — corriger les couleurs médailles**
+- [x] **UX6-7 : Leaderboard ligue — corriger les couleurs médailles**
   - _Problème :_ La médaille bronze (#3 du classement) est affichée en orange ambre — la même teinte que l'accent principal de l'app. Confusion entre "c'est une couleur d'interface" et "c'est une médaille". L'orange est aussi utilisé pour le joueur courant (bordure surlignée), ce qui amplifie la confusion.
   - _Action :_ Dans `src/components/ligues/SquadLeaderboard.tsx`, remplacer la classe Tailwind de la pastille bronze (idx === 2) par une vraie couleur bronze : `bg-amber-700 text-amber-100 border-amber-600` → utiliser plutôt `bg-[#CD7F32] text-white border-[#A0522D] shadow-[0_0_10px_rgba(205,127,50,0.3)]`. Vérifier que les positions 4+ restent en gris neutre `bg-zinc-800 text-zinc-400` sans aucun orange.
 
-- [ ] **UX6-8 : Leaderboard ligue — label "XP total" → "Points cumulés"**
+- [x] **UX6-8 : Leaderboard ligue — label "XP total" → "Points cumulés"**
   - _Problème :_ Le chip "XP total : 2 383 Pts" dans l'en-tête du classement ligue mélange deux notions : "XP" (progression de rang individuel) et "Pts" (monnaie virtuelle). Dans le contexte ligue, on parle de points gagnés en commun, pas d'XP individuel.
   - _Action :_ Dans `src/components/ligues/SquadDetailClient.tsx`, remplacer le label "XP total :" par "Points cumulés :" (ou "Cagnotte cumulée :"). Vérifier aussi dans `src/components/ligues/SquadLeaderboard.tsx` que le label de la colonne de score en mode `period === "general"` est cohérent (déjà corrigé en "pts" mais vérifier la description texte associée).
 
@@ -927,27 +927,27 @@ Agis en tant que Lead Backend et Game Designer.
 
 > À traiter en parallèle du lancement ou juste après. Ces points améliorent la qualité perçue sans débloquer de nouvelle fonctionnalité.
 
-- [ ] **UX7-1 : Hero profil — version compacte sur les onglets non-PROFIL**
+- [x] **UX7-1 : Hero profil — version compacte sur les onglets non-PROFIL**
   - _Problème :_ Le bandeau hero du profil (avatar + pseudo + stats) occupe ~40% de la hauteur d'écran et est répété identiquement sur les onglets Historique, Badges et Amis. Il pousse le contenu utile sous la ligne de flottaison.
   - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, détecter `activeTab !== "profil"`. Quand ce n'est pas l'onglet Profil, passer le `<ProfileHeader>` en mode compact (prop `compact={true}`) : n'afficher que le pseudo, le solde et le badge de grade sur une seule ligne de 60px environ, sans l'XP bar ni les stat cards. L'onglet PROFIL garde le hero pleine taille. Gérer la prop `compact?: boolean` dans `ProfileHeader.tsx` pour conditionner les éléments affichés.
 
-- [ ] **UX7-2 : Badge HISTORIQUE — pastille whistle (jaune) au lieu de gris**
+- [x] **UX7-2 : Badge HISTORIQUE — pastille whistle (jaune) au lieu de gris**
   - _Problème :_ Le badge "35" sur l'onglet HISTORIQUE dans les tabs du profil est un rond gris peu visible. C'est un signal de progression important (35 paris/pronos en attente ou résolus) qui passe inaperçu.
   - _Action :_ Dans `src/components/profile/ProfileClient.tsx`, dans le rendu des tabs pills, modifier la couleur du badge de l'onglet "historique" : utiliser `bg-whistle text-pitch-900` (jaune sur vert foncé) au lieu du gris actuel. Appliquer uniquement si le badge correspond à des entrées **en attente** (pas résolus) pour signaler une action à faire.
 
-- [ ] **UX7-3 : Cards matchs futurs Stade — compte-à-rebours ou heure de coup d'envoi**
+- [x] **UX7-3 : Cards matchs futurs Stade — compte-à-rebours ou heure de coup d'envoi**
   - _Problème :_ Les cartes de matchs "à venir" dans le Stade affichent un score vide. Sur mobile, ça ressemble à une carte vide ou cassée. L'attente doit être exploitée comme opportunité d'engagement.
   - _Action :_ Dans `src/components/lobby/MatchCard.tsx`, si le match a `status === "upcoming"` et que `start_time` est dans les prochaines 24h, afficher à la place du score vide un compte-à-rebours dynamique "Dans Xh Xmin" (calculé côté client) avec une pastille verte pulsante `🟢`. Si le match est dans plus de 24h, afficher juste l'heure locale "À 20:45" avec un emoji 🕐. Utiliser `useEffect` + `setInterval` pour le compte-à-rebours.
 
-- [ ] **UX7-4 : BottomNav — indicateur LIVE urgence si match en cours**
+- [x] **UX7-4 : BottomNav — indicateur LIVE urgence si match en cours**
   - _Problème :_ Quand un match est en cours en direct, rien dans la BottomNav ne l'indique. Un utilisateur revenant sur l'app ne sait pas qu'il y a quelque chose à faire maintenant.
   - _Action :_ Dans `src/components/layout/BottomNav.tsx`, si l'utilisateur a une `match_subscription` active sur un match actuellement `live` (requête légère au montage ou via Supabase Realtime), afficher une pastille rouge `animate-pulse` sur l'icône STADE du BottomNav. Alternative plus simple et sans requête : si l'URL courante n'est pas `/lobby` et que l'heure locale est dans une plage typique de match (18h-23h en semaine), afficher la pastille conditionnellement. Prioriser la solution Realtime si le coût perf est acceptable.
 
-- [ ] **UX7-5 : Bouton "Quitter" ligue — rendre discret**
+- [x] **UX7-5 : Bouton "Quitter" ligue — rendre discret**
   - _Problème :_ Le bouton "Quitter" sur les cartes de ligue dans `LiguesPageClient.tsx` a autant de visibilité qu'une action principale alors que c'est une action de dernière instance destructive.
   - _Action :_ Dans `src/components/ligues/LiguesPageClient.tsx`, réduire la visibilité du bouton "Quitter" : passer en `text-[10px] text-zinc-600 font-medium` (texte seul, sans fond coloré), positionné en bas à droite de la carte ligue. Ou mieux, déplacer l'action dans un menu trois points `MoreVertical` (Lucide) qui affiche un dropdown avec "Partager le code" + "Quitter la ligue" (en rouge). La confirmation `window.confirm()` déjà en place reste.
 
-- [ ] **UX7-6 : Gradient fade tabs Stade — vérifier que "La Liga" est bien coupé**
+- [x] **UX7-6 : Gradient fade tabs Stade — vérifier que "La Liga" est bien coupé**
   - _Problème :_ L'agent UX rapporte que sur les captures d'écran de Stade, "LA LIGA" apparaît encore coupé sans aucun fade visible. Le sprint UX2-1 avait ajouté le gradient, mais il se peut qu'il soit mal positionné ou que le `z-index` ou `overflow` l'écrase.
   - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, vérifier visuellement que le gradient `bg-gradient-to-l from-zinc-950` est bien visible sur le dernier onglet visible. S'assurer que le conteneur parent n'a pas `overflow: hidden` qui bloquerait le gradient. Si nécessaire, augmenter la largeur du gradient fade de `w-12` à `w-16` et vérifier qu'il est `z-10` pour passer par-dessus les tabs.
 
@@ -1006,6 +1006,192 @@ Agis en tant que Lead Backend et Game Designer.
 
 - [ ] **P8 : Onboarding préférences pour nouveaux utilisateurs**
   - _Action :_ Dans `src/components/onboarding/OnboardingTour.tsx`, insérer une étape "Choisis tes ligues" (déclenchée si `preferred_competitions` est vide ET l'utilisateur a moins de 24h d'ancienneté) : grille de 8 cards compétition avec drapeau + nom, pré-cochées selon la langue détectée (P2). Bouton "C'est parti !" → écrit en DB puis ferme l'onboarding.
+
+---
+
+### 🎯 Sprint Q : QUORUM DYNAMIQUE — "Réveiller le mode communautaire"
+
+> **Contexte stratégique :** Le seuil fixe `MIN_SIGNALS_TO_TRIGGER` actuel ne fonctionne que sur les gros matchs. Sur 95% des matchs (audience faible), aucun market ne s'ouvre → l'utilisateur se connecte, voit "La VAR dort", part. Cette dette tue silencieusement la rétention. L'API-Football remontant les events avec ~1min de délai, on ne peut PAS l'utiliser comme déclencheur principal — le mode communautaire reste donc le SEUL moyen d'ouvrir des markets en temps utile. Solution : adapter le seuil à l'audience réelle du match.
+
+- [ ] **Q1 : Compteur d'audience temps réel par match**
+  - _Action 1 :_ Créer la migration `supabase/migrations/0078_match_active_users.sql`. Ajouter une table `match_presence` (`match_id UUID`, `user_id UUID`, `last_seen_at TIMESTAMPTZ DEFAULT now()`, PRIMARY KEY (`match_id`, `user_id`)). RLS ouverte en SELECT (la donnée est publique, c'est juste un compteur), INSERT/UPDATE limité à `auth.uid() = user_id`. Index sur (`match_id`, `last_seen_at DESC`).
+  - _Action 2 :_ Créer une fonction RPC `count_active_users_on_match(p_match_id UUID, p_window_minutes INT DEFAULT 5)` qui retourne le nombre d'users avec `last_seen_at > now() - p_window_minutes minutes`. SECURITY DEFINER, accessible par l'`anon` client.
+  - _Action 3 :_ Côté client, dans `LiveRoom.tsx`, créer un hook `useMatchPresence(matchId)` qui ping un upsert `match_presence` toutes les 60s tant que la salle est ouverte (cleanup au démontage).
+  - _Action 4 :_ Cron `supabase/migrations/0078_match_active_users.sql` : ajouter aussi un cron Postgres (ou via Vercel cron) qui purge les rows `last_seen_at < now() - 1 hour` pour éviter le ballonnement.
+
+- [ ] **Q2 : Constante de seuil dynamique**
+  - _Action 1 :_ Dans `src/lib/constants/alert.ts`, remplacer la constante fixe `MIN_SIGNALS_TO_TRIGGER` par une fonction `getRequiredSignals(activeUsersCount: number): number` :
+    ```ts
+    if (activeUsersCount <= 5) return 1; // Mode "amorçage" — un seul signal suffit
+    if (activeUsersCount <= 20) return 2;
+    if (activeUsersCount <= 100) return 3;
+    return 5; // Anti-spam sur les très gros matchs
+    ```
+  - _Action 2 :_ Dans `src/app/api/alert/route.ts`, après la réception d'un signal, appeler `count_active_users_on_match(matchId)` puis `getRequiredSignals(count)` AVANT de comparer avec le total des signaux courants (et non plus la constante figée).
+  - _Action 3 :_ Logger en console (et idéalement en table `alert_logs` si elle existe déjà, sinon `console.info`) : `[ALERT] Match ${matchId} — audience: ${count}, seuil: ${required}, signals: ${current}`. Sera utile pour tuner après le lancement.
+
+- [ ] **Q3 : Affichage de l'audience dans la LiveRoom**
+  - _Action 1 :_ Dans `LiveRoom.tsx`, afficher dans le header du match un petit badge "👁️ {count} dans le stade" (rafraîchi toutes les 30s via Realtime ou polling). Ce badge a une vertu psychologique forte : sentir qu'on est plusieurs déclenche le réflexe de signaler.
+  - _Action 2 :_ Si `count >= 5`, badge en jaune `whistle` ; si `< 5`, badge en gris discret avec "Sois le premier à alerter ⚡" en infobulle au tap.
+  - _Action 3 :_ Quand l'utilisateur signale une action (action drawer), afficher "Signal envoyé — {current_signals}/{required_signals} pour ouvrir le pari" pour rendre le mécanisme transparent.
+
+- [ ] **Q4 : Mise à jour de la page Règles et de la landing**
+  - _Action 1 :_ Dans `src/app/(app)/rules/page.tsx`, mettre à jour la section "Comment fonctionnent les paris VAR" pour expliquer le seuil dynamique : "Plus il y a de monde sur le match, plus il faut de signaux pour ouvrir un pari (anti-spam). Sur les petits matchs, un seul signalement suffit pour réveiller la communauté."
+  - _Action 2 :_ Dans la landing `src/app/page.tsx`, dans la section "Comment ça marche" ou équivalente, renforcer le pitch communautaire avec une nouvelle accroche du type : "Tu vois la VAR avant la TV. Toi et la communauté décidez, ensemble, en direct."
+  - _Action 3 :_ Vérifier qu'aucune mention de seuil fixe (genre "il faut 3 signalements") ne traîne dans le contenu marketing.
+
+---
+
+### 💰 Sprint Eco-1 : SAISONS MENSUELLES — "Reset, fresh start, hype mensuel"
+
+> **Contexte stratégique :** Sans saisons, l'économie des Sifflets s'inflate sans contrôle (les vieux comptes deviennent intouchables, les nouveaux n'ont aucune chance). Le reset mensuel crée un événement de ré-engagement régulier ("Saison VAR de Mai", "Champion d'avril archivé"), donne une chance à tous, et permet de communiquer chaque 1er du mois (newsletter, push, social). C'est la base de toute économie virtuelle saine (cf. MPG, Fortnite, Sorare).
+
+- [ ] **Eco1-1 : Modèle de saison en base**
+  - _Action 1 :_ Créer `supabase/migrations/0079_seasons.sql`. Ajouter une table `seasons` (`id UUID PK`, `slug TEXT UNIQUE` ex: `2026-05`, `label TEXT` ex: `Saison de Mai 2026`, `starts_at TIMESTAMPTZ`, `ends_at TIMESTAMPTZ`, `is_current BOOLEAN`, `created_at`).
+  - _Action 2 :_ Ajouter sur `profiles` les colonnes `season_points INT DEFAULT 0` (points de la saison courante, reset chaque mois) et `current_season_id UUID REFERENCES seasons(id)`.
+  - _Action 3 :_ Ajouter une table `season_archives` (`user_id UUID`, `season_id UUID`, `final_rank INT`, `final_points INT`, `final_rank_label TEXT` ex: "Champion", "Top 10", `archived_at TIMESTAMPTZ`, PK (`user_id`, `season_id`)). Cette table conserve l'historique pour toujours.
+  - _Action 4 :_ Insérer la saison courante en seed : `('2026-05', 'Saison de Mai 2026', '2026-05-01 00:00 Europe/Paris', '2026-05-31 23:59 Europe/Paris', true)`.
+
+- [ ] **Eco1-2 : RPC de bascule de saison**
+  - _Action 1 :_ Créer la RPC `transition_season()` (SECURITY DEFINER, `service_role` only) qui :
+    1. Identifie la saison courante (`is_current = true`)
+    2. Snapshot tous les profils dans `season_archives` (rank par `season_points`, label "Champion" pour le 1er, "Top 3" pour 2-3, "Top 10" pour 4-10, "Participant" sinon)
+    3. **Reporte 10% des `season_points` arrondis vers le bas** dans le nouveau `season_points` (l'utilisateur ne perd pas tout, juste 90%)
+    4. Marque l'ancienne saison `is_current = false`, crée la nouvelle saison du mois suivant avec `is_current = true`
+    5. Update tous les profils avec le nouveau `current_season_id`
+  - _Action 2 :_ Adapter la logique de gain de points existante (RPCs `resolve_event_parimutuel`, `resolve_match_pronos`, `claim_daily_streak`) pour incrémenter À LA FOIS `lifetime_points_earned` (immuable) ET `season_points` (saisonnier). `sifflets_balance` reste indépendant — c'est le solde dépensable, pas le ranking.
+  - _Important :_ `lifetime_points_earned` ne se reset JAMAIS (leaderboard global = "Hall of Fame"). Le ranking saisonnier utilise `season_points`.
+
+- [ ] **Eco1-3 : Cron mensuel**
+  - _Action 1 :_ Créer `src/app/api/cron/transition-season/route.ts` qui appelle la RPC `transition_season()`. Protéger avec `CRON_SECRET`.
+  - _Action 2 :_ Ajouter dans `vercel.json` (ou la config cron Vercel équivalente) un job `cron: "0 0 1 * *"` (1er du mois à 00:00 UTC) pointant vers cette route. Note : Vercel fait du UTC — comme ton "jour Paris" est UTC-4h (cf. `paris-day.ts`), la bascule sera donc à 02:00 Paris le 1er. Acceptable.
+  - _Action 3 :_ Logger l'exécution dans une table `cron_logs` (si elle n'existe pas, la créer) pour audit.
+
+- [ ] **Eco1-4 : UI de la saison courante**
+  - _Action 1 :_ Créer un composant `SeasonBadge.tsx` qui affiche en haut du Profil et du Leaderboard : "🏆 Saison de Mai 2026 — J-X jours". Calcule les jours restants côté client.
+  - _Action 2 :_ Adapter `LeaderboardClient.tsx` (Stade > Classement global) : le leaderboard "actuel" trie par `season_points`, un onglet "Hall of Fame" trie par `lifetime_points_earned` (le classement perpétuel).
+  - _Action 3 :_ Adapter `SquadLeaderboard.tsx` : le filtre "Général" devient "Saison courante" (tri par `season_points`), conserver "Mois" et "Semaine" comme avant.
+  - _Action 4 :_ Sur la page Profil, ajouter une section "🏅 Mes saisons" affichant les `season_archives` de l'utilisateur (3 dernières par défaut, "Voir tout" pour la suite). Un trophée d'or si `final_rank == 1`, argent si Top 3, bronze si Top 10.
+
+- [ ] **Eco1-5 : Communication de la bascule**
+  - _Action 1 :_ Le 1er du mois, déclencher un push notification à tous les utilisateurs ayant `season_points > 0` sur la saison écoulée : "🏆 La Saison de Mai est terminée ! Tu finis {final_rank_label} avec {final_points} pts. La Saison de Juin commence MAINTENANT."
+  - _Action 2 :_ Sur le **3 derniers jours** de chaque saison, afficher une bannière permanente sur la home : "⏰ La saison se termine dans X jours — donne tout pour ton classement final !"
+  - _Action 3 :_ **Mise à jour de la page Règles** (`src/app/(app)/rules/page.tsx`) : ajouter une section "🗓️ Saisons" expliquant : "Tous les 1ers du mois, le classement saisonnier est figé et archivé. Les Sifflets gagnés sont reportés à 10% pour donner à tous une chance de briller chaque mois. Ton total de points cumulés, lui, n'est jamais effacé — il alimente ton 'Hall of Fame' personnel."
+  - _Action 4 :_ **Mise à jour de la landing** (`src/app/page.tsx`) : ajouter dans la section "Progression des rangs" (déjà en position 2 depuis UX1-4) un bloc "🗓️ Saisons mensuelles — Chaque mois, un nouveau champion couronné. Tu démarres avec une vraie chance, peu importe quand tu rejoins."
+
+---
+
+### 🛒 Sprint Eco-2 : BOUTIQUE COSMÉTIQUE — "Le premier puits"
+
+> **Contexte stratégique :** Sans puits réel, les Sifflets s'accumulent et perdent leur valeur perçue. Une boutique de cosmétiques crée la première rareté désirable, brûle des Sifflets en circulation, et fait jouer le **collection effect** (moteur de rétention prouvé). Aucun achat avec de l'argent réel — uniquement des Sifflets. Cosmétique pur, pay-to-win impossible.
+
+- [ ] **Eco2-1 : Modèle de boutique en base**
+  - _Action 1 :_ Créer `supabase/migrations/0080_shop.sql`. Tables :
+    - `shop_items` (`id UUID PK`, `slug TEXT UNIQUE`, `category TEXT CHECK IN ('avatar','border','effect')`, `name TEXT`, `description TEXT`, `price_pts INT`, `unlock_rank TEXT NULLABLE` (ex: 'arbitre_elite' — alternative gratuite), `asset_url TEXT`, `is_active BOOLEAN`)
+    - `user_shop_inventory` (`user_id UUID`, `shop_item_id UUID`, `purchased_at`, `is_equipped BOOLEAN`, PK (`user_id`, `shop_item_id`))
+  - _Action 2 :_ Ajouter sur `profiles` : `equipped_avatar_id UUID NULLABLE`, `equipped_border_id UUID NULLABLE`, `equipped_effect_id UUID NULLABLE` (FKs vers `shop_items`).
+  - _Action 3 :_ Seed initial : 8 avatars (4 standards déblocables par rang, 4 premium achetables 1500-3000 pts), 4 bordures animées (3000-5000 pts), 3 effets de pari (500 pts/usage — voir Eco-3 pour la consommation).
+
+- [ ] **Eco2-2 : RPC d'achat**
+  - _Action 1 :_ RPC `purchase_shop_item(p_item_id UUID)` SECURITY DEFINER :
+    1. Vérifie que l'item est actif et que l'utilisateur n'est pas déjà propriétaire
+    2. Vérifie que `sifflets_balance >= price_pts`
+    3. Débite atomiquement `sifflets_balance` et insère la ligne dans `user_shop_inventory`
+    4. Retourne `{ ok: true, new_balance, item: {...} }` ou erreur structurée
+  - _Action 2 :_ RPC `equip_shop_item(p_item_id UUID)` qui met à jour la colonne `equipped_*_id` correspondante sur `profiles` (un seul item équipé par catégorie à la fois). Vérifie la propriété.
+  - _Action 3 :_ Routes API associées : `POST /api/shop/purchase`, `POST /api/shop/equip` — wrap des RPCs avec response `{ ok, data | error }`.
+
+- [ ] **Eco2-3 : UI Boutique**
+  - _Action 1 :_ Nouveau path `src/app/(app)/shop/page.tsx` accessible depuis le menu burger ("🛒 Boutique"). Pas dans la BottomNav (priorités).
+  - _Action 2 :_ 3 onglets : Avatars / Bordures / Effets. Chaque item = card avec preview visuelle, prix en pts, bouton "Acheter" (ou "Équipé ✓" si possédé et équipé, ou "Équiper" si possédé non équipé).
+  - _Action 3 :_ Sur les avatars **déblocables par rang ET achetables**, double affichage : "🔓 Débloqué automatiquement à Arbitre Élite — OU 1500 pts". L'utilisateur choisit sa porte.
+  - _Action 4 :_ Animation "🎉 +Avatar débloqué" + toast confettis lors d'un achat.
+  - _Action 5 :_ Section "Aperçu" en haut de la boutique qui montre le profil de l'utilisateur en live avec l'item survolé/sélectionné — feedback visuel immédiat.
+
+- [ ] **Eco2-4 : Application des cosmétiques équipés**
+  - _Action 1 :_ Dans `ProfileHeader.tsx`, lire `equipped_avatar_id`, `equipped_border_id`, charger les assets correspondants. Fallback sur l'avatar emoji par défaut si rien d'équipé.
+  - _Action 2 :_ Dans le leaderboard et les chats de ligue, afficher les bordures animées des autres utilisateurs (status flex visible socialement).
+  - _Action 3 :_ Pour les effets de pari (consommables) : voir Sprint Eco-3 (utilisation lors d'un pari).
+
+- [ ] **Eco2-5 : Pages Règles + Landing**
+  - _Action 1 :_ **Mise à jour Règles** : ajouter une section "🛒 Boutique" : "Dépense tes Sifflets pour personnaliser ton arbitre — avatars premium, bordures animées, effets de pari visibles par tous. Aucun achat avec de l'argent réel, jamais. Les Sifflets se gagnent uniquement en jouant."
+  - _Action 2 :_ **Mise à jour Landing** : ajouter dans la section progression / hero un visuel d'avatars premium ("Affiche ton style — collectionne avatars, bordures et effets exclusifs en jouant"). Conserver la mention "monnaie virtuelle, aucun argent réel" pour Apple.
+
+---
+
+### ⚡ Sprint Eco-3 : BOOSTERS CONSOMMABLES — "Power-ups stratégiques"
+
+> **Contexte stratégique :** Deuxième puits, mais aussi mécanique de jeu. Les boosters introduisent du choix tactique (« est-ce que je dépense mon double-XP sur ce match risqué ? »), brûlent des Sifflets, et créent du **moment de gloire shareable** quand un booster fait basculer un gain. Strict garde-fou : 1 booster max par pari, jamais d'achat en argent réel, jamais de booster qui modifie le résultat (uniquement la récompense).
+
+- [ ] **Eco3-1 : Modèle de boosters**
+  - _Action 1 :_ Créer `supabase/migrations/0081_boosters.sql`. Tables :
+    - `boosters_catalog` (`id UUID PK`, `slug TEXT UNIQUE`, `name TEXT`, `description TEXT`, `price_pts INT`, `effect_type TEXT CHECK IN ('double_xp','cote_plus','safety_net','vision')`, `effect_value JSONB`, `is_active BOOLEAN`)
+    - `user_boosters_inventory` (`id UUID PK`, `user_id UUID`, `booster_id UUID`, `acquired_at`, `consumed_at NULLABLE`, `consumed_on_event_id UUID NULLABLE`, `consumed_on_prono_id UUID NULLABLE`)
+  - _Action 2 :_ Ajouter sur `bets` et `pronos` : colonne `applied_booster_id UUID NULLABLE` pour traçabilité.
+  - _Action 3 :_ Seed initial :
+    - **Double XP** (300 pts) : prochain pari/prono gagnant → +100% sur les points
+    - **Cote+** (200 pts) : ta récompense potentielle est +20% (visible avant le pari)
+    - **Filet** (500 pts) : si tu perds, tu récupères 50% de la mise
+    - **Vision** (100 pts/match) : voir les pronos détaillés des amis sur ce match (sinon masqués cf. anti-triche)
+
+- [ ] **Eco3-2 : RPC d'achat et de consommation**
+  - _Action 1 :_ RPC `purchase_booster(p_booster_id UUID, p_quantity INT DEFAULT 1)` : débit atomique + insert dans `user_boosters_inventory` (quantity rows).
+  - _Action 2 :_ Étendre `place_bet` et `place_match_prono` pour accepter un paramètre optionnel `p_booster_id UUID`. Si fourni :
+    1. Vérifie que l'utilisateur possède ce booster non consommé
+    2. Marque le booster comme `consumed_at = now()` dans la même transaction
+    3. Stocke `applied_booster_id` sur le pari/prono
+  - _Action 3 :_ Étendre `resolve_event_parimutuel` et `resolve_match_pronos` pour appliquer l'effet du booster lors du calcul du gain :
+    - `double_xp` : `points_earned * 2`
+    - `cote_plus` : multiplicateur 1.2 sur le reward
+    - `safety_net` : si perdu, créditer 50% de la mise
+    - `vision` : pas de calcul, c'est un effet UI uniquement
+  - _Important :_ 1 seul booster par pari/prono. Garde-fou en base (CHECK ou trigger).
+
+- [ ] **Eco3-3 : UI de sélection du booster**
+  - _Action 1 :_ Dans `VotingModal.tsx` (paris VAR), ajouter sous le slider de mise une section "⚡ Utiliser un booster ?" avec une rangée horizontale de chips représentant les boosters possédés. Tap = sélection (un seul à la fois). État neutre = aucun booster.
+  - _Action 2 :_ Idem dans le composant de saisie de prono (`MatchPronoSheet` ou équivalent). Le booster s'applique au prono entier (1N2 + score exact).
+  - _Action 3 :_ Si l'inventaire est vide → CTA "Acheter des boosters" qui deep-link vers la boutique avec scroll sur l'onglet Boosters.
+  - _Action 4 :_ Affichage clair de l'effet anticipé : "Avec Double XP : tu gagnes potentiellement {x2} pts sur ce pari".
+
+- [ ] **Eco3-4 : Feedback de victoire boostée**
+  - _Action 1 :_ Lors de la résolution, si `applied_booster_id` était posé et que le pari/prono est gagné, déclencher un toast Sonner spécial : "💥 Booster {nom} activé — tu gagnes {x_amount} pts au lieu de {base_amount} !" avec une animation plus marquée (gradient pulse).
+  - _Action 2 :_ Stocker dans une table `booster_highlights` les 10 plus gros gains boostés du mois → exploités plus tard (sprint social) pour générer des stories de ligue type "💥 Cafoutch a explosé son booster Double XP : +1200 pts sur PSG-OM".
+
+- [ ] **Eco3-5 : Pages Règles + Landing**
+  - _Action 1 :_ **Mise à jour Règles** : nouvelle section "⚡ Boosters" listant les 4 boosters avec coût et effet en clair. Insister sur : "1 seul booster par pari maximum. Les boosters ne modifient PAS le résultat, seulement ta récompense. Aucun pay-to-win."
+  - _Action 2 :_ **Mise à jour Landing** : NE PAS mettre les boosters en avant sur la landing publique (risque de mauvaise perception "ils essaient de me faire payer"). Plutôt mentionner discrètement dans la section "Comment ça marche" : "Personnalise ta stratégie avec des boosters tactiques débloqués en jouant".
+
+---
+
+### 🎚️ Sprint Eco-4 : MISES MINIMUM SCALANTES — "Les riches doivent risquer"
+
+> **Contexte stratégique :** Sans mise minimum scalante, un utilisateur avec 50 000 Sifflets peut miser 5 pts par pari pour pas en perdre. Conséquence : les Sifflets s'accumulent, les paris perdent du sens, l'app devient ennuyeuse. La mise min scalante force les "riches" à brûler proportionnellement, sans punir les nouveaux. C'est aussi un signal de status (« mise min affichée = ton rang d'ancienneté »).
+
+- [ ] **Eco4-1 : Logique de mise min**
+  - _Action 1 :_ Créer `src/lib/economy/min-bet.ts` exportant :
+    ```ts
+    export function getMinBetForBalance(balance: number): number {
+      if (balance < 5_000) return 5;
+      if (balance < 20_000) return 50;
+      if (balance < 50_000) return 200;
+      if (balance < 100_000) return 500;
+      return 1_000;
+    }
+    ```
+  - _Action 2 :_ Garde-fou serveur : étendre `place_bet` (RPC) pour rejeter avec une erreur explicite `MIN_BET_NOT_REACHED` si `p_amount < getMinBetForBalance(profile.sifflets_balance)`. Tester unitairement avec Vitest dans `src/lib/__tests__/min-bet.test.ts`.
+
+- [ ] **Eco4-2 : UI dans la VotingModal**
+  - _Action 1 :_ Dans `VotingModal.tsx`, lire le solde courant et calculer la mise min via `getMinBetForBalance`. Afficher en sous-texte de la mise : "Mise minimum sur ton solde : {X} pts" (chalk subtil).
+  - _Action 2 :_ Le slider de mise commence à `getMinBetForBalance` (pas à 0). Les preset chips (rapides) doivent tous être ≥ ce min.
+  - _Action 3 :_ Si l'utilisateur tente de soumettre en dessous (cas edge, ne devrait pas arriver), toast d'erreur clair : "Sur ton solde, mise minimum : {X} pts."
+
+- [ ] **Eco4-3 : Communication transparente**
+  - _Action 1 :_ Sur la page Profil, dans la section Vestiaire, afficher discrètement "🎚️ Ta mise minimum : {X} pts" comme un trait de status (pas une punition).
+  - _Action 2 :_ Quand un utilisateur passe un palier (ex: solde de 4 800 → 5 100), déclencher un push notif gentil : "🎚️ Tu viens de passer un palier ! Ta mise minimum monte à 50 pts. Plus de risque, plus de gloire."
+
+- [ ] **Eco4-4 : Pages Règles + Landing**
+  - _Action 1 :_ **Mise à jour Règles** : nouvelle sous-section dans "Économie des Sifflets" : "🎚️ Mises minimum — Plus tu accumules, plus tes mises minimums montent. C'est un trait de status : les meilleurs prennent les plus gros risques. Liste des paliers : [tableau]."
+  - _Action 2 :_ Ne **PAS** mettre sur la landing (sujet trop technique pour un nouveau visiteur, et négatif présenté hors contexte).
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -363,6 +363,20 @@ export function MatchLobby({
 
   const roundView = viewMode === "round" && roundContext != null;
 
+  // Auto-switch away from empty "Direct" tab on first render
+  const hasAutoSwitched = useRef(false);
+  useEffect(() => {
+    if (
+      !hasAutoSwitched.current &&
+      tab === "direct" &&
+      directRows.length === 0 &&
+      !roundView
+    ) {
+      hasAutoSwitched.current = true;
+      setTab(TABS[1]?.id ?? "l1");
+    }
+  }, [directRows.length, tab, roundView]);
+
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12 text-center text-sm text-zinc-400">
@@ -426,7 +440,7 @@ export function MatchLobby({
           ))}
         </nav>
         <div
-          className="pointer-events-none absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-zinc-950 to-transparent"
+          className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-zinc-950 to-transparent"
           aria-hidden
         />
       </div>
@@ -449,6 +463,20 @@ export function MatchLobby({
               <Target className="h-4 w-4" />
               Faire mes pronos
             </Link>
+            <div className="mt-2 flex w-full gap-2">
+              <Link
+                href="/leaderboard"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
+              >
+                🏆 Classement
+              </Link>
+              <Link
+                href="/ligues"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
+              >
+                🛡️ Mes ligues
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-10">

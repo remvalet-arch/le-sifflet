@@ -600,7 +600,7 @@ function MatchPronoCard({
                         {pts1}
                       </span>
                       <span className="text-[8px] text-zinc-600 leading-none">
-                        pts
+                        pts si ✓
                       </span>
                     </div>
                     <div
@@ -612,7 +612,7 @@ function MatchPronoCard({
                         {ptsN}
                       </span>
                       <span className="text-[8px] text-zinc-600 leading-none">
-                        pts
+                        pts si ✓
                       </span>
                     </div>
                     <div
@@ -624,29 +624,35 @@ function MatchPronoCard({
                         {pts2}
                       </span>
                       <span className="text-[8px] text-zinc-600 leading-none">
-                        pts
+                        pts si ✓
                       </span>
                     </div>
                   </div>
 
                   {/* Community Percentages */}
-                  <div className="flex items-center justify-center gap-1.5 mt-1 opacity-75">
-                    <div className="min-w-[2.5rem] text-center">
-                      <span className="text-[10px] font-medium text-zinc-500">
-                        {match.community_stats?.community_1_pct ?? 0}%
-                      </span>
+                  {(match.community_stats?.total_pronos ?? 0) >= 10 ? (
+                    <div className="flex items-center justify-center gap-1.5 mt-1 opacity-75">
+                      <div className="min-w-[2.5rem] text-center">
+                        <span className="text-[10px] font-medium text-zinc-500">
+                          {match.community_stats?.community_1_pct ?? 0}%
+                        </span>
+                      </div>
+                      <div className="min-w-[2.5rem] text-center">
+                        <span className="text-[10px] font-medium text-zinc-500">
+                          {match.community_stats?.community_N_pct ?? 0}%
+                        </span>
+                      </div>
+                      <div className="min-w-[2.5rem] text-center">
+                        <span className="text-[10px] font-medium text-zinc-500">
+                          {match.community_stats?.community_2_pct ?? 0}%
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-[2.5rem] text-center">
-                      <span className="text-[10px] font-medium text-zinc-500">
-                        {match.community_stats?.community_N_pct ?? 0}%
-                      </span>
-                    </div>
-                    <div className="min-w-[2.5rem] text-center">
-                      <span className="text-[10px] font-medium text-zinc-500">
-                        {match.community_stats?.community_2_pct ?? 0}%
-                      </span>
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="mt-1 text-center text-[10px] font-black text-amber-400">
+                      ⚡ Sois le premier à pronostiquer
+                    </p>
+                  )}
                 </>
               );
             })()}

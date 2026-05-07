@@ -17,7 +17,7 @@
 
 **Monnaie interne :** "Sifflets" (points fictifs). Aucune monnaie réelle, aucun gain pécuniaire.
 
-**URL de déploiement :** Vercel (domaine VARTIME.* non encore acheté — déployé provisoirement sous un domaine Vercel automatique).
+**URL de déploiement :** Vercel (domaine VARTIME.\* non encore acheté — déployé provisoirement sous un domaine Vercel automatique).
 
 ---
 
@@ -26,6 +26,7 @@
 **Pourquoi ce projet :** Combler le vide entre regarder un match en direct et une app de paris fictifs sociale. La mécanique d'alerte communautaire (type Waze) sur les actions VAR / penalties / cartons est le cœur de différenciation : les utilisateurs "signalent" une action, et si suffisamment de signaux arrivent → un événement de marché s'ouvre, et tout le monde a 90 secondes pour parier OUI ou NON.
 
 **Historique des décisions clés (déductible des commits/migrations) :**
+
 - Sprints 1-6 : socle auth Google, lobby matchs, live room, alertes communautaires, système de paris parimutuel, résolution auto + admin.
 - Sprint 7 / "G" : Mode Championnat 1v1 en ligue (squads persistantes, `game_mode = braquage` ou `classic`).
 - Sprint 8 : Pronos avant match (score exact + buteurs + Bunker 0-0), Push notifications VAPID, Contre-Pied bonus.
@@ -40,27 +41,27 @@
 
 ### Fonctionnalités existantes et fonctionnelles
 
-| Domaine | Fonctionnalité | État |
-|---------|---------------|------|
-| **Auth** | Google OAuth PKCE, profil auto-créé au signup | ✅ |
-| **Lobby** | Liste matchs du jour (jour "Paris" = UTC-4h), filtres par championnat, groupés par ligue | ✅ |
-| **Live Room** | Onglets Kop / Compo / Pronos (ou Stats), Realtime Supabase | ✅ |
-| **Alertes** | Signaux communautaires Waze → market_event si seuil atteint, cooldown 15s | ✅ |
-| **Paris VAR** | Fenêtre 90s, cotes parimutuel en temps réel, slider + presets, résolution auto + admin | ✅ |
-| **Braquage** | Mode ligue : mise commune intra-squad, redistribution entre membres | ✅ |
-| **Pronos avant match** | Score exact + buteurs (allocation) + Bunker 0-0 ; verrouillés 45 min avant KO | ✅ |
-| **Résolution** | Auto via sync API-Football (fin de match) + admin manuel | ✅ |
-| **Ligues (Squads)** | Création, rejoindre (code d'invitation), quitter, classement XP+Pts, chat | ✅ |
-| **Mode Championnat** | Round-robin automatique, journées aller+retour, résolution hebdo | ✅ |
-| **Profil** | Solde, win rate, historique paris VAR + pronos, badges, trust score, amis | ✅ |
-| **Trust Score** | +2 pts alerte vraie / -5 fake ; grade d'Arbitre affiché | ✅ |
-| **Push VAPID** | Alertes VAR, nudge pronos (squad), fin de match | ✅ (infra OK, résolution post-match manquante) |
-| **Streak quotidien** | Récompense connexion journalière, base badge "Fidèle au Poste" | ✅ (migration OK, badge non encore déclenché) |
-| **Leaderboard** | Global (lifetime points) + mensuel ; leaderboard par ligue | ✅ |
-| **Hub stats ligue** | Classements, buteurs, passeurs (API-Football) dans le lobby | ✅ |
-| **PWA** | Service Worker, manifest, install prompt, offline.html | ✅ |
-| **Pages légales** | CGU, mentions légales, privacy policy, règles du jeu, lois IFAB | ✅ |
-| **Tests** | E2E Playwright (connexion, prono, Bunker 0-0, profil) + tests unitaires vitest + CI GitHub Actions | ✅ |
+| Domaine                | Fonctionnalité                                                                                     | État                                           |
+| ---------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Auth**               | Google OAuth PKCE, profil auto-créé au signup                                                      | ✅                                             |
+| **Lobby**              | Liste matchs du jour (jour "Paris" = UTC-4h), filtres par championnat, groupés par ligue           | ✅                                             |
+| **Live Room**          | Onglets Kop / Compo / Pronos (ou Stats), Realtime Supabase                                         | ✅                                             |
+| **Alertes**            | Signaux communautaires Waze → market_event si seuil atteint, cooldown 15s                          | ✅                                             |
+| **Paris VAR**          | Fenêtre 90s, cotes parimutuel en temps réel, slider + presets, résolution auto + admin             | ✅                                             |
+| **Braquage**           | Mode ligue : mise commune intra-squad, redistribution entre membres                                | ✅                                             |
+| **Pronos avant match** | Score exact + buteurs (allocation) + Bunker 0-0 ; verrouillés 45 min avant KO                      | ✅                                             |
+| **Résolution**         | Auto via sync API-Football (fin de match) + admin manuel                                           | ✅                                             |
+| **Ligues (Squads)**    | Création, rejoindre (code d'invitation), quitter, classement XP+Pts, chat                          | ✅                                             |
+| **Mode Championnat**   | Round-robin automatique, journées aller+retour, résolution hebdo                                   | ✅                                             |
+| **Profil**             | Solde, win rate, historique paris VAR + pronos, badges, trust score, amis                          | ✅                                             |
+| **Trust Score**        | +2 pts alerte vraie / -5 fake ; grade d'Arbitre affiché                                            | ✅                                             |
+| **Push VAPID**         | Alertes VAR, nudge pronos (squad), fin de match                                                    | ✅ (infra OK, résolution post-match manquante) |
+| **Streak quotidien**   | Récompense connexion journalière, base badge "Fidèle au Poste"                                     | ✅ (migration OK, badge non encore déclenché)  |
+| **Leaderboard**        | Global (lifetime points) + mensuel ; leaderboard par ligue                                         | ✅                                             |
+| **Hub stats ligue**    | Classements, buteurs, passeurs (API-Football) dans le lobby                                        | ✅                                             |
+| **PWA**                | Service Worker, manifest, install prompt, offline.html                                             | ✅                                             |
+| **Pages légales**      | CGU, mentions légales, privacy policy, règles du jeu, lois IFAB                                    | ✅                                             |
+| **Tests**              | E2E Playwright (connexion, prono, Bunker 0-0, profil) + tests unitaires vitest + CI GitHub Actions | ✅                                             |
 
 ### Fonctionnalités planifiées (backlog)
 
@@ -85,24 +86,24 @@
 
 ### Stack
 
-| Couche | Choix | Version |
-|--------|-------|---------|
-| Framework | **Next.js** (App Router) | 16.2.3 |
-| UI | **React** | 19.2.4 |
-| Styling | **Tailwind CSS v4** + `lucide-react` | ^4 |
-| Toasts | `sonner` | ^2.0.7 |
-| Auth & DB | **Supabase** (`@supabase/ssr`) | ^0.10.2 |
-| Realtime | Supabase Realtime (WebSocket) | — |
-| Données live | **API-Football** (api-sports.io v3) | — |
-| Données cosmétiques | **TheSportsDB** | — |
-| Tabs UI | `@radix-ui/react-tabs` | ^1.1.13 |
-| Dates | `date-fns` | ^4.1.0 |
-| Push | `web-push` (VAPID) | ^3.6.7 |
-| i18n | `next-intl` (non branché) | ^4.11.0 |
-| Tests E2E | `@playwright/test` | ^1.59.1 |
-| Tests unitaires | `vitest` | ^4.1.5 |
-| Déploiement | **Vercel** | — |
-| Langage | **TypeScript** | ^5 |
+| Couche              | Choix                                | Version |
+| ------------------- | ------------------------------------ | ------- |
+| Framework           | **Next.js** (App Router)             | 16.2.3  |
+| UI                  | **React**                            | 19.2.4  |
+| Styling             | **Tailwind CSS v4** + `lucide-react` | ^4      |
+| Toasts              | `sonner`                             | ^2.0.7  |
+| Auth & DB           | **Supabase** (`@supabase/ssr`)       | ^0.10.2 |
+| Realtime            | Supabase Realtime (WebSocket)        | —       |
+| Données live        | **API-Football** (api-sports.io v3)  | —       |
+| Données cosmétiques | **TheSportsDB**                      | —       |
+| Tabs UI             | `@radix-ui/react-tabs`               | ^1.1.13 |
+| Dates               | `date-fns`                           | ^4.1.0  |
+| Push                | `web-push` (VAPID)                   | ^3.6.7  |
+| i18n                | `next-intl` (non branché)            | ^4.11.0 |
+| Tests E2E           | `@playwright/test`                   | ^1.59.1 |
+| Tests unitaires     | `vitest`                             | ^4.1.5  |
+| Déploiement         | **Vercel**                           | —       |
+| Langage             | **TypeScript**                       | ^5      |
 
 ### Structure des dossiers
 
@@ -197,6 +198,7 @@ le-sifflet/
 **Supabase (PostgreSQL)** — 77 migrations versionnées.
 
 Tables principales :
+
 - `profiles` — utilisateurs (solde `sifflets_balance`, `xp`, `rank`, `trust_score`, `lifetime_points_earned`, `login_streak`)
 - `matches` — matchs (statut, scores, `start_time`, `has_lineups`, `alert_cooldown_until`)
 - `market_events` — événements à parier (type, statut `open/locked/closed/resolved`, résultat)
@@ -214,14 +216,14 @@ Tables principales :
 
 ### Services externes
 
-| Service | Usage | Clé env |
-|---------|-------|---------|
-| Supabase | Auth, DB, Realtime | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
-| API-Football (api-sports.io) | Données live : fixtures, events, lineups, stats, odds | `API_FOOTBALL_KEY` |
-| TheSportsDB | Assets cosmétiques (logos équipes, compétitions) | `THESPORTSDB_API_KEY` |
-| Google OAuth | Authentification | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` |
-| VAPID (Web Push) | Notifications push | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CONTACT` |
-| Vercel | Déploiement + Cron jobs | `CRON_SECRET` |
+| Service                      | Usage                                                 | Clé env                                                                                  |
+| ---------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Supabase                     | Auth, DB, Realtime                                    | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
+| API-Football (api-sports.io) | Données live : fixtures, events, lineups, stats, odds | `API_FOOTBALL_KEY`                                                                       |
+| TheSportsDB                  | Assets cosmétiques (logos équipes, compétitions)      | `THESPORTSDB_API_KEY`                                                                    |
+| Google OAuth                 | Authentification                                      | `NEXT_PUBLIC_GOOGLE_CLIENT_ID`                                                           |
+| VAPID (Web Push)             | Notifications push                                    | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CONTACT`                     |
+| Vercel                       | Déploiement + Cron jobs                               | `CRON_SECRET`                                                                            |
 
 ---
 
@@ -246,16 +248,16 @@ Tables principales :
 
 ### Points d'attention / incomplets
 
-| Sujet | Détail |
-|-------|--------|
-| **Push post-résolution** | Les gagnants/perdants ne reçoivent pas de notif après résolution VAR ni après `resolve_match_pronos` — frein rétention #1 |
-| **Badge "Fidèle au Poste"** | Migration `0065` OK, mais `checkAndUnlockBadges` n'a pas encore le case `login_streak_3` |
-| **Migrations non appliquées en prod** | Vérifier que `0062` → `0077` sont toutes appliquées dans le SQL Editor Supabase |
-| **`long_term_bets` legacy** | Table encore en base (plus d'UI), à dropper si 0 ligne |
-| **Fichiers orphelins** | ~22 fichiers `test-*.js` / `fix-ts.js` à la racine du projet |
-| **i18n** | Fichiers `messages/` et infra `next-intl` présents mais non branchés |
-| **Capacitor** | Non démarré (Cap-1 à Cap-6 dans TASKS.md) |
-| **Temps de chargement** | Signalé par l'utilisateur — suspect : requêtes Supabase non parallélisées sur certaines pages, images non optimisées |
+| Sujet                                 | Détail                                                                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Push post-résolution**              | Les gagnants/perdants ne reçoivent pas de notif après résolution VAR ni après `resolve_match_pronos` — frein rétention #1 |
+| **Badge "Fidèle au Poste"**           | Migration `0065` OK, mais `checkAndUnlockBadges` n'a pas encore le case `login_streak_3`                                  |
+| **Migrations non appliquées en prod** | Vérifier que `0062` → `0077` sont toutes appliquées dans le SQL Editor Supabase                                           |
+| **`long_term_bets` legacy**           | Table encore en base (plus d'UI), à dropper si 0 ligne                                                                    |
+| **Fichiers orphelins**                | ~22 fichiers `test-*.js` / `fix-ts.js` à la racine du projet                                                              |
+| **i18n**                              | Fichiers `messages/` et infra `next-intl` présents mais non branchés                                                      |
+| **Capacitor**                         | Non démarré (Cap-1 à Cap-6 dans TASKS.md)                                                                                 |
+| **Temps de chargement**               | Signalé par l'utilisateur — suspect : requêtes Supabase non parallélisées sur certaines pages, images non optimisées      |
 
 ---
 
@@ -328,15 +330,15 @@ npm run test:backend # Simulation scénario match (scripts/simulate-match-scenar
 
 ### Décisions techniques importantes
 
-| Décision | Justification |
-|----------|---------------|
-| `service_role` pour les agrégations multi-users | RLS filtre silencieusement les données des autres users — sans admin client, les classements de ligue affichent tout le monde à 0 |
-| RPCs PostgreSQL SECURITY DEFINER | Opérations atomiques (débit + insert) impossibles à sécuriser depuis le client |
-| `REPLICA IDENTITY FULL` obligatoire | Sans ça, Supabase Realtime droppe silencieusement les événements pour les clients qui filtrent hors PK |
-| Objet JS brut (pas stringify) pour les JSONB RPC | Le client Supabase sérialise en JSONB — `JSON.stringify` double avant cause des erreurs silencieuses de cast |
-| Jour "Paris" (UTC-4h) dans le lobby | Évite la coupure à minuit UTC (les matchs du soir à 23h UTC appartiennent au "jour du lendemain" côté UTC mais au même jour côté Paris) |
-| `admin` client dans `/api/squads/[squadId]` | Le classement ligue doit voir les paris/pronos de TOUS les membres, pas seulement ceux de l'utilisateur courant |
-| `Date.now()` dans `useState`, pas dans le scope principal | React 19 est ultra-strict sur la pureté des composants |
+| Décision                                                  | Justification                                                                                                                           |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `service_role` pour les agrégations multi-users           | RLS filtre silencieusement les données des autres users — sans admin client, les classements de ligue affichent tout le monde à 0       |
+| RPCs PostgreSQL SECURITY DEFINER                          | Opérations atomiques (débit + insert) impossibles à sécuriser depuis le client                                                          |
+| `REPLICA IDENTITY FULL` obligatoire                       | Sans ça, Supabase Realtime droppe silencieusement les événements pour les clients qui filtrent hors PK                                  |
+| Objet JS brut (pas stringify) pour les JSONB RPC          | Le client Supabase sérialise en JSONB — `JSON.stringify` double avant cause des erreurs silencieuses de cast                            |
+| Jour "Paris" (UTC-4h) dans le lobby                       | Évite la coupure à minuit UTC (les matchs du soir à 23h UTC appartiennent au "jour du lendemain" côté UTC mais au même jour côté Paris) |
+| `admin` client dans `/api/squads/[squadId]`               | Le classement ligue doit voir les paris/pronos de TOUS les membres, pas seulement ceux de l'utilisateur courant                         |
+| `Date.now()` dans `useState`, pas dans le scope principal | React 19 est ultra-strict sur la pureté des composants                                                                                  |
 
 ### Ce qu'il faut ÉVITER (pièges connus)
 
@@ -358,22 +360,26 @@ npm run test:backend # Simulation scénario match (scripts/simulate-match-scenar
 Audit UX visuel complet basé sur 27 captures d'écran de l'app. Corrections apportées :
 
 **Identité & Landing (UX1)**
+
 - Unification de la marque "VAR TIME" sur toute la landing (remplacement de "Le Sifflet")
 - Boutons App Store passés en `disabled` + `cursor-not-allowed` (cohérence "bientôt disponible")
 - Section "Progression des rangs" remontée en position 2 (meilleur hook de rétention)
 
 **Navigation & Affordances (UX2)**
+
 - Gradient fade sur les tabs scrollables (lobby, profil) pour indiquer le scroll horizontal
 - Bouton retour renommé "← Matchs" (au lieu de "← Terrain")
 - Correction "VS" avec espace parasite dans le Scoreboard
 - Inputs de score pronos : placeholder "?", fontSize 16px (anti-zoom iOS)
 
 **Empty States & Feedback (UX3)**
+
 - SquadChat : empty state engageant "Soyez les premiers !"
 - MatchTimeline à venir : countdown + CTA "Voir la Compo"
 - AmisContent : barre de recherche par pseudo avec ajout en ligne
 
 **Lisibilité & Hiérarchie (UX4)**
+
 - MatchFilterBar : correction "Dem." → jour réel + badge "Demain"
 - Cotes Pronos : micro-label "pts" sous chaque valeur
 - Historique profil : "Score exact" → "Mon prono"

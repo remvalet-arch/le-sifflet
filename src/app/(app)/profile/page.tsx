@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
 import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
 import { ProfileClient } from "@/components/profile/ProfileClient";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import type {
   ShortBetEntry,
   PronoEntry,
@@ -299,19 +298,6 @@ export default async function ProfilePage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
 
-      <ProfileHeader
-        username={profile?.username ?? "Joueur"}
-        avatarUrl={profile?.avatar_url ?? null}
-        favoriteTeam={favoriteTeam}
-        karma={karma}
-        rank={rank}
-        xpTotal={xpTotal}
-        balance={balance}
-        loginStreak={profile?.login_streak ?? 0}
-        lastLoginDate={profile?.last_login_date ?? null}
-        trustScore={trustScore}
-      />
-
       <ProfileClient
         shortBets={shortEntries}
         pronos={pronoEntries}
@@ -335,6 +321,14 @@ export default async function ProfilePage() {
         isModerateur={trustScore >= MODERATOR_THRESHOLD}
         scoreAccuracy={scoreAccuracy}
         totalMatchesPronoed={totalMatchesPronoed}
+        headerUsername={profile?.username ?? "Joueur"}
+        headerAvatarUrl={profile?.avatar_url ?? null}
+        headerFavoriteTeam={favoriteTeam}
+        headerKarma={karma}
+        headerRank={rank}
+        headerBalance={balance}
+        headerLoginStreak={profile?.login_streak ?? 0}
+        headerLastLoginDate={profile?.last_login_date ?? null}
       />
     </main>
   );

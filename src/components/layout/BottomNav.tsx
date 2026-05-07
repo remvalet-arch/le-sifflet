@@ -6,10 +6,19 @@ import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLiveRoom } from "@/contexts/LiveRoomContext";
 
+function useLikelyLiveHour(): boolean {
+  const h = new Date().getHours();
+  const day = new Date().getDay(); // 0=dim, 6=sam
+  const isWeekend = day === 0 || day === 6;
+  return isWeekend ? h >= 13 && h < 23 : h >= 18 && h < 23;
+}
+
 export function BottomNav() {
   const pathname = usePathname();
   const t = useTranslations("Navigation");
   const { drawerAvailable, openDrawer } = useLiveRoom();
+  const likelyLive = useLikelyLiveHour();
+  const isOnLobby = pathname === "/lobby" || pathname.startsWith("/lobby/");
 
   const isMatchPage = /^\/match\//.test(pathname);
   const fabActive = isMatchPage && drawerAvailable;
@@ -27,6 +36,7 @@ export function BottomNav() {
           Icon={Landmark}
           label={t("stade")}
           pathname={pathname}
+          liveIndicator={likelyLive && !isOnLobby}
         />
         <TabLink
           href="/pronos"
@@ -79,21 +89,31 @@ function TabLink({
   Icon,
   label,
   pathname,
+  liveIndicator = false,
 }: {
   href: string;
   Icon: React.ElementType;
   label: string;
   pathname: string;
+  liveIndicator?: boolean;
 }) {
   const isActive = pathname === href || pathname.startsWith(href + "/");
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors active:scale-95 ${
+      className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors active:scale-95 ${
         isActive ? "text-green-500" : "text-zinc-500 hover:text-zinc-300"
       }`}
     >
-      <Icon className="h-5 w-5" />
+      <span className="relative inline-flex">
+        <Icon className="h-5 w-5" />
+        {liveIndicator && (
+          <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+          </span>
+        )}
+      </span>
       <span>{label}</span>
     </Link>
   );

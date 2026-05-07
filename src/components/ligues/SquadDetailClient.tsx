@@ -242,7 +242,7 @@ export function SquadDetailClient({
           <p className="flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
             <span className="inline-flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-xl border border-green-500/20">
               <Wallet className="h-4 w-4" aria-hidden />
-              XP total :{" "}
+              Points cumulés :{" "}
               <span className="font-black tabular-nums">
                 {total_xp_earned.toLocaleString("fr-FR")} Pts
               </span>

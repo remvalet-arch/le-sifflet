@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TrophyWall } from "./TrophyWall";
+import { ProfileHeader } from "./ProfileHeader";
 import type { BadgeRow, BetStatus, MarketEventType } from "@/types/database";
 import { Lock, Shield, Target, TrendingUp, Trophy, Zap } from "lucide-react";
 
@@ -40,6 +41,8 @@ export type PronoEntry = {
   startTime?: string;
 };
 
+type TeamInfo = { id: string; name: string; logo_url: string | null } | null;
+
 type Props = {
   shortBets: ShortBetEntry[];
   pronos: PronoEntry[];
@@ -56,6 +59,15 @@ type Props = {
   isModerateur: boolean;
   scoreAccuracy: number | null;
   totalMatchesPronoed: number;
+  // Header data (optional — absent sur les profils d'autres joueurs)
+  headerUsername?: string;
+  headerAvatarUrl?: string | null;
+  headerFavoriteTeam?: TeamInfo;
+  headerRank?: { emoji: string; label: string };
+  headerBalance?: number;
+  headerLoginStreak?: number;
+  headerLastLoginDate?: string | null;
+  headerKarma?: { emoji: string; label: string; cls: string };
 };
 
 const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -133,18 +145,32 @@ export function ProfileClient({
   winRate,
   totalBets,
   totalEarned,
+  xpTotal,
   bestStreak,
+  trustScore,
   isModerateur,
   scoreAccuracy,
   totalMatchesPronoed,
+  headerUsername,
+  headerAvatarUrl,
+  headerFavoriteTeam,
+  headerRank,
+  headerBalance,
+  headerLoginStreak,
+  headerLastLoginDate,
+  headerKarma,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabValue>("profil");
-  const varCount = shortBets.length;
-  const pronoCount = pronos.length;
+  const pendingPronoCount = pronos.filter((p) => p.status === "pending").length;
+  const pendingBetCount = shortBets.filter(
+    (b) => b.status === "pending",
+  ).length;
   const trophyCount = unlockedBadgeIds.length;
   const tabBadge = (value: TabValue): number | null => {
-    if (value === "historique")
-      return varCount + pronoCount > 0 ? varCount + pronoCount : null;
+    if (value === "historique") {
+      const pending = pendingPronoCount + pendingBetCount;
+      return pending > 0 ? pending : null;
+    }
     if (value === "badges") return trophyCount > 0 ? trophyCount : null;
     return null;
   };
@@ -163,7 +189,26 @@ export function ProfileClient({
         : "from-red-500/15 to-red-500/5 border-red-500/20";
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      {headerUsername != null &&
+        headerRank != null &&
+        headerBalance != null &&
+        headerAvatarUrl !== undefined && (
+          <ProfileHeader
+            username={headerUsername}
+            avatarUrl={headerAvatarUrl ?? null}
+            favoriteTeam={headerFavoriteTeam ?? null}
+            karma={headerKarma}
+            rank={headerRank}
+            xpTotal={xpTotal}
+            balance={headerBalance}
+            loginStreak={headerLoginStreak}
+            lastLoginDate={headerLastLoginDate}
+            trustScore={trustScore}
+            compact={activeTab !== "profil"}
+          />
+        )}
+
       <div className="relative">
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((tab) => {
@@ -185,9 +230,11 @@ export function ProfileClient({
                 {badge !== null && (
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-[8px] font-black ${
-                      isActive
-                        ? "bg-zinc-900 text-white"
-                        : "bg-zinc-700 text-zinc-400"
+                      tab.value === "historique"
+                        ? "bg-whistle text-pitch-900"
+                        : isActive
+                          ? "bg-zinc-900 text-white"
+                          : "bg-zinc-700 text-zinc-400"
                     }`}
                   >
                     {badge}
@@ -401,9 +448,22 @@ function buildMatchGroups(
     if (!g.lastBetAt || b.placed_at > g.lastBetAt) g.lastBetAt = b.placed_at;
   }
 
-  return [...map.values()].sort((a, b) =>
-    b.lastBetAt.localeCompare(a.lastBetAt),
-  );
+  const groups = [...map.values()];
+
+  // Resolved groups (at least one won/lost) first, then pending-only, chronologically desc within each tier
+  function resolvePriority(g: MatchGroup): number {
+    const all = [...g.pronos, ...g.varBets];
+    return all.some((b) => b.status === "won" || b.status === "lost") ? 0 : 1;
+  }
+
+  groups.sort((a, b) => {
+    const pa = resolvePriority(a);
+    const pb = resolvePriority(b);
+    if (pa !== pb) return pa - pb;
+    return b.lastBetAt.localeCompare(a.lastBetAt);
+  });
+
+  return groups;
 }
 
 function matchStatusBadge(status?: string, startTime?: string) {
@@ -439,6 +499,23 @@ function HistoriqueTab({
 }) {
   const groups = buildMatchGroups(pronos, shortBets);
 
+  // 7-day summary
+  // eslint-disable-next-line react-hooks/purity
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recentEntries = [...pronos, ...shortBets].filter(
+    (e) => new Date(e.placed_at).getTime() >= sevenDaysAgo,
+  );
+  const recentWon = recentEntries.filter((e) => e.status === "won").length;
+  const recentLost = recentEntries.filter((e) => e.status === "lost").length;
+  const recentPending = recentEntries.filter(
+    (e) => e.status === "pending",
+  ).length;
+  const recentPts = recentEntries.reduce(
+    (sum, e) =>
+      sum + (e.status === "won" ? (e as PronoEntry).points_earned || 0 : 0),
+    0,
+  );
+
   if (groups.length === 0) {
     return (
       <EmptyState emoji="📊" text="Aucun pari enregistré pour l'instant." />
@@ -447,6 +524,38 @@ function HistoriqueTab({
 
   return (
     <div className="flex flex-col gap-3">
+      {/* 7-day summary */}
+      {recentEntries.length > 0 && (
+        <div
+          className={`rounded-xl border px-4 py-3 ${recentPts >= 0 ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"}`}
+        >
+          <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+            📊 Tes 7 derniers jours
+          </p>
+          <p
+            className={`text-sm font-black ${recentPts >= 0 ? "text-green-400" : "text-red-400"}`}
+          >
+            {recentPts > 0 ? "+" : ""}
+            {recentPts.toLocaleString("fr-FR")} pts
+            {recentWon > 0 && (
+              <span className="ml-2 font-semibold text-zinc-400">
+                · {recentWon} gagné{recentWon > 1 ? "s" : ""}
+              </span>
+            )}
+            {recentLost > 0 && (
+              <span className="ml-1 font-semibold text-zinc-400">
+                · {recentLost} perdu{recentLost > 1 ? "s" : ""}
+              </span>
+            )}
+            {recentPending > 0 && (
+              <span className="ml-1 font-semibold text-zinc-400">
+                · {recentPending} en attente
+              </span>
+            )}
+          </p>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
         <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
         <p className="text-[11px] text-zinc-500">
@@ -461,11 +570,17 @@ function HistoriqueTab({
         const pendingCount = allBets.filter(
           (b) => b.status === "pending",
         ).length;
+        const hasResolved = wonCount > 0 || lostCount > 0;
+        const borderAccent = hasResolved
+          ? wonCount >= lostCount
+            ? "border-l-2 border-l-green-500"
+            : "border-l-2 border-l-red-500"
+          : "";
 
         return (
           <div
             key={g.matchId}
-            className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900"
+            className={`overflow-hidden rounded-2xl border border-white/8 bg-zinc-900 ${borderAccent}`}
           >
             {/* Match header */}
             <div className="flex items-center justify-between gap-2 border-b border-white/6 bg-zinc-800/60 px-4 py-3">

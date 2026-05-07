@@ -138,7 +138,7 @@ export function SquadLeaderboard({
                         : idx === 1
                           ? "bg-zinc-300 text-zinc-800 border-2 border-zinc-200 shadow-[0_0_10px_rgba(212,212,216,0.3)]"
                           : idx === 2
-                            ? "bg-amber-700 text-amber-100 border-2 border-amber-600 shadow-[0_0_10px_rgba(180,83,9,0.3)]"
+                            ? "bg-[#CD7F32] text-white border-2 border-[#A0522D] shadow-[0_0_10px_rgba(205,127,50,0.3)]"
                             : "bg-zinc-800 text-zinc-400"
                     }`}
                   >
