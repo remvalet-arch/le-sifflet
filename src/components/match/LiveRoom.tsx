@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Siren } from "lucide-react";
+import { Siren, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useLiveRoom } from "@/contexts/LiveRoomContext";
 import type {
   AlertActionType,
   BetRow,
@@ -136,9 +137,11 @@ export function LiveRoom({
   }, [localBalance]);
 
   const { squadId, squadName } = useActiveSquad();
+  const { setDrawerAvailable, registerOpenDrawer } = useLiveRoom();
 
   // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [realtimeConnected, setRealtimeConnected] = useState(true);
 
   // Cooldown countdown
   useEffect(() => {
@@ -259,7 +262,9 @@ export function LiveRoom({
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        setRealtimeConnected(status === "SUBSCRIBED");
+      });
 
     return () => {
       void supabase.removeChannel(channel);
@@ -274,26 +279,13 @@ export function LiveRoom({
     liveMatch.status === "paused";
 
   useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent("sifflet:drawer-available", {
-        detail: { enabled: isLive },
-      }),
-    );
-    return () => {
-      window.dispatchEvent(
-        new CustomEvent("sifflet:drawer-available", {
-          detail: { enabled: false },
-        }),
-      );
-    };
-  }, [isLive]);
+    setDrawerAvailable(isLive);
+    return () => setDrawerAvailable(false);
+  }, [isLive, setDrawerAvailable]);
 
-  // Écoute le Super Button de la BottomNav
   useEffect(() => {
-    const open = () => setDrawerOpen(true);
-    window.addEventListener("sifflet:open-drawer", open);
-    return () => window.removeEventListener("sifflet:open-drawer", open);
-  }, []);
+    registerOpenDrawer(() => setDrawerOpen(true));
+  }, [registerOpenDrawer]);
 
   function markAsSignaled(type: AlertActionType) {
     setSignaledTypes((prev) => new Set([...prev, type]));
@@ -349,6 +341,17 @@ export function LiveRoom({
   return (
     <>
       <LiveRoomTutorial />
+      {!realtimeConnected && (
+        <div
+          className="fixed left-1/2 top-[4rem] z-[55] -translate-x-1/2"
+          style={{ marginTop: "env(safe-area-inset-top, 0px)" }}
+        >
+          <div className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/80 px-3 py-1.5 text-[10px] font-black text-red-400 shadow-lg backdrop-blur-sm">
+            <WifiOff className="h-3 w-3" />
+            Reconnexion…
+          </div>
+        </div>
+      )}
       {/* En-tête sticky : scoreboard + onglets */}
       <div
         className="sticky z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md"

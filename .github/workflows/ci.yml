@@ -27,6 +27,9 @@ jobs:
       - name: 🧹 Vérification Lint & TypeScript (AI Check)
         run: npm run ai:check
 
+      - name: 🧪 Tests unitaires (Vitest)
+        run: npm run test:unit
+
       - name: 🎭 Installation de Playwright
         run: npx playwright install --with-deps chromium
 

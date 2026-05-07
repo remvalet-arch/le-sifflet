@@ -9,6 +9,7 @@
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "test:unit": "vitest run",
     "ai:check": "npm run format && npm run lint && npm run typecheck",
     "ai:verify": "npm run ai:check && npm run test:e2e",
     "test:backend": "tsx --tsconfig tsconfig.json scripts/simulate-match-scenario.ts",
@@ -45,6 +46,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",
+    "vitest": "^4.1.5",
     "ws": "^8.20.0"
   }
 }

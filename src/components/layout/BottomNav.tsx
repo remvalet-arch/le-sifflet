@@ -1,28 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
-
 import { useTranslations } from "next-intl";
+import { useLiveRoom } from "@/contexts/LiveRoomContext";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const [superVisible, setSuperVisible] = useState(false);
   const t = useTranslations("Navigation");
-
-  useEffect(() => {
-    const onAvailable = (e: Event) => {
-      setSuperVisible((e as CustomEvent<{ enabled: boolean }>).detail.enabled);
-    };
-    window.addEventListener("sifflet:drawer-available", onAvailable);
-    return () =>
-      window.removeEventListener("sifflet:drawer-available", onAvailable);
-  }, []);
+  const { drawerAvailable, openDrawer } = useLiveRoom();
 
   const isMatchPage = /^\/match\//.test(pathname);
-  const fabActive = isMatchPage && superVisible;
+  const fabActive = isMatchPage && drawerAvailable;
 
   return (
     <nav
@@ -51,10 +41,7 @@ export function BottomNav() {
             <button
               type="button"
               disabled={!fabActive}
-              onClick={() =>
-                fabActive &&
-                window.dispatchEvent(new CustomEvent("sifflet:open-drawer"))
-              }
+              onClick={() => fabActive && openDrawer()}
               aria-label="Appeler la VAR"
               className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
                 fabActive

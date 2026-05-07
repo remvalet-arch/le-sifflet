@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
-import type { PlayerForSelect } from "./PronosticsHubClient";
+import type { PlayerForSelect } from "./ScorerAllocationEditor";
 
 function getPosLabel(pos: string | null | undefined) {
   if (pos === "G") return "Gardien";

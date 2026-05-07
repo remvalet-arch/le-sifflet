@@ -3,7 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Search, X } from "lucide-react";
-import type { PlayerForSelect } from "./PronosticsHubClient";
+import type { PlayerForSelect } from "./ScorerAllocationEditor";
 
 /** Detects client-side rendering without triggering set-state-in-effect. */
 function useIsClient() {

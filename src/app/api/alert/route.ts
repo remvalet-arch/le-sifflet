@@ -4,6 +4,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { AlertActionType } from "@/types/database";
 import { sendPushToMatchSubscribers } from "@/lib/push-sender";
+import { log } from "@/lib/logger";
+import {
+  ALERT_THRESHOLD,
+  ALERT_WINDOW_SECONDS,
+  COOLDOWN_MINUTES,
+  MIN_TRUST_ALERT_SCORE,
+} from "@/lib/constants/alert";
 
 const ACTION_LABELS: Record<AlertActionType, string> = {
   penalty_check: "Penalty en discussion",
@@ -24,10 +31,6 @@ const VALID_TYPES: AlertActionType[] = [
   "free_kick",
   "corner",
 ];
-const ALERT_THRESHOLD = 2;
-const ALERT_WINDOW_SECONDS = 30;
-const COOLDOWN_MINUTES = 5;
-const MIN_TRUST_SCORE = 50;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -60,7 +63,17 @@ export async function POST(request: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  if ((profile?.trust_score ?? 0) < MIN_TRUST_SCORE) {
+  if ((profile?.trust_score ?? 0) < MIN_TRUST_ALERT_SCORE) {
+    return successResponse({ cooldown_until: null });
+  }
+
+  // Rate limiting : max 5 alertes par minute (silencieux — pas de message d'erreur exposé)
+  const { count: recentAlertCount } = await supabase
+    .from("alert_signals")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("created_at", new Date(Date.now() - 60_000).toISOString());
+  if ((recentAlertCount ?? 0) >= 5) {
     return successResponse({ cooldown_until: null });
   }
 
@@ -86,7 +99,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (insertError) {
-    console.error("[alert] Échec insert alert_signal:", insertError.message);
+    log.error("alert", "Échec insert alert_signal", insertError.message);
     return errorResponse(insertError.message);
   }
 
@@ -102,7 +115,7 @@ export async function POST(request: NextRequest) {
     .gte("created_at", since);
 
   if (signalsError) {
-    console.error("[alert] Échec fetch alert_signals:", signalsError.message);
+    log.error("alert", "Échec fetch alert_signals", signalsError.message);
     return errorResponse(signalsError.message);
   }
 
@@ -111,8 +124,9 @@ export async function POST(request: NextRequest) {
   ];
   const distinctCount = distinctUsers.length;
 
-  console.log(
-    `[alert] match=${match_id} type=${validType} distinct=${distinctCount} threshold=${ALERT_THRESHOLD}`,
+  log.info(
+    "alert",
+    `match=${match_id} type=${validType} distinct=${distinctCount}/${ALERT_THRESHOLD}`,
   );
 
   let cooldown_until: string | null = null;
@@ -122,7 +136,7 @@ export async function POST(request: NextRequest) {
     try {
       admin = createAdminClient();
     } catch (e) {
-      console.error("[alert] createAdminClient failed:", e);
+      log.error("alert", "createAdminClient failed", e);
       return errorResponse(
         "Configuration serveur manquante (SUPABASE_SERVICE_ROLE_KEY)",
         500,
@@ -150,11 +164,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (eventError) {
-      console.error("[alert] Échec insert market_event:", eventError.message);
+      log.error("alert", "Échec insert market_event", eventError.message);
       return errorResponse("Impossible de créer l'événement");
     }
-    console.log(
-      `[alert] ✅ market_event créé — match=${match_id} type=${validType} initiators=${distinctUsers.length}`,
+    log.info(
+      "alert",
+      `market_event créé match=${match_id} type=${validType} initiators=${distinctUsers.length}`,
     );
 
     // Fire-and-forget : push aux abonnés du match
@@ -162,7 +177,7 @@ export async function POST(request: NextRequest) {
       title: "VAR Time 🟨",
       body: `${ACTION_LABELS[validType]} — le marché vient d'ouvrir, parie !`,
       url: `/match/${match_id}`,
-    }).catch((e) => console.error("[alert] push failed:", e));
+    }).catch((e: unknown) => log.error("alert", "push failed", e));
 
     cooldown_until = new Date(
       Date.now() + COOLDOWN_MINUTES * 60 * 1000,
@@ -174,9 +189,9 @@ export async function POST(request: NextRequest) {
       .eq("id", match_id);
 
     if (cooldownError) {
-      console.error("[alert] Échec update cooldown:", cooldownError.message);
+      log.warn("alert", "Échec update cooldown", cooldownError.message);
     }
-    console.log(`[alert] ✅ cooldown posé jusqu'à ${cooldown_until}`);
+    log.info("alert", `cooldown posé jusqu'à ${cooldown_until}`);
   }
 
   return successResponse({ cooldown_until });

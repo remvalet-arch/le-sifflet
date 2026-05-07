@@ -6,17 +6,14 @@ import { toast } from "sonner";
 import {
   BellRing,
   LoaderCircle,
-  Trophy,
   Wallet,
   ChevronLeft,
-  Flame,
-  Swords,
-  CalendarDays,
-  PlayCircle,
   UserPlus,
 } from "lucide-react";
 import type { SquadRow } from "@/types/database";
 import { SquadChat } from "./SquadChat";
+import { SquadChampionship } from "./SquadChampionship";
+import { SquadLeaderboard } from "./SquadLeaderboard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 type LeaderboardRow = {
@@ -107,8 +104,7 @@ export function SquadDetailClient({
   const [loading, setLoading] = useState(true);
   const [nudging, setNudging] = useState(false);
   const [period, setPeriod] = useState<"general" | "week" | "month">("general");
-  const [launchingChamp, setLaunchingChamp] = useState(false);
-  const [confirmLaunch, setConfirmLaunch] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -134,7 +130,7 @@ export function SquadDetailClient({
     return () => {
       alive = false;
     };
-  }, [squadId, period]);
+  }, [squadId, period, reloadKey]);
 
   if (loading) {
     return (
@@ -222,42 +218,6 @@ export function SquadDetailClient({
 
   const isAdmin = squad.owner_id === currentUserId;
 
-  async function handleLaunchSeason() {
-    setLaunchingChamp(true);
-    try {
-      const res = await fetch(`/api/squads/${squadId}/start-season`, {
-        method: "POST",
-      });
-      const json = (await res.json()) as {
-        ok: boolean;
-        data?: {
-          season_id: string;
-          total_rounds: number;
-          fixtures_count: number;
-        };
-        error?: string;
-      };
-      if (!json.ok) {
-        toast.error(json.error ?? "Impossible de lancer le championnat");
-      } else {
-        toast.success(
-          `Championnat lancé ! ${json.data?.total_rounds} journées générées 🏆`,
-        );
-        setConfirmLaunch(false);
-        // Reload data
-        setLoading(true);
-        const r = await fetch(`/api/squads/${squadId}?period=${period}`);
-        const updated = (await r.json()) as { ok: boolean; data?: ApiPayload };
-        if (updated.ok && updated.data) setData(updated.data);
-        setLoading(false);
-      }
-    } catch {
-      toast.error("Connexion perdue");
-    } finally {
-      setLaunchingChamp(false);
-    }
-  }
-
   return (
     <div className="space-y-6 pb-8 relative min-h-screen">
       <Link
@@ -332,517 +292,25 @@ export function SquadDetailClient({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="classement" className="mt-4 space-y-6">
-          {/* ── Vue Championnat 1v1 ─────────────────────────────────────────────── */}
+        <TabsContent value="classement" className="mt-4">
           {championship ? (
-            <div className="space-y-6">
-              {/* Podium de fin de saison */}
-              {championship.status === "finished" &&
-                championship.standings.length >= 1 && (
-                  <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-5 text-center space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
-                      Saison terminée 🏆
-                    </p>
-                    <div className="flex items-end justify-center gap-4">
-                      {/* 2nd */}
-                      {championship.standings[1] && (
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="h-12 w-12 flex items-center justify-center rounded-full bg-zinc-300 text-zinc-800 text-lg font-black">
-                            2
-                          </div>
-                          <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
-                            {championship.standings[1].user_id === currentUserId
-                              ? "Toi"
-                              : championship.standings[1].username}
-                          </p>
-                          <p className="text-[10px] text-zinc-500">
-                            {championship.standings[1].points} pts
-                          </p>
-                        </div>
-                      )}
-                      {/* 1st */}
-                      <div className="flex flex-col items-center gap-1 -mb-2">
-                        <div className="h-16 w-16 flex items-center justify-center rounded-full bg-yellow-500 text-yellow-900 text-2xl font-black shadow-[0_0_20px_rgba(234,179,8,0.4)]">
-                          1
-                        </div>
-                        <p className="text-sm font-black text-yellow-300 max-w-[80px] truncate">
-                          {championship.standings[0].user_id === currentUserId
-                            ? "Toi 🎉"
-                            : championship.standings[0].username}
-                        </p>
-                        <p className="text-[10px] text-yellow-500">
-                          {championship.standings[0].points} pts
-                        </p>
-                      </div>
-                      {/* 3rd */}
-                      {championship.standings[2] && (
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-700 text-amber-100 text-base font-black">
-                            3
-                          </div>
-                          <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
-                            {championship.standings[2].user_id === currentUserId
-                              ? "Toi"
-                              : championship.standings[2].username}
-                          </p>
-                          <p className="text-[10px] text-zinc-500">
-                            {championship.standings[2].points} pts
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    {championship.standings[0].user_id === currentUserId && (
-                      <p className="text-xs font-bold text-yellow-400">
-                        Félicitations, tu es Champion de la ligue ! 🎊
-                      </p>
-                    )}
-                  </div>
-                )}
-
-              {/* Section 1 — Tableau de championnat */}
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <Swords className="h-4 w-4 text-amber-400" aria-hidden />
-                  <h2 className="text-sm font-black uppercase tracking-wide text-white">
-                    Championnat — J{championship.current_round}/
-                    {championship.total_rounds}
-                  </h2>
-                  {championship.status === "finished" && (
-                    <span className="ml-auto rounded-lg bg-zinc-700 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-zinc-300">
-                      Terminé
-                    </span>
-                  )}
-                </div>
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/8 text-[10px] font-black uppercase tracking-wide text-zinc-500">
-                        <th className="px-3 py-2 text-left">#</th>
-                        <th className="px-3 py-2 text-left">Joueur</th>
-                        <th className="px-2 py-2 text-center">J</th>
-                        <th className="px-2 py-2 text-center">V</th>
-                        <th className="px-2 py-2 text-center">N</th>
-                        <th className="px-2 py-2 text-center">D</th>
-                        <th className="px-2 py-2 text-right font-black text-white">
-                          Pts
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {championship.standings.map((s, idx) => {
-                        const isMe = s.user_id === currentUserId;
-                        return (
-                          <tr
-                            key={s.user_id}
-                            className={`border-b border-white/5 last:border-0 ${
-                              isMe ? "bg-amber-500/10" : ""
-                            }`}
-                          >
-                            <td className="px-3 py-2.5">
-                              <span
-                                className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black ${
-                                  idx === 0
-                                    ? "bg-yellow-500 text-yellow-900"
-                                    : idx === 1
-                                      ? "bg-zinc-300 text-zinc-800"
-                                      : idx === 2
-                                        ? "bg-amber-700 text-amber-100"
-                                        : "bg-zinc-800 text-zinc-400"
-                                }`}
-                              >
-                                {idx + 1}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <p
-                                className={`font-bold ${isMe ? "text-amber-300" : "text-white"}`}
-                              >
-                                {isMe ? "Toi" : s.username}
-                              </p>
-                              <p className="text-[10px] text-zinc-500">
-                                {s.pronos_pts.toLocaleString("fr-FR")} pts
-                                cumulés
-                              </p>
-                            </td>
-                            <td className="px-2 py-2.5 text-center text-zinc-400">
-                              {s.played}
-                            </td>
-                            <td className="px-2 py-2.5 text-center text-green-400">
-                              {s.won}
-                            </td>
-                            <td className="px-2 py-2.5 text-center text-zinc-400">
-                              {s.drawn}
-                            </td>
-                            <td className="px-2 py-2.5 text-center text-red-400">
-                              {s.lost}
-                            </td>
-                            <td className="px-2 py-2.5 text-right font-black tabular-nums text-amber-300">
-                              {s.points}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Section 2 — Journée en cours */}
-              {championship.current_fixtures.length > 0 && (
-                <div>
-                  <div className="mb-3 flex items-center gap-2">
-                    <CalendarDays
-                      className="h-4 w-4 text-blue-400"
-                      aria-hidden
-                    />
-                    <h2 className="text-sm font-black uppercase tracking-wide text-white">
-                      Journée {championship.current_round}
-                    </h2>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {championship.current_fixtures.map((f) => {
-                      const isMyMatch =
-                        f.home_member_id === currentUserId ||
-                        f.away_member_id === currentUserId;
-                      const isFinished = f.status === "finished";
-                      return (
-                        <div
-                          key={f.id}
-                          className={`rounded-2xl border px-4 py-3 ${
-                            isMyMatch
-                              ? "border-amber-500/40 bg-amber-500/10"
-                              : "border-white/8 bg-zinc-900/60"
-                          }`}
-                        >
-                          {isMyMatch && (
-                            <p className="mb-1.5 text-[10px] font-black uppercase tracking-wide text-amber-400">
-                              Ton match cette semaine
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0 flex-1 text-center">
-                              <p
-                                className={`truncate text-sm font-bold ${
-                                  f.home_member_id === currentUserId
-                                    ? "text-amber-300"
-                                    : "text-white"
-                                }`}
-                              >
-                                {f.home_member_id === currentUserId
-                                  ? "Toi"
-                                  : f.home_username}
-                              </p>
-                              {isFinished && (
-                                <p className="text-xl font-black tabular-nums text-white">
-                                  {f.home_points ?? 0}
-                                </p>
-                              )}
-                            </div>
-                            <div className="shrink-0 px-2 text-xs font-black text-zinc-500">
-                              {isFinished ? "FIN" : "VS"}
-                            </div>
-                            <div className="min-w-0 flex-1 text-center">
-                              <p
-                                className={`truncate text-sm font-bold ${
-                                  f.away_member_id === currentUserId
-                                    ? "text-amber-300"
-                                    : "text-white"
-                                }`}
-                              >
-                                {f.away_member_id === currentUserId
-                                  ? "Toi"
-                                  : f.away_username}
-                              </p>
-                              {isFinished && (
-                                <p className="text-xl font-black tabular-nums text-white">
-                                  {f.away_points ?? 0}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          {isFinished && f.winner_id && (
-                            <p className="mt-1.5 text-center text-[10px] font-bold text-green-400">
-                              Victoire :{" "}
-                              {f.winner_id === currentUserId
-                                ? "Toi"
-                                : f.winner_id === f.home_member_id
-                                  ? f.home_username
-                                  : f.away_username}
-                            </p>
-                          )}
-                          {isFinished && !f.winner_id && (
-                            <p className="mt-1.5 text-center text-[10px] font-bold text-zinc-400">
-                              Match nul
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
+            <SquadChampionship
+              championship={championship}
+              currentUserId={currentUserId}
+            />
           ) : (
-            /* ── Vue classique XP ─────────────────────────────────────────────────── */
-            <div>
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-400" aria-hidden />
-                  <h2 className="text-sm font-black uppercase tracking-wide text-white">
-                    Classement
-                  </h2>
-                </div>
-                <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
-                  {(["general", "month", "week"] as const).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setPeriod(p)}
-                      className={`rounded-lg px-3 py-1 text-[11px] font-black transition ${
-                        period === p
-                          ? "bg-amber-500 text-black"
-                          : "text-zinc-400 hover:text-white"
-                      }`}
-                    >
-                      {p === "general"
-                        ? "Général"
-                        : p === "month"
-                          ? "Mois"
-                          : "Semaine"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <p className="mb-3 text-xs text-zinc-500">
-                {period === "general"
-                  ? "XP total (puis pseudo). Solde Pts affiché pour le fun du vestiaire."
-                  : `Points gagnés depuis le début ${period === "month" ? "du mois" : "de la semaine"} (Pronos + Paris Live).`}
-              </p>
-              <ol className="flex flex-col gap-2">
-                {leaderboard.map((row, idx) => {
-                  const isMe = row.user_id === currentUserId;
-                  const inner = (
-                    <>
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                            idx === 0
-                              ? "bg-yellow-500 text-yellow-900 border-2 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
-                              : idx === 1
-                                ? "bg-zinc-300 text-zinc-800 border-2 border-zinc-200 shadow-[0_0_10px_rgba(212,212,216,0.3)]"
-                                : idx === 2
-                                  ? "bg-amber-700 text-amber-100 border-2 border-amber-600 shadow-[0_0_10px_rgba(180,83,9,0.3)]"
-                                  : "bg-zinc-800 text-zinc-400"
-                          }`}
-                        >
-                          {idx + 1}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate font-bold text-white">
-                            {isMe ? "Toi" : row.username}
-                          </p>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                            {row.rank}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-sm font-black tabular-nums text-amber-300">
-                          {row.xp.toLocaleString("fr-FR")}{" "}
-                          {period === "general" ? "XP" : "pts"}
-                        </p>
-                        <div className="flex gap-2 justify-end mt-0.5">
-                          <span className="text-[10px] font-bold text-green-400">
-                            🎯 {row.pronos_xp.toLocaleString("fr-FR")}
-                          </span>
-                          <span className="text-[10px] font-bold text-blue-400">
-                            ⚡ {row.var_xp.toLocaleString("fr-FR")}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  );
-                  const cls = `flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition ${
-                    isMe
-                      ? "border-amber-500/40 bg-amber-500/10"
-                      : "border-white/10 bg-zinc-900/60 hover:border-white/20 hover:bg-zinc-800/60"
-                  }`;
-                  return isMe ? (
-                    <li key={row.user_id} className={cls}>
-                      {inner}
-                    </li>
-                  ) : (
-                    <li key={row.user_id}>
-                      <Link
-                        href={`/profile/${row.user_id}`}
-                        className={`flex ${cls}`}
-                      >
-                        {inner}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ol>
-
-              {/* CTA lancer le championnat (owner, mode braquage, pas de saison active) */}
-              {isAdmin && squad.game_mode === "braquage" && !championship && (
-                <div className="mt-6">
-                  {!confirmLaunch ? (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmLaunch(true)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-6 py-4 text-sm font-black uppercase tracking-wide text-amber-300 transition active:scale-[0.98] hover:bg-amber-500/20"
-                    >
-                      <PlayCircle className="h-5 w-5" />
-                      Lancer le championnat
-                    </button>
-                  ) : (
-                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 space-y-3">
-                      <p className="text-sm font-black text-white">
-                        Lancer le championnat avec {leaderboard.length} joueurs
-                        ?
-                      </p>
-                      <p className="text-xs text-zinc-400">
-                        {leaderboard.length % 2 !== 0
-                          ? "⚠️ Nombre de joueurs impair — attends un membre supplémentaire."
-                          : leaderboard.length < 2
-                            ? "⚠️ Il faut au moins 2 joueurs."
-                            : `${(leaderboard.length - 1) * 2} journées générées (aller + retour), à partir du lundi prochain.`}
-                      </p>
-                      {leaderboard.length >= 2 &&
-                        leaderboard.length % 2 === 0 && (
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={handleLaunchSeason}
-                              disabled={launchingChamp}
-                              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black uppercase text-black transition disabled:opacity-50"
-                            >
-                              {launchingChamp ? (
-                                <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <PlayCircle className="h-3.5 w-3.5" />
-                              )}
-                              Lancer
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmLaunch(false)}
-                              className="flex-1 rounded-xl bg-zinc-800 px-4 py-2.5 text-xs font-black uppercase text-zinc-400 transition hover:bg-zinc-700"
-                            >
-                              Annuler
-                            </button>
-                          </div>
-                        )}
-                      {(leaderboard.length < 2 ||
-                        leaderboard.length % 2 !== 0) && (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmLaunch(false)}
-                          className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-xs font-black uppercase text-zinc-400 transition hover:bg-zinc-700"
-                        >
-                          Fermer
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activity.length > 0 && (
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-400" aria-hidden />
-                <h2 className="text-sm font-black uppercase tracking-wide text-white">
-                  Derniers exploits
-                </h2>
-              </div>
-              <div className="flex flex-col gap-2">
-                {activity.map((item, idx) => {
-                  const isBraquage = item.contre_pied_bonus >= 100;
-                  const isVisionnaire =
-                    item.contre_pied_bonus >= 60 &&
-                    item.contre_pied_bonus < 100;
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900/60 px-4 py-3"
-                    >
-                      <span className="shrink-0 text-lg" aria-hidden>
-                        {isBraquage ? "💎" : isVisionnaire ? "🔮" : "🔥"}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-white">
-                          <span className="text-amber-300">
-                            {item.user_id === currentUserId
-                              ? "Toi"
-                              : item.username}
-                          </span>{" "}
-                          a ramassé{" "}
-                          <span className="font-black text-green-400">
-                            +{item.points_earned} pts
-                          </span>
-                        </p>
-                        <p className="truncate text-[11px] text-zinc-500">
-                          {item.team_home} – {item.team_away}
-                          {item.contre_pied_bonus > 0 && (
-                            <span className="ml-1 text-amber-400">
-                              · Contre-Pied +{item.contre_pied_bonus}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── Palmarès ────────────────────────────────────────────────────────── */}
-          {past_seasons && past_seasons.length > 0 && (
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-yellow-400" aria-hidden />
-                <h2 className="text-sm font-black uppercase tracking-wide text-white">
-                  Palmarès
-                </h2>
-              </div>
-              <div className="flex flex-col gap-2">
-                {past_seasons.map((s, idx) => (
-                  <div
-                    key={s.season_id}
-                    className="flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3"
-                  >
-                    <span className="text-2xl" aria-hidden>
-                      🏆
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white">
-                        Saison {past_seasons.length - idx}
-                      </p>
-                      <p className="text-xs text-zinc-400">
-                        Champion :{" "}
-                        <span className="font-black text-yellow-300">
-                          {s.champion_username ?? "—"}
-                        </span>{" "}
-                        · {s.champion_points} pts
-                      </p>
-                      {s.ended_at && (
-                        <p className="text-[10px] text-zinc-600">
-                          {new Date(s.ended_at).toLocaleDateString("fr-FR", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SquadLeaderboard
+              leaderboard={leaderboard}
+              currentUserId={currentUserId}
+              period={period}
+              setPeriod={setPeriod}
+              isAdmin={isAdmin}
+              gameMode={squad.game_mode}
+              activity={activity}
+              past_seasons={past_seasons}
+              squadId={squadId}
+              onLaunchSuccess={() => setReloadKey((k) => k + 1)}
+            />
           )}
         </TabsContent>
 

@@ -485,24 +485,24 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
         </p>
         <div className="mt-3 flex items-center justify-center gap-4">
           <a
-            href="#"
+            href="/cgu"
             className="text-[10px] text-zinc-700 transition hover:text-zinc-500"
           >
             CGU
           </a>
           <span className="text-zinc-800">•</span>
           <a
-            href="#"
+            href="/mentions-legales"
             className="text-[10px] text-zinc-700 transition hover:text-zinc-500"
           >
             Mentions Légales
           </a>
           <span className="text-zinc-800">•</span>
           <a
-            href="#"
+            href="/privacy"
             className="text-[10px] text-zinc-700 transition hover:text-zinc-500"
           >
-            Jeu Responsable
+            Confidentialité
           </a>
         </div>
         <p className="mx-auto mt-4 max-w-sm px-4 text-[9px] text-zinc-700">

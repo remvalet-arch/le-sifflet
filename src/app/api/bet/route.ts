@@ -53,6 +53,16 @@ export async function POST(request: NextRequest) {
     return errorResponse("Les prédictions sont closes", 400);
   }
 
+  // Rate limiting : max 10 paris par minute
+  const { count: recentBetCount } = await supabase
+    .from("bets")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("placed_at", new Date(Date.now() - 60_000).toISOString());
+  if ((recentBetCount ?? 0) >= 10) {
+    return errorResponse("Doucement l'arbitre, tu parles trop vite…", 429);
+  }
+
   const { data: oddsRows, error: oddsErr } = await supabase.rpc(
     "get_event_odds",
     {
