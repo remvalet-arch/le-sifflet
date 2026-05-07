@@ -151,6 +151,8 @@ type Props = {
   matchId: string;
   isModerator: boolean;
   matchStatus: MatchStatus;
+  matchStartTime?: string;
+  onSwitchToCompo?: () => void;
 };
 
 function timelineEmptyMessage(status: MatchStatus): string {
@@ -164,6 +166,8 @@ export const MatchTimeline = memo(function MatchTimeline({
   matchId,
   isModerator,
   matchStatus,
+  matchStartTime,
+  onSwitchToCompo,
 }: Props) {
   const [events, setEvents] = useState<MatchTimelineEventRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -348,6 +352,46 @@ export const MatchTimeline = memo(function MatchTimeline({
   }
 
   if (events.length === 0) {
+    if (matchStatus === "upcoming") {
+      const kickoff = matchStartTime ? new Date(matchStartTime) : null;
+      const now = new Date();
+      const diffMs = kickoff ? kickoff.getTime() - now.getTime() : null;
+      const diffH = diffMs != null ? Math.floor(diffMs / 3600000) : null;
+      const diffMin =
+        diffMs != null ? Math.floor((diffMs % 3600000) / 60000) : null;
+
+      return (
+        <div className="mt-6 flex flex-col items-center gap-4 py-10 text-center">
+          <span className="text-4xl">🕐</span>
+          {kickoff &&
+            diffMs != null &&
+            diffMs > 0 &&
+            diffH != null &&
+            diffMin != null && (
+              <div>
+                <p className="text-2xl font-black tabular-nums text-white">
+                  {diffH > 0 ? `${diffH}h ${diffMin}min` : `${diffMin} min`}
+                </p>
+                <p className="mt-0.5 text-[11px] font-bold text-zinc-500 uppercase tracking-wide">
+                  avant le coup d&apos;envoi
+                </p>
+              </div>
+            )}
+          <p className="max-w-[220px] text-sm text-zinc-500">
+            Les événements apparaîtront ici dès le coup de sifflet.
+          </p>
+          {onSwitchToCompo && (
+            <button
+              type="button"
+              onClick={onSwitchToCompo}
+              className="mt-1 flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800 px-4 py-2 text-[11px] font-black text-zinc-300 transition hover:bg-zinc-700 active:scale-[0.97]"
+            >
+              Voir la Compo →
+            </button>
+          )}
+        </div>
+      );
+    }
     return (
       <p className="mt-6 py-10 text-center text-sm text-zinc-500">
         {timelineEmptyMessage(matchStatus)}

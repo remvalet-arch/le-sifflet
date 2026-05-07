@@ -405,25 +405,31 @@ export function MatchLobby({
         </div>
       )}
 
-      <nav
-        className="-mx-1 flex gap-1 overflow-x-auto pb-1"
-        aria-label="Filtrer par compétition"
-      >
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`shrink-0 rounded-full px-3 py-2 text-xs font-black uppercase tracking-wide transition ${
-              tab === t.id
-                ? "bg-whistle text-pitch-900"
-                : "bg-zinc-800/90 text-zinc-400 hover:bg-zinc-800"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <div className="relative -mx-1">
+        <nav
+          className="flex gap-1 overflow-x-auto pb-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Filtrer par compétition"
+        >
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 rounded-full px-3 py-2 text-xs font-black uppercase tracking-wide transition ${
+                tab === t.id
+                  ? "bg-whistle text-pitch-900"
+                  : "bg-zinc-800/90 text-zinc-400 hover:bg-zinc-800"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-zinc-950 to-transparent"
+          aria-hidden
+        />
+      </div>
 
       {tab === "direct" ? (
         directRows.length === 0 ? (

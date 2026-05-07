@@ -98,6 +98,10 @@ export function LiguesPageClient({ userId }: { userId: string }) {
 
   async function handleLeave(squad: SquadWithMembers) {
     if (submitting) return;
+    const confirmed = window.confirm(
+      `Quitter "${squad.name}" ? Tu perdras ta position dans le classement.`,
+    );
+    if (!confirmed) return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/squads/leave", {
@@ -226,12 +230,12 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                       onClick={() =>
                         copyInvite(s.id, s.invite_code!, s.name, s.members)
                       }
-                      className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-3 py-1.5 text-[11px] font-bold text-zinc-400 hover:bg-zinc-700"
+                      className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-2.5 py-1.5 text-[11px] font-bold text-zinc-400 hover:bg-zinc-700"
                     >
-                      <Copy className="h-3 w-3" />
-                      {copiedSquadId === s.id
-                        ? "Copié !"
-                        : `Code: ${s.invite_code}`}
+                      <Copy className="h-3 w-3 shrink-0" />
+                      <span className="font-mono tracking-wider">
+                        {copiedSquadId === s.id ? "Copié !" : s.invite_code}
+                      </span>
                     </button>
                   )}
                   <button

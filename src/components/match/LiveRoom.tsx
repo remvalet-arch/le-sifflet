@@ -395,6 +395,8 @@ export function LiveRoom({
             matchId={liveMatch.id}
             isModerator={isModerator}
             matchStatus={liveMatch.status}
+            matchStartTime={liveMatch.start_time ?? undefined}
+            onSwitchToCompo={() => setActiveTab("compo")}
           />
           {/* Sirène VAR — panic button ligue */}
           {isLive && (

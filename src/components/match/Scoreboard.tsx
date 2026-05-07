@@ -88,7 +88,7 @@ export function Scoreboard({ match }: { match: MatchRow }) {
               {match.away_score}
             </span>
           ) : (
-            <span className="text-xl font-black uppercase tracking-[0.25em] text-white/30">
+            <span className="text-xl font-black uppercase text-white/30">
               VS
             </span>
           )}

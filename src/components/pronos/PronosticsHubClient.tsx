@@ -207,8 +207,9 @@ function ScoreInput({
         onChange(v);
         if (v.length >= 1) onFilled?.();
       }}
-      className="h-14 w-12 rounded-[10px] border border-white/10 bg-[#2D2D2D] text-center text-xl font-black text-white outline-none ring-0 transition focus:border-amber-500/50 focus:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
-      placeholder=""
+      className="h-14 w-12 rounded-[10px] border border-white/10 bg-[#2D2D2D] text-center text-xl font-black text-white outline-none ring-0 transition focus:border-amber-500/50 focus:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-zinc-600"
+      style={{ fontSize: "16px" }}
+      placeholder="?"
     />
   );
 }
@@ -598,6 +599,9 @@ function MatchPronoCard({
                       >
                         {pts1}
                       </span>
+                      <span className="text-[8px] text-zinc-600 leading-none">
+                        pts
+                      </span>
                     </div>
                     <div
                       className={`flex flex-col items-center justify-center rounded-[6px] px-2 py-1 min-w-[2.5rem] transition-all ${isN ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
@@ -607,6 +611,9 @@ function MatchPronoCard({
                       >
                         {ptsN}
                       </span>
+                      <span className="text-[8px] text-zinc-600 leading-none">
+                        pts
+                      </span>
                     </div>
                     <div
                       className={`flex flex-col items-center justify-center rounded-[6px] px-2 py-1 min-w-[2.5rem] transition-all ${is2 ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
@@ -615,6 +622,9 @@ function MatchPronoCard({
                         className={`text-[11px] font-black tabular-nums ${is2 ? "text-amber-400" : "text-zinc-400"}`}
                       >
                         {pts2}
+                      </span>
+                      <span className="text-[8px] text-zinc-600 leading-none">
+                        pts
                       </span>
                     </div>
                   </div>

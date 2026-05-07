@@ -5,15 +5,18 @@ import { fr } from "date-fns/locale";
 
 type MatchStub = { id: string };
 
-function getDayPill(dayKey: string): { abbrev: string; num: string } {
+function getDayPill(dayKey: string): {
+  abbrev: string;
+  num: string;
+  sub?: string;
+} {
   const [y, mo, d] = dayKey.split("-").map(Number);
   const date = new Date(y!, mo! - 1, d!);
   if (isToday(date)) return { abbrev: "Auj.", num: "" };
-  if (isTomorrow(date)) return { abbrev: "Dem.", num: "" };
-  return {
-    abbrev: format(date, "EEE", { locale: fr }),
-    num: format(date, "d", { locale: fr }),
-  };
+  const abbrev = format(date, "EEE", { locale: fr });
+  const num = format(date, "d", { locale: fr });
+  if (isTomorrow(date)) return { abbrev, num, sub: "Demain" };
+  return { abbrev, num };
 }
 
 function getDayFullLabel(dayKey: string): string {
@@ -80,6 +83,13 @@ export function MatchFilterBar({
                   }`}
                 >
                   {pill.num}
+                </span>
+              )}
+              {pill.sub && (
+                <span
+                  className={`text-[8px] font-bold leading-tight ${isSelected ? "text-pitch-900/70" : "text-zinc-500"}`}
+                >
+                  {pill.sub}
                 </span>
               )}
               <span

@@ -196,6 +196,49 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
       </section>
 
       {/* ═══════════════════════════════════════════
+          GRADES KOP — progression (vitrine) — position 2
+      ═══════════════════════════════════════════ */}
+      <section className="border-t border-white/8 py-14 md:py-16">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+            Ton expertise au kop.
+          </h2>
+          <div className="mx-auto mt-10 max-w-2xl rounded-3xl border border-green-500/40 bg-zinc-900/50 p-6 shadow-[0_0_40px_rgba(34,197,94,0.15)] backdrop-blur-sm sm:p-8">
+            <p className="text-center text-sm leading-relaxed text-zinc-400">
+              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss
+              de la VAR en enchaînant les bons verdicts.
+            </p>
+            <ol className="relative mt-8 list-none space-y-0 p-0">
+              <KopRankStep
+                step={1}
+                label="Arbitre de District"
+                variant="muted"
+                isLast={false}
+              />
+              <KopRankStep
+                step={2}
+                label="Sifflet de Bronze"
+                variant="bronze"
+                isLast={false}
+              />
+              <KopRankStep
+                step={3}
+                label="Sifflet d&rsquo;Argent"
+                variant="silver"
+                isLast={false}
+              />
+              <KopRankStep
+                step={4}
+                label="Boss de la VAR"
+                variant="gold"
+                isLast
+              />
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
           COMMENT ÇA MARCHE — Game Panels
       ═══════════════════════════════════════════ */}
       <section id="comment" className="scroll-mt-8 py-20 lg:py-24">
@@ -429,49 +472,6 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
                 bientôt disponible
               </span>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          GRADES KOP — progression (vitrine)
-      ═══════════════════════════════════════════ */}
-      <section className="border-t border-white/8 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
-            Ton expertise au kop.
-          </h2>
-          <div className="mx-auto mt-10 max-w-2xl rounded-3xl border border-green-500/40 bg-zinc-900/50 p-6 shadow-[0_0_40px_rgba(34,197,94,0.15)] backdrop-blur-sm sm:p-8">
-            <p className="text-center text-sm leading-relaxed text-zinc-400">
-              Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss
-              de la VAR en enchaînant les bons verdicts.
-            </p>
-            <ol className="relative mt-8 list-none space-y-0 p-0">
-              <KopRankStep
-                step={1}
-                label="Arbitre de District"
-                variant="muted"
-                isLast={false}
-              />
-              <KopRankStep
-                step={2}
-                label="Sifflet de Bronze"
-                variant="bronze"
-                isLast={false}
-              />
-              <KopRankStep
-                step={3}
-                label="Sifflet d&rsquo;Argent"
-                variant="silver"
-                isLast={false}
-              />
-              <KopRankStep
-                step={4}
-                label="Boss de la VAR"
-                variant="gold"
-                isLast
-              />
-            </ol>
           </div>
         </div>
       </section>

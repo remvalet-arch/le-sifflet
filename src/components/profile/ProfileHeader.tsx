@@ -39,6 +39,32 @@ function getXpProgress(xp: number): {
   return { level: "District", pct: Math.round((xp / 500) * 100), next: 500 };
 }
 
+function getTrustGradeCompact(score: number) {
+  if (score >= 200)
+    return {
+      icon: "🏅",
+      label: "Arbitre Élite",
+      color: "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
+    };
+  if (score >= 100)
+    return {
+      icon: "✅",
+      label: "Arbitre Officiel",
+      color: "text-green-400 border-green-500/30 bg-green-500/10",
+    };
+  if (score >= 50)
+    return {
+      icon: "⚡",
+      label: "Lanceur d'Alerte",
+      color: "text-blue-400 border-blue-500/30 bg-blue-500/10",
+    };
+  return {
+    icon: "⚠️",
+    label: "Carton Jaune",
+    color: "text-orange-400 border-orange-500/30 bg-orange-500/10",
+  };
+}
+
 export function ProfileHeader({
   username: initialUsername,
   avatarUrl: initialAvatarUrl,
@@ -48,6 +74,7 @@ export function ProfileHeader({
   balance,
   loginStreak,
   lastLoginDate,
+  trustScore,
 }: {
   username: string;
   avatarUrl: string | null;
@@ -58,6 +85,7 @@ export function ProfileHeader({
   balance: number;
   loginStreak?: number;
   lastLoginDate?: string | null;
+  trustScore?: number;
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const [username, setUsername] = useState(initialUsername);
@@ -75,6 +103,7 @@ export function ProfileHeader({
   const avatar = avatarUrl ?? "🎽";
   const ringCls = getRankRing(rank.label);
   const xpInfo = getXpProgress(xpTotal);
+  const trust = trustScore != null ? getTrustGradeCompact(trustScore) : null;
 
   async function handleClaimStreak() {
     if (!canClaimStreak || claimingStreak) return;
@@ -203,7 +232,7 @@ export function ProfileHeader({
                 type="button"
                 onClick={() => void handleClaimStreak()}
                 disabled={!canClaimStreak || claimingStreak}
-                className={`flex items-center gap-1 rounded-full px-3 py-2 text-[11px] font-black transition ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-black transition ${
                   canClaimStreak
                     ? "border border-orange-500/40 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
                     : "border border-white/10 bg-zinc-800 text-zinc-500 cursor-default"
@@ -212,6 +241,14 @@ export function ProfileHeader({
                 🔥 {streak}j
                 {canClaimStreak && ` +${50 * Math.min(streak, 7)}pts`}
               </button>
+            )}
+
+            {trust && trustScore != null && (
+              <span
+                className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-[10px] font-black ${trust.color}`}
+              >
+                {trust.icon} {trust.label}
+              </span>
             )}
           </div>
         </div>

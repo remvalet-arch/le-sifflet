@@ -22,13 +22,13 @@ L'IA s'occupera du reste. Elle codera, testera ses erreurs, documentera, et coch
 
 Ces commandes sont à taper dans ton terminal classique si tu as besoin de voir ce qui se passe.
 
-| Commande               | À quoi ça sert ?                                                                                                                                    |
-| :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`          | Lance ton site en local pour que tu puisses le voir sur `http://localhost:3000`.                                                                    |
+| Commande               | À quoi ça sert ?                                                                                                                                        |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`          | Lance ton site en local pour que tu puisses le voir sur `http://localhost:3000`.                                                                        |
 | `npm run test:unit`    | **Tests unitaires instantanés.** Lance les 17 tests Vitest sur les fonctions de calcul (scorer, stoppage…). Aucun serveur nécessaire, résultat en < 1s. |
-| `npm run test:backend` | **Le Simulateur de Match !** Ça lance de faux événements en arrière-plan pendant que tu regardes ton app, pour tester la sensation du "Temps Réel". |
-| `npm run ai:check`     | Lint + TypeScript — ce que l'IA lance avant chaque commit. Aucun prérequis.                                                                         |
-| `npm run ai:verify`    | `ai:check` + tests E2E Playwright (nécessite l'app en cours + Supabase connecté).                                                                   |
+| `npm run test:backend` | **Le Simulateur de Match !** Ça lance de faux événements en arrière-plan pendant que tu regardes ton app, pour tester la sensation du "Temps Réel".     |
+| `npm run ai:check`     | Lint + TypeScript — ce que l'IA lance avant chaque commit. Aucun prérequis.                                                                             |
+| `npm run ai:verify`    | `ai:check` + tests E2E Playwright (nécessite l'app en cours + Supabase connecté).                                                                       |
 
 ---
 
@@ -45,6 +45,7 @@ Quand l'IA crée un fichier dans `supabase/migrations/`, **tu dois l'appliquer m
 3. Clique **Run**
 
 **Migrations en attente à ce jour :**
+
 - `0062_fix_match_community_stats.sql`
 - `0063_friends.sql`
 - `0064_league_mode.sql`
@@ -54,6 +55,7 @@ Quand l'IA crée un fichier dans `supabase/migrations/`, **tu dois l'appliquer m
 ### Variables d'environnement
 
 Ton `.env.local` doit toujours contenir :
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
@@ -65,6 +67,7 @@ Sur Vercel : Settings → Environment Variables → vérifier que les 3 sont pr�
 ### Tests E2E (Playwright)
 
 Pour lancer `npm run ai:verify` ou `npm run test:e2e`, il faut :
+
 1. App démarrée : `npm run dev` dans un terminal séparé
 2. Variable `PLAYWRIGHT_BASE_URL=http://localhost:3000` dans `.env.local`
 3. `TEST_AUTH_SECRET` configuré (voir `tests/e2e/global-setup.ts`)
@@ -74,6 +77,7 @@ Sans ça, les tests E2E échouent — `npm run ai:check` (sans verify) reste tou
 ### Secrets GitHub Actions
 
 Pour que le CI GitHub fonctionne complètement, ajoute dans **GitHub → Settings → Secrets → Actions** :
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 

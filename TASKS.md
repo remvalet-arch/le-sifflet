@@ -761,6 +761,99 @@ Agis en tant que Lead Backend et Game Designer.
 
 ---
 
+### 🎨 Sprint UX1 : IDENTITÉ & LANDING — "Unifier la marque VAR TIME"
+
+> Issu de l'audit UX du 07/05/2026. La landing page dit encore "Le Sifflet" à certains endroits et contient des incohérences visuelles et de contenu. Ce sprint aligne tout sur VAR TIME.
+
+- [x] **UX1-1 : Unifier le nom de marque — "Le Sifflet" → "VAR TIME" sur la landing**
+  - _Problème :_ Le header de la landing + certains textes utilisent encore "Le Sifflet" alors que l'app affiche "VAR TIME". Un visiteur qui voit les deux noms est déstabilisé.
+  - _Action :_ Auditer `src/app/page.tsx` et tous les composants du dossier `src/components/home/`. Remplacer chaque occurrence de "Le Sifflet" par "VAR TIME". Vérifier aussi les meta tags (`<title>`, `og:title`, `description`) dans `src/app/layout.tsx`.
+
+- [x] **UX1-2 : Corriger la contradiction App Store sur la landing**
+  - _Problème :_ Les boutons "App Store" et "Google Play" sont affichés comme actifs, mais le QR code dit "Bientôt disponible" — message contradictoire pour un visiteur.
+  - _Action :_ Dans `src/app/page.tsx`, remplacer les boutons App Store / Google Play par un unique bloc "Bientôt disponible sur iOS & Android" avec une formule de liste d'attente (input email + bouton "Me prévenir") ou à défaut les masquer complètement jusqu'à disponibilité réelle. Conserver le QR code si l'app PWA est installable.
+
+- [x] **UX1-3 : Alléger les sections "Quatre façons" et "Trois étapes" de la landing**
+  - _Problème :_ Chaque carte contient un paragraphe entier — trop dense, ne se lit pas en scroll rapide.
+  - _Action :_ Dans `src/app/page.tsx`, réduire le texte de chaque carte à **1 ligne maximum** (pitch en une phrase). Le contenu détaillé peut rester dans un tooltip ou être supprimé. Vérifier que les 4 icônes/emojis sont bien visibles et cohérents visuellement.
+
+- [x] **UX1-4 : Remonter la section "Progression des rangs" en position 2 sur la landing**
+  - _Problème :_ La section "Ton Expertise au Kop" (Arbitre de District → Boss de la VAR) est tout en bas de page — c'est pourtant le meilleur hook de rétention.
+  - _Action :_ Dans `src/app/page.tsx`, déplacer la section de progression des rangs juste après le hero (section 2), avant "Quatre façons de jouer".
+
+---
+
+### 🎨 Sprint UX2 : NAVIGATION & AFFORDANCES — "Ce qu'on ne voit pas, on ne clique pas"
+
+> Problèmes d'affordance identifiés sur Stade, Pronos et Profil.
+
+- [x] **UX2-1 : Affordance de scroll sur les tabs de ligues (Stade)**
+  - _Problème :_ Les onglets DIRECT / LIGUE 1 / PREMIER LEAGUE / LA LIGA sont scrollables horizontalement mais rien ne l'indique. Les ligues de droite sont invisibles.
+  - _Action :_ Dans le composant de tabs du Stade (`src/app/(app)/lobby/page.tsx` ou le composant concerné), ajouter un **gradient fade sur le bord droit** (`via un pseudo-élément ou un div absolu`) quand il reste des tabs hors-écran. Le gradient disparaît quand on a scrollé jusqu'au bout.
+
+- [x] **UX2-2 : Affordance de scroll sur les tabs du Profil**
+  - _Problème :_ Même problème sur PROFIL / HISTORIQUE 35 / BADGES / AMIS — "HISTORIQUE 35" est large et peut couper "BADGES" ou "AMIS" sur petits écrans.
+  - _Action :_ Appliquer le même traitement gradient fade que UX2-1 sur les tabs du profil (`src/components/profile/ProfileClient.tsx`). Vérifier aussi que le compteur "35" dans l'onglet HISTORIQUE ne fait pas déborder le tab — si oui, le passer en badge superposé plutôt qu'en texte inline.
+
+- [x] **UX2-3 : Corriger le label "← Terrain" dans la feuille de match**
+  - _Problème :_ "← Terrain" comme bouton retour est thématique mais UX-ment ambigu — les utilisateurs cherchent "Retour" ou une flèche seule.
+  - _Action :_ Dans `src/app/(app)/match/[id]/page.tsx` ou le composant header de la feuille de match, remplacer le label "Terrain" par une simple flèche `←` sans texte, ou "← Matchs". Conserver la couleur jaune/whistle actuelle.
+
+- [x] **UX2-4 : Corriger "V S" (avec espace) dans le header match À VENIR**
+  - _Problème :_ Le score des matchs à venir affiche "V S" avec un espace parasite — artefact typographique.
+  - _Action :_ Trouver l'origine du rendu "VS" dans le composant de score (probablement `src/components/match/MatchStats.tsx` ou le header du match). Corriger pour afficher "VS" sans espace, ou remplacer par un tiret `—` plus sobre.
+
+- [x] **UX2-5 : Indiquer que les cases de score Pronos sont éditables**
+  - _Problème :_ Dans la page Pronos, les cases pour entrer le score ressemblent à des placeholders statiques — pas d'affordance visuelle d'édition.
+  - _Action :_ Dans `src/components/pronos/PronosticsHubClient.tsx` ou `ScorerAllocationEditor.tsx`, ajouter un placeholder `?` dans chaque input de score vide, et une bordure en tirets ou une légère lueur au focus pour signaler l'interactivité. S'assurer que `font-size >= 16px` sur ces inputs pour éviter le zoom automatique iOS (déjà listé en F7 mais vérifier si fait).
+
+---
+
+### 🎨 Sprint UX3 : EMPTY STATES & FEEDBACK — "Chaque écran vide doit inviter à agir"
+
+- [x] **UX3-1 : Refaire l'empty state du Vestiaire (Chat de ligue)**
+  - _Problème :_ L'onglet Vestiaire (chat) d'une ligue affiche presque uniquement du noir — c'est l'écran le plus vide et le moins motivant de l'app.
+  - _Action :_ Dans `src/components/ligues/SquadDetailClient.tsx` (ou le composant chat extrait), détecter quand il n'y a aucun message. Afficher un empty state : illustration simple (emoji ou SVG minimaliste), texte "Personne n'a encore pris la parole... Brise la glace !", et focus automatique sur l'input à l'arrivée sur cet onglet.
+  - _Bonus :_ Insérer automatiquement un message système à la création de la ligue : `"🎉 Bienvenue dans [Nom de la ligue] ! Présentez-vous..."`.
+
+- [x] **UX3-2 : Améliorer l'empty state KOP (match À VENIR)**
+  - _Problème :_ Quand un match n'a pas encore commencé, le KOP affiche juste "En attente des premiers événements..." sur un écran vide. L'utilisateur est bloqué sans action possible.
+  - _Action :_ Dans `src/components/match/MatchTimeline.tsx`, quand `matchStatus === 'upcoming'`, afficher à la place : l'heure de coup d'envoi en gros, un compteur de temps restant si < 24h, et un CTA "Voir la Compo" qui switche sur l'onglet COMPO. Conserver le message actuel uniquement pour les matchs `live` sans événements.
+
+- [x] **UX3-3 : Améliorer l'onglet Amis (recherche directe)**
+  - _Problème :_ L'onglet Amis du profil renvoie vers les Ligues pour trouver des amis — parcours brisé. Il n'y a pas de recherche par pseudo.
+  - _Action :_ Dans `src/components/profile/AmisContent.tsx`, ajouter en haut de l'onglet un champ de recherche `input` avec placeholder "Chercher un joueur par pseudo...". Au submit, appeler une query Supabase `profiles` filtrant par `username ilike %query%` (limité à 5 résultats). Afficher les résultats avec un bouton "Ajouter" inline. Conserver le CTA "Rejoins une ligue" en bas comme action secondaire.
+
+---
+
+### 🎨 Sprint UX4 : LISIBILITÉ & HIÉRARCHIE — "Chaque info à sa bonne place"
+
+- [x] **UX4-1 : Corriger l'abréviation "Dem." dans le sélecteur de jours (Pronos)**
+  - _Problème :_ Le sélecteur de jours mélange des jours absolus (Dim, Lun, Mar...) avec "Dem." (relatif = Demain) — incohérence de convention.
+  - _Action :_ Dans `src/components/pronos/MatchFilterBar.tsx` ou le composant de sélection de dates, remplacer "Dem." par l'abréviation réelle du jour (`format(date, 'EEE', { locale: fr })` → "Jeu.", "Ven."...). Si on veut signaler "Demain", ajouter un badge secondaire sous le numéro du jour plutôt que remplacer le nom.
+
+- [x] **UX4-2 : Ajouter une légende aux cotes dans les cartes Pronos**
+  - _Problème :_ Les chiffres 193 / 166 / 65 sous les boutons de pronostic n'ont pas de label — un nouvel utilisateur ne sait pas ce qu'ils représentent.
+  - _Action :_ Dans la `MatchPronoCard` de `src/components/pronos/PronosticsHubClient.tsx`, ajouter sous chaque cote un micro-label `"pts si correct"` (ou `"XP"`) en texte très petit (`text-[10px] text-zinc-500`). Alternative : une icône info ⓘ qui affiche un tooltip au tap.
+
+- [x] **UX4-3 : Clarifier le label "Score exact" dans l'Historique profil**
+  - _Problème :_ Dans l'historique, "Score exact · 1-4" pour un match 0-0 est confus — "Score exact" ressemble à une catégorie de résultat, pas à un type de pari.
+  - _Action :_ Dans `src/components/profile/ProfileClient.tsx` ou le composant d'historique, renommer le label affiché de "Score exact" en "Mon prono :" suivi du score prédit. Le résultat réel doit être clairement séparé visuellement (ex: `Résultat : 0-0` en grisé dessous).
+
+- [x] **UX4-4 : Remonter "Score de confiance" dans le hero du profil**
+  - _Problème :_ Le "Score de confiance" (indicateur de qualité de prédiction) est tout en bas du profil, sous le fold. C'est pourtant une métrique-clé de progression.
+  - _Action :_ Dans `src/components/profile/ProfileClient.tsx` (ou le composant hero du profil), déplacer le bloc "Score de confiance" dans la carte hero, à côté ou juste en dessous du streak. Le streak (`🔥 2j`) mérite aussi d'être agrandi — passer de `text-xs` à `text-sm` minimum.
+
+- [x] **UX4-5 : Améliorer le code de ligue sur les cartes (Ligues)**
+  - _Problème :_ Le "Code: F9DQXT" prend l'espace d'un bouton pleine largeur alors que c'est une action secondaire (partager le code).
+  - _Action :_ Dans `src/components/ligues/LiguesPageClient.tsx`, remplacer le bouton pleine largeur "Code: F9DQXT" par une ligne inline affichant le code en `font-mono` + une icône `Copy` (Lucide) cliquable qui copie dans le presse-papiers avec un toast "Code copié !". Libérer ainsi l'espace visuel sur la carte.
+
+- [x] **UX4-6 : Ajouter confirmation avant "Quitter" une ligue**
+  - _Problème :_ Le bouton "Quitter" est une action destructive sans confirmation — risque de quitter accidentellement une ligue.
+  - _Action :_ Dans `src/components/ligues/LiguesPageClient.tsx`, entourer l'action "Quitter" d'une modale de confirmation (`AlertDialog` ou `confirm()` natif) : "Es-tu sûr de vouloir quitter [Nom de la ligue] ? Tu perdras ton classement.". Bouton de confirmation en rouge.
+
+---
+
 ## 💡 Rappel des Commandes pour l'IA
 
 - `npm run ai:check` : Formate, vérifie le typage (TS) et les règles de code (ESLint). **A faire à chaque fin de tâche.**

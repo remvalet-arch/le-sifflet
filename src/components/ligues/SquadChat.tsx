@@ -140,9 +140,15 @@ export function SquadChat({
       {/* Messages */}
       <div className="flex flex-col gap-2 px-4 py-3 overflow-y-auto max-h-64 min-h-[80px]">
         {messages.length === 0 ? (
-          <p className="text-xs text-zinc-600 text-center py-4">
-            Aucun message encore — lancez la discussion !
-          </p>
+          <div className="flex flex-col items-center gap-2 py-6 text-center">
+            <span className="text-3xl">💬</span>
+            <p className="text-sm font-black text-zinc-400">
+              Soyez les premiers !
+            </p>
+            <p className="text-xs text-zinc-600 max-w-[180px]">
+              Personne n&apos;a encore pris la parole. Brisez la glace&nbsp;!
+            </p>
+          </div>
         ) : (
           messages.map((msg) => {
             const isMe = msg.user_id === currentUserId;

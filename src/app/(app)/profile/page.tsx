@@ -309,6 +309,7 @@ export default async function ProfilePage() {
         balance={balance}
         loginStreak={profile?.login_streak ?? 0}
         lastLoginDate={profile?.last_login_date ?? null}
+        trustScore={trustScore}
       />
 
       <ProfileClient

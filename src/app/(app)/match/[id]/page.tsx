@@ -109,7 +109,7 @@ export default async function MatchPage({ params }: Props) {
         href="/lobby"
         className="inline-flex items-center gap-1.5 text-sm font-bold text-whistle transition-opacity hover:opacity-70"
       >
-        ← Terrain
+        ← Matchs
       </Link>
 
       {match.status === "finished" && squadPronos.length > 0 && (

@@ -114,40 +114,6 @@ function formatPronoValue(
   return value;
 }
 
-function getTrustGrade(score: number) {
-  if (score >= 200)
-    return {
-      label: "Arbitre Élite",
-      icon: "🏅",
-      color: "text-yellow-400",
-      bar: "bg-yellow-400",
-      glow: "shadow-[0_0_12px_rgba(234,179,8,0.4)]",
-    };
-  if (score >= 100)
-    return {
-      label: "Arbitre Officiel",
-      icon: "✅",
-      color: "text-green-400",
-      bar: "bg-green-500",
-      glow: "shadow-[0_0_12px_rgba(34,197,94,0.4)]",
-    };
-  if (score >= 50)
-    return {
-      label: "Lanceur d'Alerte",
-      icon: "⚡",
-      color: "text-blue-400",
-      bar: "bg-blue-400",
-      glow: "shadow-[0_0_12px_rgba(59,130,246,0.4)]",
-    };
-  return {
-    label: "Carton Jaune",
-    icon: "⚠️",
-    color: "text-orange-400",
-    bar: "bg-orange-400",
-    glow: "shadow-[0_0_12px_rgba(249,115,22,0.4)]",
-  };
-}
-
 const TABS = [
   { value: "profil", icon: "⚽", label: "Profil" },
   { value: "historique", icon: "📊", label: "Historique" },
@@ -168,7 +134,6 @@ export function ProfileClient({
   totalBets,
   totalEarned,
   bestStreak,
-  trustScore,
   isModerateur,
   scoreAccuracy,
   totalMatchesPronoed,
@@ -177,8 +142,6 @@ export function ProfileClient({
   const varCount = shortBets.length;
   const pronoCount = pronos.length;
   const trophyCount = unlockedBadgeIds.length;
-  const grade = getTrustGrade(trustScore);
-
   const tabBadge = (value: TabValue): number | null => {
     if (value === "historique")
       return varCount + pronoCount > 0 ? varCount + pronoCount : null;
@@ -201,37 +164,43 @@ export function ProfileClient({
 
   return (
     <div className="mt-4 flex flex-col gap-4">
-      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.value;
-          const badge = tabBadge(tab.value);
-          return (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setActiveTab(tab.value)}
-              className={`shrink-0 flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-wide transition-all ${
-                isActive
-                  ? "border-white/25 bg-zinc-800 text-white shadow-[0_0_12px_rgba(255,255,255,0.08)]"
-                  : "border-white/8 bg-zinc-900 text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-              {badge !== null && (
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[8px] font-black ${
-                    isActive
-                      ? "bg-zinc-900 text-white"
-                      : "bg-zinc-700 text-zinc-400"
-                  }`}
-                >
-                  {badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
+      <div className="relative">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.value;
+            const badge = tabBadge(tab.value);
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setActiveTab(tab.value)}
+                className={`shrink-0 flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-wide transition-all ${
+                  isActive
+                    ? "border-white/25 bg-zinc-800 text-white shadow-[0_0_12px_rgba(255,255,255,0.08)]"
+                    : "border-white/8 bg-zinc-900 text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+                {badge !== null && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[8px] font-black ${
+                      isActive
+                        ? "bg-zinc-900 text-white"
+                        : "bg-zinc-700 text-zinc-400"
+                    }`}
+                  >
+                    {badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950 to-transparent"
+          aria-hidden
+        />
       </div>
 
       {activeTab === "profil" && (
@@ -314,27 +283,6 @@ export function ProfileClient({
               </div>
             </div>
           )}
-
-          <div className="rounded-2xl border border-white/8 bg-zinc-900 px-4 py-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wide text-zinc-500">
-                Score de confiance
-              </span>
-              <span
-                className={`text-[10px] font-black ${grade.color} ${grade.glow} rounded-full px-2 py-0.5`}
-              >
-                {grade.icon} {grade.label} · {trustScore}
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
-              <div
-                className={`h-full rounded-full transition-[width] duration-500 ${grade.bar}`}
-                style={{
-                  width: `${Math.min(100, (trustScore / 1000) * 100)}%`,
-                }}
-              />
-            </div>
-          </div>
 
           {refillContent}
 
@@ -588,7 +536,7 @@ function PronoRow({ prono: p }: { prono: PronoEntry }) {
       <div className="min-w-0 flex-1">
         {isScore ? (
           <p className="text-xs font-black text-white">
-            Score exact · {p.prono_value}
+            Mon prono · {p.prono_value}
           </p>
         ) : (
           <p className="truncate text-xs font-semibold text-zinc-300">{line}</p>

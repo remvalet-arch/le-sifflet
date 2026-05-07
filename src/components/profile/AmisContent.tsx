@@ -1,11 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Users, Check, X, ChevronRight, Trophy } from "lucide-react";
+import {
+  Users,
+  Check,
+  X,
+  ChevronRight,
+  Trophy,
+  Search,
+  UserPlus,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/types/database";
+
+type SearchProfile = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+};
 
 type FriendRequestRow = Database["public"]["Tables"]["friend_requests"]["Row"];
 
@@ -56,6 +70,11 @@ function AvatarCircle({
 export function AmisContent({ currentUserId }: { currentUserId: string }) {
   const [friends, setFriends] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchProfile[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -103,6 +122,54 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
     };
   }, [currentUserId, supabase]);
 
+  function handleSearchChange(val: string) {
+    setSearchQuery(val);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (val.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    searchTimer.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .ilike("username", `%${val.trim()}%`)
+        .neq("id", currentUserId)
+        .limit(5);
+      setSearchResults((data as SearchProfile[]) ?? []);
+      setSearchLoading(false);
+    }, 350);
+  }
+
+  async function handleAddFriend(targetId: string) {
+    if (addingId) return;
+    setAddingId(targetId);
+    const existing = friends.find(
+      (f) =>
+        (f.sender_id === currentUserId && f.receiver_id === targetId) ||
+        (f.sender_id === targetId && f.receiver_id === currentUserId),
+    );
+    if (existing) {
+      toast.error("Demande déjà envoyée ou déjà ami !");
+      setAddingId(null);
+      return;
+    }
+    const { error } = await supabase.from("friend_requests").insert({
+      sender_id: currentUserId,
+      receiver_id: targetId,
+      status: "pending",
+    });
+    setAddingId(null);
+    if (error) {
+      toast.error("Erreur lors de l'envoi de la demande");
+    } else {
+      toast.success("Demande d'ami envoyée !");
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  }
+
   async function handleAction(id: string, action: "accepted" | "rejected") {
     if (action === "rejected") {
       await supabase.from("friend_requests").delete().eq("id", id);
@@ -137,6 +204,53 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
 
   return (
     <div className="space-y-5">
+      {/* Search bar */}
+      <div className="relative">
+        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900 px-3 py-2.5">
+          <Search className="h-4 w-4 shrink-0 text-zinc-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Chercher un joueur par pseudo…"
+            className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-600 outline-none"
+            style={{ fontSize: "16px" }}
+          />
+        </div>
+        {(searchResults.length > 0 || searchLoading) && (
+          <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-xl">
+            {searchLoading ? (
+              <p className="px-4 py-3 text-xs text-zinc-500">Recherche…</p>
+            ) : (
+              searchResults.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0"
+                >
+                  <AvatarCircle
+                    avatarUrl={p.avatar_url}
+                    username={p.username}
+                    size="sm"
+                  />
+                  <span className="flex-1 text-sm font-bold text-white">
+                    {p.username}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void handleAddFriend(p.id)}
+                    disabled={addingId === p.id}
+                    className="flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/15 px-3 py-1 text-[11px] font-black text-green-400 transition hover:bg-green-500/25 disabled:opacity-50"
+                  >
+                    <UserPlus className="h-3 w-3" />
+                    Ajouter
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       <Link
         href="/ligues"
         className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3.5 transition hover:bg-emerald-500/12"
