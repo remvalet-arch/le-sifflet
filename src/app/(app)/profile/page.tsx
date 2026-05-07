@@ -89,7 +89,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date, login_streak, last_login_date",
+      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date, login_streak, last_login_date, preferred_competitions",
     )
     .eq("id", user.id)
     .single();
@@ -329,6 +329,7 @@ export default async function ProfilePage() {
         headerBalance={balance}
         headerLoginStreak={profile?.login_streak ?? 0}
         headerLastLoginDate={profile?.last_login_date ?? null}
+        headerPreferredCompetitions={profile?.preferred_competitions ?? []}
       />
     </main>
   );

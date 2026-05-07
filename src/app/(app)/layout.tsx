@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/TopBar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { LiveRoomProvider } from "@/contexts/LiveRoomContext";
 
 async function trackLoginStreak(
@@ -59,6 +60,7 @@ export default async function AppLayout({
     <LiveRoomProvider>
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden bg-zinc-950 shadow-2xl">
         <div className="flex min-h-full flex-1 flex-col text-white">
+          <MigrationBanner />
           <TopBar
             username={profile.username}
             siffletsBalance={profile.sifflets_balance}

@@ -957,7 +957,7 @@ Agis en tant que Lead Backend et Game Designer.
 
 > Réduire la friction de pronostiquer en filtrant le contenu sur les compétitions que l'utilisateur suit vraiment. Préférence globale appliquée à Pronos + Stade + Push. Comportement par défaut pour un nouvel utilisateur : déduction depuis le `favorite_team_id` (club de cœur) → puis `Accept-Language` → fallback Ligue 1 + UCL. Les préférences s'appliquent partout (Pronos, Stade, Push).
 
-- [ ] **P1 : Migration `preferred_competitions` sur profiles**
+- [x] **P1 : Migration `preferred_competitions` sur profiles**
   - _Action 1 :_ Créer `supabase/migrations/0078_preferred_competitions.sql` :
     - Ajouter colonne `preferred_competitions UUID[] DEFAULT ARRAY[]::UUID[]` sur `profiles`
     - Ajouter index GIN : `CREATE INDEX idx_profiles_preferred_competitions ON profiles USING GIN (preferred_competitions);`
@@ -966,13 +966,13 @@ Agis en tant que Lead Backend et Game Designer.
   - _Action 2 :_ Mettre à jour `src/types/database.ts` — ajouter `preferred_competitions: string[] | null` sur `ProfileRow` (Insert + Update).
   - _Action 3 :_ Étendre la RPC `update_profile` (`supabase/migrations/0079_update_profile_preferred.sql`) pour accepter le paramètre `p_preferred_competitions UUID[]` (optionnel — ne touche pas si NULL).
 
-- [ ] **P2 : Détection automatique de la langue → ligues par défaut**
+- [x] **P2 : Détection automatique de la langue → ligues par défaut**
   - _Contexte :_ Pour les nouveaux utilisateurs sans `favorite_team_id`, déduire les ligues par défaut depuis la langue navigateur. Mapping : `fr` → Ligue 1 + UCL, `en` → Premier League + UCL, `es` → La Liga + UCL, `de` → Bundesliga + UCL, `it` → Serie A + UCL, autre → UCL seulement.
   - _Action 1 :_ Créer `src/lib/default-competitions.ts` exportant `getDefaultCompetitionsByLocale(locale: string): string[]`. Les UUIDs Supabase des compétitions sont référencés depuis une constante `src/lib/constants/competitions.ts` (mapping `api_football_league_id` → UUID Supabase, hardcodé et commenté).
   - _Action 2 :_ Dans le callback d'auth (`src/app/auth/callback/route.ts`), après création du profil, si `preferred_competitions` est vide : lire `headers().get('accept-language')`, appeler `getDefaultCompetitionsByLocale()`, écrire en DB via le client admin.
   - _Ordre de priorité :_ Club de cœur → Langue → Fallback Ligue 1 + UCL.
 
-- [ ] **P3 : Composant `CompetitionFilter` réutilisable**
+- [x] **P3 : Composant `CompetitionFilter` réutilisable**
   - _Action 1 :_ Créer `src/components/shared/CompetitionFilter.tsx` (Client Component) :
     - Props : `competitions: CompetitionRow[]`, `selectedIds: string[]`, `onChange: (ids: string[]) => void`, `showCounts?: Record<string, number>`
     - UI : rangée scrollable horizontale (`overflow-x-auto snap-x`), gradient fade à droite (pattern UX2-1)
@@ -983,28 +983,28 @@ Agis en tant que Lead Backend et Game Designer.
     - Lit `profile.preferred_competitions` au mount (passé en prop depuis la page Server Component)
     - Expose `preferences` + `setPreferences(ids)` (appelle `PUT /api/profile`, optimistic update, rollback sur erreur, toast Sonner).
 
-- [ ] **P4 : Intégration dans le Hub Pronos**
+- [x] **P4 : Intégration dans le Hub Pronos**
   - _Action 1 :_ Dans `src/components/pronos/PronosticsHubClient.tsx`, insérer `<CompetitionFilter />` **entre le `DateSlider` et la liste des matchs** (pas au-dessus du DateSlider — ordre : barre progression → DateSlider → filtre compétitions → accordéon matchs).
   - _Action 2 :_ Filtrer le tableau de matchs côté client : `match.competition_id IN selectedCompetitionIds` quand le filtre actif n'est pas "TOUTES".
   - _Action 3 :_ Mettre à jour la barre de progression "X/Y pronostiqués" pour refléter uniquement les matchs du filtre actif (ex: "8/12 sur tes ligues" vs "25/72 tous").
   - _Action 4 :_ Empty state si filtre actif + 0 match ce jour : "Aucun match {noms des ligues filtrées} ce jour-là — essaie une autre date ou élargis tes ligues." + bouton "Voir tous les matchs" (reset filtre).
 
-- [ ] **P5 : Intégration dans le Stade (Lobby)**
+- [x] **P5 : Intégration dans le Stade (Lobby)**
   - _Action 1 :_ Dans `src/components/lobby/MatchLobby.tsx`, réordonner les onglets de ligues : les compétitions présentes dans `preferredCompetitions` de l'utilisateur apparaissent EN PREMIER (après "DIRECT"), les autres après. Passer les préférences depuis la page Server Component (`src/app/(app)/lobby/page.tsx` qui lit `profile.preferred_competitions`).
   - _Action 2 :_ Onglet "DIRECT" : si plusieurs matchs live, afficher en priorité ceux des ligues suivies — les autres en repli sous un séparateur discret "Autres compétitions".
   - _Action 3 :_ Empty state "La VAR dort" : personnaliser → "Aucun match {Ligue 1 ou Champions League} en direct. Tes prochains matchs : {liste 2-3 prochains matchs des ligues suivies}."
 
-- [ ] **P6 : Filtrage des push notifications**
+- [x] **P6 : Filtrage des push notifications**
   - _Action 1 :_ Dans `src/lib/push-sender.ts`, fonction `sendPushToMatchSubscribers(matchId, payload)` : avant d'envoyer à un destinataire, vérifier que `match.competition_id` figure dans `profile.preferred_competitions`. Sinon, skip silencieux.
   - _Action 2 :_ Idem pour `POST /api/squads/nudge` (nudge pronos) : ne réveille pas un user dont la compétition du match n'est pas dans ses préférences.
   - _Note :_ La sirène VAR (`POST /api/squads/var-alert`) est une action sociale explicite d'un membre de la ligue — ne pas filtrer.
 
-- [ ] **P7 : UI de gestion des préférences**
+- [x] **P7 : UI de gestion des préférences**
   - _Action 1 :_ Dans la modale "Modifier mon profil" (`src/components/profile/ProfileEditModal.tsx`), ajouter une section "MES LIGUES" sous "CLUB DE CŒUR" — liste de chips toggle pour les 8 compétitions disponibles, état initial depuis `profile.preferred_competitions`.
   - _Action 2 :_ Inclure `preferred_competitions` dans l'appel `update_profile` au submit du formulaire.
   - _Action 3 (bonus) :_ Ajouter un bouton "⚙️ Mes ligues" à droite du `CompetitionFilter` dans Pronos qui ouvre directement la section "MES LIGUES" de la modale profil (deep-link).
 
-- [ ] **P8 : Onboarding préférences pour nouveaux utilisateurs**
+- [x] **P8 : Onboarding préférences pour nouveaux utilisateurs**
   - _Action :_ Dans `src/components/onboarding/OnboardingTour.tsx`, insérer une étape "Choisis tes ligues" (déclenchée si `preferred_competitions` est vide ET l'utilisateur a moins de 24h d'ancienneté) : grille de 8 cards compétition avec drapeau + nom, pré-cochées selon la langue détectée (P2). Bouton "C'est parti !" → écrit en DB puis ferme l'onboarding.
 
 ---

@@ -68,6 +68,7 @@ type Props = {
   headerLoginStreak?: number;
   headerLastLoginDate?: string | null;
   headerKarma?: { emoji: string; label: string; cls: string };
+  headerPreferredCompetitions?: string[];
 };
 
 const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -159,6 +160,7 @@ export function ProfileClient({
   headerLoginStreak,
   headerLastLoginDate,
   headerKarma,
+  headerPreferredCompetitions,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabValue>("profil");
   const pendingPronoCount = pronos.filter((p) => p.status === "pending").length;
@@ -206,6 +208,7 @@ export function ProfileClient({
             lastLoginDate={headerLastLoginDate}
             trustScore={trustScore}
             compact={activeTab !== "profil"}
+            preferredCompetitions={headerPreferredCompetitions}
           />
         )}
 

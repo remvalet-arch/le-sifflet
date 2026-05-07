@@ -76,6 +76,7 @@ export function ProfileHeader({
   lastLoginDate,
   trustScore,
   compact = false,
+  preferredCompetitions = [],
 }: {
   username: string;
   avatarUrl: string | null;
@@ -88,6 +89,7 @@ export function ProfileHeader({
   lastLoginDate?: string | null;
   trustScore?: number;
   compact?: boolean;
+  preferredCompetitions?: string[];
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const [username, setUsername] = useState(initialUsername);
@@ -168,6 +170,7 @@ export function ProfileHeader({
             initialTeamId={team?.id ?? null}
             initialTeamName={team?.name ?? null}
             initialTeamLogo={team?.logo_url ?? null}
+            initialPreferredCompetitions={preferredCompetitions}
             xp={xpTotal}
             onSaved={(data) => {
               setUsername(data.username);

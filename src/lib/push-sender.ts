@@ -18,7 +18,7 @@ export type PushPayload = {
   url?: string;
 };
 
-/** Envoie un push à tous les abonnés d'un match (filtre smart_mute). */
+/** Envoie un push à tous les abonnés d'un match (filtre smart_mute + preferred_competitions). */
 export async function sendPushToMatchSubscribers(
   matchId: string,
   payload: PushPayload,
@@ -28,14 +28,45 @@ export async function sendPushToMatchSubscribers(
 
   const admin = createAdminClient();
 
-  const { data: matchSubs } = await admin
-    .from("match_subscriptions")
-    .select("user_id")
-    .eq("match_id", matchId)
-    .eq("smart_mute", false);
+  const [{ data: matchSubs }, { data: match }] = await Promise.all([
+    admin
+      .from("match_subscriptions")
+      .select("user_id")
+      .eq("match_id", matchId)
+      .eq("smart_mute", false),
+    admin
+      .from("matches")
+      .select("competition_id")
+      .eq("id", matchId)
+      .maybeSingle(),
+  ]);
 
   if (!matchSubs?.length) return 0;
-  const userIds = matchSubs.map((s) => s.user_id);
+
+  const competitionId = match?.competition_id ?? null;
+
+  let userIds = matchSubs.map((s) => s.user_id);
+
+  // Filter by preferred_competitions when competition is known
+  if (competitionId) {
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, preferred_competitions")
+      .in("id", userIds);
+
+    const profileMap = new Map(
+      (profiles ?? []).map((p) => [p.id, p.preferred_competitions]),
+    );
+
+    userIds = userIds.filter((uid) => {
+      const prefs = profileMap.get(uid);
+      // Empty/null prefs = "all competitions" (no filter applied)
+      if (!prefs || prefs.length === 0) return true;
+      return prefs.includes(competitionId);
+    });
+  }
+
+  if (userIds.length === 0) return 0;
   return sendPushToUsers(userIds, payload);
 }
 

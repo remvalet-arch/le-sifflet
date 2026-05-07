@@ -19,9 +19,11 @@ type Search = Record<string, string | string[] | undefined>;
 async function MatchListFetcher({
   viewMode,
   roundContext,
+  preferredLeagueApiIds,
 }: {
   viewMode: "day" | "round";
   roundContext: { leagueApiId: number; roundShort: string } | null;
+  preferredLeagueApiIds: number[];
 }) {
   const supabase = await createClient();
 
@@ -81,6 +83,7 @@ async function MatchListFetcher({
       viewMode={viewMode}
       roundContext={roundContext}
       dayFallbackBanner={dayFallbackBanner}
+      preferredLeagueApiIds={preferredLeagueApiIds}
     />
   );
 }
@@ -91,6 +94,33 @@ export default async function LobbyPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const roundContext = parseLobbyRoundParams(sp);
   const viewMode = roundContext != null ? "round" : "day";
+
+  // Fetch preferred competitions for tab ordering
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let preferredLeagueApiIds: number[] = [];
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("preferred_competitions")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.preferred_competitions?.length) {
+      const { data: comps } = await supabase
+        .from("competitions")
+        .select("api_football_league_id")
+        .in("id", profile.preferred_competitions)
+        .not("api_football_league_id", "is", null);
+
+      preferredLeagueApiIds = (comps ?? [])
+        .map((c) => c.api_football_league_id)
+        .filter((id): id is number => id != null);
+    }
+  }
 
   return (
     <>
@@ -103,7 +133,11 @@ export default async function LobbyPage({ searchParams }: PageProps) {
           }
           fallback={<MatchListSkeleton />}
         >
-          <MatchListFetcher viewMode={viewMode} roundContext={roundContext} />
+          <MatchListFetcher
+            viewMode={viewMode}
+            roundContext={roundContext}
+            preferredLeagueApiIds={preferredLeagueApiIds}
+          />
         </Suspense>
       </main>
 

@@ -11,17 +11,31 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: "VAR Time",
-    template: "%s | VAR Time",
+    default: "VAR TIME — L'app du match en direct",
+    template: "%s | VAR TIME",
   },
   description:
-    "Second écran football : signale les actions en direct, prédis les décisions de la VAR, grimpe au classement.",
-  applicationName: "VAR Time",
+    "Pronos avant les matchs, paris VAR en direct, ligues entre potes. L'app du match en direct, 100% gratuite, sifflets virtuels.",
+  applicationName: "VAR TIME",
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    url: appUrl,
+    siteName: "VAR TIME",
+    title: "VAR TIME — L'app du match en direct",
+    description:
+      "Pronos avant les matchs, paris VAR en direct, ligues entre potes. 100% gratuit.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VAR TIME — L'app du match en direct",
+    description:
+      "Pronos, paris VAR en direct, ligues entre potes. 100% gratuit.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "VAR Time",
+    title: "VAR TIME",
     startupImage: [
       {
         url: "/icon.svg",

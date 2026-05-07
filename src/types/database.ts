@@ -57,6 +57,7 @@ export interface Database {
           login_streak: number;
           lifetime_points_earned: number;
           monthly_points_earned: number;
+          preferred_competitions: string[] | null;
         };
         Insert: {
           id: string;
@@ -76,6 +77,7 @@ export interface Database {
           login_streak?: number;
           lifetime_points_earned?: number;
           monthly_points_earned?: number;
+          preferred_competitions?: string[] | null;
         };
         Update: {
           id?: string;
@@ -95,6 +97,7 @@ export interface Database {
           login_streak?: number;
           lifetime_points_earned?: number;
           monthly_points_earned?: number;
+          preferred_competitions?: string[] | null;
         };
         Relationships: [];
       };

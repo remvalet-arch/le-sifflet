@@ -23,6 +23,8 @@ import {
   aggregateSlots,
 } from "./ScorerAllocationEditor";
 import { MatchFilterBar } from "./MatchFilterBar";
+import { CompetitionFilter } from "@/components/shared/CompetitionFilter";
+import { usePreferredCompetitions } from "@/hooks/usePreferredCompetitions";
 
 type MatchStub = {
   id: string;
@@ -762,10 +764,12 @@ export function PronosticsHubClient({
   matches,
   existingPronos,
   competitions,
+  preferredCompetitions = [],
 }: {
   matches: MatchStub[];
   existingPronos: ExistingProno[];
   competitions: CompetitionStub[];
+  preferredCompetitions?: string[];
 }) {
   // Build prono lookup from server data
   const pronoByMatchId = new Map<
@@ -788,6 +792,9 @@ export function PronosticsHubClient({
   }
 
   const competitionMap = new Map(competitions.map((c) => [c.id, c]));
+
+  const { preferences: selectedCompIds, setPreferences: setSelectedCompIds } =
+    usePreferredCompetitions(preferredCompetitions);
 
   // Build day → competition → matches hierarchy (derived from props, stable order)
   type SectionKey = string; // `${dayKey}::${compId}`
@@ -837,10 +844,6 @@ export function PronosticsHubClient({
     return open;
   });
 
-  const [submittedCount, setSubmittedCount] = useState(
-    () => matches.filter((m) => pronoByMatchId.get(m.id)?.score != null).length,
-  );
-
   const [localSubmittedIds, setLocalSubmittedIds] = useState<Set<string>>(
     new Set(),
   );
@@ -861,9 +864,36 @@ export function PronosticsHubClient({
     });
   }
 
-  const total = matches.length;
+  // Competition filter: empty selectedCompIds = "all"
+  const filterActive = selectedCompIds.length > 0;
 
-  if (total === 0) {
+  const filteredMatches = filterActive
+    ? matches.filter(
+        (m) =>
+          m.competition_id != null &&
+          selectedCompIds.includes(m.competition_id),
+      )
+    : matches;
+
+  const total = filteredMatches.length;
+  const submittedCount = filteredMatches.filter((m) =>
+    isMatchDone(m.id),
+  ).length;
+
+  // Counts per competition for the selected day (for CompetitionFilter badges)
+  const countsForSelectedDay = (() => {
+    const map: Record<string, number> = {};
+    if (!selectedDay) return map;
+    for (const [dayKey, compMap] of dayMap) {
+      if (dayKey !== selectedDay) continue;
+      for (const [compId, ms] of compMap) {
+        if (compId !== "__none__") map[compId] = ms.length;
+      }
+    }
+    return map;
+  })();
+
+  if (matches.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-12 text-center space-y-3">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-2xl">
@@ -913,6 +943,15 @@ export function PronosticsHubClient({
         isMatchDone={isMatchDone}
       />
 
+      {competitions.length > 1 && (
+        <CompetitionFilter
+          competitions={competitions}
+          selectedIds={selectedCompIds}
+          onChange={setSelectedCompIds}
+          showCounts={countsForSelectedDay}
+        />
+      )}
+
       {/* Competition accordions for selected day */}
       {!selectedCompMap && (
         <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
@@ -925,10 +964,31 @@ export function PronosticsHubClient({
           </p>
         </div>
       )}
+      {selectedCompMap && total === 0 && filterActive && (
+        <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center space-y-3">
+          <p className="text-2xl">🔍</p>
+          <p className="text-sm font-black text-white">
+            Aucun match pour tes ligues ce jour-là
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Essaie une autre date ou élargis tes ligues.
+          </p>
+          <button
+            type="button"
+            onClick={() => setSelectedCompIds([])}
+            className="mt-2 rounded-full border border-white/10 bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-300 hover:text-white transition"
+          >
+            Voir tous les matchs
+          </button>
+        </div>
+      )}
       {selectedCompMap && (
         <div className="flex flex-col gap-2">
-          {Array.from(selectedCompMap.entries()).map(
-            ([compId, groupMatches]) => {
+          {Array.from(selectedCompMap.entries())
+            .filter(([compId]) =>
+              filterActive ? selectedCompIds.includes(compId) : true,
+            )
+            .map(([compId, groupMatches]) => {
               const comp =
                 compId !== "__none__" ? competitionMap.get(compId) : null;
               const sectionKey: SectionKey = `${selectedDay}::${compId}`;
@@ -1015,9 +1075,6 @@ export function PronosticsHubClient({
                             existingScore={p?.score ?? null}
                             existingScorers={p?.scorers ?? null}
                             onSubmittedChange={(submitted) => {
-                              setSubmittedCount((prev) =>
-                                submitted ? prev + 1 : Math.max(0, prev - 1),
-                              );
                               setLocalSubmittedIds((prev) => {
                                 const next = new Set(prev);
                                 if (submitted) next.add(m.id);
@@ -1032,8 +1089,7 @@ export function PronosticsHubClient({
                   )}
                 </div>
               );
-            },
-          )}
+            })}
         </div>
       )}
     </div>

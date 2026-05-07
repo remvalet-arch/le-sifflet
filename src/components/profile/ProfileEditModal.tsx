@@ -38,6 +38,13 @@ const AVATAR_TIERS: AvatarTier[] = [
 
 type TeamResult = { id: string; name: string; logo_url: string | null };
 
+type CompetitionResult = {
+  id: string;
+  name: string;
+  badge_url: string | null;
+  api_football_league_id: number | null;
+};
+
 function useIsClient() {
   return useSyncExternalStore(
     () => () => {},
@@ -46,6 +53,16 @@ function useIsClient() {
   );
 }
 
+const COMPETITION_FLAGS: Record<number, string> = {
+  61: "🇫🇷",
+  39: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  140: "🇪🇸",
+  135: "🇮🇹",
+  78: "🇩🇪",
+  2: "🏆",
+  3: "🥈",
+};
+
 export function ProfileEditModal({
   onClose,
   initialUsername,
@@ -53,6 +70,7 @@ export function ProfileEditModal({
   initialTeamId,
   initialTeamName,
   initialTeamLogo,
+  initialPreferredCompetitions = [],
   xp = 0,
   onSaved,
 }: {
@@ -62,6 +80,7 @@ export function ProfileEditModal({
   initialTeamId: string | null;
   initialTeamName: string | null;
   initialTeamLogo: string | null;
+  initialPreferredCompetitions?: string[];
   xp?: number;
   onSaved: (data: {
     username: string;
@@ -69,6 +88,7 @@ export function ProfileEditModal({
     favorite_team_id: string | null;
     team_name: string | null;
     team_logo: string | null;
+    preferred_competitions: string[];
   }) => void;
 }) {
   const isClient = useIsClient();
@@ -79,6 +99,10 @@ export function ProfileEditModal({
   const [teamId, setTeamId] = useState<string | null>(initialTeamId);
   const [teamName, setTeamName] = useState<string | null>(initialTeamName);
   const [teamLogo, setTeamLogo] = useState<string | null>(initialTeamLogo);
+  const [preferredComps, setPreferredComps] = useState<string[]>(
+    initialPreferredCompetitions,
+  );
+  const [competitions, setCompetitions] = useState<CompetitionResult[]>([]);
   const [teamSearch, setTeamSearch] = useState("");
   const [teamResults, setTeamResults] = useState<TeamResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -92,6 +116,26 @@ export function ProfileEditModal({
     return () => {
       document.body.style.overflow = "";
     };
+  }, []);
+
+  // Fetch available competitions on mount
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase
+      .from("competitions")
+      .select("id, name, badge_url, api_football_league_id")
+      .not("api_football_league_id", "is", null)
+      .order("name")
+      .then(({ data }) => {
+        setCompetitions(
+          (data ?? []).map((c) => ({
+            id: c.id,
+            name: c.name,
+            badge_url: c.badge_url,
+            api_football_league_id: c.api_football_league_id ?? null,
+          })),
+        );
+      });
   }, []);
 
   // Debounced team search — called directly from onChange, not in an effect
@@ -138,6 +182,7 @@ export function ProfileEditModal({
           username,
           avatar_url: avatar,
           favorite_team_id: teamId,
+          preferred_competitions: preferredComps,
         }),
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
@@ -152,6 +197,7 @@ export function ProfileEditModal({
         favorite_team_id: teamId,
         team_name: teamName,
         team_logo: teamLogo,
+        preferred_competitions: preferredComps,
       });
       onClose();
     } catch {
@@ -263,6 +309,46 @@ export function ProfileEditModal({
               </p>
             )}
           </section>
+
+          {/* ── Mes ligues ───────────────────────────────────────────────── */}
+          {competitions.length > 0 && (
+            <section className="mb-6">
+              <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
+                Mes ligues
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {competitions.map((comp) => {
+                  const flag = comp.api_football_league_id
+                    ? (COMPETITION_FLAGS[comp.api_football_league_id] ?? "⚽")
+                    : "⚽";
+                  const isSelected = preferredComps.includes(comp.id);
+                  return (
+                    <button
+                      key={comp.id}
+                      type="button"
+                      onClick={() =>
+                        setPreferredComps((prev) =>
+                          isSelected
+                            ? prev.filter((id) => id !== comp.id)
+                            : [...prev, comp.id],
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition ${
+                        isSelected
+                          ? "border-whistle bg-whistle/20 text-whistle"
+                          : "border-white/10 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                      }`}
+                    >
+                      {flag} {comp.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-[10px] text-zinc-600">
+                Filtrage des pronos et notifications
+              </p>
+            </section>
+          )}
 
           {/* ── Équipe favorite ──────────────────────────────────────────── */}
           <section>

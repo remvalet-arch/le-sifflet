@@ -312,12 +312,15 @@ export function MatchLobby({
   viewMode = "day",
   roundContext = null,
   dayFallbackBanner = null,
+  preferredLeagueApiIds = [],
 }: {
   initialMatches: LobbyMatchRow[];
   viewMode?: "day" | "round";
   roundContext?: { leagueApiId: number; roundShort: string } | null;
   /** Liste du jour = auto-forward (aucun match sur le football day). */
   dayFallbackBanner?: { shownDayLabelFr: string } | null;
+  /** Preferred league API IDs — reorders tabs (preferred first after Direct). */
+  preferredLeagueApiIds?: number[];
 }) {
   const [tab, setTab] = useState<LobbyTabKey>(() =>
     defaultTabForProps(viewMode, roundContext),
@@ -363,6 +366,23 @@ export function MatchLobby({
 
   const roundView = viewMode === "round" && roundContext != null;
 
+  // Reorder tabs: preferred leagues first (after Direct), then the rest
+  const orderedTabs = useMemo(() => {
+    if (preferredLeagueApiIds.length === 0) return TABS;
+    const preferred = TOP_LEAGUES.filter((l) =>
+      preferredLeagueApiIds.includes(l.apiFootballLeagueId),
+    ).map((l) => ({ id: l.tabKey, label: l.label }));
+    const others = TOP_LEAGUES.filter(
+      (l) => !preferredLeagueApiIds.includes(l.apiFootballLeagueId),
+    ).map((l) => ({ id: l.tabKey, label: l.label }));
+    return [
+      { id: "direct" as LobbyTabKey, label: "Direct" },
+      ...preferred,
+      ...others,
+      { id: "europe" as LobbyTabKey, label: "Europe" },
+    ];
+  }, [preferredLeagueApiIds]);
+
   // Auto-switch away from empty "Direct" tab on first render
   const hasAutoSwitched = useRef(false);
   useEffect(() => {
@@ -373,9 +393,9 @@ export function MatchLobby({
       !roundView
     ) {
       hasAutoSwitched.current = true;
-      setTab(TABS[1]?.id ?? "l1");
+      setTab(orderedTabs[1]?.id ?? "l1");
     }
-  }, [directRows.length, tab, roundView]);
+  }, [directRows.length, tab, roundView, orderedTabs]);
 
   if (rows.length === 0) {
     return (
@@ -424,7 +444,7 @@ export function MatchLobby({
           className="flex gap-1 overflow-x-auto pb-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Filtrer par compétition"
         >
-          {TABS.map((t) => (
+          {orderedTabs.map((t) => (
             <button
               key={t.id}
               type="button"

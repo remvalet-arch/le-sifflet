@@ -1,7 +1,7 @@
 {
-  "name": "VAR Time",
-  "short_name": "VAR Time",
-  "description": "Second écran football — signale les actions, prédis la VAR, grimpe au classement.",
+  "name": "VAR TIME — L'app du match en direct",
+  "short_name": "VAR TIME",
+  "description": "Pronos avant les matchs, paris VAR en direct, ligues entre potes. 100% gratuit.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",
@@ -9,10 +9,22 @@
   "orientation": "portrait-primary",
   "icons": [
     {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

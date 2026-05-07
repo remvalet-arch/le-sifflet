@@ -22,11 +22,13 @@ export async function PATCH(req: Request) {
     return errorResponse("Corps invalide", 400);
   }
 
-  const { username, avatar_url, favorite_team_id } = body as {
-    username?: unknown;
-    avatar_url?: unknown;
-    favorite_team_id?: unknown;
-  };
+  const { username, avatar_url, favorite_team_id, preferred_competitions } =
+    body as {
+      username?: unknown;
+      avatar_url?: unknown;
+      favorite_team_id?: unknown;
+      preferred_competitions?: unknown;
+    };
 
   const update: ProfileUpdate = {
     updated_at: new Date().toISOString(),
@@ -55,6 +57,20 @@ export async function PATCH(req: Request) {
       update.avatar_url = avatar_url;
     } else {
       update.avatar_url = null;
+    }
+  }
+
+  // ── Validation preferred_competitions (UUID[] ou null) ────────────────────
+  if (preferred_competitions !== undefined) {
+    if (preferred_competitions === null) {
+      update.preferred_competitions = null;
+    } else if (
+      Array.isArray(preferred_competitions) &&
+      preferred_competitions.every((id) => typeof id === "string")
+    ) {
+      update.preferred_competitions = preferred_competitions as string[];
+    } else {
+      return errorResponse("preferred_competitions invalide", 400);
     }
   }
 

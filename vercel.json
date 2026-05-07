@@ -4,5 +4,13 @@
       "path": "/api/cron/sync-odds",
       "schedule": "0 6 * * 1"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "le-sifflet.vercel.app" }],
+      "destination": "https://vartime.app/$1",
+      "permanent": true
+    }
   ]
 }

@@ -17,10 +17,17 @@ export default async function PronosPage() {
   const fourDaysAgo = new Date(nowMs - 4 * 24 * 60 * 60 * 1000).toISOString();
   const fiveDaysLater = new Date(nowMs + 5 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: competitions } = await supabase
-    .from("competitions")
-    .select("id, name, badge_url, api_football_league_id")
-    .in("api_football_league_id", LOBBY_TRACKED_LEAGUE_API_IDS as number[]);
+  const [{ data: competitions }, { data: profilePrefs }] = await Promise.all([
+    supabase
+      .from("competitions")
+      .select("id, name, badge_url, api_football_league_id")
+      .in("api_football_league_id", LOBBY_TRACKED_LEAGUE_API_IDS as number[]),
+    supabase
+      .from("profiles")
+      .select("preferred_competitions")
+      .eq("id", user.id)
+      .single(),
+  ]);
 
   const competitionIds = (competitions ?? []).map((c) => c.id);
 
@@ -88,6 +95,7 @@ export default async function PronosPage() {
           badge_url: c.badge_url,
           api_football_league_id: c.api_football_league_id ?? null,
         }))}
+        preferredCompetitions={profilePrefs?.preferred_competitions ?? []}
       />
     </main>
   );
