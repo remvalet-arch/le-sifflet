@@ -48,14 +48,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-6 pb-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-            Classement
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Top 50 des meilleurs joueurs.
-          </p>
-        </div>
+        <p className="text-sm text-zinc-500">Top 50 des meilleurs joueurs</p>
 
         {/* Filter tabs */}
         <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">

@@ -98,13 +98,7 @@ export function SquadLeaderboard({
   return (
     <div className="space-y-6">
       <div>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-400" aria-hidden />
-            <h2 className="text-sm font-black uppercase tracking-wide text-white">
-              Classement
-            </h2>
-          </div>
+        <div className="mb-3 flex items-center justify-end gap-2">
           <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
             {(["general", "month", "week"] as const).map((p) => (
               <button
@@ -128,7 +122,7 @@ export function SquadLeaderboard({
         </div>
         <p className="mb-3 text-xs text-zinc-500">
           {period === "general"
-            ? "XP total (puis pseudo). Solde Pts affiché pour le fun du vestiaire."
+            ? "Points cumulés depuis le début. Solde affiché pour le fun du vestiaire."
             : `Points gagnés depuis le début ${period === "month" ? "du mois" : "de la semaine"} (Pronos + Paris Live).`}
         </p>
         <ol className="flex flex-col gap-2">
@@ -161,8 +155,7 @@ export function SquadLeaderboard({
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-sm font-black tabular-nums text-amber-300">
-                    {row.xp.toLocaleString("fr-FR")}{" "}
-                    {period === "general" ? "XP" : "pts"}
+                    {row.xp.toLocaleString("fr-FR")} pts
                   </p>
                   <div className="flex gap-2 justify-end mt-0.5">
                     <span className="text-[10px] font-bold text-green-400">

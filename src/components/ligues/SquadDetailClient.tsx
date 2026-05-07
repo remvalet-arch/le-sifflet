@@ -105,6 +105,7 @@ export function SquadDetailClient({
   const [nudging, setNudging] = useState(false);
   const [period, setPeriod] = useState<"general" | "week" | "month">("general");
   const [reloadKey, setReloadKey] = useState(0);
+  const [vestiaireSeen, setVestiaireSeen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -275,7 +276,12 @@ export function SquadDetailClient({
         </div>
       </div>
 
-      <Tabs defaultValue="classement">
+      <Tabs
+        defaultValue="classement"
+        onValueChange={(v) => {
+          if (v === "vestiaire") setVestiaireSeen(true);
+        }}
+      >
         <TabsList className="w-full flex">
           <TabsTrigger
             value="classement"
@@ -288,7 +294,9 @@ export function SquadDetailClient({
             className="flex-1 text-sm font-black uppercase tracking-wide relative"
           >
             💬 Vestiaire
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            {!vestiaireSeen && (
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            )}
           </TabsTrigger>
         </TabsList>
 

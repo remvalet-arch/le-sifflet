@@ -65,24 +65,28 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   const trimmed = (url ?? "").trim();
   if (trimmed.startsWith("https://") && isNextImageRemoteLogoUrl(trimmed)) {
     return (
-      <Image
-        src={trimmed}
-        alt={alt}
-        width={24}
-        height={24}
-        className="h-6 w-6 shrink-0 object-contain"
-        sizes="24px"
-      />
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/10 p-0.5">
+        <Image
+          src={trimmed}
+          alt={alt}
+          width={24}
+          height={24}
+          className="h-full w-full object-contain drop-shadow-sm"
+          sizes="24px"
+        />
+      </div>
     );
   }
   if (trimmed.startsWith("http")) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={trimmed}
-        alt={alt}
-        className="h-6 w-6 shrink-0 object-contain"
-      />
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/10 p-0.5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={trimmed}
+          alt={alt}
+          className="h-full w-full object-contain drop-shadow-sm"
+        />
+      </div>
     );
   }
   return (
@@ -440,7 +444,7 @@ export function MatchLobby({
             <p className="text-base font-black text-white">La VAR dort...</p>
             <p className="mt-2 text-sm text-zinc-400">
               Aucun match en direct pour le moment. Profites-en pour préparer
-              tes prochains braquages ou consulte les classements.
+              tes pronos, consulter le classement ou challenger tes ligues.
             </p>
             <Link
               href="/pronos"
