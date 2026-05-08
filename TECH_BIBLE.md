@@ -1,6 +1,6 @@
-# 📖 BIBLE TECHNIQUE — VAR TIME (Le Sifflet) — V4
+# 📖 BIBLE TECHNIQUE — VAR TIME (Le Sifflet) — V5
 
-> Audit CTO • 2026-05-08 • Base : sprints 1–8 + A–UX7 + Eco1–4 + FK1/FK2 + Push + LAND complétés • **92 migrations Supabase** • **~80 composants client**
+> Audit CTO • 2026-05-09 • Base : sprints 1–8 + A–UX7 + Eco1–4 + FK1/FK2 + Push + LAND + CHAT-1/2/3 + MON-1 + bug fixes (badge, VAR options, lifetime_points) complétés • **97 migrations Supabase** • **~80 composants client**
 
 ---
 
@@ -133,29 +133,30 @@ Tables     : push_subscriptions (endpoint, keys JSONB) + match_subscriptions (sm
 
 ### 2.2 Triggers Implémentés ✅
 
-| #   | Trigger                    | Fichier                             | Condition                                      |
-| --- | -------------------------- | ----------------------------------- | ---------------------------------------------- |
-| 1   | **VAR Market Opening**     | `/api/alert/route.ts`               | ≥ 2 signaux distincts en 30s                   |
-| 2   | **Squad VAR Siren**        | `/api/squads/var-alert/route.ts`    | Manuel par l'utilisateur (cooldown 15 min)     |
-| 3   | **Prono Nudge**            | `/api/squads/nudge/route.ts`        | Squad leader (cooldown 30 min/squad)           |
-| 4   | **VAR Résolue**            | `/api/admin/resolve-event/route.ts` | Après `resolveEvent()` — sprint A1 ✅          |
-| 5   | **Fin de match**           | `/api/admin/finish-match/route.ts`  | Après résolution pronos — sprint A2 ✅         |
-| 6   | **Nouveau membre**         | `/api/squads/join/route.ts`         | Sprint B4 ✅                                   |
-| 7   | **Rappel prono H-1**       | `/api/cron/prono-reminders`         | Sprint H3 ✅                                   |
-| 8   | **Fin de saison 1v1**      | Cron resolve-league-round           | Sprint I3 ✅                                   |
-| 9   | **Quick-bet VAR** (action) | `/api/var-bets/quick-bet`           | Depuis SW notificationclick — FK1 ✅           |
-| 10  | **Badge débloqué**         | `/api/admin/resolve-event`          | `checkAndUnlockBadges()` — BadgeUnlockListener |
-| 11  | **Rappel match imminent**  | `/api/cron/match-imminent`          | H-5min avant coup d'envoi — FK2 ✅             |
-| 12  | **Rappel match 2h**        | `/api/cron/match-reminder-2h`       | H-2h avant coup d'envoi — FK2 ✅               |
-| 13  | **Daily Digest**           | `/api/cron/daily-digest`            | 8h UTC — résumé pronos du jour ✅              |
-| 14  | **Transition de saison**   | `/api/cron/transition-season`       | 1er du mois — archive + reset ✅               |
+| #   | Trigger                    | Fichier                             | Condition                                                                                                 |
+| --- | -------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | **VAR Market Opening**     | `/api/alert/route.ts`               | ≥ 2 signaux distincts en 30s                                                                              |
+| 2   | **Squad VAR Siren**        | `/api/squads/var-alert/route.ts`    | Manuel par l'utilisateur (cooldown 15 min)                                                                |
+| 3   | **Prono Nudge**            | `/api/squads/nudge/route.ts`        | Squad leader (cooldown 30 min/squad)                                                                      |
+| 4   | **VAR Résolue**            | `/api/admin/resolve-event/route.ts` | Après `resolveEvent()` — sprint A1 ✅                                                                     |
+| 5   | **Fin de match**           | `/api/admin/finish-match/route.ts`  | Après résolution pronos — sprint A2 ✅                                                                    |
+| 6   | **Nouveau membre**         | `/api/squads/join/route.ts`         | Sprint B4 ✅                                                                                              |
+| 7   | **Rappel prono H-1**       | `/api/cron/prono-reminders`         | Sprint H3 ✅                                                                                              |
+| 8   | **Fin de saison 1v1**      | Cron resolve-league-round           | Sprint I3 ✅                                                                                              |
+| 9   | **Quick-bet VAR** (action) | `/api/var-bets/quick-bet`           | Depuis SW notificationclick — FK1 ✅                                                                      |
+| 10  | **Badge débloqué**         | `/api/admin/resolve-event`          | `checkAndUnlockBadges()` — BadgeUnlockListener                                                            |
+| 11  | **Rappel match imminent**  | `/api/cron/match-imminent`          | H-5min avant coup d'envoi — FK2 ✅                                                                        |
+| 12  | **Rappel match 2h**        | `/api/cron/match-reminder-2h`       | H-2h avant coup d'envoi — FK2 ✅                                                                          |
+| 13  | **Daily Digest**           | `/api/cron/daily-digest`            | 8h UTC — résumé pronos du jour ✅                                                                         |
+| 14  | **Transition de saison**   | `/api/cron/transition-season`       | 1er du mois — archive + reset ✅                                                                          |
+| 15  | **Chat de ligue**          | `/api/squads/[id]/messages`         | Push aux membres avec `notif_squad_chat=true` ; cooldown 30 min/squad via `chat_last_push_at` — CHAT-3 ✅ |
 
 ### 2.3 Triggers Manquants ❌
 
 | #   | Trigger manquant                | Priorité  |
 | --- | ------------------------------- | --------- |
-| 15  | **Badge débloqué (app fermée)** | 🟡 MOYEN  |
-| 16  | **Rappel streak quotidien**     | 🟢 FAIBLE |
+| 16  | **Badge débloqué (app fermée)** | 🟡 MOYEN  |
+| 17  | **Rappel streak quotidien**     | 🟢 FAIBLE |
 
 ---
 
@@ -597,43 +598,44 @@ Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant l
 
 ## ANNEXE A — INVENTAIRE DES ROUTES API
 
-| Route                                  | Méthode  | Auth               | Rôle                                      |
-| -------------------------------------- | -------- | ------------------ | ----------------------------------------- |
-| `/api/cron/match-monitor`              | GET      | Bearer CRON_SECRET | Sync live principale (~1 min)             |
-| `/api/cron/sync-odds`                  | GET      | Bearer CRON_SECRET | Odds hebdomadaires                        |
-| `/api/cron/prono-reminders`            | GET      | Bearer CRON_SECRET | Push H-1 avant matchs                     |
-| `/api/cron/match-imminent`             | GET      | Bearer CRON_SECRET | Push H-5min avant matchs (FK2 ✅)         |
-| `/api/cron/match-reminder-2h`          | GET      | Bearer CRON_SECRET | Push H-2h avant matchs (FK2 ✅)           |
-| `/api/cron/daily-digest`               | GET      | Bearer CRON_SECRET | Résumé quotidien 8h UTC ✅                |
-| `/api/cron/transition-season`          | GET      | Bearer CRON_SECRET | Archive + reset saison 1er du mois ✅     |
-| `/api/alert`                           | POST     | User (trust ≥ 50)  | Signal VAR → marché si seuil              |
-| `/api/bet`                             | POST     | User               | Place un pari VAR (RPC atomique)          |
-| `/api/verify-event`                    | POST     | User               | Vérifie VAR > 6 min via API-Football      |
-| `/api/claim-daily-streak`              | POST     | User               | Récompense streak quotidienne             |
-| `/api/claim-rsa`                       | POST     | User               | RSA si solde trop bas (Eco1 ✅)           |
-| `/api/refill`                          | POST     | User               | Refill manuel si solde < 500              |
-| `/api/profile`                         | PATCH    | User               | Mise à jour profil (username, avatar)     |
-| `/api/var-bets/quick-bet`              | POST     | User               | Quick-bet depuis notification SW (FK1 ✅) |
-| `/api/shop/purchase`                   | POST     | User               | Achat item cosmétique (Eco3 ✅)           |
-| `/api/shop/equip`                      | POST     | User               | Équiper item acheté                       |
-| `/api/boosters/purchase`               | POST     | User               | Achat booster (Eco2 ✅)                   |
-| `/api/recap/today`                     | GET      | User               | Résumé pronos du jour                     |
-| `/api/match-subscription`              | POST     | User               | Subscribe/mute un match                   |
-| `/api/admin/resolve-event`             | POST     | Modérateur         | Force OUI/NON sur un événement            |
-| `/api/admin/finish-match`              | POST     | Modérateur         | Termine match + résout paris + pronos     |
-| `/api/admin/sync-apifootball-fixtures` | GET      | Modérateur         | Import matchs par date                    |
-| `/api/admin/sync-apifootball-round`    | GET      | Modérateur         | Import par journée de championnat         |
-| `/api/admin/sync-live`                 | GET      | Modérateur/Cron    | Sync ad-hoc matchs actifs                 |
-| `/api/admin/resolve-league-round`      | POST     | Modérateur         | Résolution hebdo 1v1                      |
-| `/api/admin/health`                    | GET      | Modérateur         | Status dernier tick monitor               |
-| `/api/squads`                          | GET/POST | User               | Liste/Création ligues                     |
-| `/api/squads/[id]`                     | GET      | Membre             | Détail ligue + classement hybride         |
-| `/api/squads/[id]/start-season`        | POST     | Owner              | Lance championnat 1v1                     |
-| `/api/squads/join`                     | POST     | User               | Rejoindre via invite_code                 |
-| `/api/squads/leave`                    | POST     | User               | Quitter une ligue                         |
-| `/api/squads/var-alert`                | POST     | User               | Sirène VAR → push squad members           |
-| `/api/squads/nudge`                    | POST     | User               | Rappel pronos → push squad members        |
-| `/api/og/victory/[id]`                 | GET      | Public             | OG image dynamique résultats (LAND ✅)    |
+| Route                                  | Méthode  | Auth               | Rôle                                                                                                  |
+| -------------------------------------- | -------- | ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `/api/cron/match-monitor`              | GET      | Bearer CRON_SECRET | Sync live principale (~1 min)                                                                         |
+| `/api/cron/sync-odds`                  | GET      | Bearer CRON_SECRET | Odds hebdomadaires                                                                                    |
+| `/api/cron/prono-reminders`            | GET      | Bearer CRON_SECRET | Push H-1 avant matchs                                                                                 |
+| `/api/cron/match-imminent`             | GET      | Bearer CRON_SECRET | Push H-5min avant matchs (FK2 ✅)                                                                     |
+| `/api/cron/match-reminder-2h`          | GET      | Bearer CRON_SECRET | Push H-2h avant matchs (FK2 ✅)                                                                       |
+| `/api/cron/daily-digest`               | GET      | Bearer CRON_SECRET | Résumé quotidien 8h UTC ✅                                                                            |
+| `/api/cron/transition-season`          | GET      | Bearer CRON_SECRET | Archive + reset saison 1er du mois ✅                                                                 |
+| `/api/alert`                           | POST     | User (trust ≥ 50)  | Signal VAR → marché si seuil                                                                          |
+| `/api/bet`                             | POST     | User               | Place un pari VAR (RPC atomique)                                                                      |
+| `/api/verify-event`                    | POST     | User               | Vérifie VAR > 6 min via API-Football                                                                  |
+| `/api/claim-daily-streak`              | POST     | User               | Récompense streak quotidienne                                                                         |
+| `/api/claim-rsa`                       | POST     | User               | RSA si solde trop bas (Eco1 ✅)                                                                       |
+| `/api/refill`                          | POST     | User               | Refill manuel si solde < 500                                                                          |
+| `/api/profile`                         | PATCH    | User               | Mise à jour profil (username, avatar)                                                                 |
+| `/api/var-bets/quick-bet`              | POST     | User               | Quick-bet depuis notification SW (FK1 ✅)                                                             |
+| `/api/shop/purchase`                   | POST     | User               | Achat item cosmétique (Eco3 ✅)                                                                       |
+| `/api/shop/equip`                      | POST     | User               | Équiper item acheté                                                                                   |
+| `/api/boosters/purchase`               | POST     | User               | Achat booster (Eco2 ✅)                                                                               |
+| `/api/recap/today`                     | GET      | User               | Résumé pronos du jour                                                                                 |
+| `/api/match-subscription`              | POST     | User               | Subscribe/mute un match                                                                               |
+| `/api/admin/resolve-event`             | POST     | Modérateur         | Force OUI/NON sur un événement                                                                        |
+| `/api/admin/finish-match`              | POST     | Modérateur         | Termine match + résout paris + pronos                                                                 |
+| `/api/admin/sync-apifootball-fixtures` | GET      | Modérateur         | Import matchs par date                                                                                |
+| `/api/admin/sync-apifootball-round`    | GET      | Modérateur         | Import par journée de championnat                                                                     |
+| `/api/admin/sync-live`                 | GET      | Modérateur/Cron    | Sync ad-hoc matchs actifs                                                                             |
+| `/api/admin/resolve-league-round`      | POST     | Modérateur         | Résolution hebdo 1v1                                                                                  |
+| `/api/admin/health`                    | GET      | Modérateur         | Status dernier tick monitor                                                                           |
+| `/api/squads`                          | GET/POST | User               | Liste/Création ligues                                                                                 |
+| `/api/squads/[id]`                     | GET      | Membre             | Détail ligue + classement hybride                                                                     |
+| `/api/squads/[id]/start-season`        | POST     | Owner              | Lance championnat 1v1                                                                                 |
+| `/api/squads/join`                     | POST     | User               | Rejoindre via invite_code                                                                             |
+| `/api/squads/leave`                    | POST     | User               | Quitter une ligue                                                                                     |
+| `/api/squads/var-alert`                | POST     | User               | Sirène VAR → push squad members                                                                       |
+| `/api/squads/nudge`                    | POST     | User               | Rappel pronos → push squad members                                                                    |
+| `/api/squads/[id]/messages`            | POST     | Membre             | Envoie un message chat + push aux membres (cooldown 30 min/squad via `chat_last_push_at`) — CHAT-3 ✅ |
+| `/api/og/victory/[id]`                 | GET      | Public             | OG image dynamique résultats (LAND ✅)                                                                |
 
 ---
 
@@ -694,8 +696,8 @@ Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant l
 
 ## ANNEXE C — SCHÉMA BASE DE DONNÉES (Vue d'ensemble)
 
-**92 migrations** (0001 → 0092) — évolution rigoureuse depuis `0001_init.sql`.
-**39 tables actives** dans `src/types/database.ts`.
+**97 migrations** (0001 → 0097) — évolution rigoureuse depuis `0001_init.sql`.
+**41 tables actives** dans `src/types/database.ts`.
 **27 RPCs publiques** + 5 fonctions trigger.
 **9 tables Realtime** avec REPLICA IDENTITY FULL.
 
@@ -731,3 +733,13 @@ season_archives (snapshot classement saison terminée)
 
 **Tables nouvelles depuis V3 (migrations 0078–0092) :**
 `match_presence`, `seasons`, `season_archives`, `user_daily_recaps`, `shop_items`, `user_shop_inventory`, `boosters_catalog`, `user_boosters_inventory`, `booster_highlights`, `push_logs`, `friend_requests`
+
+**Colonnes et fixes depuis V4 (migrations 0093–0097) :**
+
+| Migration | Contenu                                                                                                                                                                                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0093**  | `squad_messages.is_system_message BOOLEAN DEFAULT false` — messages système (annonces VAR, gains) dans le chat ligue ; rate-limité à 5/squad/24h                                                                                                                                                        |
+| **0094**  | `squad_members.last_read_at TIMESTAMPTZ` — base du badge "non-lu" dans `BottomNav` ; mis à jour à chaque visite de `SquadChat`                                                                                                                                                                          |
+| **0095**  | Fix critique : `resolve_event_parimutuel` et `resolve_match_pronos` n'incrémentaient pas `lifetime_points_earned` → le trigger `trg_sync_season_points` ne se déclenchait jamais → `season_points` restait à 0. Réécriture des UPDATE avec `lifetime_points_earned = lifetime_points_earned + v_reward` |
+| **0096**  | `profiles.notif_squad_chat BOOLEAN DEFAULT true` + `squads.chat_last_push_at TIMESTAMPTZ` — opt-in push chat ligue + cooldown 30 min/squad                                                                                                                                                              |
+| **0097**  | Fix `place_bet` RPC : remplace le check `NOT IN ('oui','non')` par un simple check non-vide → débloque les marchés stoppage (options `1`/`2`/`3`/`4`/`5`/`6+`)                                                                                                                                          |

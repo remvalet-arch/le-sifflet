@@ -66,6 +66,8 @@ export interface Database {
           notif_prono_results: boolean;
           notif_daily_digest: boolean;
           notif_pre_match_2h: boolean;
+          notif_squad_chat: boolean;
+          notif_dm: boolean;
           streak_freezes_owned: number;
           streak_freezes_used_count: number;
           equipped_avatar_id: string | null;
@@ -99,6 +101,8 @@ export interface Database {
           notif_prono_results?: boolean;
           notif_daily_digest?: boolean;
           notif_pre_match_2h?: boolean;
+          notif_squad_chat?: boolean;
+          notif_dm?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
@@ -132,11 +136,70 @@ export interface Database {
           notif_prono_results?: boolean;
           notif_daily_digest?: boolean;
           notif_pre_match_2h?: boolean;
+          notif_squad_chat?: boolean;
+          notif_dm?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
+        };
+        Relationships: [];
+      };
+      direct_message_threads: {
+        Row: {
+          id: string;
+          user_a_id: string;
+          user_b_id: string;
+          last_message_at: string | null;
+          last_message_preview: string | null;
+          user_a_read_at: string | null;
+          user_b_read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_a_id: string;
+          user_b_id: string;
+          last_message_at?: string | null;
+          last_message_preview?: string | null;
+          user_a_read_at?: string | null;
+          user_b_read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_a_id?: string;
+          user_b_id?: string;
+          last_message_at?: string | null;
+          last_message_preview?: string | null;
+          user_a_read_at?: string | null;
+          user_b_read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      direct_messages: {
+        Row: {
+          id: string;
+          thread_id: string;
+          sender_id: string;
+          content: string;
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          thread_id: string;
+          sender_id: string;
+          content: string;
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          thread_id?: string;
+          sender_id?: string;
+          content?: string;
+          sent_at?: string;
         };
         Relationships: [];
       };
@@ -419,6 +482,7 @@ export interface Database {
           owner_id: string;
           created_at: string;
           game_mode: string;
+          chat_last_push_at: string | null;
         };
         Insert: {
           id?: string;
@@ -428,6 +492,7 @@ export interface Database {
           owner_id: string;
           created_at?: string;
           game_mode?: string;
+          chat_last_push_at?: string | null;
         };
         Update: {
           id?: string;
@@ -437,6 +502,7 @@ export interface Database {
           owner_id?: string;
           created_at?: string;
           game_mode?: string;
+          chat_last_push_at?: string | null;
         };
         Relationships: [];
       };
@@ -1645,3 +1711,7 @@ export type BoosterCatalogRow =
   Database["public"]["Tables"]["boosters_catalog"]["Row"];
 export type UserBoosterInventoryRow =
   Database["public"]["Tables"]["user_boosters_inventory"]["Row"];
+export type DirectMessageThreadRow =
+  Database["public"]["Tables"]["direct_message_threads"]["Row"];
+export type DirectMessageRow =
+  Database["public"]["Tables"]["direct_messages"]["Row"];

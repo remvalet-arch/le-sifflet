@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT — VAR TIME
 
-> Document de passation généré le 2026-05-07. Destiné à toute personne (humaine ou IA) reprenant le projet à froid.
+> Document de passation mis à jour le 2026-05-09. Destiné à toute personne (humaine ou IA) reprenant le projet à froid.
 > Pour les détails vivants (migrations, état exact des tables, bugs connus) → `PROJECT_STATE.md`.
 > Pour les pièges techniques → `AI_LEARNINGS.md`.
 > Pour le backlog de tâches → `TASKS.md`.
@@ -168,7 +168,7 @@ le-sifflet/
 │   │   └── lobby.ts            # LobbyMatchRow
 │   └── middleware.ts           # Refresh JWT + protection routes
 ├── supabase/
-│   └── migrations/             # 77 fichiers SQL versionnés (0001 → 0077)
+│   └── migrations/             # 97 fichiers SQL versionnés (0001 → 0097)
 ├── scripts/                    # Import données, sync cotes, simulation scénario
 ├── tests/e2e/                  # Playwright
 ├── public/                     # sw.js, manifest.webmanifest, offline.html, icons
@@ -195,7 +195,7 @@ le-sifflet/
 
 ### Base de données
 
-**Supabase (PostgreSQL)** — 77 migrations versionnées.
+**Supabase (PostgreSQL)** — 97 migrations versionnées.
 
 Tables principales :
 
@@ -248,16 +248,18 @@ Tables principales :
 
 ### Points d'attention / incomplets
 
-| Sujet                                 | Détail                                                                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Push post-résolution**              | Les gagnants/perdants ne reçoivent pas de notif après résolution VAR ni après `resolve_match_pronos` — frein rétention #1 |
-| **Badge "Fidèle au Poste"**           | Migration `0065` OK, mais `checkAndUnlockBadges` n'a pas encore le case `login_streak_3`                                  |
-| **Migrations non appliquées en prod** | Vérifier que `0062` → `0077` sont toutes appliquées dans le SQL Editor Supabase                                           |
-| **`long_term_bets` legacy**           | Table encore en base (plus d'UI), à dropper si 0 ligne                                                                    |
-| **Fichiers orphelins**                | ~22 fichiers `test-*.js` / `fix-ts.js` à la racine du projet                                                              |
-| **i18n**                              | Fichiers `messages/` et infra `next-intl` présents mais non branchés                                                      |
-| **Capacitor**                         | Non démarré (Cap-1 à Cap-6 dans TASKS.md)                                                                                 |
-| **Temps de chargement**               | Signalé par l'utilisateur — suspect : requêtes Supabase non parallélisées sur certaines pages, images non optimisées      |
+| Sujet                                 | Détail                                                                                                                            |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Push post-résolution**              | ✅ Implémenté : `/api/admin/resolve-event` (sprint A1) et `/api/admin/finish-match` (sprint A2).                                  |
+| **Badge "Fidèle au Poste"**           | Migration `0065` OK, mais `checkAndUnlockBadges` n'a pas encore le case `login_streak_3`                                          |
+| **Migrations non appliquées en prod** | Appliquer **`0093` → `0097`** dans le SQL Editor Supabase (0001→0092 doivent déjà être appliquées)                                |
+| **`long_term_bets` legacy**           | Table encore en base (plus d'UI), à dropper si 0 ligne                                                                            |
+| **Fichiers orphelins**                | ~22 fichiers `test-*.js` / `fix-ts.js` à la racine du projet                                                                      |
+| **i18n**                              | Fichiers `messages/` et infra `next-intl` présents, partiellement branchés (TopBar + BottomNav seulement)                         |
+| **Capacitor**                         | Non démarré (Cap-1 à Cap-6 dans TASKS.md)                                                                                         |
+| **Rate limiting routes éco**          | Manquant sur `/api/claim-daily-streak`, `/api/shop/purchase`, `/api/boosters/purchase`, `/api/var-bets/quick-bet` — risque d'abus |
+| **lifetime_points_earned bug**        | ✅ Corrigé en migration 0095 (les résolutions 0091 n'incrémentaient pas le champ → season_points restait à 0)                     |
+| **VAR bet options stoppage**          | ✅ Corrigé : route `/api/bet` + migration 0097 acceptent maintenant n'importe quelle option non-vide                              |
 
 ---
 
@@ -394,6 +396,34 @@ Audit UX visuel complet basé sur 27 captures d'écran de l'app. Corrections app
 - **XP → pts** : uniformisé en "pts" en mode Général dans le leaderboard de ligue
 - **"La VAR dort"** : texte actualisé (pronos / classement / ligues au lieu de braquages)
 - **Logos de compétitions** : fond blanc solide `rounded-lg` derrière chaque logo pour les logos à fond transparent (Ligue 1, Bundesliga, etc.)
+
+### Sprints CHAT-2 + MON-1 + CHAT-3 + Bug fixes — Mai 2026 (9 mai)
+
+**CHAT-2 : Messages système dans le chat ligue**
+
+- Migration `0093` : `squad_messages.is_system_message BOOLEAN DEFAULT false`
+- `src/lib/squad-messages.ts` : `postSystemMessageToUserSquads()` poste un message par squad pour le meilleur gagnant
+- `/api/admin/resolve-event` : déclenche un message "🔥 **username** vient d'empocher +X 🪙 sur une VAR"
+- `/api/admin/finish-match` : déclenche un message "🎯 **username** avait prédit le score exact"
+- Rate-limit : 5 messages système/squad/24h
+
+**MON-1 : Fix lifetime_points_earned → season_points**
+
+- Migration `0095` : réintroduit `lifetime_points_earned += v_reward` dans `resolve_event_parimutuel` et `resolve_match_pronos`
+- Débloque le trigger `trg_sync_season_points` qui synchronise automatiquement `season_points`
+
+**CHAT-3 : Push notification chat de ligue**
+
+- Migration `0096` : `profiles.notif_squad_chat` (opt-out) + `squads.chat_last_push_at` (cooldown 30 min)
+- `/api/squads/[squadId]/messages` POST : remplace l'insert direct, envoie le message + push aux membres
+- `SquadChat.tsx` : remplace insert direct Supabase par appel API
+- `src/app/(app)/settings/notifications/` : nouveau toggle "Chat de ligue actif"
+
+**Bug fixes**
+
+- Badge non-lu persistant (`BottomNav`) : optimistic clear quand `isOnLigues=true` (migration 0094 + fix React)
+- Bold markdown dans les messages système : `renderBold()` dans `SquadChat.tsx`
+- VAR bets sur marchés stoppage : suppression du check `NOT IN ('oui','non')` dans `/api/bet/route.ts` + migration 0097 sur `place_bet` RPC
 
 ---
 

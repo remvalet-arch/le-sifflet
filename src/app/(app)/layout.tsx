@@ -82,6 +82,21 @@ export default async function AppLayout({
 
   void trackLoginStreak(supabase, user.id);
 
+  // Vérifie les DMs non lus (threads où mon read_at est avant last_message_at)
+  const { data: unreadThreads } = await supabase
+    .from("direct_message_threads")
+    .select("id, user_a_id, user_a_read_at, user_b_read_at, last_message_at")
+    .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+    .not("last_message_at", "is", null)
+    .limit(20);
+
+  const hasUnreadDm = (unreadThreads ?? []).some((t) => {
+    if (!t.last_message_at) return false;
+    const myReadAt =
+      t.user_a_id === user.id ? t.user_a_read_at : t.user_b_read_at;
+    return myReadAt === null || t.last_message_at > myReadAt;
+  });
+
   return (
     <LiveRoomProvider>
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden bg-zinc-950 shadow-2xl">
@@ -94,6 +109,7 @@ export default async function AppLayout({
             rank={profile.rank}
             xp={profile.xp ?? 0}
             userId={user.id}
+            hasUnreadDm={hasUnreadDm}
           />
 
           {/* Scrollable content — clears fixed TopBar and BottomNav */}

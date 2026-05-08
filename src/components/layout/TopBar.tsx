@@ -11,6 +11,7 @@ import {
   Scale,
   Trophy,
   ShoppingBag,
+  MessageCircle,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { switchLocale } from "@/app/actions/locale";
@@ -26,6 +27,7 @@ type Props = {
   userId: string;
   rank: string;
   xp: number;
+  hasUnreadDm?: boolean;
 };
 
 export function TopBar({
@@ -34,6 +36,7 @@ export function TopBar({
   userId,
   rank,
   xp: initialXp,
+  hasUnreadDm = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [balance, setBalance] = useState(siffletsBalance);
@@ -115,14 +118,28 @@ export function TopBar({
             </span>
           </Link>
 
-          {/* Burger */}
-          <button
-            onClick={() => setOpen(true)}
-            aria-label="Ouvrir le menu"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Messages privés */}
+            <Link
+              href="/messages"
+              aria-label="Messages privés"
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+            >
+              <MessageCircle className="h-5 w-5" />
+              {hasUnreadDm && (
+                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-whistle ring-2 ring-zinc-950" />
+              )}
+            </Link>
+
+            {/* Burger */}
+            <button
+              onClick={() => setOpen(true)}
+              aria-label="Ouvrir le menu"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -170,6 +187,13 @@ export function TopBar({
 
         {/* Nav links */}
         <nav className="flex flex-col gap-1 p-3">
+          <SheetLink
+            href="/messages"
+            icon={<MessageCircle className="h-4 w-4" />}
+            label="Messages"
+            onClick={() => setOpen(false)}
+            badge={hasUnreadDm ? "●" : undefined}
+          />
           <SheetLink
             href="/leaderboard"
             icon={<Trophy className="h-4 w-4" />}

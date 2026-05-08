@@ -2,7 +2,7 @@
 
 > Documentation vivante. Ne documente que le **code et le schéma présents** dans ce dépôt (pas la roadmap produit seule).
 >
-> **Dernière mise à jour : Sprint D/E/F — Auth race condition, Performance (Promise.all + ISR + indexes), Données (lifetime_points_earned, placed_at filter, total_xp_earned) — 2026-05-06.**
+> **Dernière mise à jour : 2026-05-09 — Sprints CHAT-2/3, MON-1, bug fixes (badge BottomNav, bold markdown, VAR options stoppage, lifetime_points_earned). 97 migrations Supabase.**
 
 ---
 
@@ -32,7 +32,7 @@
 
 ## 🗄️ Schéma de données (état des migrations)
 
-**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0067_lifetime_points_earned.sql`** (67 migrations versionnées).
+**Fichiers SQL** : `supabase/migrations/0001_init.sql` → **`0097_fix_place_bet_option_check.sql`** (97 migrations versionnées).
 
 ### Tables & objets notables (post-0033)
 
@@ -74,6 +74,37 @@
 | **0065**  | `profiles.last_login_date` DATE + `profiles.login_streak` INT — base badge "Fidèle au Poste".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **0066**  | Index composites performance : `pronos(user_id,match_id)`, `pronos(match_id,status)`, `bets(user_id,placed_at)`, `alert_signals(match_id,action_type,created_at)`, `market_events(match_id,status)`.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **0067**  | `profiles.lifetime_points_earned` INT DEFAULT 0 + triggers sur `pronos`/`bets` (incrémente à chaque résolution `won`) + backfill historique. Leaderboard classe par `lifetime_points_earned`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+
+| **0068** | Fix `resolve_match_pronos` : support des pronos `scorer_allocation` dans la résolution. |
+| **0069** | Mode Championnat : tables `league_seasons`, `league_fixtures`, `league_standings` ; RPC `create_league_season`. |
+| **0070** | RPC `resolve_squad_round()` — résolution hebdomadaire des confrontations 1v1. |
+| **0071** | Variante `resolve_squad_round_with_var` — inclut les paris VAR dans le score de journée. |
+| **0072** | `squad_messages` (squad_id, user_id, content) + RLS membres + `REPLICA IDENTITY FULL`. Chat de ligue. |
+| **0073** | RPC `cancel_match_pronos(p_match_id)` — annulation + remboursement pour match reporté/annulé. |
+| **0074** | `profiles.season_points` + trigger `trg_sync_season_points` sur `lifetime_points_earned`. |
+| **0075** | Fix `resolve_event_parimutuel` : ferme correctement les événements `closed`. |
+| **0076** | `lineups.grid_position` — position terrain pour `MatchLineupsPitch`. |
+| **0077** | Marchés stoppage : types `stoppage_ht` / `stoppage_ft`, options multi-valeurs (`1`…`6+`). |
+| **0078** | `user_preferred_competitions` — préférences de ligue (filtres lobby persistants). |
+| **0079** | `match_presence` + `REPLICA IDENTITY FULL` — compteur joueurs actifs en salle. |
+| **0080** | `bets.is_quick_bet BOOLEAN` + route `/api/var-bets/quick-bet` — paris depuis SW (FK1). |
+| **0081** | `seasons` + `season_archives` — infrastructure transition mensuelle. |
+| **0082** | Push H-1 prono : `match_subscriptions.push_before_match BOOLEAN`. |
+| **0083** | `badges.narrative_text` — texte narratif court par badge (MPP-1). |
+| **0084** | Toggles notifications sur `profiles` : `notif_var_open`, `notif_var_result`, `notif_prono_result`, `notif_match_start`, `notif_nudge`. |
+| **0085** | Vue `v_friend_pronos` — pronos des amis. |
+| **0086** | `profiles.streak_freeze_count` — boosters gel de streak. |
+| **0087** | `user_daily_recaps` — résumés quotidiens pour le Daily Digest cron. |
+| **0088** | RPC `get_user_stats(p_user_id)` — agrège win_rate, best_streak, total_earned. |
+| **0089** | Boutique cosmétique : `shop_items` + `user_shop_inventory`. |
+| **0090** | Boosters : `boosters_catalog` + `user_boosters_inventory`. 4 types : `double_xp`, `cote_plus`, `safety_net`, `vision`. |
+| **0091** | Réécriture `resolve_event_parimutuel` et `resolve_match_pronos` avec support boosters. **Bug :** n'incrémentait pas `lifetime_points_earned` — corrigé en 0095. |
+| **0092** | `get_min_bet_for_balance()` — paliers de mise min dynamiques (5/50/200/500/1 000 pts). |
+| **0093** | `squad_messages.is_system_message BOOLEAN DEFAULT false` — messages système VAR ; rate-limité 5/squad/24h. |
+| **0094** | `squad_members.last_read_at TIMESTAMPTZ` — base du badge non-lu `BottomNav`. |
+| **0095** | **Fix critique :** réintroduit `lifetime_points_earned += v_reward` dans `resolve_event_parimutuel` et `resolve_match_pronos` pour que `trg_sync_season_points` se déclenche et synchronise `season_points`. |
+| **0096** | `profiles.notif_squad_chat BOOLEAN DEFAULT true` + `squads.chat_last_push_at TIMESTAMPTZ`. |
+| **0097** | Fix `place_bet` : remplace check `NOT IN ('oui','non')` par check non-vide → débloque marchés stoppage. |
 
 ### RPC métier (SECURITY DEFINER) — présents dans `database.ts`
 
@@ -226,12 +257,13 @@ Script SQL utilitaire : `supabase/audit_pending_bets.sql`.
 
 ## 📌 Next Steps (backlog)
 
-1. **Migrations SQL en attente (prod)** — appliquer **`0062` → `0067`** dans le Supabase SQL Editor avant tout déploiement.
-2. **Push "VAR Résolue"** — Les gagnants/perdants ne reçoivent jamais de notification après la résolution. Frein rétention #1. (voir TECH_BIBLE Pilier 2 §2.3)
-3. **Push "Fin de match + résultats pronos"** — idem après `resolve_match_pronos`.
-4. **Badge "Fidèle au Poste"** — migration 0065 est en place mais `checkAndUnlockBadges` n’a pas encore de case pour `login_streak_3`.
-5. **Nettoyage fichiers orphelins** — ~22 fichiers `test-*.js` / `fix-ts.js` à la racine (voir TECH_BIBLE §4.1).
+1. **Migrations SQL en attente (prod)** — appliquer **`0093` → `0097`** dans le Supabase SQL Editor avant tout déploiement. (0001→0092 doivent déjà être appliquées.)
+2. **Push "VAR Résolue"** ✅ — Implémenté dans `/api/admin/resolve-event` (sprint A1).
+3. **Push "Fin de match + résultats pronos"** ✅ — Implémenté dans `/api/admin/finish-match` (sprint A2).
+4. **Badge "Fidèle au Poste"** — migration 0065 OK, `checkAndUnlockBadges` n’a pas encore le case `login_streak_3`.
+5. **Nettoyage fichiers orphelins** — ~22 fichiers `test-*.js` / `fix-ts.js` à la racine (voir TECH_BIBLE §5.1).
 6. **`long_term_bets` (legacy)** — DROP si plus aucune ligne en base.
+7. **Rate limiting** sur les routes économiques : `/api/claim-daily-streak`, `/api/shop/purchase`, `/api/boosters/purchase`, `/api/var-bets/quick-bet` (voir TECH_BIBLE §5.2).
 
 ---
 

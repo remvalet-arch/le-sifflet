@@ -1,4 +1,4 @@
-import { Target, TrendingUp, Trophy } from "lucide-react";
+import { Target, TrendingUp, Trophy, MessageCircle } from "lucide-react";
 import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileClient } from "@/components/profile/ProfileClient";
@@ -7,6 +7,7 @@ import type {
   PronoEntry,
 } from "@/components/profile/ProfileClient";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import type {
   BetRow,
   MarketEventRow,
@@ -109,6 +110,7 @@ export default async function PublicProfilePage({
     { data: rawPronos },
     { data: allBadges },
     { data: userBadgesData },
+    { data: friendship },
   ] = await Promise.all([
     supabase
       .from("bets")
@@ -124,6 +126,14 @@ export default async function PublicProfilePage({
       .limit(30),
     supabase.from("badges").select("*").order("created_at"),
     supabase.from("user_badges").select("badge_id").eq("user_id", id),
+    supabase
+      .from("friend_requests")
+      .select("id")
+      .or(
+        `and(sender_id.eq.${user.id},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${user.id})`,
+      )
+      .eq("status", "accepted")
+      .maybeSingle(),
   ]);
 
   let favoriteTeam: {
@@ -390,8 +400,19 @@ export default async function PublicProfilePage({
         <StatCard Icon={Trophy} label="Résultats" value={String(totalBets)} />
       </div>
 
-      <div className="mb-4">
-        <FriendButton profileId={id} currentUserId={user.id} />
+      <div className="mb-4 flex gap-2">
+        <div className="flex-1">
+          <FriendButton profileId={id} currentUserId={user.id} />
+        </div>
+        {friendship && (
+          <Link
+            href={`/messages/${id}`}
+            className="flex items-center gap-2 rounded-xl border border-whistle/30 bg-whistle/10 px-4 py-2.5 text-sm font-bold text-whistle transition hover:bg-whistle/20 active:scale-[0.97]"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Message
+          </Link>
+        )}
       </div>
 
       <ProfileClient

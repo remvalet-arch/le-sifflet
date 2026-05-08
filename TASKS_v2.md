@@ -1475,9 +1475,296 @@ Agis en tant que Lead Backend et Game Designer.
 
 ---
 
-## 💎 PHASE 3 — LONG TERME (post-validation PMF)
+## 🆕 PHASE PRÉ-CDM — DÉBRIEF UX/UI + ARCHITECTURE MONNAIES (8 mai 2026)
+
+> Issus du débriefing UX complet du 8 mai 2026 (19 écrans navigation hors-match + 8 écrans match live).
+> Ordre de traitement recommandé : **MONNAIES → BUG-CSC → SWEEP-NAMING → UX8 → UX9 → UX10**.
+> Le sprint MONNAIES est un pré-requis structurel : sans séparation propre, la boutique sera désertée et les classements seront perçus comme injustes par les acheteurs.
 
 ---
+
+### 🔴 Sprint MONNAIES : SÉPARATION SCORE / SOLDE — "Une action, une monnaie"
+
+> **Contexte stratégique :** L'app utilise actuellement le label "pts" pour 5 valeurs différentes : `sifflets_balance` (TopBar, dépensable), `season_points` (leaderboard saisonnier), `lifetime_points_earned` (Hall of Fame), cagnotte cumulée XP de ligue, et XP de progression de rang. L'utilisateur ne sait pas que dépenser ses Sifflets dans la boutique n'impacte pas son classement → personne n'achète. Inversement, si la séparation backend n'est pas propre, dépenser PEUT vraiment impacter le classement → injustice perçue. Ce sprint résout les deux problèmes simultanément.
+
+- [x] **MON-1 : Audit backend de la séparation des monnaies (Claude Code)**
+  - _Action :_ Lancer le prompt d'audit "Séparation Monnaies VAR TIME" dans Claude Code (cf. fichier dédié). L'audit doit identifier les écarts dans :
+    - RPCs de gain (`resolve_event_parimutuel`, `resolve_match_pronos`, `claim_daily_streak`, `claim_rsa`, `transition_season`) — vérifier que les 3 colonnes (`sifflets_balance`, `season_points`, `lifetime_points_earned`) sont incrémentées.
+    - RPCs de dépense (`place_bet`, `purchase_shop_item`, `purchase_booster`, `equip_shop_item`, `purchase_streak_freeze`) — vérifier qu'elles débitent UNIQUEMENT `sifflets_balance` et ne touchent JAMAIS au score.
+    - Tris de leaderboards (`/leaderboard`, `SquadLeaderboard`, `SquadChampionship`, `resolve_league_round`) — vérifier qu'ils utilisent `season_points` ou `lifetime_points_earned`, jamais `sifflets_balance`.
+    - Triggers SQL et contraintes CHECK.
+  - _Livrable :_ Rapport structuré "ÉCART CRITIQUE / MINEUR" + plan de fix proposé à valider par le PM avant exécution.
+
+- [x] **MON-2 : Fix des écarts identifiés (suite à MON-1)**
+  - _Action :_ Selon le rapport d'audit, créer les migrations SQL et patches code pour corriger les RPCs/queries défaillantes. Tester unitairement chaque RPC modifiée avec Vitest. Validation : un achat boutique de 1 000 pts ne doit JAMAIS modifier `season_points` ni `lifetime_points_earned`.
+
+- [x] **MON-3 : Naming officiel — décision PM**
+  - _Décision proposée :_
+    - **Sifflets** (🪙) = solde dépensable (TopBar, boutique, mises, boosters)
+    - **Points** ou **pts** = score (leaderboards, profil "Points gagnés", cagnotte ligue)
+    - **XP** = progression de rang uniquement (barre 150/500 District)
+  - _Action :_ Trancher cette convention avant de lancer le sweep (UX10).
+
+---
+
+### 🔴 Sprint BUG-CSC : JSON BRUT QUI FUITE DANS LE VESTIAIRE — "L'app paraît cassée"
+
+> **Bug critique identifié sur device le 8 mai 2026.** Dans l'onglet Vestiaire d'un match live, quand un ami a pronostiqué un buteur CSC (contre-son-camp), la chaîne `{"away": [], "home": [{"name": "CSC", "goals": 1}]}` s'affiche brute au lieu d'être formatée. Le rendu correct existe pour le score exact ("1 ami a mis score exact 1-0") mais pas pour les buteurs CSC. À fixer en urgence : la friction UX est immédiate sur l'écran social par excellence.
+
+- [x] **CSC-1 : Identifier le composant qui rend les pronos amis dans le Vestiaire**
+  - _Action :_ Localiser dans `src/components/match/` (probablement dans le tab Vestiaire de la LiveRoom ou un sous-composant `FriendsPronos.tsx` / `MatchVestiaire.tsx`) la logique qui formate les pronos amis sur un match en cours.
+
+- [x] **CSC-2 : Ajouter le formatage CSC**
+  - _Action :_ Dans la fonction qui sérialise les buteurs prédits, gérer explicitement le cas `name === "CSC"` (contre-son-camp) avec une formulation lisible. Exemples :
+    - `1 ami a mis Borussia CSC (1)` → "1 ami a misé sur un CSC de Borussia"
+    - Plusieurs CSC : "1 ami a misé : CSC pour Borussia (×1)"
+    - CSC + buteur normal : "1 ami a misé : Reggiani (×1) + CSC pour Eintracht"
+  - _Test :_ Vérifier sur le match Borussia-Eintracht (ou créer un cas de test) que le rendu est lisible quel que soit le mix score/CSC/buteurs nommés.
+
+- [x] **CSC-3 : Audit des autres endroits où les buteurs sont affichés**
+  - _Action :_ Grep sur le projet `JSON.stringify`, `home.*goals`, `away.*goals` dans les composants pour identifier d'autres potentielles fuites JSON. Vérifier au minimum : ProfileClient (historique pronos), PronosticsHubClient (récap après saisie), MatchPronoCard. Patcher si nécessaire.
+
+---
+
+### 🟠 Sprint SWEEP-NAMING : RENOMMAGE COHÉRENT "Sifflets / Points / XP"
+
+> Suite à la décision MON-3, sweep complet de l'app pour aligner le vocabulaire. Sans ça, même avec le backend propre, l'utilisateur restera confus.
+
+- [x] **NAM-1 : Inventaire complet (Claude Code)**
+  - _Action :_ Prompt Claude Code dédié qui grep toutes les occurrences de "pts", "Pts", "points", "Points", "XP", "Sifflets", "sifflet" dans `src/` et liste pour chaque occurrence : fichier, ligne, contexte (label UI, message toast, clé i18n, commentaire), valeur sémantique (solde dépensable / score saisonnier / score perpétuel / XP de rang / cagnotte ligue / autre). Livrable : tableau Markdown avec colonne "Renommage proposé".
+
+- [x] **NAM-2 : TopBar — passage à "🪙 Sifflets"**
+  - _Action :_ Dans `src/components/layout/TopBar.tsx`, remplacer "355 pts" par "🪙 355" (ou "355 Sifflets" si la place le permet). Vérifier que l'état actif/cliquable mène bien au profil ou à la boutique (UX6-6 prévu mais à confirmer en visuel). Tester l'animation pulse sur changement de solde.
+
+- [x] **NAM-3 : Boutique — affichage prix en "Sifflets"**
+  - _Action :_ Dans `src/app/(app)/shop/page.tsx` et composants associés, remplacer "1 000 pts" par "1 000 🪙" ou "1 000 Sifflets" selon contexte. Le solde en haut à droite de la boutique passe aussi en "🪙 355".
+
+- [x] **NAM-4 : VotingModal et place_bet — "Engagement Sifflets"**
+  - _Action :_ Dans `src/components/match/VotingModal.tsx`, remplacer "Engagement 35 pts" par "Mise : 35 🪙" ou "Mise : 35 Sifflets". Idem dans la modale d'achat de booster.
+
+- [x] **NAM-5 : Leaderboards — passage à "Points"**
+  - _Action :_ Dans `LeaderboardClient.tsx`, `SquadLeaderboard.tsx`, `SquadChampionship.tsx`, `ProfileClient.tsx` (section "Points gagnés"), remplacer "pts" par "Points" ou conserver "pts" mais ajouter un sous-label "(score saisonnier)" ou "(score perpétuel)" selon le contexte. Garantir la distinction visuelle avec les Sifflets.
+
+- [x] **NAM-6 : Profil — clarification XP vs Points vs Sifflets**
+  - _Action :_ Dans `ProfileHeader.tsx`, libeller explicitement chaque valeur :
+    - Barre de progression "XP · DISTRICT 150 / 500" → conserver "XP" (c'est de la progression)
+    - Card "355 PTS" en hero → renommer "355 🪙 SIFFLETS" pour la dépense, ET ajouter à côté ou en dessous un "725 Points gagnés" (lifetime) ou "Saison de Mai : X Points"
+    - Card "725 POINTS GAGNÉS" → garder "Points" (c'est le score)
+
+- [x] **NAM-7 : i18n — propagation aux fichiers `messages/*.json`**
+  - _Action :_ Si certaines strings sont déjà dans `next-intl`, mettre à jour les 5 langues (FR/EN/ES/DE/IT). Sinon, prévoir le naming pour quand l'i18n sera branchée.
+
+---
+
+### 🟡 Sprint UX8 : POLISH ÉCRANS NAVIGATION (hors-match)
+
+> Issus du débrief des 19 écrans hors-match du 8 mai 2026.
+
+- [x] **UX8-1 : Logo "VAR TIME" — unifier le lockup**
+  - _Problème :_ "VAR" est dans une box bordée et "TIME" est en texte libre, ça ressemble à deux marques accolées.
+  - _Action :_ Dans le composant logo (probablement `WhistleLogo.tsx` ou `BrandLogo.tsx`), unifier le lockup : soit boxer les deux, soit aucun. Recommandation : un seul lockup propre, éventuellement avec l'éclair ⚡ comme symbole de marque entre "VAR" et "TIME". Tester le rendu sur fond sombre et clair.
+
+- [x] **UX8-2 : Empty state "La VAR dort" — alléger le texte**
+  - _Problème :_ "Profites-en pour préparer tes pronos, consulter le classement ou challenger tes ligues" est descriptif et redondant avec les 3 CTAs en dessous.
+  - _Action :_ Dans `src/components/lobby/MatchLobby.tsx`, remplacer le paragraphe par : "Aucun match en direct. C'est le moment de poser tes pronos." (une seule phrase). Les 3 CTAs en dessous parlent d'eux-mêmes.
+- [x] **UX8-2bis : Afficher cette page en entrée sur l'application**
+
+- [x] **UX8-3 : Bug visuel "Quitter la ligue" qui flotte détaché**
+  - _Problème :_ Sur la page Ligues (`LiguesPageClient.tsx`), le menu trois points qui ouvre "Quitter la ligue" affiche le tooltip détaché de la card, comme une bulle flottante orpheline.
+  - _Action :_ Ancrer le dropdown sous le bouton trois points avec un positionnement relatif strict. Utiliser un composant Popover/DropdownMenu de Radix si pas déjà fait. Tester sur petit et grand écran.
+
+- [x] **UX8-4 : Slider Pronos — clarifier le saut de jours sans match**
+  - _Contexte :_ Le slider affiche uniquement les jours avec des matchs (ex: saute Jeu et Ven s'il n'y a aucun match). C'est une décision UX volontaire et juste — ça évite des taps sur des jours vides.
+  - _Problème :_ L'utilisateur peut être perplexe la première fois qu'il voit Mer 6 → Auj → Sam 9 sans transition. Le saut n'est pas explicite.
+  - _Action :_ Pas de refonte. Juste vérifier que :
+    - Le label "Demain" sous "Sam 9" s'affiche bien quand le prochain jour avec match n'est pas littéralement demain (ce qui semble déjà être le cas).
+    - Le label "Auj." apparaît même quand il n'y a aucun match aujourd'hui (l'utilisateur doit pouvoir voir où il en est dans le temps).
+    - Optionnel : ajouter un micro-séparateur visuel (un `·` discret ou un espacement légèrement plus grand) entre deux jours non-consécutifs, pour signaler implicitement le saut.
+
+- [x] **UX8-5 : Pronos — légender les 5 ronds historique sous les noms d'équipe**
+  - _Problème :_ Sous chaque équipe (Forest, Newcastle, Burnley, Aston Villa) on voit 5 ronds verts/rouges qui représentent les 5 derniers matchs. Pas de légende.
+  - _Action :_ Dans la `MatchPronoCard`, ajouter un micro-label "5 derniers" ou un tooltip au tap. Alternative : ajouter une icône d'info ⓘ qui ouvre un mini-explainer.
+
+- [x] **UX8-7 : Stats compactes du profil — colorisation**
+  - _Problème :_ La section PRONOS (5 total / 2 corrects / 2 exacts / 40% win rate) et PARIS VAR (4 total / 2 gagnés) est plate visuellement par rapport au hero du dessus.
+  - _Action :_ Dans `ProfileClient.tsx` ou `MppStatsSection.tsx`, coloriser les ratios : vert si >= 60%, ambre 30-60%, rouge < 30%. Augmenter la taille des chiffres principaux (text-3xl bold) et réduire les labels (text-xs uppercase tracking).
+
+- [x] **UX8-8 : Burger menu — masquer ou marquer "Bientôt" les langues non actives**
+  - _Problème :_ 5 langues affichées (FR/EN/ES/DE/IT) alors que la couverture i18n est à ~5%. Trompeur.
+  - _Action :_ Tant que `next-intl` n'est pas branché complètement, n'afficher que FR (et EN si traduit). Marquer ES/DE/IT comme "Bientôt" en disabled state, ou les masquer.
+
+- [x] **UX8-10 : Tabs scrollables — gradient fade visible (vérification UX2-1 et UX7-6)**
+  - _Problème :_ Sur l'image du Stade, "LA LIGA" est encore tronqué sans fade visible.
+  - _Action :_ Vérifier dans `MatchLobby.tsx` que le gradient `bg-gradient-to-l from-zinc-950` est bien présent ET visible (pas coupé par overflow:hidden parent). Augmenter w-12 → w-16 si nécessaire. Vérifier z-index >= 10.
+
+---
+
+### 🟡 Sprint UX9 : POLISH ÉCRANS MATCH LIVE
+
+> Issus du débrief des 8 écrans match live du 8 mai 2026 (KOP, Vestiaire, Compo, Stats, VotingModal, ActionDrawer).
+
+- [x] **UX9-1 : Tabs KOP/VESTIAIRE/COMPO/STATS — underline du tab actif plus visible**
+  - _Problème :_ L'underline vert sous le tab actif est très discret (h-0.5).
+  - _Action :_ Dans le composant Tabs de la LiveRoom, augmenter l'underline à `h-1` voire `h-1.5`, avec léger glow. Alternative : ajouter un fond pill subtil (`bg-pitch-700/30`) sur le tab actif en plus de l'underline.
+
+- [x] **UX9-2 : Statut live "1ÈRE MI-TEMPS · 5'" — augmenter la visibilité**
+  - _Problème :_ Le statut le plus dynamique (la minute du match) est en text-xs sous le score, trop petit.
+  - _Action :_ Dans le Scoreboard de la LiveRoom, augmenter la taille à `text-sm font-bold` minimum, garder le rouge avec dot pulse animé (`animate-pulse`). Tester sur petite résolution (iPhone SE).
+
+- [x] **UX9-3 : Bouton notification (cloche) — cohérence d'état**
+  - _Problème :_ La cloche en haut à droite est tantôt verte plein, tantôt verte outline selon les écrans (image 1 vs image 3). Incohérence ou bug.
+  - _Action :_ Identifier le composant (probablement dans le header de la LiveRoom). Définir clairement l'état : plein = abonné aux notifs du match, outline = pas abonné. Ajouter un toast au tap "Notifs activées pour ce match" / "Désactivées".
+
+- [x] **UX9-4 : Compo — affichage des noms longs**
+  - _Problème :_ "Schlott..." pour Schlotterbeck, "Bellingh..." pour Bellingham — tronquage moche.
+  - _Action :_ Dans `MatchLineupsPitch.tsx` ou équivalent, afficher uniquement le nom de famille en `text-xs`, ou prénom abrégé + nom complet ("M. Schlotterbeck"). Si le nom dépasse 12 caractères, basculer en abréviation propre. Pas de "..." en suffixe.
+
+- [x] **UX9-5 : Vestiaire — header "TES AMIS" plus explicite**
+  - _Problème :_ La card jaune "TES AMIS" ne dit pas qu'il s'agit d'une synthèse des pronos amis sur ce match précis.
+  - _Action :_ Dans le composant Vestiaire de la LiveRoom, remplacer "TES AMIS" par "👥 Pronos de tes amis sur ce match" ou "Ce qu'ont misé tes amis ici". Plus explicite, plus social.
+
+- [x] **UX9-6 : Pronos de la ligue — passage en row compact**
+  - _Problème :_ Chaque membre (Remi, Cafoutch...) a une card pleine largeur avec score + buteurs. Sur ligue de 6 membres = scroll infini.
+  - _Action :_ Dans le Vestiaire LiveRoom, transformer les cards en rows compacts : avatar + pseudo + score "1-0" + chevron pour expand. Au tap, expand affiche les buteurs prédits. Limite par défaut : 3 rows visibles, "Voir les X autres" dessous.
+
+- [x] **UX9-7 : VotingModal — slider plus lisible**
+  - _Problème :_ Le slider de mise n'a pas de label flottant qui suit le drag. La valeur "35 pts" est déconnectée visuellement.
+  - _Action :_ Dans `VotingModal.tsx`, ajouter un tooltip flottant au-dessus du dot du slider qui affiche la mise courante en gros (ex: "🪙 35"). Le tooltip suit le drag en temps réel. Améliore drastiquement la sensation de contrôle.
+
+- [x] **UX9-8 : VotingModal — clarifier "COTES ESTIMÉES (MASSE DES MISES)"**
+  - _Problème :_ Le footer underline ressemble à un lien cliquable mais c'est probablement juste un label.
+  - _Action :_ Si c'est un label statique, retirer l'underline. Si c'est cliquable (tooltip explicatif), le rendre visiblement interactif (icône ⓘ + label "Comment sont calculées les cotes ?"). Au tap, ouvrir un mini-explainer ou un lien vers `/rules#cotes`.
+
+- [x] **UX9-9 : ActionDrawer — masquer la barre de tabs côté user**
+  - _Problème :_ Les onglets ALERTES / FEUILLE / CONTRÔLE sont visibles mais FEUILLE/CONTRÔLE sont admin-only (cachés en pratique). Côté user, ALERTES seul = pas besoin de tab.
+  - _Action :_ Dans `ActionDrawer.tsx`, conditionner l'affichage de la barre de tabs à `user.trust_score >= MODERATOR_THRESHOLD`. Côté user normal, afficher directement la grid de cards "Décisions VAR à signaler" sans tab. Côté modérateur, garder les 3 tabs.
+
+- [x] **UX9-10 : LiveRoom — afficher le badge d'audience "👁️ X" (vérification Sprint Q)**
+  - _Problème :_ Le sprint Q (quorum dynamique) est marqué `[x]` côté code mais aucun screen ne montre le badge audience visible. À vérifier sur device qu'il s'affiche bien dans le header de la LiveRoom.
+  - _Action :_ Tester sur device pendant un match live. Si le badge n'apparaît pas, déboguer la souscription Realtime à `match_presence` et la requête `count_active_users_on_match`. Si le badge apparaît mais est peu visible, augmenter sa visibilité (text-sm minimum, jaune whistle si audience >= 5).
+
+---
+
+### 🟢 Sprint UX10 : MICRO-DÉTAILS POST-DÉBRIEF
+
+> À traiter en parallèle des sprints critiques. Chaque tâche est < 15 min de code.
+
+- [x] **UX10-1 : Bouton retour LiveRoom — arbitrer "← Matchs" vs flèche seule**
+  - _Action :_ Décision PM : garder "← Matchs" (texte explicite)
+
+- [x] **UX10-2 : Compo — vérifier le terrain en mode portrait/paysage**
+  - _Action :_ Sur petits écrans (iPhone SE), le terrain peut déborder. Tester et ajuster les `viewBox` SVG si nécessaire.
+
+- [x] **UX10-3 : Captures admin/résolution — à demander au PM**
+  - _Action :_ Capter ce soir pendant Lens-Nantes ou Monaco-Lille :
+    - Le moment où un market VAR se résout (animation gain/perte côté user)
+    - L'écran admin de résolution (UX modérateur)
+    - Une notification push native (format actions OUI/NON sur Android)
+  - Ces écrans manquent au débrief et bloquent une review complète.
+
+---
+
+### 🟠 Sprint CHAT-LIVE : AMORÇAGE & VIE DES CHATS DE LIGUE — "Que ça parle"
+
+> **Contexte stratégique :** Les chats de ligue sont vides en pratique (cf. screens du 8 mai 2026). Le problème n'est pas la découvrabilité (pastille rouge déjà présente) mais l'amorçage : sans premier message, personne n'ose parler. Sans contenu généré automatiquement, le chat n'a rien à offrir entre deux conversations humaines. Ce sprint donne vie au chat sans demander aux utilisateurs de produire le contenu.
+
+- [x] **CHAT-1 : Message de bienvenue auto à la création de ligue**
+  - _Problème :_ Le bonus UX3-1 prévoyait ce message mais n'a pas été implémenté. Tous les chats créés depuis sont muets par défaut.
+  - _Action 1 :_ Dans `POST /api/squads` (création de ligue), juste après l'INSERT dans `squads` et `squad_members`, insérer une row dans `squad_messages` avec :
+    - `user_id` = NULL (ou un user_id "system" dédié)
+    - `is_system_message` = TRUE (ajouter cette colonne via migration si elle n'existe pas)
+    - `content` = "🎉 Bienvenue dans **[Nom de la ligue]** ! Présentez-vous, chambrez-vous, et que le Boss de la VAR remporte le mois ! 🏆"
+  - _Action 2 :_ Migration ajoutant `is_system_message BOOLEAN DEFAULT FALSE` à `squad_messages`.
+  - _Action 3 :_ Dans `SquadChat.tsx`, styliser différemment les messages système : fond légèrement vert pitch, italique, sans avatar utilisateur, badge "VAR TIME" en lieu et place du pseudo.
+  - _Action 4 :_ Backfill des ligues existantes sans messages : insérer un message système rétroactivement sur toutes les `squads` qui n'ont aucun `squad_messages` à date.
+
+- [x] **CHAT-2 : Messages système auto sur événements importants**
+  - _Problème :_ Le chat n'a rien à raconter entre deux interactions humaines. Aucun feed dynamique.
+  - _Action 1 :_ Identifier les triggers à brancher (dans les RPCs ou les routes API qui résolvent des paris/pronos) :
+    - **Gros gain** : un membre gagne ≥ 200 pts sur un pari VAR ou un prono → "🔥 **{pseudo}** vient d'empocher +{points} pts sur {match} !"
+    - **All In** : un membre mise > 80% de son solde sur un pari → "⚡ **{pseudo}** met {amount} 🪙 All In sur {market_event} — folie ou génie ?"
+    - **Badge débloqué** : un membre débloque un badge → "🏆 **{pseudo}** vient de débloquer le badge **{badge_name}** !"
+    - **Score exact trouvé** : un membre a fait un score exact sur un match → "🎯 **{pseudo}** avait prédit le score exact {score} sur {match}. Respect."
+    - **Promotion de division/rang** : un membre passe à un grade supérieur → "🚀 **{pseudo}** est promu **{nouveau_grade}** ! Bienvenue chez les grands."
+  - _Action 2 :_ Créer une fonction utilitaire `postSquadSystemMessage(squadId, content)` dans `src/lib/squad-messages.ts` qui insère un message système dans `squad_messages` avec le bon flag.
+  - _Action 3 :_ Dans `resolve_event_parimutuel`, après distribution des gains, identifier le plus gros gagnant par squad et déclencher le message "Gros gain" si > 200 pts. Idem dans `resolve_match_pronos` pour les scores exacts.
+  - _Action 4 :_ Rate-limiting : pas plus de 5 messages système / squad / 24h pour éviter le spam. Compteur en table `squad_system_message_log` ou logique simple dans la fonction utilitaire.
+
+- [x] **CHAT-3 : Push notification quand un chat de ligue s'anime**
+  - _Problème :_ Même avec des messages auto, les utilisateurs ne reviennent pas sur le chat sans rappel.
+  - _Action 1 :_ Dans `SquadChat.tsx`, lors de l'INSERT d'un message humain, déclencher (côté API) un push aux autres membres de la squad ayant `notif_squad_chat = TRUE` (toggle à ajouter dans `profiles`).
+  - _Action 2 :_ Format du push : "💬 **{pseudo}** dans **{squad_name}** : {first_50_chars_of_message}..."
+  - _Action 3 :_ Cooldown : 1 push max / squad / 30 min pour éviter d'inonder pendant une conversation active.
+  - _Action 4 :_ Toggle `notif_squad_chat` dans la page Notifications (Settings).
+
+- [x] **CHAT-4 : Pastille rouge sur l'icône Ligues du BottomNav**
+  - _Problème :_ Vérifier que UX7-2 (pastille whistle sur tab HISTORIQUE) a bien été étendue au tab LIGUES quand un message non-lu existe.
+  - _Action 1 :_ Si pas déjà fait : ajouter une pastille `bg-whistle` (ou rouge animate-pulse pour les MP, à voir Sprint MP) sur l'icône Ligues du `BottomNav` quand au moins une squad a un message non-lu.
+  - _Action 2 :_ Marquer comme lu : utiliser `last_read_at` sur `squad_members` (ajouter colonne via migration). Mettre à jour à chaque visite du chat.
+  - _Action 3 :_ Les messages système (bienvenue, événements auto) déclenchent aussi la pastille pour rappeler le membre.
+
+---
+
+### 🟢 Sprint MP : MESSAGERIE PRIVÉE ENTRE AMIS — "L'inbox"
+
+> **Contexte stratégique :** Le système d'amis existe (`friend_requests` avec statut `accepted`) mais aucune mécanique sociale 1-to-1. Les messages privés entre amis créent un canal informel hors-ligue, idéal pour chambrer son meilleur pote sur un prono raté. C'est aussi un signal de sérieux pour les utilisateurs (vraie app sociale). **À NE PAS LANCER AVANT LA CDM** — ça nécessite modération + signalement + blocage. Backlog post-CDM, à activer une fois la masse d'utilisateurs stabilisée. Pour la CDM, garder le focus sur les chats de ligue (Sprint CHAT-LIVE).
+
+- [x] **MP-1 : Modèle de données**
+  - _Action 1 :_ Migration `supabase/migrations/00XX_direct_messages.sql` :
+
+```sql
+    CREATE TABLE direct_message_threads (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_a_id UUID REFERENCES profiles(id) NOT NULL,
+      user_b_id UUID REFERENCES profiles(id) NOT NULL,
+      last_message_at TIMESTAMPTZ,
+      last_message_preview TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      CHECK (user_a_id < user_b_id),  -- ordre canonique pour unicité
+      UNIQUE (user_a_id, user_b_id)
+    );
+
+    CREATE TABLE direct_messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      thread_id UUID REFERENCES direct_message_threads(id) ON DELETE CASCADE NOT NULL,
+      sender_id UUID REFERENCES profiles(id) NOT NULL,
+      content TEXT NOT NULL CHECK (length(content) <= 500),
+      sent_at TIMESTAMPTZ DEFAULT NOW(),
+      read_at TIMESTAMPTZ
+    );
+
+    -- RLS : seuls les 2 participants peuvent lire/écrire
+    -- Index sur thread_id, sent_at DESC
+```
+
+- _Action 2 :_ Types dans `src/types/database.ts`.
+
+- [x] **MP-2 : Bouton "Envoyer un MP" sur le profil public d'un ami**
+  - _Action :_ Dans `src/app/(app)/profile/[id]/page.tsx`, si la relation `friend_requests` est `accepted`, afficher un bouton "💬 Message" qui ouvre une nouvelle thread (ou la thread existante) et redirige vers `/messages/[threadId]`.
+
+- [x] **MP-3 : Page `/messages` — liste des threads**
+  - _Action :_ Créer `src/app/(app)/messages/page.tsx` qui liste les threads de l'utilisateur, triés par `last_message_at DESC`. Format : avatar de l'autre user + pseudo + preview du dernier message + timestamp + pastille si non-lu.
+
+- [x] **MP-4 : Page `/messages/[threadId]` — conversation 1-to-1**
+  - _Action :_ Page de chat similaire à `SquadChat.tsx` mais simplifié (2 participants, pas de modération communautaire). Bulles à gauche/droite, scroll auto, input + bouton envoyer. Souscription Realtime sur `direct_messages` filtrée par `thread_id`.
+
+- [x] **MP-5 : Bouton "💬" dans la TopBar (à côté du burger)**
+  - _Problème :_ Aujourd'hui la TopBar a logo + solde + burger. Avec les MP, ajouter un 4ème élément se justifie (l'inbox privée n'a pas de page parente naturelle).
+  - _Action :_ Dans `src/components/layout/TopBar.tsx`, ajouter une icône `MessageCircle` (Lucide) à gauche du burger. Pastille rouge animée si messages non-lus. Au tap, redirige vers `/messages`.
+  - _Note :_ Garder l'icône **uniquement** quand l'utilisateur a au moins 1 ami (`friend_requests.status = 'accepted'`). Sinon, masquer pour ne pas polluer la TopBar des nouveaux utilisateurs.
+
+- [ ] **MP-6 : Modération — signalement et blocage**
+  - _Action 1 :_ Dans la conversation, long-press sur un message ouvre un menu "Signaler ce message". Insère une row dans `message_reports` (à créer).
+  - _Action 2 :_ Dans le profil public d'un ami, ajouter un bouton "Bloquer" qui supprime la friendship et empêche tout futur MP. Table `user_blocks` (blocker_id, blocked_id).
+  - _Action 3 :_ Dashboard admin pour les modérateurs : liste des messages signalés, action "Supprimer + warn" ou "Ignorer".
+
+- [x] **MP-7 : Push notification sur nouveau MP**
+  - _Action :_ Quand un message est envoyé, push à l'autre user (si `notif_dm = TRUE`) : "💬 **{pseudo}** : {first_50_chars}...". Au tap, ouvre la thread.
+
+- [ ] **MP-8 : Hub social unifié dans `/messages` (optionnel V2)**
+  - _Note :_ À faire seulement si le besoin émerge. La page `/messages` pourrait afficher 2 sections : "Conversations privées" (MP) et "Mes ligues" (raccourcis vers chats de ligue). Hub centralisé tout-social.
+
+## 💎 PHASE 3 — LONG TERME (post-validation PMF)
 
 ### 🏆 Sprint INSP-2 : DIVISIONS PROMOTION/RELÉGATION — "Bronze → Or → Elite"
 
