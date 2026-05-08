@@ -179,6 +179,14 @@ export async function POST(request: NextRequest) {
       return errorResponse(memberErr.message, 500);
     }
 
+    // Message de bienvenue automatique (fire-and-forget)
+    void supabase.from("squad_messages").insert({
+      squad_id: squad.id,
+      user_id: null,
+      content: `🎉 Bienvenue dans **${squad.name}** ! Présentez-vous, chambrez-vous, et que le Boss de la VAR remporte le mois ! 🏆`,
+      is_system_message: true,
+    });
+
     return successResponse(
       {
         squad: {

@@ -38,7 +38,13 @@ export function SquadChat({
         .limit(50);
       if (!rawMsgs || rawMsgs.length === 0) return;
 
-      const userIds = [...new Set(rawMsgs.map((m) => m.user_id))];
+      const userIds = [
+        ...new Set(
+          rawMsgs
+            .map((m) => m.user_id)
+            .filter((id): id is string => id !== null),
+        ),
+      ];
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("id, username, avatar_url")
@@ -52,7 +58,7 @@ export function SquadChat({
       setMessages(
         rawMsgs.map((m) => ({
           ...m,
-          profiles: profileMap.get(m.user_id) ?? null,
+          profiles: m.user_id ? (profileMap.get(m.user_id) ?? null) : null,
         })),
       );
     })();
@@ -70,6 +76,10 @@ export function SquadChat({
         },
         async (payload) => {
           const newMsg = payload.new as SquadMessageRow;
+          if (newMsg.is_system_message || !newMsg.user_id) {
+            setMessages((prev) => [...prev, { ...newMsg, profiles: null }]);
+            return;
+          }
           const { data: profileData } = await supabase
             .from("profiles")
             .select("username, avatar_url")
@@ -151,6 +161,20 @@ export function SquadChat({
           </div>
         ) : (
           messages.map((msg) => {
+            if (msg.is_system_message) {
+              return (
+                <div key={msg.id} className="flex items-center gap-2 py-0.5">
+                  <div className="h-px flex-1 bg-white/5" />
+                  <p className="max-w-[85%] rounded-lg border border-green-800/30 bg-green-950/30 px-2.5 py-1.5 text-center text-[11px] italic text-green-400/80">
+                    <span className="not-italic mr-1.5 rounded border border-green-700/30 bg-green-900/30 px-1 py-0.5 text-[8px] font-black uppercase tracking-widest text-green-500/70">
+                      VAR TIME
+                    </span>
+                    {msg.content}
+                  </p>
+                  <div className="h-px flex-1 bg-white/5" />
+                </div>
+              );
+            }
             const isMe = msg.user_id === currentUserId;
             return (
               <div

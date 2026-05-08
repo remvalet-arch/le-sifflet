@@ -567,23 +567,26 @@ export interface Database {
         Row: {
           id: string;
           squad_id: string;
-          user_id: string;
+          user_id: string | null;
           content: string;
           created_at: string;
+          is_system_message: boolean;
         };
         Insert: {
           id?: string;
           squad_id: string;
-          user_id: string;
+          user_id?: string | null;
           content: string;
           created_at?: string;
+          is_system_message?: boolean;
         };
         Update: {
           id?: string;
           squad_id?: string;
-          user_id?: string;
+          user_id?: string | null;
           content?: string;
           created_at?: string;
+          is_system_message?: boolean;
         };
         Relationships: [];
       };
