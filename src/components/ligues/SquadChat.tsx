@@ -27,6 +27,16 @@ export function SquadChat({
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const supabase = createClient();
 
+  // Marquer comme lu à chaque visite
+  useEffect(() => {
+    void supabase
+      .from("squad_members")
+      .update({ last_read_at: new Date().toISOString() })
+      .eq("squad_id", squadId)
+      .eq("user_id", currentUserId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [squadId, currentUserId]);
+
   useEffect(() => {
     // Initial fetch
     void (async () => {

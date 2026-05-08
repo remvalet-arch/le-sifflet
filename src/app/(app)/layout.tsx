@@ -107,7 +107,7 @@ export default async function AppLayout({
             {children}
           </div>
 
-          <BottomNav />
+          <BottomNav userId={user.id} />
         </div>
       </div>
     </LiveRoomProvider>

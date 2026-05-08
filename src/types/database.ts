@@ -550,16 +550,19 @@ export interface Database {
           user_id: string;
           squad_id: string;
           joined_at: string;
+          last_read_at: string | null;
         };
         Insert: {
           user_id: string;
           squad_id: string;
           joined_at?: string;
+          last_read_at?: string | null;
         };
         Update: {
           user_id?: string;
           squad_id?: string;
           joined_at?: string;
+          last_read_at?: string | null;
         };
         Relationships: [];
       };
