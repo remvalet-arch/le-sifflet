@@ -4,7 +4,7 @@
   <architecture_rules>
     <rule>Server Components par défaut : N'utilise "use client" qu'en haut des fichiers qui nécessitent des hooks d'état (useState, useEffect) ou des interactions (onClick).</rule>
     <rule>Mobile-First UX : Toutes les zones cliquables (boutons, liens, cartes) DOIVENT avoir une taille minimale de min-h-[48px] et min-w-[48px] pour faciliter le tap. Pas d'états :hover critiques pour la navigation.</rule>
-    <rule>Design System (Tailwind v4) : Utilise exclusivement les couleurs du thème : bg-pitch-dark, bg-pitch-light, text-chalk, border-whistle, text-card-red, text-card-yellow.</rule>
+    <rule>Design System (Tailwind v4) : Utilise exclusivement les couleurs du thème. Backgrounds : `bg-pitch-800`, `bg-pitch-900` (vert foncé). Accent : `text-whistle`, `bg-whistle`, `border-whistle` (jaune). Texte clair : `text-chalk`. Texte secondaire : `text-zinc-400`, `text-zinc-600`. Pour les surfaces de carte : `bg-zinc-800`, `bg-zinc-900`. Jamais de couleurs hardcodées hors palette.</rule>
     <rule>Librairies UI : Toujours utiliser `lucide-react` pour les icônes. Toujours utiliser `sonner` pour les toasts (toast.success()).</rule>
     <rule>Ton Editorial : Utiliser le tutoiement ("Ton pari", "Tu as gagné") et un ton décalé (type Mon Petit Gazon).</rule>
   </architecture_rules>

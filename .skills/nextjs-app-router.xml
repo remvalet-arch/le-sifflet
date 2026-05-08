@@ -1,13 +1,17 @@
 <skill>
-  <name>Next.js 16 App Router Server Actions</name>
-  <description>Implémenter la logique backend, les mutations de données, et le routage avec Next.js 16 App Router.</description>
+  <name>Next.js 16 App Router — Route Handlers & Architecture</name>
+  <description>Implémenter la logique backend, les mutations de données, et le routage avec Next.js 16 App Router. Dans ce projet, les Route Handlers (`/api/`) sont le pattern principal — pas les Server Actions.</description>
   <architecture_rules>
-    <rule>Server Actions : Pour les soumissions de formulaires ou les clics modifiant la DB, utiliser des actions asynchrones avec `"use server"` dans `src/app/actions/` plutôt que `app/api/`.</rule>
-    <rule>Revalidation : Après une mutation réussie, utiliser `revalidatePath('/chemin')` ou `revalidateTag()` pour purger le cache et rafraîchir l'UI.</rule>
-    <rule>Gestion des Erreurs : Les Server Actions doivent retourner des objets structurés `{ success: true, data: ... }` ou `{ success: false, error: "..." }` pour un traitement propre par le client, jamais lancer d'exceptions brutes non catchées.</rule>
+    <rule>Route Handlers pour les mutations : Toute logique backend (paris, balance, amis, messages, push…) passe par des Route Handlers dans `src/app/api/`. Format de réponse uniforme via `successResponse` / `errorResponse` depuis `src/lib/api-response.ts`. Ne jamais retourner `Response.json()` brut.</rule>
+    <rule>Authentification systématique : Chaque Route Handler commence par `const { data: { user } } = await supabase.auth.getUser()`. Si `!user`, retourner `errorResponse("Unauthorized", 401)` immédiatement.</rule>
+    <rule>Server Components pour la lecture : Les pages dans `app/(app)/` sont des Server Components par défaut. Elles lisent les données via `createClient()` (server) et passent les props aux Client Components. Éviter les fetch() côté client pour les données initiales.</rule>
+    <rule>params async : Dans Next.js 16, `params` est une Promise. Toujours `const { id } = await params;` en haut du composant/handler avant tout usage.</rule>
+    <rule>Client Supabase : `src/lib/supabase/server.ts` (await createClient()) dans les Server Components et Route Handlers. `src/lib/supabase/client.ts` (createClient()) dans les Client Components. `src/lib/supabase/admin.ts` (createAdminClient()) pour bypass RLS — jamais côté client.</rule>
+    <rule>Cron routes : Les routes cron (`/api/cron/...`) vérifient `Authorization: Bearer ${CRON_SECRET}` avant tout.</rule>
   </architecture_rules>
   <harness>
-    <verification_step>Vérifier que la Server Action est appelée correctement depuis le client (Network tab ou logs serveur).</verification_step>
-    <verification_step>Vérifier que l'UI se met à jour immédiatement après la mutation sans rechargement manuel de la page (grâce à revalidatePath).</verification_step>
+    <verification_step>Tester la route avec `curl` ou le Network tab : vérifier que la réponse suit le format `{ ok: true, data: ... }` ou `{ ok: false, error: "..." }`.</verification_step>
+    <verification_step>Vérifier qu'un appel non authentifié retourne bien 401.</verification_step>
+    <verification_step>Exécuter `npm run typecheck` — aucune erreur.</verification_step>
   </harness>
 </skill>

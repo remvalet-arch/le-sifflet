@@ -1,0 +1,35 @@
+<skill>
+  <name>Système Social — Amis & Messagerie Privée</name>
+  <description>Implémenter des features liées au graphe social : demandes d'amitié, statut d'amitié, messagerie 1-to-1 entre amis. Tables : friend_requests, direct_message_threads, direct_messages.</description>
+
+  <schema>
+    <table name="friend_requests">
+      Colonnes : sender_id, receiver_id, status ('pending'|'accepted'|'declined').
+      Policy RLS : chaque user voit les rows où il est sender ou receiver.
+      Vérifier l'amitié : requête avec `.or("and(sender_id.eq.X,receiver_id.eq.Y),and(sender_id.eq.Y,receiver_id.eq.X)")` + `.eq("status", "accepted")`.
+    </table>
+    <table name="direct_message_threads">
+      Colonnes : user_a_id, user_b_id (CONSTRAINT chk_canonical_order CHECK (user_a_id &lt; user_b_id)), UNIQUE(user_a_id, user_b_id), last_message_at, last_message_preview, user_a_read_at, user_b_read_at.
+      Ordre canonique OBLIGATOIRE : `const [userA, userB] = [userId1, userId2].sort()` — toujours trier avant insertion/lookup pour garantir l'unicité.
+    </table>
+    <table name="direct_messages">
+      Colonnes : thread_id, sender_id, content (CHECK char_length 1-500), sent_at.
+      Realtime activé (REPLICA IDENTITY FULL + supabase_realtime publication).
+    </table>
+  </schema>
+
+  <architecture_rules>
+    <rule>Ordre canonique pour les threads DM : TOUJOURS trier les deux user IDs (`[a, b] = [id1, id2].sort()`) avant toute opération sur `direct_message_threads`. La CONSTRAINT en base rejette les insertions hors ordre — ne pas compter sur la DB pour corriger, corriger côté app.</rule>
+    <rule>Clé dynamique Supabase Update : Ne pas utiliser `{ [dynamicKey]: value }` avec `.update()` — TS refuse le type dynamique sur l'interface typée Supabase. Utiliser un if/else explicite pour `user_a_read_at` vs `user_b_read_at`.</rule>
+    <rule>Vérification amitié avant message : La route POST `/api/messages/[otherId]` vérifie l'amitié acceptée via le client admin avant tout. Retourner 403 si non-amis.</rule>
+    <rule>Client admin pour find-or-create thread : La création d'un thread implique d'insérer une row liant deux users — utiliser `createAdminClient()` pour bypasser RLS. La lecture des threads d'un user peut utiliser le client normal si les policies RLS sont bien définies.</rule>
+    <rule>Unread tracking : Comparer `last_message_at` vs `user_a_read_at` (ou `user_b_read_at` selon quel côté on est). Marquer comme lu à l'ouverture de la conversation (server-side) ET à la réception d'un nouveau message (client-side via Realtime).</rule>
+    <rule>Rate limiting messages : Côté client, enforcer un délai minimum (RATE_LIMIT_MS = 2000ms) entre deux envois via `lastSentAt` state. Côté serveur, valider la longueur du contenu (1-500 chars).</rule>
+  </architecture_rules>
+
+  <harness>
+    <verification_step>Tester avec deux comptes : A envoie une demande à B → B accepte → A peut ouvrir une conversation → messages apparaissent en Realtime des deux côtés.</verification_step>
+    <verification_step>Vérifier que le badge "non lu" dans TopBar disparaît à l'ouverture de la conversation.</verification_step>
+    <verification_step>Vérifier que deux utilisateurs non-amis ne peuvent pas s'envoyer de messages (403 sur la route POST).</verification_step>
+  </harness>
+</skill>

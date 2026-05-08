@@ -1,14 +1,19 @@
 <skill>
   <name>Waze-like Realtime Signal</name>
-  <description>Ajouter ou modifier un événement diffusé en temps réel (ex: "Penalty", "Faute", "Hors-jeu") via Supabase Realtime.</description>
+  <description>Ajouter ou modifier un événement diffusé en temps réel (ex: "Penalty", "Faute", "Hors-jeu") via Supabase Realtime. S'applique aussi aux abonnements temps réel en général (messages, bets, scores).</description>
   <architecture_rules>
-    <rule>Typage strict : L'événement doit être ajouté au type/enum des signaux dans le dossier des types TypeScript.</rule>
-    <rule>Canal de diffusion : Les signaux s'écoutent sur le channel du match via `supabase.channel('match_room_XYZ')`. Utiliser `on('broadcast', { event: 'SIGNAL_NAME' }, callback)`.</rule>
-    <rule>Composant UI associé : Chaque nouveau signal doit avoir une représentation visuelle courte et impactante (Modal flash ou Toast via `sonner`) invitant les autres à parier.</rule>
+    <rule>Pattern Realtime : Utiliser `postgres_changes` (INSERT/UPDATE sur table), PAS broadcast. Exemple correct :
+      supabase.channel("nom-unique").on("postgres_changes", { event: "INSERT", schema: "public", table: "ma_table", filter: "col=eq.valeur" }, callback).subscribe()
+    </rule>
+    <rule>REPLICA IDENTITY FULL obligatoire : Toute table écoutée via postgres_changes sous RLS DOIT avoir `ALTER TABLE x REPLICA IDENTITY FULL` dans sa migration, sinon les events sont droppés silencieusement pour les clients non-propriétaires.</rule>
+    <rule>Cleanup : Toujours retourner `() => { void supabase.removeChannel(channel); }` dans le useEffect pour éviter les fuites mémoire.</rule>
+    <rule>Nommage des channels : Utiliser un identifiant préfixé et unique par instance (ex: `dm-${threadId}`, `match-${matchId}`, `bets-${userId}`). Éviter les noms génériques qui provoqueraient des collisions si le composant est monté plusieurs fois.</rule>
+    <rule>Typage : Caster `payload.new as MonTypeRow` (importé de `src/types/database.ts`). Ne jamais laisser `any`.</rule>
+    <rule>Composant UI : Chaque nouveau signal doit avoir une représentation visuelle courte et impactante (Modal flash ou Toast via `sonner`) invitant les autres à parier.</rule>
   </architecture_rules>
   <harness>
-    <verification_step>Lancer le serveur local (`npm run dev`).</verification_step>
-    <verification_step>Adapter et exécuter `scripts/simulate-match-scenario.ts` via `npm run test:backend` pour émettre le nouveau signal.</verification_step>
-    <verification_step>Vérifier que l'interface client réagit instantanément au broadcast.</verification_step>
+    <verification_step>Lancer `npm run dev` et ouvrir deux onglets avec deux sessions différentes.</verification_step>
+    <verification_step>Déclencher l'action depuis l'onglet A, vérifier que l'onglet B réagit en temps réel sans refresh.</verification_step>
+    <verification_step>Vérifier dans la console Supabase (Realtime inspector) que les events sont bien publiés.</verification_step>
   </harness>
 </skill>

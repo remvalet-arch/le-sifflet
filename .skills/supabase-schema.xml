@@ -2,12 +2,16 @@
   <name>Supabase Schema & Database</name>
   <description>Créer ou modifier des tables, des vues, des Row Level Security (RLS) ou des fonctions RPC dans Supabase.</description>
   <architecture_rules>
-    <rule>Pas de modification directe via l'UI Supabase : Toutes les modifications de schéma doivent être écrites sous forme de fichiers de migration SQL dans `supabase/migrations/`.</rule>
-    <rule>RLS Obligatoire : Toute nouvelle table DOIT activer RLS (`ALTER TABLE x ENABLE ROW LEVEL SECURITY;`). Fournir les policies pour SELECT, INSERT, UPDATE selon `auth.uid()`.</rule>
-    <rule>Synchronisation TypeScript : Après exécution SQL, les types doivent être regénérés via `npx supabase gen types typescript --local > src/types/supabase.ts` (ou la commande du projet).</rule>
+    <rule>Migrations uniquement : Toutes les modifications de schéma doivent être écrites en SQL dans `supabase/migrations/` avec un numéro séquentiel (ex: `0099_xxx.sql`). Jamais via l'UI Supabase. Idempotent : CREATE TABLE IF NOT EXISTS, ADD COLUMN IF NOT EXISTS.</rule>
+    <rule>RLS Obligatoire : Toute nouvelle table DOIT activer RLS (`ALTER TABLE x ENABLE ROW LEVEL SECURITY;`). Fournir les policies SELECT/INSERT/UPDATE/DELETE selon `auth.uid()`.</rule>
+    <rule>Realtime : Toute table Realtime (postgres_changes) DOIT avoir `ALTER TABLE x REPLICA IDENTITY FULL;` ET `ALTER PUBLICATION supabase_realtime ADD TABLE x;`. Sans ça, les events sont silencieusement droppés pour les clients passifs sous RLS.</rule>
+    <rule>Types TypeScript MANUELS : Ce projet ne génère PAS les types automatiquement. Les types vivent dans `src/types/database.ts` et suivent le contrat Supabase SDK : chaque table a des sous-types Row/Insert/Update + Relationships: []. Ajouter manuellement les types après toute migration. Exporter des alias `*Row` à la fin du fichier (ex: `export type DirectMessageRow = Database["public"]["Tables"]["direct_messages"]["Row"]`).</rule>
+    <rule>Client admin pour bypass RLS : Les opérations qui doivent ignorer RLS (ex: créer un thread entre deux users, lire les données d'un autre user) utilisent `createAdminClient()` depuis `src/lib/supabase/admin.ts`. Jamais côté client.</rule>
+    <rule>Migrations appliquées manuellement en prod : Il n'y a pas de CLI locale connectée à la prod. Les migrations sont copiées-collées dans le SQL Editor Supabase. Le signaler à l'utilisateur dans le récap de tâche.</rule>
   </architecture_rules>
   <harness>
-    <verification_step>Appliquer la migration locale : `npx supabase db reset` ou `npx supabase migration up`.</verification_step>
-    <verification_step>Exécuter `npm run typecheck` après la génération des types. Tout doit compiler sans erreur.</verification_step>
+    <verification_step>Après écriture de la migration SQL, mettre à jour `src/types/database.ts` manuellement.</verification_step>
+    <verification_step>Exécuter `npm run typecheck` pour valider les types. Tout doit compiler sans erreur.</verification_step>
+    <verification_step>Rappeler à l'utilisateur d'appliquer la migration dans le SQL Editor Supabase (action humaine requise).</verification_step>
   </harness>
 </skill>

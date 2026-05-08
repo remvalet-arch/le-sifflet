@@ -1,0 +1,26 @@
+<skill>
+  <name>Push Notifications (Web Push / VAPID)</name>
+  <description>Ajouter ou modifier des notifications push web : nouvelles catégories de notifs, envoi conditionnel selon les préférences utilisateur, gestion des subscriptions. S'appuie sur VAPID + service worker.</description>
+
+  <architecture>
+    <component name="Service Worker">`public/sw.js` — écoute `push`, affiche la notification via `self.registration.showNotification()`. Données reçues : `{ title, body, url, icon }`.</component>
+    <component name="Subscription API">`/api/push/subscribe` (POST) — enregistre/met à jour la subscription Web Push dans `push_subscriptions` (table Supabase, user_id + endpoint + keys).</component>
+    <component name="Send utility">`src/lib/push.ts` — `sendPushToUsers(userIds, payload)` : récupère les subscriptions via admin client, envoie via `web-push` (VAPID). Silencieux si subscription invalide (expired endpoints ignorés).</component>
+    <component name="Opt-in UI">`src/components/pwa/PushOptIn.tsx` — demande la permission navigateur + appelle `/api/push/subscribe`.</component>
+    <component name="Préférences">`src/app/(app)/settings/notifications/` — page + API pour activer/désactiver par catégorie. Colonnes booléennes sur la table `profiles` (ex: `notif_dm`, `notif_result`, `notif_badge`).</component>
+  </architecture>
+
+  <architecture_rules>
+    <rule>Préférence avant envoi : Avant d'appeler `sendPushToUsers()`, toujours vérifier la colonne de préférence correspondante sur `profiles` (ex: `notif_dm = true`). Ne jamais envoyer sans consentement.</rule>
+    <rule>Nouvelle catégorie = nouvelle colonne : Ajouter une colonne booléenne `notif_xxx BOOLEAN NOT NULL DEFAULT true` sur `profiles` via migration. Ajouter le type dans `database.ts`. Ajouter la ligne dans la page settings/notifications.</rule>
+    <rule>VAPID : Les clés VAPID sont dans les variables d'env `VAPID_PUBLIC_KEY` (NEXT_PUBLIC_) et `VAPID_PRIVATE_KEY` (jamais côté client). L'envoi se fait exclusivement côté serveur.</rule>
+    <rule>Silencieux en cas d'échec : `sendPushToUsers` ne doit pas faire planter la route principale si un push échoue. Wrapper dans try/catch, loguer l'erreur, continuer.</rule>
+    <rule>Payload limité : Web Push a une limite de ~4KB. Garder `title` court (< 50 chars), `body` < 120 chars.</rule>
+  </architecture_rules>
+
+  <harness>
+    <verification_step>Tester avec `src/app/admin/push-test/` — interface admin pour envoyer un push de test à son propre compte.</verification_step>
+    <verification_step>Vérifier sur mobile (Chrome Android ou Safari iOS) que la notification apparaît même app en arrière-plan.</verification_step>
+    <verification_step>Vérifier que désactiver la préférence dans Settings > Notifications stoppe bien les envois.</verification_step>
+  </harness>
+</skill>
