@@ -1,7 +1,5 @@
 "use client";
 
-import { subscribePushAction } from "@/app/actions/push";
-
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -75,14 +73,23 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
     return { ok: false, reason: "invalid_subscription_json" };
   }
 
-  const result = await subscribePushAction({
-    endpoint: json.endpoint,
-    keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
-  });
-
-  if (!result.success) {
-    console.error("[Push] subscribePushAction échoué:", result.error);
-    return { ok: false, reason: `db_error: ${result.error}` };
+  try {
+    const res = await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        endpoint: json.endpoint,
+        keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      console.error("[Push] /api/push/subscribe échoué:", data);
+      return { ok: false, reason: `db_error: ${data.error ?? res.status}` };
+    }
+  } catch (err) {
+    console.error("[Push] fetch /api/push/subscribe échoué:", err);
+    return { ok: false, reason: `network_error: ${err instanceof Error ? err.message : String(err)}` };
   }
 
   return { ok: true };
