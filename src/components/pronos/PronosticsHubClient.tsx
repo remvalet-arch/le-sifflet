@@ -545,6 +545,7 @@ function MatchPronoCard({
               <TeamFormPills
                 form={parseFormString(match.community_stats?.home_form)}
               />
+              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">5 derniers</p>
             </div>
           </div>
 
@@ -670,6 +671,7 @@ function MatchPronoCard({
               <TeamFormPills
                 form={parseFormString(match.community_stats?.away_form)}
               />
+              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">5 derniers</p>
             </div>
           </div>
         </div>
@@ -810,6 +812,14 @@ export function PronosticsHubClient({
     const compMap = dayMap.get(dayKey)!;
     if (!compMap.has(compId)) compMap.set(compId, []);
     compMap.get(compId)!.push(m);
+  }
+  // UX8-4: always include today so user can orient themselves in time
+  const todayKey = new Date().toISOString().slice(0, 10);
+  if (!dayMap.has(todayKey)) {
+    const todayDate = new Date(todayKey);
+    const insertIdx = dayOrder.findIndex((dk) => new Date(dk) > todayDate);
+    dayOrder.splice(insertIdx === -1 ? dayOrder.length : insertIdx, 0, todayKey);
+    dayMap.set(todayKey, new Map());
   }
 
   // Selected day: first day with an upcoming match missing a prono, else first day

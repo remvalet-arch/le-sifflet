@@ -88,11 +88,10 @@ export function TopBar({
       >
         <div className="flex h-14 items-center justify-between px-4">
           {/* Logo */}
-          <Link href="/lobby" className="flex items-center gap-2">
-            <span className="rounded border border-white/25 px-1.5 py-0.5 text-[11px] font-black tracking-widest text-white">
+          <Link href="/lobby" className="flex items-center">
+            <span className="inline-flex items-center rounded border border-white/25 px-2 py-0.5 text-[11px] font-black tracking-widest text-white">
               VAR
-            </span>
-            <span className="text-sm font-black uppercase tracking-widest text-white">
+              <span className="mx-1.5 text-white/30">⚡</span>
               TIME
             </span>
           </Link>
@@ -210,24 +209,34 @@ export function TopBar({
             {t("language")}
           </span>
           <div className="flex overflow-hidden rounded-lg border border-white/10">
-            {(["fr", "en", "es", "de", "it"] as const).map((l) => (
-              <button
-                key={l}
-                onClick={() =>
-                  startTransition(async () => {
-                    await switchLocale(l);
-                    router.refresh();
-                  })
-                }
-                className={`px-2.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
-                  locale === l
-                    ? "bg-green-500 text-zinc-950"
-                    : "text-zinc-500 hover:text-white"
-                }`}
-              >
-                {l}
-              </button>
-            ))}
+            {(["fr", "en", "es", "de", "it"] as const).map((l) => {
+              const isActive = locale === l;
+              const isAvailable = l === "fr";
+              return (
+                <button
+                  key={l}
+                  onClick={() =>
+                    isAvailable
+                      ? startTransition(async () => {
+                          await switchLocale(l);
+                          router.refresh();
+                        })
+                      : undefined
+                  }
+                  disabled={!isAvailable && !isActive}
+                  title={!isAvailable ? "Bientôt disponible" : undefined}
+                  className={`px-2.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
+                    isActive
+                      ? "bg-green-500 text-zinc-950"
+                      : isAvailable
+                        ? "text-zinc-500 hover:text-white"
+                        : "cursor-not-allowed text-zinc-700"
+                  }`}
+                >
+                  {l}
+                </button>
+              );
+            })}
           </div>
         </div>
 

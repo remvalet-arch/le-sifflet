@@ -254,7 +254,9 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                       <MoreVertical className="h-4 w-4" />
                     </button>
                     {menuOpenSquadId === s.id && (
-                      <div className="absolute right-0 top-full z-20 mt-1 min-w-[160px] overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-xl">
+                      <>
+                      <div className="fixed inset-0 z-10" onClick={() => setMenuOpenSquadId(null)} />
+                      <div className="absolute right-0 bottom-full z-20 mb-1 min-w-[160px] overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-xl">
                         <button
                           type="button"
                           onClick={() => {
@@ -268,6 +270,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                           Quitter la ligue
                         </button>
                       </div>
+                      </>
                     )}
                   </div>
                 </div>

@@ -188,19 +188,19 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
             </p>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <p className="text-2xl font-black tabular-nums text-white">
+                <p className="text-3xl font-black tabular-nums text-white">
                   {stats.pronos_total}
                 </p>
                 <p className="text-[9px] uppercase text-zinc-500">Total</p>
               </div>
               <div>
-                <p className="text-2xl font-black tabular-nums text-green-400">
+                <p className="text-3xl font-black tabular-nums text-green-400">
                   {stats.pronos_correct}
                 </p>
                 <p className="text-[9px] uppercase text-zinc-500">Corrects</p>
               </div>
               <div>
-                <p className="text-2xl font-black tabular-nums text-amber-400">
+                <p className="text-3xl font-black tabular-nums text-amber-400">
                   {stats.pronos_exact}
                 </p>
                 <p className="text-[9px] uppercase text-zinc-500">Exacts</p>
@@ -214,7 +214,7 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
                     className={
                       pronoWinRate >= 60
                         ? "text-green-400"
-                        : pronoWinRate >= 40
+                        : pronoWinRate >= 30
                           ? "text-amber-400"
                           : "text-red-400"
                     }
@@ -234,13 +234,13 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
             </p>
             <div className="grid grid-cols-2 gap-3 text-center">
               <div>
-                <p className="text-2xl font-black tabular-nums text-white">
+                <p className="text-3xl font-black tabular-nums text-white">
                   {stats.var_bets_total}
                 </p>
                 <p className="text-[9px] uppercase text-zinc-500">Total</p>
               </div>
               <div>
-                <p className="text-2xl font-black tabular-nums text-blue-400">
+                <p className="text-3xl font-black tabular-nums text-blue-400">
                   {stats.var_bets_won}
                 </p>
                 <p className="text-[9px] uppercase text-zinc-500">Gagnés</p>
@@ -254,7 +254,7 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
                     className={
                       varWinRate >= 60
                         ? "text-green-400"
-                        : varWinRate >= 40
+                        : varWinRate >= 30
                           ? "text-amber-400"
                           : "text-red-400"
                     }

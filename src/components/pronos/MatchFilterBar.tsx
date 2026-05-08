@@ -5,6 +5,12 @@ import { fr } from "date-fns/locale";
 
 type MatchStub = { id: string };
 
+function dayDiffDays(dk1: string, dk2: string): number {
+  return Math.round(
+    (new Date(dk2).getTime() - new Date(dk1).getTime()) / 86_400_000,
+  );
+}
+
 function getDayPill(dayKey: string): {
   abbrev: string;
   num: string;
@@ -48,7 +54,9 @@ export function MatchFilterBar({
     <>
       {/* Day navbar — horizontal scroll */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {dayOrder.map((dk) => {
+        {dayOrder.map((dk, i) => {
+          const prevDk = dayOrder[i - 1];
+          const hasGap = prevDk !== undefined && dayDiffDays(prevDk, dk) > 1;
           const cm = dayMap.get(dk)!;
           const dayTotal = Array.from(cm.values()).reduce(
             (s, ms) => s + ms.length,
@@ -63,8 +71,11 @@ export function MatchFilterBar({
           const pill = getDayPill(dk);
 
           return (
+            <span key={dk} className="flex shrink-0 items-center gap-2">
+            {hasGap && (
+              <span className="self-center text-zinc-700 select-none" aria-hidden>·</span>
+            )}
             <button
-              key={dk}
               type="button"
               onClick={() => onSelectedDayChange(dk)}
               className={`relative flex shrink-0 flex-col items-center rounded-2xl px-4 py-2.5 transition active:scale-[0.96] ${
@@ -104,6 +115,7 @@ export function MatchFilterBar({
                 }`}
               />
             </button>
+            </span>
           );
         })}
       </div>

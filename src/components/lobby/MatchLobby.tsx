@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -383,19 +383,7 @@ export function MatchLobby({
     ];
   }, [preferredLeagueApiIds]);
 
-  // Auto-switch away from empty "Direct" tab on first render
-  const hasAutoSwitched = useRef(false);
-  useEffect(() => {
-    if (
-      !hasAutoSwitched.current &&
-      tab === "direct" &&
-      directRows.length === 0 &&
-      !roundView
-    ) {
-      hasAutoSwitched.current = true;
-      setTab(orderedTabs[1]?.id ?? "l1");
-    }
-  }, [directRows.length, tab, roundView, orderedTabs]);
+  // UX8-2bis: keep "Direct" tab visible even when empty — users see the entry empty state
 
   if (rows.length === 0) {
     return (
@@ -460,7 +448,7 @@ export function MatchLobby({
           ))}
         </nav>
         <div
-          className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-zinc-950 to-transparent"
+          className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-zinc-950 to-transparent"
           aria-hidden
         />
       </div>
@@ -473,8 +461,7 @@ export function MatchLobby({
             </span>
             <p className="text-base font-black text-white">La VAR dort...</p>
             <p className="mt-2 text-sm text-zinc-400">
-              Aucun match en direct pour le moment. Profites-en pour préparer
-              tes pronos, consulter le classement ou challenger tes ligues.
+              Aucun match en direct. C&apos;est le moment de poser tes pronos.
             </p>
             <Link
               href="/pronos"
