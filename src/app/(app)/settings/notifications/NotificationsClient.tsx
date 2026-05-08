@@ -100,17 +100,25 @@ export default function NotificationsClient({
 
   async function handleActivatePush() {
     setSubscribing(true);
-    const ok = await trySubscribePush();
+    const result = await trySubscribePush();
     setSubscribing(false);
-    if (ok) {
+    if (result.ok) {
       setSubStatus("subscribed");
       toast.success("Notifications push activées !");
     } else {
-      toast.error(
-        Notification.permission === "denied"
-          ? "Notifications bloquées — autorise-les dans les réglages iOS/Safari."
-          : "Impossible d'activer les notifications push.",
-      );
+      const msg: Record<string, string> = {
+        permission_denied:
+          "Notifications bloquées — autorise-les dans Réglages > Safari > Notifications.",
+        push_not_supported:
+          "Web Push non supporté. Sur iPhone, l'app doit être installée sur l'écran d'accueil.",
+        no_vapid_key: "Configuration serveur manquante (VAPID). Contacte l'admin.",
+        sw_not_ready:
+          "Service Worker non prêt. Ferme l'app, réouvre-la et réessaie.",
+      };
+      const reason = result.reason.startsWith("subscribe_failed")
+        ? "Sur iPhone, ouvre l'app depuis l'écran d'accueil (pas via Safari directement)."
+        : (msg[result.reason] ?? `Erreur : ${result.reason}`);
+      toast.error(reason, { duration: 6000 });
     }
   }
 

@@ -13,49 +13,79 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   return output.buffer;
 }
 
+export type PushSubscribeResult =
+  | { ok: true }
+  | { ok: false; reason: string };
+
 /**
  * Demande la permission push, souscrit et enregistre la souscription en base.
  * À appeler après une action utilisateur (clic ou toast CTA).
- * Returns true si l'abonnement a réussi.
  */
-export async function trySubscribePush(): Promise<boolean> {
-  if (
-    typeof window === "undefined" ||
-    !("Notification" in window) ||
-    !("serviceWorker" in navigator)
-  )
-    return false;
+export async function trySubscribePush(): Promise<PushSubscribeResult> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return { ok: false, reason: "push_not_supported" };
+  }
 
-  if (Notification.permission === "denied") return false;
+  if (!("Notification" in window)) {
+    return { ok: false, reason: "push_not_supported" };
+  }
+
+  if (Notification.permission === "denied") {
+    return { ok: false, reason: "permission_denied" };
+  }
 
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") return false;
+  if (permission !== "granted") {
+    return { ok: false, reason: "permission_denied" };
+  }
 
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  if (!vapidKey) {
+    console.error("[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY manquant");
+    return { ok: false, reason: "no_vapid_key" };
+  }
+
+  let reg: ServiceWorkerRegistration;
   try {
-    const reg = await navigator.serviceWorker.ready;
-    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!vapidKey) return false;
+    reg = await navigator.serviceWorker.ready;
+  } catch (err) {
+    console.error("[Push] Service worker non prêt:", err);
+    return { ok: false, reason: "sw_not_ready" };
+  }
 
+  let sub: PushSubscription;
+  try {
     const existing = await reg.pushManager.getSubscription();
-    const sub =
+    sub =
       existing ??
       (await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       }));
-
-    const json = sub.toJSON();
-    if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
-
-    const result = await subscribePushAction({
-      endpoint: json.endpoint,
-      keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
-    });
-
-    return result.success;
-  } catch {
-    return false;
+  } catch (err) {
+    console.error("[Push] pushManager.subscribe() échoué:", err);
+    return {
+      ok: false,
+      reason: `subscribe_failed: ${err instanceof Error ? err.message : String(err)}`,
+    };
   }
+
+  const json = sub.toJSON();
+  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
+    return { ok: false, reason: "invalid_subscription_json" };
+  }
+
+  const result = await subscribePushAction({
+    endpoint: json.endpoint,
+    keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
+  });
+
+  if (!result.success) {
+    console.error("[Push] subscribePushAction échoué:", result.error);
+    return { ok: false, reason: `db_error: ${result.error}` };
+  }
+
+  return { ok: true };
 }
 
 /** Retourne true si l'utilisateur est déjà abonné aux notifications push. */
