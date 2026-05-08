@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     !Number.isInteger(amount_staked) ||
     amount_staked < 10
   ) {
-    return errorResponse("Mise invalide (min. 10 Pts)", 400);
+    return errorResponse("Mise invalide (min. 10 🪙)", 400);
   }
 
   if (typeof multiplier !== "number" || multiplier < 1.0) {
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       return errorResponse("Mise invalide", 400);
     if (msg.includes("min_bet_not_reached")) {
       const minVal = msg.split(":")[1]?.trim() ?? "?";
-      return errorResponse(`Mise minimum sur ton solde : ${minVal} pts`, 400);
+      return errorResponse(`Mise minimum sur ton solde : ${minVal} 🪙`, 400);
     }
     if (msg.includes("invalid_multiplier"))
       return errorResponse("Multiplicateur invalide", 400);

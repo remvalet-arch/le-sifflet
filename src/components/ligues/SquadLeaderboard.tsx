@@ -160,7 +160,7 @@ export function SquadLeaderboard({
                       ? row.season_points
                       : row.xp
                     ).toLocaleString("fr-FR")}{" "}
-                    pts
+                    Points
                   </p>
                   <div className="flex gap-2 justify-end mt-0.5">
                     <span className="text-[10px] font-bold text-green-400">
@@ -285,7 +285,7 @@ export function SquadLeaderboard({
                       </span>{" "}
                       a ramassé{" "}
                       <span className="font-black text-green-400">
-                        +{item.points_earned} pts
+                        +{item.points_earned} Points
                       </span>
                     </p>
                     <p className="truncate text-[11px] text-zinc-500">
@@ -330,7 +330,7 @@ export function SquadLeaderboard({
                     <span className="font-black text-yellow-300">
                       {s.champion_username ?? "—"}
                     </span>{" "}
-                    · {s.champion_points} pts
+                    · {s.champion_points} Points
                   </p>
                   {s.ended_at && (
                     <p className="text-[10px] text-zinc-600">

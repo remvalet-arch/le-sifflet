@@ -354,7 +354,7 @@ export default async function PublicProfilePage({
                 {balance.toLocaleString("fr-FR")}
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
-                pts
+                Sifflets
               </span>
             </div>
           </div>

@@ -112,7 +112,7 @@ export function TopBar({
                 flash ? "text-green-300/80" : "text-whistle/60"
               }`}
             >
-              pts
+              🪙
             </span>
           </Link>
 

@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
           marginBottom: 32,
         }}
       >
-        pts gagnés
+        🪙 gagnés
       </div>
 
       {/* Username */}

@@ -213,7 +213,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                       </span>
                       <span className="flex items-center gap-1 text-[11px] font-bold text-green-400/90">
                         <Wallet className="h-3 w-3 shrink-0" aria-hidden />
-                        {s.pot_commun.toLocaleString("fr-FR")} Pts
+                        {s.pot_commun.toLocaleString("fr-FR")} Points
                       </span>
                     </div>
                   </div>
@@ -318,7 +318,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
           </p>
         </div>
         <p className="text-sm text-zinc-400">
-          Tu joues contre toute la communauté. Les Pts des joueurs qui se
+          Tu joues contre toute la communauté. Les Sifflets des joueurs qui se
           trompent financent les gagnants — ta ligue sert de classement et de
           lieu de chambrage entre amis.
         </p>

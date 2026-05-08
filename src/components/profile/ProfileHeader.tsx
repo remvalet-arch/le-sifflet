@@ -142,7 +142,7 @@ export function ProfileHeader({
         toast.error(json.error ?? "Déjà réclamé !");
         setStreakClaimed(true);
       } else {
-        toast.success(`+${json.data!.bonus} Pts — Série de ${streak} jours !`);
+        toast.success(`+${json.data!.bonus} 🪙 — Série de ${streak} jours !`);
         setStreakClaimed(true);
       }
     } catch {
@@ -304,7 +304,7 @@ export function ProfileHeader({
                 {balance.toLocaleString("fr-FR")}
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
-                pts
+                Sifflets
               </span>
             </div>
 
@@ -320,7 +320,7 @@ export function ProfileHeader({
                 }`}
               >
                 🔥 {streak}j
-                {canClaimStreak && ` +${50 * Math.min(streak, 7)}pts`}
+                {canClaimStreak && ` +${50 * Math.min(streak, 7)}🪙`}
               </button>
             )}
             {streakFreezesOwned > 0 && (

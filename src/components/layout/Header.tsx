@@ -23,7 +23,7 @@ export function AppHeader({ username, siffletsBalance }: AppHeaderProps) {
           </div>
           <div className="rounded-full border border-whistle/40 bg-black/30 px-2.5 py-1 text-xs font-bold text-whistle sm:px-3 sm:text-sm">
             {siffletsBalance.toLocaleString("fr-FR")}{" "}
-            <span className="font-normal text-whistle/80">pts</span>
+            <span className="font-normal text-whistle/80">🪙</span>
           </div>
           <form action={signOut}>
             <button

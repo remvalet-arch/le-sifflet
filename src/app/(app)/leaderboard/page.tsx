@@ -119,7 +119,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                     {player.trust_score >= MODERATOR_THRESHOLD && " 🛡️"}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400">
-                    {player.score.toLocaleString("fr-FR")} pts
+                    {player.score.toLocaleString("fr-FR")} Points
                   </p>
                 </div>
                 <span className="text-sm font-black text-zinc-500">
@@ -165,7 +165,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                   )}
                 </p>
                 <span className="shrink-0 text-sm font-black text-zinc-400">
-                  {player.score.toLocaleString("fr-FR")} pts
+                  {player.score.toLocaleString("fr-FR")} Points
                 </span>
               </div>
             );
@@ -187,7 +187,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
               {me.username}
             </p>
             <span className="font-black text-green-400">
-              {me.score.toLocaleString("fr-FR")} pts
+              {me.score.toLocaleString("fr-FR")} Points
             </span>
           </div>
         </div>

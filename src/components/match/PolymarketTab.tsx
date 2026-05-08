@@ -246,7 +246,7 @@ export function PolymarketTab({
     ]);
     setScoreSuccess(true);
     toast.success(
-      `Prono enregistré ! +${scoreReward.toLocaleString("fr-FR")} Pts si tu as raison 🎯`,
+      `Prono enregistré ! +${scoreReward.toLocaleString("fr-FR")} Points si tu as raison 🎯`,
     );
     setTimeout(() => {
       setScoreSuccess(false);
@@ -285,7 +285,7 @@ export function PolymarketTab({
     ]);
     setScorerSuccess(true);
     toast.success(
-      `Prono enregistré ! +${reward.toLocaleString("fr-FR")} Pts si ${name} marque 🎯`,
+      `Prono enregistré ! +${reward.toLocaleString("fr-FR")} Points si ${name} marque 🎯`,
     );
     setTimeout(() => {
       setScorerSuccess(false);
@@ -300,7 +300,7 @@ export function PolymarketTab({
   return (
     <div className="mt-6 flex flex-col gap-3 pb-4">
       <p className="text-center text-xs text-zinc-500">
-        Pronos gratuits — gagne des Pts si tu as raison
+        Pronos gratuits — gagne des Points si tu as raison
       </p>
 
       {/* ── Score Exact ─────────────────────────────────────────────────────── */}
@@ -357,7 +357,7 @@ export function PolymarketTab({
                 >
                   <p className="text-balance text-xl font-black tracking-tight text-amber-50 sm:text-2xl">
                     🛡️ AUCUN BUTEUR (+{BUNKER_REWARD.toLocaleString("fr-FR")}{" "}
-                    Pts)
+                    Points)
                   </p>
                 </div>
               ) : (
@@ -376,7 +376,7 @@ export function PolymarketTab({
                         Gain de base
                       </p>
                       <p className="text-xl font-black text-white">
-                        +{scoreReward.toLocaleString("fr-FR")} pts
+                        +{scoreReward.toLocaleString("fr-FR")} Points
                       </p>
                     </div>
                   </div>
@@ -387,7 +387,7 @@ export function PolymarketTab({
                   )}
                   <div className="mb-4 flex items-center justify-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 border border-amber-500/20">
                     <span className="text-[10px] font-black uppercase tracking-wide text-amber-500">
-                      + Jusqu&apos;à 100 pts (Prime Contre-Pied)
+                      + Jusqu&apos;à 100 Points (Prime Contre-Pied)
                     </span>
                   </div>
                 </>
@@ -485,7 +485,7 @@ export function PolymarketTab({
                               {label}
                             </p>
                             <p className="text-[9px] font-black text-green-500">
-                              +{reward.toLocaleString("fr-FR")} Pts
+                              +{reward.toLocaleString("fr-FR")} Points
                             </p>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
@@ -577,7 +577,7 @@ export function PolymarketTab({
                       {getScorerReward(selectedScorerPos).toLocaleString(
                         "fr-FR",
                       )}{" "}
-                      Pts
+                      Points
                     </p>
                   </div>
                   <button

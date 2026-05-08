@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
         .map((bet) => {
           const bodyText =
             bet.status === "won"
-              ? `${verdictLabel} +${bet.potential_reward} pts gagnés 🔥`
-              : `${verdictLabel} ${bet.amount_staked} pts perdus.`;
+              ? `${verdictLabel} +${bet.potential_reward} 🪙 gagnés 🔥`
+              : `${verdictLabel} ${bet.amount_staked} 🪙 perdus.`;
           return sendPushToUsers([bet.user_id], {
             title: `⚡ VAR Résolue — ${eventLabel}`,
             body: bodyText,

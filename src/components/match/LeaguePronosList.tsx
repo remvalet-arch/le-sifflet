@@ -112,7 +112,7 @@ export function LeaguePronosList({
             </div>
             {user.points_earned > 0 && (
               <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-black text-green-400">
-                +{user.points_earned} pts
+                +{user.points_earned} Points
               </span>
             )}
           </div>

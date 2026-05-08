@@ -362,7 +362,7 @@ export function ProfileClient({
                 </p>
                 <p className="mt-1 text-base font-black text-amber-400">
                   {getMinBetForBalance(headerBalance).toLocaleString("fr-FR")}{" "}
-                  pts
+                  🪙
                 </p>
               </div>
               <span className="text-2xl" aria-hidden>
@@ -411,7 +411,7 @@ export function ProfileClient({
                         </p>
                         <p className="text-[10px] text-zinc-500">
                           #{sa.final_rank} ·{" "}
-                          {sa.final_points.toLocaleString("fr-FR")} pts
+                          {sa.final_points.toLocaleString("fr-FR")} Points
                         </p>
                       </div>
                       <p className="text-[10px] text-zinc-600">
@@ -637,7 +637,7 @@ function HistoriqueTab({
             className={`text-sm font-black ${recentPts >= 0 ? "text-green-400" : "text-red-400"}`}
           >
             {recentPts > 0 ? "+" : ""}
-            {recentPts.toLocaleString("fr-FR")} pts
+            {recentPts.toLocaleString("fr-FR")} 🪙
             {recentWon > 0 && (
               <span className="ml-2 font-semibold text-zinc-400">
                 · {recentWon} gagné{recentWon > 1 ? "s" : ""}
@@ -762,7 +762,7 @@ function PronoRow({ prono: p }: { prono: PronoEntry }) {
         </p>
         {p.status === "won" && p.contre_pied_bonus === 100 && (
           <p className="mt-0.5 text-[9px] font-black text-amber-400">
-            💎 Contre-pied +100 pts
+            💎 Contre-pied +100 Points
           </p>
         )}
       </div>
@@ -809,7 +809,7 @@ function VarBetRow({ bet: b }: { bet: ShortBetEntry }) {
             </span>
           )}
           {" · "}
-          {b.amount_staked} pts misés
+          {b.amount_staked} 🪙 misés
         </p>
       </div>
       <div className="shrink-0 text-right">

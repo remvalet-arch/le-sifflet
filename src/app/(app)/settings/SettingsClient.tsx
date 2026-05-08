@@ -60,7 +60,7 @@ export default function SettingsClient({
       if (error) {
         toast.error("Impossible de sauvegarder les paramètres.");
       } else {
-        toast.success(`Mise rapide fixée à ${value} pts !`);
+        toast.success(`Mise rapide fixée à ${value} 🪙 !`);
         setBetAmount(value);
       }
     });
@@ -91,7 +91,7 @@ export default function SettingsClient({
           {/* Current value display */}
           <div className="mt-5 text-center">
             <span className="text-4xl font-black text-white">{betAmount}</span>
-            <span className="ml-2 text-lg text-zinc-400">pts</span>
+            <span className="ml-2 text-lg text-zinc-400">🪙</span>
           </div>
 
           {/* Slider */}
@@ -107,8 +107,8 @@ export default function SettingsClient({
               aria-label="Montant de mise rapide"
             />
             <div className="mt-1 flex justify-between text-[10px] text-zinc-600">
-              <span>{MIN} pts</span>
-              <span>{MAX} pts</span>
+              <span>{MIN} 🪙</span>
+              <span>{MAX} 🪙</span>
             </div>
           </div>
 
@@ -125,7 +125,7 @@ export default function SettingsClient({
                     : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                 }`}
               >
-                {p} pts
+                {p} 🪙
               </button>
             ))}
           </div>
@@ -162,7 +162,7 @@ export default function SettingsClient({
               <p className="mt-2 text-xs text-zinc-500">
                 Solde :{" "}
                 <span className="font-black text-white">
-                  {balance.toLocaleString("fr-FR")} pts
+                  {balance.toLocaleString("fr-FR")} 🪙
                 </span>
                 {" · "}
                 En stock :{" "}
@@ -184,8 +184,8 @@ export default function SettingsClient({
               : freezesOwned >= 3
                 ? "Stock plein (3/3)"
                 : balance < 500
-                  ? "Solde insuffisant (500 pts requis)"
-                  : `Acheter un Streak Freeze — 500 pts`}
+                  ? "Solde insuffisant (500 🪙 requis)"
+                  : `Acheter un Streak Freeze — 500 🪙`}
           </button>
         </div>
       </section>

@@ -145,7 +145,7 @@ export function VerdictOverlay({
                 Tu avais raison ! {isFireworks && <span>🔥</span>}
               </p>
               <p className="text-4xl font-black text-green-400">
-                +{reward.toLocaleString("fr-FR")} pts
+                +{reward.toLocaleString("fr-FR")} 🪙
               </p>
             </div>
           ) : (
@@ -178,7 +178,7 @@ export function VerdictOverlay({
                       <span className="font-bold text-white">{p.username}</span>
                     </span>
                     <span className="font-black text-green-400">
-                      +{p.reward.toLocaleString("fr-FR")} pts
+                      +{p.reward.toLocaleString("fr-FR")} 🪙
                     </span>
                   </div>
                 ))}
@@ -201,8 +201,8 @@ export function VerdictOverlay({
                 const ogUrl = `https://vartime.app/api/og/victory?${params}`;
                 if (navigator.share) {
                   void navigator.share({
-                    title: `J'ai gagné +${reward} pts sur VAR TIME !`,
-                    text: `${username ?? "Arbitre"} a gagné +${reward} pts sur ${matchLabel ?? "VAR TIME"} 🔥`,
+                    title: `J'ai gagné +${reward} 🪙 sur VAR TIME !`,
+                    text: `${username ?? "Arbitre"} a gagné +${reward} 🪙 sur ${matchLabel ?? "VAR TIME"} 🔥`,
                     url: "https://vartime.app",
                   });
                 } else {

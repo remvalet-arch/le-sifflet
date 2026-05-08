@@ -246,7 +246,7 @@ export function SquadDetailClient({
               <Wallet className="h-4 w-4" aria-hidden />
               Points cumulés :{" "}
               <span className="font-black tabular-nums">
-                {total_xp_earned.toLocaleString("fr-FR")} Pts
+                {total_xp_earned.toLocaleString("fr-FR")} Points
               </span>
             </span>
           </p>

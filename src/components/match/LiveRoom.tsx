@@ -325,7 +325,7 @@ export function LiveRoom({
               });
             } else {
               toast.success(
-                `Prédiction juste ! +${reward.toLocaleString("fr-FR")} Pts 🎉`,
+                `Prédiction juste ! +${reward.toLocaleString("fr-FR")} 🪙 🎉`,
               );
             }
           } else if (bet.status === "lost") {

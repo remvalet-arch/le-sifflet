@@ -86,7 +86,7 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
             +{pts}
           </span>
           <span className="mt-1 text-sm font-black uppercase tracking-widest text-green-500/60">
-            pts gagnés hier
+            Points gagnés hier
           </span>
         </div>
 

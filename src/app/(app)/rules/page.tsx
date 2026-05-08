@@ -7,17 +7,17 @@ const PRONO_RULES = [
   {
     emoji: "🎯",
     title: "Le Vainqueur (1 / N / 2)",
-    body: "Pronostique la bonne issue (victoire domicile, nul, victoire extérieur) avant le coup d'envoi. Tu gagnes des points indexés sur les vraies cotes du marché : plus le résultat est improbable, plus ça rapporte. La formule asymptotique plafonne les gains à 220 pts maximum pour préserver l'économie du jeu.",
+    body: "Pronostique la bonne issue (victoire domicile, nul, victoire extérieur) avant le coup d'envoi. Tu gagnes des Points indexés sur les vraies cotes du marché : plus le résultat est improbable, plus ça rapporte. La formule asymptotique plafonne les gains à 220 Points maximum pour préserver l'économie du jeu.",
   },
   {
     emoji: "💎",
     title: "Le Score Exact & la Prime Contre-Pied",
-    body: "Dépasse l'issue et vise le score pile. Si tu es dans le bon camp ET que peu de joueurs ont trouvé ce score exact parmi ceux ayant la bonne issue, tu décroches la prime Contre-Pied : +10 pts (> 40%), +30 pts (Joli Coup), +60 pts (Le Visionnaire), ou +100 pts (💎 Le Braquage — moins de 5% !). Le but : surprendre la communauté.",
+    body: "Dépasse l'issue et vise le score pile. Si tu es dans le bon camp ET que peu de joueurs ont trouvé ce score exact parmi ceux ayant la bonne issue, tu décroches la prime Contre-Pied : +10 Points (> 40%), +30 Points (Joli Coup), +60 Points (Le Visionnaire), ou +100 Points (💎 Le Braquage — moins de 5% !). Le but : surprendre la communauté.",
   },
   {
     emoji: "⚽",
     title: "Les Buteurs",
-    body: "Nomme un ou plusieurs buteurs avant le match. Chaque buteur trouvé rapporte des Pts selon la cote réelle du joueur — les défenseurs et milieux rapportent plus que les attaquants attendus. Les cotes sont calculées avec une formule asymptotique plafonnée à 150 pts par buteur, cumulables.",
+    body: "Nomme un ou plusieurs buteurs avant le match. Chaque buteur trouvé rapporte des Points selon la cote réelle du joueur — les défenseurs et milieux rapportent plus que les attaquants attendus. Les cotes sont calculées avec une formule asymptotique plafonnée à 150 Points par buteur, cumulables.",
   },
 ];
 
@@ -30,7 +30,7 @@ const LIVE_RULES = [
   {
     emoji: "⏱️",
     title: "La fenêtre de 90 secondes",
-    body: "Tu as 90 secondes pour miser des Pts sur OUI (l'arbitre valide) ou NON (décision inversée). Passé ce délai, les paris sont fermés et on attend le verdict.",
+    body: "Tu as 90 secondes pour miser des Sifflets sur OUI (l'arbitre valide) ou NON (décision inversée). Passé ce délai, les paris sont fermés et on attend le verdict.",
   },
   {
     emoji: "⚖️",
@@ -63,7 +63,7 @@ const CHAMPIONSHIP_RULES = [
   {
     emoji: "🏆",
     title: "Victoire, Nul, Défaite",
-    body: "À la fin de la semaine, le joueur avec le plus de points pronos remporte le « match ». Victoire = 3 pts au classement, Match nul (égalité) = 1 pt chacun, Défaite = 0 pt. En cas d'égalité parfaite dans le classement général, les points pronos totaux servent de goal average.",
+    body: "À la fin de la semaine, le joueur avec le plus de Points pronos remporte le « match ». Victoire = 3 Points au classement, Match nul (égalité) = 1 Point chacun, Défaite = 0 Point. En cas d'égalité parfaite dans le classement général, les Points pronos totaux servent de goal average.",
   },
   {
     emoji: "🔒",
@@ -245,25 +245,25 @@ export default function RulesPage() {
             {
               emoji: "💎",
               name: "Double XP",
-              cost: "300 pts",
-              desc: "Pari/prono gagnant → 2× les points.",
+              cost: "300 🪙",
+              desc: "Pari/prono gagnant → 2× les Points.",
             },
             {
               emoji: "📈",
               name: "Cote+",
-              cost: "200 pts",
+              cost: "200 🪙",
               desc: "Ta récompense potentielle +20%.",
             },
             {
               emoji: "🛡️",
               name: "Filet de Sécurité",
-              cost: "500 pts",
+              cost: "500 🪙",
               desc: "Si tu perds, tu récupères 50% de ta mise.",
             },
             {
               emoji: "👁️",
               name: "Vision",
-              cost: "100 pts",
+              cost: "100 🪙",
               desc: "Révèle les pronos détaillés de tes amis sur un match.",
             },
           ].map((b) => (
@@ -309,11 +309,11 @@ export default function RulesPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {[
-                  { range: "< 5 000 pts", min: "5 pts" },
-                  { range: "5 000 – 19 999 pts", min: "50 pts" },
-                  { range: "20 000 – 49 999 pts", min: "200 pts" },
-                  { range: "50 000 – 99 999 pts", min: "500 pts" },
-                  { range: "≥ 100 000 pts", min: "1 000 pts" },
+                  { range: "< 5 000 🪙", min: "5 🪙" },
+                  { range: "5 000 – 19 999 🪙", min: "50 🪙" },
+                  { range: "20 000 – 49 999 🪙", min: "200 🪙" },
+                  { range: "50 000 – 99 999 🪙", min: "500 🪙" },
+                  { range: "≥ 100 000 🪙", min: "1 000 🪙" },
                 ].map((tier) => (
                   <tr key={tier.range}>
                     <td className="px-4 py-2 text-zinc-400">{tier.range}</td>

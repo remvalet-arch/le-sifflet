@@ -399,7 +399,7 @@ export function VotingModal({
             <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
               Gain potentiel :{" "}
               <span className="text-green-400">
-                {Math.floor(betConfirmed.staked * betConfirmed.multiplier)} Pts
+                {Math.floor(betConfirmed.staked * betConfirmed.multiplier)} 🪙
               </span>
             </p>
           </div>
@@ -500,7 +500,7 @@ export function VotingModal({
                 Engagement
               </span>
               <span className="text-sm font-black text-white">
-                {amount.toLocaleString("fr-FR")} pts
+                {amount.toLocaleString("fr-FR")} 🪙
               </span>
             </div>
             <div className="mb-3 grid grid-cols-3 gap-2">
@@ -541,7 +541,7 @@ export function VotingModal({
               <p className="mt-1 text-[10px] text-zinc-600">
                 🎚️ Mise min sur ton solde :{" "}
                 <span className="font-black text-zinc-500">
-                  {minBet.toLocaleString("fr-FR")} pts
+                  {minBet.toLocaleString("fr-FR")} 🪙
                 </span>
               </p>
             )}
@@ -652,7 +652,7 @@ export function VotingModal({
 
           {!canBet && !expired && (
             <p className="mt-3 text-center text-xs font-bold text-red-400">
-              Solde insuffisant (min. 10 pts)
+              Solde insuffisant (min. 10 🪙)
             </p>
           )}
 
@@ -757,7 +757,7 @@ function BinaryButtons({
                 <span
                   className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}
                 >
-                  +{gain.toLocaleString("fr-FR")} pts
+                  +{gain.toLocaleString("fr-FR")} 🪙
                 </span>
               </>
             )}
@@ -830,7 +830,7 @@ function StoppageButtons({
                   ×{odd.toFixed(2)}
                 </span>
                 <span className="text-[9px] font-bold text-white/40">
-                  +{gain >= 1000 ? `${Math.floor(gain / 1000)}k` : gain} pts
+                  +{gain >= 1000 ? `${Math.floor(gain / 1000)}k` : gain} 🪙
                 </span>
               </>
             )}

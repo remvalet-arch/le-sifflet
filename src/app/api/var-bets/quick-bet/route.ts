@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
   const voteLabel = vote === "oui" ? "OUI ✅" : "NON ❌";
   void sendPushToUsers([user.id], {
     title: `Pari ${voteLabel} posé !`,
-    body: `${amount} pts misés — attends le verdict de l'arbitre !`,
+    body: `${amount} 🪙 misés — attends le verdict de l'arbitre !`,
     url: `/match/${event.match_id}`,
   }).catch((e: unknown) =>
     log.error("quick-bet", "confirmation push failed", e),
@@ -100,6 +100,6 @@ export async function POST(request: NextRequest) {
     bet_id: betId,
     amount,
     vote,
-    message: `Pari ${voteLabel} posé avec ${amount} pts.`,
+    message: `Pari ${voteLabel} posé avec ${amount} 🪙.`,
   });
 }

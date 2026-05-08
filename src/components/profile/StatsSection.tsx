@@ -176,7 +176,7 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
             </p>
             {stats.best_win > 0 && (
               <p className="mt-1 text-xs text-zinc-500">
-                Plus gros gain : +{stats.best_win.toLocaleString("fr-FR")} pts
+                Plus gros gain : +{stats.best_win.toLocaleString("fr-FR")} Points
               </p>
             )}
           </div>

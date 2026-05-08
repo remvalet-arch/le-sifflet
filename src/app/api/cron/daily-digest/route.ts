@@ -154,7 +154,7 @@ export async function GET(request: Request) {
         const earned = recap.points_earned;
         const bodyText =
           earned > 0
-            ? `🏆 C'est l'heure du bilan ! Tu as gagné +${earned} pts hier. Découvre ton classement →`
+            ? `🏆 C'est l'heure du bilan ! Tu as gagné +${earned} Points hier. Découvre ton classement →`
             : `📊 C'est l'heure du bilan ! Retrouve tes résultats d'hier →`;
         await sendPushToUsers([uid], {
           title: "📊 Bilan du jour — VAR TIME",

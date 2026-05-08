@@ -63,7 +63,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                       : championship.standings[1].username}
                   </p>
                   <p className="text-[10px] text-zinc-500">
-                    {championship.standings[1].points} pts
+                    {championship.standings[1].points} Points
                   </p>
                 </div>
               )}
@@ -77,7 +77,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                     : championship.standings[0].username}
                 </p>
                 <p className="text-[10px] text-yellow-500">
-                  {championship.standings[0].points} pts
+                  {championship.standings[0].points} Points
                 </p>
               </div>
               {championship.standings[2] && (
@@ -91,7 +91,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                       : championship.standings[2].username}
                   </p>
                   <p className="text-[10px] text-zinc-500">
-                    {championship.standings[2].points} pts
+                    {championship.standings[2].points} Points
                   </p>
                 </div>
               )}
@@ -163,7 +163,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                         {isMe ? "Toi" : s.username}
                       </p>
                       <p className="text-[10px] text-zinc-500">
-                        {s.pronos_pts.toLocaleString("fr-FR")} pts cumulés
+                        {s.pronos_pts.toLocaleString("fr-FR")} Points cumulés
                       </p>
                     </td>
                     <td className="px-2 py-2.5 text-center text-zinc-400">

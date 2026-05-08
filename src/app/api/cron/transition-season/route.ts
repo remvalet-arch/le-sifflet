@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         archives.map((a) =>
           sendPushToUsers([a.user_id], {
             title: `🏆 ${oldLabel} terminée !`,
-            body: `Tu finis ${a.final_rank_label} avec ${a.final_points} pts. ${newLabel} commence MAINTENANT !`,
+            body: `Tu finis ${a.final_rank_label} avec ${a.final_points} Points. ${newLabel} commence MAINTENANT !`,
             url: "/leaderboard",
           }),
         ),

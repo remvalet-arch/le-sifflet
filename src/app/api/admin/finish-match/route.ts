@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
           const earned = userEarned.get(uid) ?? 0;
           const bodyText =
             earned > 0
-              ? `${match.team_home} ${scoreStr} ${match.team_away} — Tu as gagné +${earned} pts ! 🎯`
+              ? `${match.team_home} ${scoreStr} ${match.team_away} — Tu as gagné +${earned} Points ! 🎯`
               : `${match.team_home} ${scoreStr} ${match.team_away} — Pas de chance. Retente sur le prochain !`;
           return sendPushToUsers([uid], {
             title: "⏱ Match terminé !",

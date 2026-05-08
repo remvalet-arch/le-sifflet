@@ -280,7 +280,7 @@ export function ProfileEditModal({
                     onClick={() => !locked && setAvatar(emoji)}
                     title={
                       locked
-                        ? `Débloqué à ${minXp.toLocaleString("fr-FR")} pts`
+                        ? `Débloqué à ${minXp.toLocaleString("fr-FR")} XP`
                         : undefined
                     }
                     className={`relative flex h-12 w-full items-center justify-center rounded-xl text-2xl transition ${
@@ -305,7 +305,7 @@ export function ProfileEditModal({
             </div>
             {xp < 5000 && (
               <p className="mt-2 text-[10px] text-zinc-600">
-                🔒 Gagne des pts pour débloquer de nouveaux avatars
+                🔒 Gagne de l&apos;XP pour débloquer de nouveaux avatars
               </p>
             )}
           </section>
