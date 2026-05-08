@@ -147,7 +147,9 @@ export function LeaguePronosList({
                           key={idx}
                           className="inline-flex items-center gap-1 rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 text-[11px] font-medium text-zinc-300"
                         >
-                          ⚽ {s.name} {s.goals > 1 ? `(x${s.goals})` : ""}
+                          {s.name === "CSC" ? "🔙" : "⚽"}{" "}
+                          {s.name === "CSC" ? "CSC" : s.name}{" "}
+                          {s.goals > 1 ? `(×${s.goals})` : ""}
                         </span>
                       ),
                     )}

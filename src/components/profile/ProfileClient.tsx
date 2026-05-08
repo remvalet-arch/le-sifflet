@@ -123,14 +123,12 @@ function formatPronoValue(
     try {
       const parsed = JSON.parse(value);
       const names: string[] = [];
-      if (parsed.home)
-        parsed.home.forEach((s: { name: string; goals: number }) =>
-          names.push(`${s.name}${s.goals > 1 ? ` (x${s.goals})` : ""}`),
-        );
-      if (parsed.away)
-        parsed.away.forEach((s: { name: string; goals: number }) =>
-          names.push(`${s.name}${s.goals > 1 ? ` (x${s.goals})` : ""}`),
-        );
+      const fmtScorer = (s: { name: string; goals: number }) => {
+        const label = s.name === "CSC" ? "CSC (csc)" : s.name;
+        return `${label}${s.goals > 1 ? ` (×${s.goals})` : ""}`;
+      };
+      if (parsed.home) parsed.home.forEach((s: { name: string; goals: number }) => names.push(fmtScorer(s)));
+      if (parsed.away) parsed.away.forEach((s: { name: string; goals: number }) => names.push(fmtScorer(s)));
       if (names.length === 0) return `⚽ Buteurs : Aucun (Bunker)`;
       return `⚽ Buteurs : ${names.join(", ")}`;
     } catch {

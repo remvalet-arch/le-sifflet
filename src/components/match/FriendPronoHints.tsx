@@ -22,9 +22,33 @@ function friendLabel(count: number) {
   return count === 1 ? "1 ami a mis" : `${count} amis ont mis`;
 }
 
+function formatScorerName(name: string): string {
+  if (name === "CSC") return "un CSC";
+  return name;
+}
+
+function formatScorerAllocation(value: string): string {
+  try {
+    const parsed = JSON.parse(value) as {
+      home?: { name: string; goals: number }[];
+      away?: { name: string; goals: number }[];
+    };
+    const parts: string[] = [];
+    for (const s of [...(parsed.home ?? []), ...(parsed.away ?? [])]) {
+      const label = formatScorerName(s.name);
+      parts.push(s.goals > 1 ? `${label} (×${s.goals})` : label);
+    }
+    if (parts.length === 0) return "aucun buteur (Bunker)";
+    return `buteurs : ${parts.join(", ")}`;
+  } catch {
+    return "buteurs";
+  }
+}
+
 function valueLabel(type: string, value: string) {
   if (type === "exact_score") return `score exact ${value}`;
   if (type === "scorer") return `buteur ${value}`;
+  if (type === "scorer_allocation") return formatScorerAllocation(value);
   const known = PRONO_LABEL[value];
   return known ? known : value;
 }
