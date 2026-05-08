@@ -1,4 +1,7 @@
-import { Lock, User } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { Lock, User, ChevronDown, ChevronUp } from "lucide-react";
 import type { SquadProno } from "./LiveRoom";
 import type { MatchStatus } from "@/types/database";
 
@@ -16,7 +19,9 @@ export function LeaguePronosList({
   startTime,
   squadPronos,
 }: Props) {
-  // Déterminer si les pronos sont dévoilés
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
   const hasStarted =
     matchStatus !== "upcoming" && new Date() >= new Date(startTime);
 
@@ -37,7 +42,6 @@ export function LeaguePronosList({
     );
   }
 
-  // Grouper les pronos par utilisateur
   const pronosByUser = new Map<
     string,
     {
@@ -69,7 +73,7 @@ export function LeaguePronosList({
       try {
         userEntry.scorers = JSON.parse(prono.prono_value);
       } catch {
-        // Ignorer silencieusement si le JSON est mal formé
+        /* silent */
       }
     }
   }
@@ -86,79 +90,102 @@ export function LeaguePronosList({
     );
   }
 
+  const VISIBLE_COUNT = 3;
+  const visible = showAll
+    ? userPronosList
+    : userPronosList.slice(0, VISIBLE_COUNT);
+  const remaining = userPronosList.length - VISIBLE_COUNT;
+
   return (
-    <div className="mt-4 flex flex-col gap-3 px-4">
-      <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+    <div className="mt-4 flex flex-col gap-1.5 px-4">
+      <p className="mb-1 text-xs font-bold uppercase tracking-widest text-zinc-500">
         Les pronos de tes ligues
       </p>
 
-      {userPronosList.map((user, i) => (
-        <div
-          key={i}
-          className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 transition-colors hover:bg-zinc-800/80"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      {visible.map((user, i) => {
+        const isExpanded = expandedIdx === i;
+        const hasScorers =
+          user.scorers != null &&
+          (user.scorers.home.length > 0 || user.scorers.away.length > 0);
+
+        return (
+          <div key={i}>
+            <button
+              type="button"
+              onClick={() =>
+                hasScorers ? setExpandedIdx(isExpanded ? null : i) : undefined
+              }
+              className={`flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3 text-left transition hover:bg-zinc-800/80 active:scale-[0.99] ${isExpanded ? "rounded-b-none border-b-transparent" : ""}`}
+            >
               {user.avatar_url ? (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-lg shadow">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg shadow">
                   {user.avatar_url}
                 </div>
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
                   <User className="h-4 w-4" />
                 </div>
               )}
-              <span className="font-bold text-white">{user.username}</span>
-            </div>
-            {user.points_earned > 0 && (
-              <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-black text-green-400">
-                +{user.points_earned} Points
-              </span>
-            )}
-          </div>
 
-          <div className="flex flex-col gap-2 rounded-xl bg-zinc-950/50 p-3">
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-xs font-bold uppercase text-zinc-500 mb-2">
-                Score exact
+              <span className="min-w-0 flex-1 truncate font-bold text-white">
+                {user.username}
               </span>
-              <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-lg font-black text-amber-400 shadow-inner">
-                  {user.score ? user.score.split("-")[0] : "-"}
-                </div>
-                <span className="text-zinc-600 font-bold">-</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-lg font-black text-amber-400 shadow-inner">
-                  {user.score ? user.score.split("-")[1] : "-"}
+
+              {user.score && (
+                <span className="font-mono text-sm font-black tabular-nums text-amber-400">
+                  {user.score}
+                </span>
+              )}
+
+              {user.points_earned > 0 && (
+                <span className="shrink-0 rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-black text-green-400">
+                  +{user.points_earned}
+                </span>
+              )}
+
+              {hasScorers &&
+                (isExpanded ? (
+                  <ChevronUp className="h-4 w-4 shrink-0 text-zinc-600" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-zinc-600" />
+                ))}
+            </button>
+
+            {isExpanded && hasScorers && (
+              <div className="rounded-b-2xl border border-t-0 border-white/10 bg-zinc-950/60 px-4 py-3">
+                <span className="mb-2 block text-[10px] font-bold uppercase text-zinc-600">
+                  Buteurs
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    ...(user.scorers!.home ?? []),
+                    ...(user.scorers!.away ?? []),
+                  ].map((s, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 text-[11px] font-medium text-zinc-300"
+                    >
+                      {s.name === "CSC" ? "🔙" : "⚽"}{" "}
+                      {s.name === "CSC" ? "CSC" : s.name}{" "}
+                      {s.goals > 1 ? `(×${s.goals})` : ""}
+                    </span>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {user.scorers &&
-              (user.scorers.home.length > 0 ||
-                user.scorers.away.length > 0) && (
-                <div className="mt-1 border-t border-white/5 pt-2">
-                  <span className="mb-2 block text-[10px] font-bold uppercase text-zinc-600">
-                    Buteurs
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[...user.scorers.home, ...user.scorers.away].map(
-                      (s, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 text-[11px] font-medium text-zinc-300"
-                        >
-                          {s.name === "CSC" ? "🔙" : "⚽"}{" "}
-                          {s.name === "CSC" ? "CSC" : s.name}{" "}
-                          {s.goals > 1 ? `(×${s.goals})` : ""}
-                        </span>
-                      ),
-                    )}
-                  </div>
-                </div>
-              )}
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
+
+      {!showAll && remaining > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="mt-1 w-full py-2 text-xs font-bold text-zinc-500 transition hover:text-zinc-300"
+        >
+          Voir {remaining} autre{remaining > 1 ? "s" : ""}
+        </button>
+      )}
     </div>
   );
 }

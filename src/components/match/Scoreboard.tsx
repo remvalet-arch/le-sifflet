@@ -110,7 +110,7 @@ export function Scoreboard({ match }: { match: MatchRow }) {
           </span>
         )}
         <span
-          className={`text-[11px] font-black uppercase tracking-widest ${
+          className={`text-sm font-black uppercase tracking-widest ${
             inProgress
               ? match.status === "half_time" || match.status === "paused"
                 ? "text-yellow-400"

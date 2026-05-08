@@ -54,9 +54,13 @@ function TeamLogoSmall({
   );
 }
 
-function lastName(fullName: string): string {
+function playerLabel(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
-  return parts[parts.length - 1] ?? fullName;
+  const last = parts[parts.length - 1] ?? fullName;
+  if (last.length <= 11) return last;
+  const first = parts[0];
+  if (first && parts.length > 1) return `${first[0]}. ${last}`;
+  return last.slice(0, 10) + "…";
 }
 
 function initials(fullName: string): string {
@@ -169,8 +173,8 @@ function PlayerOnPitch({
       >
         {showNumber ? num : initials(name)}
       </div>
-      <span className="w-full truncate text-center text-[9px] font-semibold leading-tight text-white/90 drop-shadow-sm">
-        {lastName(name)}
+      <span className="line-clamp-2 w-full break-words text-center text-[9px] font-semibold leading-tight text-white/90 drop-shadow-sm">
+        {playerLabel(name)}
       </span>
     </div>
   );

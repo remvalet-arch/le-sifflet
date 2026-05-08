@@ -488,7 +488,7 @@ export function LiveRoom({
             >
               {tab.label}
               {displayedTab === tab.id && (
-                <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-t-full bg-green-500" />
+                <span className="absolute bottom-0 left-4 right-4 h-1 rounded-t-full bg-green-500" />
               )}
             </button>
           ))}
