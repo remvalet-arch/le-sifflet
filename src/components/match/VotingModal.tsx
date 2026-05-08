@@ -495,14 +495,7 @@ export function VotingModal({
 
           {/* Amount */}
           <div className="mb-5">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-bold text-zinc-400">
-                Engagement
-              </span>
-              <span className="text-sm font-black text-white">
-                {amount.toLocaleString("fr-FR")} 🪙
-              </span>
-            </div>
+            <p className="mb-2 text-sm font-bold text-zinc-400">Engagement</p>
             <div className="mb-3 grid grid-cols-3 gap-2">
               {(
                 [
@@ -526,17 +519,36 @@ export function VotingModal({
                 </button>
               ))}
             </div>
-            <input
-              type="range"
-              min={minBet}
-              max={Math.max(minBet, siffletsBalance)}
-              step={10}
-              value={amount}
-              onChange={(e) => setAmount(clamp(parseInt(e.target.value, 10)))}
-              disabled={!canBet || expired}
-              aria-label="Montant du pari en points"
-              className="w-full accent-green-500 disabled:opacity-40"
-            />
+            <div className="relative mt-2 pb-1 pt-7">
+              <div
+                className="pointer-events-none absolute top-0 z-10"
+                style={{
+                  left: `${
+                    Math.max(minBet, siffletsBalance) - minBet > 0
+                      ? ((amount - minBet) /
+                          (Math.max(minBet, siffletsBalance) - minBet)) *
+                        100
+                      : 0
+                  }%`,
+                  transform: "translateX(-50%)",
+                }}
+              >
+                <span className="whitespace-nowrap rounded-md bg-zinc-700 px-1.5 py-0.5 text-[11px] font-black text-white">
+                  🪙 {amount.toLocaleString("fr-FR")}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={minBet}
+                max={Math.max(minBet, siffletsBalance)}
+                step={10}
+                value={amount}
+                onChange={(e) => setAmount(clamp(parseInt(e.target.value, 10)))}
+                disabled={!canBet || expired}
+                aria-label="Montant du pari en points"
+                className="w-full accent-green-500 disabled:opacity-40"
+              />
+            </div>
             {minBet > 5 && (
               <p className="mt-1 text-[10px] text-zinc-600">
                 🎚️ Mise min sur ton solde :{" "}
@@ -640,14 +652,15 @@ export function VotingModal({
             />
           )}
 
-          <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+          <p className="mt-2 flex items-center justify-center gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Cotes estimées (masse des mises)
             <span
               title="Cote parimutuelle : elle s'ajuste selon les mises de tous les joueurs jusqu'à la fin du chrono."
-              className="cursor-help underline decoration-dotted"
+              className="cursor-help text-zinc-600 hover:text-zinc-400"
+              aria-label="Comment sont calculées les cotes ?"
             >
-              Cotes estimées
-            </span>{" "}
-            (masse des mises)
+              ⓘ
+            </span>
           </p>
 
           {!canBet && !expired && (
