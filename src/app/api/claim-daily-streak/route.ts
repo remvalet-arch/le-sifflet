@@ -11,7 +11,7 @@ export async function POST() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("sifflets_balance, login_streak, last_login_date")
+    .select("sifflets_balance, login_streak, last_login_date, lifetime_points_earned")
     .eq("id", user.id)
     .single();
 
@@ -26,10 +26,13 @@ export async function POST() {
   const bonus = 50 * Math.min(streak, 7);
 
   const admin = createAdminClient();
+  // lifetime_points_earned += bonus déclenche le trigger trg_sync_season_points
+  // qui incrémente season_points automatiquement (migration 0081)
   const { error } = await admin
     .from("profiles")
     .update({
       sifflets_balance: profile.sifflets_balance + bonus,
+      lifetime_points_earned: (profile.lifetime_points_earned ?? 0) + bonus,
       last_login_date: todayStr,
     })
     .eq("id", user.id);
