@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { SeasonBadge } from "@/components/shared/SeasonBadge";
 
 export const metadata = { title: "Classement" };
-export const revalidate = 300;
+export const revalidate = 86400;
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -11,29 +12,33 @@ type Props = { searchParams: Promise<{ mode?: string }> };
 
 export default async function LeaderboardPage({ searchParams }: Props) {
   const { mode } = await searchParams;
-  const isMonthly = mode === "month";
+  const isHallOfFame = mode === "alltime";
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const scoreCol = isMonthly
-    ? "monthly_points_earned"
-    : "lifetime_points_earned";
+  const scoreCol = isHallOfFame ? "lifetime_points_earned" : "season_points";
 
-  const { data: rows } = await supabase
-    .from("profiles")
-    .select(`id, username, ${scoreCol}, trust_score`)
-    .order(scoreCol, { ascending: false })
-    .limit(50);
+  const [{ data: rows }, { data: currentSeason }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(`id, username, ${scoreCol}, trust_score`)
+      .order(scoreCol, { ascending: false })
+      .limit(50),
+    supabase
+      .from("seasons")
+      .select("label, ends_at")
+      .eq("is_current", true)
+      .maybeSingle(),
+  ]);
 
   const players = (rows ?? []).map((p) => ({
     ...p,
-    score: isMonthly
-      ? (((p as Record<string, unknown>).monthly_points_earned as number) ?? 0)
-      : (((p as Record<string, unknown>).lifetime_points_earned as number) ??
-        0),
+    score: isHallOfFame
+      ? (((p as Record<string, unknown>).lifetime_points_earned as number) ?? 0)
+      : (((p as Record<string, unknown>).season_points as number) ?? 0),
   }));
 
   const top3 = players.slice(0, 3);
@@ -47,30 +52,42 @@ export default async function LeaderboardPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-6 pb-8">
+      {/* Season badge */}
+      {currentSeason && !isHallOfFame && (
+        <div className="mb-4">
+          <SeasonBadge
+            label={currentSeason.label}
+            endsAt={currentSeason.ends_at}
+          />
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-500">Top 50 des meilleurs joueurs</p>
+        <p className="text-sm text-zinc-500">
+          {isHallOfFame ? "Tous temps — Top 50" : "Saison courante — Top 50"}
+        </p>
 
         {/* Filter tabs */}
         <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
           <Link
             href="/leaderboard"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
-              !isMonthly
+              !isHallOfFame
                 ? "bg-amber-500 text-black"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            Général
+            Saison
           </Link>
           <Link
-            href="/leaderboard?mode=month"
+            href="/leaderboard?mode=alltime"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
-              isMonthly
+              isHallOfFame
                 ? "bg-amber-500 text-black"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            Ce mois
+            Hall of Fame
           </Link>
         </div>
       </div>

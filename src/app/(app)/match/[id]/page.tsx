@@ -49,7 +49,7 @@ export default async function MatchPage({ params }: Props) {
   const [{ data: profile }, { data: pairs }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("sifflets_balance, trust_score")
+      .select("sifflets_balance, trust_score, username")
       .eq("id", user.id)
       .single(),
     supabase.rpc("squad_members_for_my_squads"),
@@ -57,6 +57,7 @@ export default async function MatchPage({ params }: Props) {
 
   const siffletsBalance = profile?.sifflets_balance ?? 0;
   const isModerator = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
+  const username = profile?.username ?? undefined;
 
   // On inclut AUSSI l'utilisateur courant pour qu'il puisse voir son propre prono dans le vestiaire !
   const memberIds = [
@@ -126,6 +127,7 @@ export default async function MatchPage({ params }: Props) {
         match={match}
         siffletsBalance={siffletsBalance}
         userId={user.id}
+        username={username}
         isModerator={isModerator}
         squadPronos={squadPronos}
       />

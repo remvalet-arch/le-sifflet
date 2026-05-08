@@ -10,8 +10,10 @@ import type {
   BetRow,
   MatchRow,
   MarketEventRow,
+  MarketEventType,
 } from "@/types/database";
 import { VotingModal } from "./VotingModal";
+import { VerdictOverlay } from "./VerdictOverlay";
 import { Scoreboard } from "./Scoreboard";
 import { MatchTimeline } from "./MatchTimeline";
 import { MatchLineups } from "./MatchLineups";
@@ -21,6 +23,7 @@ import { MatchNotificationBell } from "./MatchNotificationBell";
 import { LeaguePronosList } from "./LeaguePronosList";
 import { LiveRoomTutorial } from "./LiveRoomTutorial";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
+import { FriendPronoHints } from "./FriendPronoHints";
 
 export type SquadProno = {
   user_id: string;
@@ -47,6 +50,7 @@ type Props = {
   match: LiveRoomMatchRow;
   siffletsBalance: number;
   userId: string;
+  username?: string;
   isModerator: boolean;
   squadPronos: SquadProno[];
 };
@@ -55,6 +59,7 @@ export function LiveRoom({
   match,
   siffletsBalance,
   userId,
+  username,
   isModerator,
   squadPronos,
 }: Props) {
@@ -62,6 +67,9 @@ export function LiveRoom({
   const [activeTab, setActiveTab] = useState<Tab>("kop");
 
   const displayedTab: Tab = activeTab;
+
+  // Audience temps réel (Sprint Q)
+  const [audienceCount, setAudienceCount] = useState(0);
 
   // Cooldown
   const [cooldownUntil, setCooldownUntil] = useState<Date | null>(() =>
@@ -120,6 +128,21 @@ export function LiveRoom({
   // Active betting event
   const [activeEvent, setActiveEvent] = useState<MarketEventRow | null>(null);
   const [localBalance, setLocalBalance] = useState(siffletsBalance);
+
+  // Verdict overlay (INSP4-3)
+  type VerdictState = {
+    eventType: MarketEventType;
+    eventId: string;
+    won: boolean;
+    reward: number;
+  };
+  const [verdictOverlay, setVerdictOverlay] = useState<VerdictState | null>(
+    null,
+  );
+  const lastResolvedMeta = useRef<{
+    eventId: string;
+    eventType: MarketEventType;
+  } | null>(null);
 
   useEffect(() => {
     if (localBalance < 10) {
@@ -180,6 +203,43 @@ export function LiveRoom({
       });
   }, [match.id]);
 
+  // Sprint Q : présence + compteur d'audience
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function pingPresence() {
+      await supabase.from("match_presence").upsert(
+        {
+          match_id: match.id,
+          user_id: userId,
+          last_seen_at: new Date().toISOString(),
+        },
+        { onConflict: "match_id,user_id" },
+      );
+    }
+
+    async function fetchAudience() {
+      const { data } = await supabase.rpc("count_active_users_on_match", {
+        p_match_id: match.id,
+        p_window_minutes: 5,
+      });
+      if (typeof data === "number") {
+        setTimeout(() => setAudienceCount(data), 0);
+      }
+    }
+
+    void pingPresence();
+    void fetchAudience();
+
+    const presenceId = setInterval(() => void pingPresence(), 60_000);
+    const audienceId = setInterval(() => void fetchAudience(), 30_000);
+
+    return () => {
+      clearInterval(presenceId);
+      clearInterval(audienceId);
+    };
+  }, [match.id, userId]);
+
   // Realtime subscriptions
   useEffect(() => {
     const supabase = createClient();
@@ -231,11 +291,12 @@ export function LiveRoom({
         (payload) => {
           const event = payload.new as MarketEventRow;
           if (event?.status === "resolved") {
+            lastResolvedMeta.current = {
+              eventId: event.id,
+              eventType: event.type,
+            };
             setActiveEvent((prev) => {
-              if (prev?.id === event.id) {
-                toast.info("L'arbitre a tranché — résultat en cours…");
-                return null;
-              }
+              if (prev?.id === event.id) return null;
               return prev;
             });
           }
@@ -254,11 +315,31 @@ export function LiveRoom({
           if (bet.status === "won") {
             const reward = Math.round(Number(bet.potential_reward));
             setLocalBalance((b) => b + reward);
-            toast.success(
-              `Prédiction juste ! +${reward.toLocaleString("fr-FR")} Pts 🎉`,
-            );
+            const meta = lastResolvedMeta.current;
+            if (meta && bet.event_id === meta.eventId) {
+              setVerdictOverlay({
+                eventType: meta.eventType,
+                eventId: meta.eventId,
+                won: true,
+                reward,
+              });
+            } else {
+              toast.success(
+                `Prédiction juste ! +${reward.toLocaleString("fr-FR")} Pts 🎉`,
+              );
+            }
           } else if (bet.status === "lost") {
-            toast.error("Pari perdu… Meilleure chance la prochaine fois !");
+            const meta = lastResolvedMeta.current;
+            if (meta && bet.event_id === meta.eventId) {
+              setVerdictOverlay({
+                eventType: meta.eventType,
+                eventId: meta.eventId,
+                won: false,
+                reward: 0,
+              });
+            } else {
+              toast.error("Pari perdu… Meilleure chance la prochaine fois !");
+            }
           }
         },
       )
@@ -310,7 +391,12 @@ export function LiveRoom({
       });
       const json = (await res.json()) as {
         ok: boolean;
-        data?: { cooldown_until: string | null };
+        data?: {
+          cooldown_until: string | null;
+          current_signals: number;
+          required_signals: number;
+          market_opened: boolean;
+        };
         error?: string;
       };
       if (!res.ok) {
@@ -318,7 +404,13 @@ export function LiveRoom({
         return;
       }
       markAsSignaled(type);
-      toast.success("Signal envoyé ! En attente d'autres confirmations…");
+      const cur = json.data?.current_signals ?? 1;
+      const req = json.data?.required_signals ?? 2;
+      if (json.data?.market_opened) {
+        toast.success("Le marché VAR vient d'ouvrir ! Parie maintenant 🔥");
+      } else {
+        toast.success(`Signal envoyé — ${cur}/${req} pour ouvrir le pari ⚡`);
+      }
       if (json.data?.cooldown_until)
         setCooldownUntil(new Date(json.data.cooldown_until));
     } catch {
@@ -358,7 +450,22 @@ export function LiveRoom({
         style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
         <div className="relative px-6 pt-2">
-          <div className="absolute right-4 top-2 z-10">
+          <div className="absolute right-4 top-2 z-10 flex items-center gap-2">
+            {/* Badge audience (Sprint Q) */}
+            {audienceCount > 0 && (
+              <span
+                className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  audienceCount >= 5
+                    ? "bg-whistle/20 text-whistle"
+                    : "bg-white/8 text-zinc-400"
+                }`}
+                title={
+                  audienceCount < 5 ? "Sois le premier à alerter ⚡" : undefined
+                }
+              >
+                👁️ {audienceCount}
+              </span>
+            )}
             <MatchNotificationBell matchId={liveMatch.id} />
           </div>
           <Scoreboard
@@ -458,11 +565,14 @@ export function LiveRoom({
         />
       )}
       {displayedTab === "vestiaire" && (
-        <LeaguePronosList
-          matchStatus={liveMatch.status}
-          startTime={liveMatch.start_time}
-          squadPronos={squadPronos}
-        />
+        <>
+          <FriendPronoHints matchId={liveMatch.id} userId={userId} />
+          <LeaguePronosList
+            matchStatus={liveMatch.status}
+            startTime={liveMatch.start_time}
+            squadPronos={squadPronos}
+          />
+        </>
       )}
       {/* Drawer d'action */}
       <ActionDrawer
@@ -489,8 +599,22 @@ export function LiveRoom({
           siffletsBalance={localBalance}
           squadId={squadId}
           squadName={squadName}
+          audienceCount={audienceCount}
           onClose={() => setActiveEvent(null)}
           onBetSuccess={(amount) => setLocalBalance((b) => b - amount)}
+        />
+      )}
+
+      {/* Verdict overlay — INSP4-3 */}
+      {verdictOverlay && (
+        <VerdictOverlay
+          eventType={verdictOverlay.eventType}
+          eventId={verdictOverlay.eventId}
+          won={verdictOverlay.won}
+          reward={verdictOverlay.reward}
+          username={username}
+          matchLabel={`${liveMatch.team_home} — ${liveMatch.team_away}`}
+          onClose={() => setVerdictOverlay(null)}
         />
       )}
     </>

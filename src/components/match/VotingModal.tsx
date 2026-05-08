@@ -5,7 +5,12 @@ import { toast } from "sonner";
 import { LoaderCircle, X, Swords } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LIVE_BETTING_WINDOW_SECONDS } from "@/lib/constants/odds";
-import type { MarketEventRow, MarketEventType } from "@/types/database";
+import type {
+  MarketEventRow,
+  MarketEventType,
+  BoosterCatalogRow,
+} from "@/types/database";
+import { getMinBetForBalance } from "@/lib/economy/min-bet";
 
 const EVENT_CONFIG: Record<
   MarketEventType,
@@ -108,6 +113,7 @@ type Props = {
   onBetSuccess: (amountStaked: number) => void;
   squadId?: string | null;
   squadName?: string | null;
+  audienceCount?: number;
 };
 
 export function VotingModal({
@@ -117,6 +123,7 @@ export function VotingModal({
   onBetSuccess,
   squadId,
   squadName,
+  audienceCount,
 }: Props) {
   const supabase = createClient();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -180,6 +187,7 @@ export function VotingModal({
   const secondsLeft = Math.max(0, LIVE_BETTING_WINDOW_SECONDS - elapsed);
   const expired = elapsed >= LIVE_BETTING_WINDOW_SECONDS;
   const timerPct = (secondsLeft / LIVE_BETTING_WINDOW_SECONDS) * 100;
+  const isUrgent = secondsLeft <= 10 && secondsLeft > 0 && !expired;
   const timerColor =
     secondsLeft > 45
       ? "bg-green-500"
@@ -187,16 +195,28 @@ export function VotingModal({
         ? "bg-yellow-400"
         : "bg-red-500";
 
-  const canBet = siffletsBalance >= 10;
-  const half = Math.max(10, Math.floor(siffletsBalance / 2));
+  // Haptic feedback on last 10 seconds (Android + some browsers)
+  useEffect(() => {
+    if (!isUrgent) return;
+    const id = setInterval(() => {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([100]);
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [isUrgent]);
+
+  const minBet = getMinBetForBalance(siffletsBalance);
+  const canBet = siffletsBalance >= minBet;
+  const half = Math.max(minBet, Math.floor(siffletsBalance / 2));
   const defaultAmount = Math.min(
-    Math.max(10, Math.floor(siffletsBalance * 0.1)),
+    Math.max(minBet, Math.floor(siffletsBalance * 0.1)),
     siffletsBalance,
   );
   const [amount, setAmount] = useState(defaultAmount);
 
   function clamp(v: number) {
-    return Math.min(Math.max(10, v), siffletsBalance);
+    return Math.min(Math.max(minBet, v), siffletsBalance);
   }
 
   const [voteLoading, setVoteLoading] = useState<string | null>(null);
@@ -206,12 +226,43 @@ export function VotingModal({
     label: string;
     multiplier: number;
     staked: number;
+    boosterName?: string;
   } | null>(null);
+
+  // Boosters
+  const [availableBoosters, setAvailableBoosters] = useState<
+    { inv_id: string; booster: BoosterCatalogRow }[]
+  >([]);
+  const [selectedBoosterId, setSelectedBoosterId] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    void supabase
+      .from("user_boosters_inventory")
+      .select("id, booster_id, consumed_at, boosters_catalog(*)")
+      .is("consumed_at", null)
+      .then(({ data }) => {
+        if (!data) return;
+        const items = data
+          .filter((r) => r.boosters_catalog)
+          .map((r) => ({
+            inv_id: r.id,
+            booster: r.boosters_catalog as unknown as BoosterCatalogRow,
+          }));
+        setTimeout(() => setAvailableBoosters(items), 0);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleVote(v: string) {
     if (voteLoading || expired || !canBet || oddsLoading) return;
     const staked = clamp(amount);
     const multiplier = poolOdds[v] ?? DEFAULT_ODD;
+    const selectedBooster = selectedBoosterId
+      ? (availableBoosters.find((b) => b.booster.id === selectedBoosterId)
+          ?.booster ?? null)
+      : null;
     setVoteLoading(v);
     setOptimisticVote(v);
     try {
@@ -224,6 +275,7 @@ export function VotingModal({
           amount_staked: staked,
           multiplier,
           squad_id: squadId ?? null,
+          booster_id: selectedBoosterId ?? null,
         }),
       });
       const json = (await res.json()) as {
@@ -238,7 +290,31 @@ export function VotingModal({
       }
       onBetSuccess(staked);
       const label = isStoppage ? `${v} min` : v;
-      setBetConfirmed({ option: v, label, multiplier, staked });
+      setBetConfirmed({
+        option: v,
+        label,
+        multiplier,
+        staked,
+        boosterName: selectedBooster?.name,
+      });
+      // Remove used booster from local list
+      if (selectedBoosterId) {
+        setTimeout(() => {
+          setAvailableBoosters((prev) =>
+            prev.filter((b, i) => {
+              if (b.booster.id === selectedBoosterId) {
+                // remove only first match (one consumed)
+                const firstIdx = prev.findIndex(
+                  (x) => x.booster.id === selectedBoosterId,
+                );
+                return i !== firstIdx;
+              }
+              return true;
+            }),
+          );
+          setSelectedBoosterId(null);
+        }, 0);
+      }
       setTimeout(() => onClose(), 1800);
     } catch {
       setOptimisticVote(null);
@@ -315,6 +391,11 @@ export function VotingModal({
               {betConfirmed.staked} Sifflets · Cote ×
               {betConfirmed.multiplier.toFixed(2)}
             </p>
+            {betConfirmed.boosterName && (
+              <p className="text-[11px] font-black text-amber-400">
+                ⚡ Booster actif : {betConfirmed.boosterName}
+              </p>
+            )}
             <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
               Gain potentiel :{" "}
               <span className="text-green-400">
@@ -370,23 +451,40 @@ export function VotingModal({
             </button>
           </div>
 
-          {/* Timer */}
-          <div className="mb-5">
-            <div className="mb-1.5 flex justify-between text-xs font-semibold">
-              <span className="text-zinc-500">Temps restant</span>
-              <span
-                className={expired ? "font-black text-red-400" : "text-white"}
-              >
-                {expired ? "Votes clos" : `${secondsLeft}s`}
-              </span>
-            </div>
+          {/* Timer — hero display */}
+          <div className="mb-5 flex flex-col items-center gap-2">
             <div
-              className="h-2 overflow-hidden rounded-full bg-zinc-800"
+              className={`tabular-nums text-6xl font-black leading-none tracking-tight transition-colors ${
+                expired
+                  ? "text-zinc-600"
+                  : isUrgent
+                    ? "text-red-400"
+                    : secondsLeft > 45
+                      ? "text-green-400"
+                      : "text-yellow-400"
+              }`}
+              role="timer"
+              aria-label={
+                expired ? "Votes clos" : `${secondsLeft} secondes restantes`
+              }
+            >
+              {expired ? "0:00" : `0:${String(secondsLeft).padStart(2, "0")}`}
+            </div>
+            {audienceCount && audienceCount > 0 ? (
+              <span className="text-xs font-bold text-zinc-500">
+                👁️ {audienceCount} dans le stade
+              </span>
+            ) : (
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                {expired ? "Votes clos" : "Temps restant"}
+              </span>
+            )}
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={LIVE_BETTING_WINDOW_SECONDS}
               aria-valuenow={secondsLeft}
-              aria-label="Temps restant pour parier"
             >
               <div
                 className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${timerColor}`}
@@ -408,7 +506,7 @@ export function VotingModal({
             <div className="mb-3 grid grid-cols-3 gap-2">
               {(
                 [
-                  ["MIN", 10],
+                  ["MIN", minBet],
                   ["MOITIÉ", half],
                   ["ALL IN", siffletsBalance],
                 ] as const
@@ -430,8 +528,8 @@ export function VotingModal({
             </div>
             <input
               type="range"
-              min={10}
-              max={Math.max(10, siffletsBalance)}
+              min={minBet}
+              max={Math.max(minBet, siffletsBalance)}
               step={10}
               value={amount}
               onChange={(e) => setAmount(clamp(parseInt(e.target.value, 10)))}
@@ -439,7 +537,68 @@ export function VotingModal({
               aria-label="Montant du pari en points"
               className="w-full accent-green-500 disabled:opacity-40"
             />
+            {minBet > 5 && (
+              <p className="mt-1 text-[10px] text-zinc-600">
+                🎚️ Mise min sur ton solde :{" "}
+                <span className="font-black text-zinc-500">
+                  {minBet.toLocaleString("fr-FR")} pts
+                </span>
+              </p>
+            )}
           </div>
+
+          {/* Booster picker */}
+          {availableBoosters.length > 0 && !expired && (
+            <div className="mb-4">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                ⚡ Utiliser un booster ?
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {[
+                  ...new Map(
+                    availableBoosters.map((b) => [b.booster.id, b]),
+                  ).values(),
+                ].map((item) => {
+                  const count = availableBoosters.filter(
+                    (b) => b.booster.id === item.booster.id,
+                  ).length;
+                  const isSelected = selectedBoosterId === item.booster.id;
+                  return (
+                    <button
+                      key={item.booster.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedBoosterId(
+                          isSelected ? null : item.booster.id,
+                        )
+                      }
+                      className={`shrink-0 rounded-xl px-3 py-2 text-[11px] font-black transition ${
+                        isSelected
+                          ? "border border-amber-500/40 bg-amber-500/20 text-amber-400"
+                          : "border border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      ⚡ {item.booster.name}
+                      {count > 1 && (
+                        <span className="ml-1 text-[9px] text-zinc-500">
+                          ×{count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedBoosterId && (
+                <p className="mt-1.5 text-[10px] text-amber-400/80">
+                  {
+                    availableBoosters.find(
+                      (b) => b.booster.id === selectedBoosterId,
+                    )?.booster.description
+                  }
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Boutons de vote */}
           {optimisticVote ? (
@@ -512,6 +671,23 @@ export function VotingModal({
   );
 }
 
+function computePct(
+  poolOdds: Record<string, number>,
+  options: string[],
+): Record<string, number> {
+  const implied = options.map((opt) => ({
+    opt,
+    ip: 1 / (poolOdds[opt] ?? DEFAULT_ODD),
+  }));
+  const total = implied.reduce((s, x) => s + x.ip, 0);
+  if (total === 0) return {};
+  const result: Record<string, number> = {};
+  for (const { opt, ip } of implied) {
+    result[opt] = Math.round((ip / total) * 100);
+  }
+  return result;
+}
+
 function BinaryButtons({
   cfg,
   poolOdds,
@@ -529,6 +705,7 @@ function BinaryButtons({
   voteLoading: string | null;
   onVote: (v: string) => void;
 }) {
+  const pct = computePct(poolOdds, ["oui", "non"]);
   return (
     <div className="grid grid-cols-2 gap-3">
       {(["oui", "non"] as const).map((v) => {
@@ -536,6 +713,7 @@ function BinaryButtons({
         const gain = Math.floor(amount * odd);
         const isLoading = voteLoading === v;
         const label = v === "oui" ? cfg.yes : cfg.no;
+        const votePct = pct[v];
         return (
           <button
             type="button"
@@ -543,7 +721,7 @@ function BinaryButtons({
             onClick={() => onVote(v)}
             disabled={disabled}
             aria-label={`${label}, cote estimée ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
-            className={`flex h-24 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`flex h-28 flex-col items-center justify-center gap-0.5 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
               v === "oui"
                 ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
                 : "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20"
@@ -560,7 +738,7 @@ function BinaryButtons({
                   {label}
                 </span>
                 <span
-                  className={`text-sm font-black tabular-nums transition-colors ${
+                  className={`text-lg font-black tabular-nums transition-colors ${
                     oddsFlash
                       ? "text-yellow-400"
                       : v === "oui"
@@ -569,7 +747,12 @@ function BinaryButtons({
                   }`}
                   aria-live="polite"
                 >
-                  ~×{odd.toFixed(2)}
+                  ×{odd.toFixed(2)}
+                  {votePct !== undefined && (
+                    <span className="ml-1 text-xs font-bold opacity-60">
+                      · {votePct}%
+                    </span>
+                  )}
                 </span>
                 <span
                   className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}

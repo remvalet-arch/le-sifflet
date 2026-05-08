@@ -7,6 +7,17 @@ import { ProfileEditModal } from "./ProfileEditModal";
 
 type TeamInfo = { id: string; name: string; logo_url: string | null } | null;
 
+const BORDER_RING_CLASSES: Record<string, string> = {
+  gold: "ring-4 ring-yellow-400 shadow-[0_0_24px_rgba(234,179,8,0.6)]",
+  neon: "ring-4 ring-green-400 shadow-[0_0_24px_rgba(74,222,128,0.6)]",
+  inferno: "ring-4 ring-orange-500 shadow-[0_0_24px_rgba(249,115,22,0.6)]",
+  elite: "ring-4 ring-purple-500 shadow-[0_0_24px_rgba(168,85,247,0.6)]",
+};
+
+function getBorderRingClass(assetUrl: string) {
+  return BORDER_RING_CLASSES[assetUrl] ?? "ring-2 ring-white/20";
+}
+
 function getRankRing(rankLabel: string) {
   const t = rankLabel.toLowerCase();
   if (t.includes("boss"))
@@ -77,6 +88,9 @@ export function ProfileHeader({
   trustScore,
   compact = false,
   preferredCompetitions = [],
+  streakFreezesOwned = 0,
+  equippedAvatarAsset,
+  equippedBorderAsset,
 }: {
   username: string;
   avatarUrl: string | null;
@@ -90,6 +104,9 @@ export function ProfileHeader({
   trustScore?: number;
   compact?: boolean;
   preferredCompetitions?: string[];
+  streakFreezesOwned?: number;
+  equippedAvatarAsset?: string | null;
+  equippedBorderAsset?: string | null;
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const [username, setUsername] = useState(initialUsername);
@@ -104,8 +121,10 @@ export function ProfileHeader({
 
   const streak = loginStreak ?? 0;
   const canClaimStreak = streak > 0 && !streakClaimed;
-  const avatar = avatarUrl ?? "🎽";
-  const ringCls = getRankRing(rank.label);
+  const avatar = equippedAvatarAsset ?? avatarUrl ?? "🎽";
+  const ringCls = equippedBorderAsset
+    ? getBorderRingClass(equippedBorderAsset)
+    : getRankRing(rank.label);
   const xpInfo = getXpProgress(xpTotal);
   const trust = trustScore != null ? getTrustGradeCompact(trustScore) : null;
 
@@ -303,6 +322,11 @@ export function ProfileHeader({
                 🔥 {streak}j
                 {canClaimStreak && ` +${50 * Math.min(streak, 7)}pts`}
               </button>
+            )}
+            {streakFreezesOwned > 0 && (
+              <span className="flex items-center gap-1 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-[11px] font-black text-sky-400">
+                🛡️ ×{streakFreezesOwned}
+              </span>
             )}
 
             {trust && trustScore != null && (

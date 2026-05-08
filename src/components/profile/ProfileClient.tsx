@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { TrophyWall } from "./TrophyWall";
 import { ProfileHeader } from "./ProfileHeader";
-import type { BadgeRow, BetStatus, MarketEventType } from "@/types/database";
+import type {
+  BadgeRow,
+  BetStatus,
+  MarketEventType,
+  SeasonArchiveRow,
+} from "@/types/database";
 import { Lock, Shield, Target, TrendingUp, Trophy, Zap } from "lucide-react";
+import { getMinBetForBalance } from "@/lib/economy/min-bet";
+import { SeasonBadge } from "@/components/shared/SeasonBadge";
+import { StatsSection } from "./StatsSection";
 
 export type ShortBetEntry = {
   id: string;
@@ -69,6 +77,11 @@ type Props = {
   headerLastLoginDate?: string | null;
   headerKarma?: { emoji: string; label: string; cls: string };
   headerPreferredCompetitions?: string[];
+  headerStreakFreezesOwned?: number;
+  headerEquippedAvatarAsset?: string | null;
+  headerEquippedBorderAsset?: string | null;
+  seasonArchives?: SeasonArchiveRow[];
+  currentSeason?: { label: string; endsAt: string } | null;
 };
 
 const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -132,6 +145,7 @@ const TABS = [
   { value: "historique", icon: "📊", label: "Historique" },
   { value: "badges", icon: "🏅", label: "Badges" },
   { value: "amis", icon: "👥", label: "Amis" },
+  { value: "stats", icon: "📈", label: "Stats" },
 ] as const;
 
 type TabValue = (typeof TABS)[number]["value"];
@@ -161,6 +175,11 @@ export function ProfileClient({
   headerLastLoginDate,
   headerKarma,
   headerPreferredCompetitions,
+  headerStreakFreezesOwned,
+  headerEquippedAvatarAsset,
+  headerEquippedBorderAsset,
+  seasonArchives = [],
+  currentSeason,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabValue>("profil");
   const pendingPronoCount = pronos.filter((p) => p.status === "pending").length;
@@ -209,6 +228,9 @@ export function ProfileClient({
             trustScore={trustScore}
             compact={activeTab !== "profil"}
             preferredCompetitions={headerPreferredCompetitions}
+            streakFreezesOwned={headerStreakFreezesOwned}
+            equippedAvatarAsset={headerEquippedAvatarAsset}
+            equippedBorderAsset={headerEquippedBorderAsset}
           />
         )}
 
@@ -334,7 +356,78 @@ export function ProfileClient({
             </div>
           )}
 
+          {headerBalance !== undefined && (
+            <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  Mise minimum
+                </p>
+                <p className="mt-1 text-base font-black text-amber-400">
+                  {getMinBetForBalance(headerBalance).toLocaleString("fr-FR")}{" "}
+                  pts
+                </p>
+              </div>
+              <span className="text-2xl" aria-hidden>
+                🎚️
+              </span>
+            </div>
+          )}
+
           {refillContent}
+
+          {/* Season badge */}
+          {currentSeason && (
+            <SeasonBadge
+              label={currentSeason.label}
+              endsAt={currentSeason.endsAt}
+            />
+          )}
+
+          {/* Mes saisons */}
+          {seasonArchives.length > 0 && (
+            <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
+              <div className="border-b border-white/5 px-5 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  🏅 Mes saisons
+                </p>
+              </div>
+              <div className="flex flex-col divide-y divide-white/5">
+                {seasonArchives.slice(0, 3).map((sa) => {
+                  const trophy =
+                    sa.final_rank === 1
+                      ? "🥇"
+                      : sa.final_rank_label === "Top 3"
+                        ? "🥈"
+                        : sa.final_rank_label === "Top 10"
+                          ? "🥉"
+                          : "🎖️";
+                  return (
+                    <div
+                      key={sa.season_id}
+                      className="flex items-center gap-3 px-5 py-3"
+                    >
+                      <span className="text-xl">{trophy}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-white">
+                          {sa.final_rank_label}
+                        </p>
+                        <p className="text-[10px] text-zinc-500">
+                          #{sa.final_rank} ·{" "}
+                          {sa.final_points.toLocaleString("fr-FR")} pts
+                        </p>
+                      </div>
+                      <p className="text-[10px] text-zinc-600">
+                        {new Date(sa.archived_at).toLocaleDateString("fr-FR", {
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {isModerateur && (
             <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
@@ -373,6 +466,13 @@ export function ProfileClient({
       )}
 
       {activeTab === "amis" && <div>{amisContent}</div>}
+
+      {activeTab === "stats" && (
+        <StatsSection
+          favoriteTeamId={headerFavoriteTeam?.id ?? null}
+          favoriteTeamName={headerFavoriteTeam?.name ?? null}
+        />
+      )}
     </div>
   );
 }

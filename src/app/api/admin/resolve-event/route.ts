@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { resolveEvent } from "@/lib/resolve-event";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
-import { sendPushToMatchSubscribers } from "@/lib/push-sender";
+import { sendPushToUsers } from "@/lib/push-sender";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 const EVENT_LABEL: Record<string, string> = {
@@ -17,6 +17,26 @@ const EVENT_LABEL: Record<string, string> = {
   corner: "Corner",
 };
 
+// Verdict labels per result
+const OUI_VERDICT: Record<string, string> = {
+  penalty_check: "PENALTY confirmé !",
+  penalty_outcome: "PENALTY marqué !",
+  var_goal: "BUT VALIDÉ !",
+  red_card: "ROUGE confirmé !",
+  injury_sub: "Remplacement confirmé",
+  free_kick: "COUP FRANC !",
+  corner: "Corner confirmé",
+};
+const NON_VERDICT: Record<string, string> = {
+  penalty_check: "NON Penalty.",
+  penalty_outcome: "Penalty raté.",
+  var_goal: "BUT ANNULÉ.",
+  red_card: "Carton annulé.",
+  injury_sub: "Remplacement annulé.",
+  free_kick: "Coup franc refusé.",
+  corner: "Corner annulé.",
+};
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -24,7 +44,6 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
 
-  // Guard modérateur — vérification stricte côté serveur
   const { data: profile } = await supabase
     .from("profiles")
     .select("trust_score")
@@ -46,7 +65,6 @@ export async function POST(request: NextRequest) {
 
   const adminClient = createAdminClient();
 
-  // Récupère match_id + type avant résolution pour le push
   const { data: eventRow } = await adminClient
     .from("market_events")
     .select("match_id, type")
@@ -62,24 +80,48 @@ export async function POST(request: NextRequest) {
     return errorResponse(msg);
   }
 
-  // Push notification + badges (fire-and-forget)
+  // Personalized push + badges (fire-and-forget)
   void (async () => {
     const { data: bets } = await adminClient
       .from("bets")
-      .select("user_id")
+      .select("user_id, status, potential_reward, amount_staked")
       .eq("event_id", body.event_id!);
+
     const uniqueUserIds = [...new Set((bets ?? []).map((b) => b.user_id))];
     await Promise.all(uniqueUserIds.map((uid) => checkAndUnlockBadges(uid)));
 
-    if (eventRow) {
-      const label = EVENT_LABEL[eventRow.type] ?? "Événement VAR";
-      const verdict = body.result === "oui" ? "✅ Confirmé" : "❌ Annulé";
-      await sendPushToMatchSubscribers(eventRow.match_id, {
-        title: `⚡ VAR Résolue — ${verdict}`,
-        body: `${label} — découvre tes gains !`,
-        url: `/match/${eventRow.match_id}`,
-      });
-    }
+    if (!eventRow || !bets?.length) return;
+
+    // Fetch notif opt-outs for these users
+    const { data: prefs } = await adminClient
+      .from("profiles")
+      .select("id, notif_var_results")
+      .in("id", uniqueUserIds);
+    const optedOut = new Set(
+      (prefs ?? []).filter((p) => !p.notif_var_results).map((p) => p.id),
+    );
+
+    const verdictLabel =
+      body.result === "oui"
+        ? (OUI_VERDICT[eventRow.type] ?? "CONFIRMÉ !")
+        : (NON_VERDICT[eventRow.type] ?? "ANNULÉ.");
+    const eventLabel = EVENT_LABEL[eventRow.type] ?? "Événement VAR";
+
+    await Promise.all(
+      bets
+        .filter((bet) => !optedOut.has(bet.user_id))
+        .map((bet) => {
+          const bodyText =
+            bet.status === "won"
+              ? `${verdictLabel} +${bet.potential_reward} pts gagnés 🔥`
+              : `${verdictLabel} ${bet.amount_staked} pts perdus.`;
+          return sendPushToUsers([bet.user_id], {
+            title: `⚡ VAR Résolue — ${eventLabel}`,
+            body: bodyText,
+            url: `/match/${eventRow.match_id}`,
+          });
+        }),
+    );
   })();
 
   return successResponse({ resolved: true });

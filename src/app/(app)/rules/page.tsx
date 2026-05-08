@@ -25,7 +25,7 @@ const LIVE_RULES = [
   {
     emoji: "🚨",
     title: "Le système Waze — Signaler une action",
-    body: "Pendant le match, si tu repères une action litigieuse (penalty, hors-jeu VAR, carton…), appuie sur le bouton correspondant. Si assez de joueurs confirment en moins de 30 secondes, un marché de paris s'ouvre automatiquement dans la room.",
+    body: "Pendant le match, si tu repères une action litigieuse (penalty, hors-jeu VAR, carton…), appuie sur le bouton correspondant. Si assez de joueurs confirment en moins de 30 secondes, un marché de paris s'ouvre automatiquement. Le seuil est dynamique : sur un petit match peu fréquenté, 1 seul signal suffit. Sur un gros match, il en faut davantage pour éviter le spam.",
   },
   {
     emoji: "⏱️",
@@ -146,6 +146,61 @@ export default function RulesPage() {
         </div>
       </section>
 
+      {/* Section Saisons */}
+      <section className="mb-6">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          <span>🗓️</span> Saisons Mensuelles
+        </h2>
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 text-xl" aria-hidden>
+                🔄
+              </span>
+              <div>
+                <h3 className="font-black text-white">
+                  Chaque mois, un nouveau départ
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+                  Tous les 1ers du mois, le classement saisonnier est figé et
+                  archivé. Les Sifflets gagnés sont reportés à 10 % dans la
+                  nouvelle saison pour donner à tous une vraie chance de briller
+                  — peu importe quand tu rejoins.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 text-xl" aria-hidden>
+                🏆
+              </span>
+              <div>
+                <h3 className="font-black text-white">Hall of Fame immuable</h3>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+                  Ton total de points cumulés (toutes saisons confondues)
+                  n&apos;est jamais effacé. Il alimente ton Hall of Fame
+                  personnel — une trace permanente de toutes tes performances.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 text-xl" aria-hidden>
+                🎖️
+              </span>
+              <div>
+                <h3 className="font-black text-white">
+                  Rangs de fin de saison
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+                  À la clôture de chaque saison : Champion (1er), Top 3, Top 10,
+                  Participant. Ces rangs sont archivés dans ton profil pour
+                  l&apos;éternité.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Section Championnat 1v1 */}
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
@@ -170,6 +225,127 @@ export default function RulesPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-black text-white">
+          <span>⚡</span>
+          <span>Boosters</span>
+        </h2>
+        <div className="rounded-2xl border border-white/8 bg-zinc-900 p-4 space-y-3">
+          <p className="text-sm leading-relaxed text-zinc-400">
+            Les boosters sont des power-ups tactiques achetables avec des
+            Sifflets.{" "}
+            <span className="font-black text-white">
+              1 seul booster par pari maximum.
+            </span>
+          </p>
+          {[
+            {
+              emoji: "💎",
+              name: "Double XP",
+              cost: "300 pts",
+              desc: "Pari/prono gagnant → 2× les points.",
+            },
+            {
+              emoji: "📈",
+              name: "Cote+",
+              cost: "200 pts",
+              desc: "Ta récompense potentielle +20%.",
+            },
+            {
+              emoji: "🛡️",
+              name: "Filet de Sécurité",
+              cost: "500 pts",
+              desc: "Si tu perds, tu récupères 50% de ta mise.",
+            },
+            {
+              emoji: "👁️",
+              name: "Vision",
+              cost: "100 pts",
+              desc: "Révèle les pronos détaillés de tes amis sur un match.",
+            },
+          ].map((b) => (
+            <div key={b.name} className="flex items-start gap-3">
+              <span className="text-xl">{b.emoji}</span>
+              <div>
+                <p className="text-sm font-black text-white">
+                  {b.name}{" "}
+                  <span className="font-normal text-zinc-500">· {b.cost}</span>
+                </p>
+                <p className="text-[11px] text-zinc-500">{b.desc}</p>
+              </div>
+            </div>
+          ))}
+          <p className="text-[11px] text-zinc-600 pt-1">
+            Les boosters ne modifient pas le résultat — uniquement ta
+            récompense. Aucun pay-to-win.
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          <span>🎚️</span> Mises Minimum
+        </h2>
+        <div className="rounded-2xl border border-white/8 bg-zinc-900 p-4">
+          <p className="mb-3 text-sm leading-relaxed text-zinc-400">
+            La mise minimum augmente avec ton solde pour garder le jeu
+            stimulant. Plus tu accumules de Sifflets, plus tu dois risquer pour
+            parier.
+          </p>
+          <div className="overflow-hidden rounded-xl border border-white/8">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/8 bg-zinc-800">
+                  <th className="px-4 py-2 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Solde
+                  </th>
+                  <th className="px-4 py-2 text-right text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Mise min.
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {[
+                  { range: "< 5 000 pts", min: "5 pts" },
+                  { range: "5 000 – 19 999 pts", min: "50 pts" },
+                  { range: "20 000 – 49 999 pts", min: "200 pts" },
+                  { range: "50 000 – 99 999 pts", min: "500 pts" },
+                  { range: "≥ 100 000 pts", min: "1 000 pts" },
+                ].map((tier) => (
+                  <tr key={tier.range}>
+                    <td className="px-4 py-2 text-zinc-400">{tier.range}</td>
+                    <td className="px-4 py-2 text-right font-black text-amber-400">
+                      {tier.min}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-black text-white">
+          <span>🛒</span>
+          <span>Boutique</span>
+        </h2>
+        <div className="rounded-2xl border border-white/8 bg-zinc-900 p-4">
+          <p className="text-sm leading-relaxed text-zinc-400">
+            Dépense tes Sifflets pour personnaliser ton arbitre — avatars
+            premium, bordures animées, effets de pari visibles par tous.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+            <span className="font-black text-white">
+              Aucun achat avec de l&apos;argent réel, jamais.
+            </span>{" "}
+            Les Sifflets se gagnent uniquement en jouant. Certains cosmétiques
+            sont débloqués automatiquement en atteignant un rang — achète-les
+            avant si tu es impatient.
+          </p>
         </div>
       </section>
     </main>

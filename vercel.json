@@ -1,8 +1,24 @@
 {
   "crons": [
     {
+      "path": "/api/cron/match-imminent",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/match-reminder-2h",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/daily-digest",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/cron/sync-odds",
       "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/transition-season",
+      "schedule": "0 0 1 * *"
     }
   ],
   "redirects": [

@@ -6,7 +6,7 @@ function ensureVapid() {
   if (vapidConfigured) return;
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  const sub = process.env.VAPID_SUBJECT ?? "mailto:contact@lesifflet.app";
+  const sub = process.env.VAPID_SUBJECT ?? "mailto:contact@vartime.app";
   if (!pub || !priv) return;
   webpush.setVapidDetails(sub, pub, priv);
   vapidConfigured = true;
@@ -16,6 +16,13 @@ export type PushPayload = {
   title: string;
   body: string;
   url?: string;
+  // FK2: action-button fields (Android/desktop only — iOS ignores gracefully)
+  actions?: Array<{ action: string; title: string }>;
+  tag?: string;
+  requireInteraction?: boolean;
+  vibrate?: number[];
+  /** Extra data passed through notification.data (e.g. marketEventId) */
+  extra_data?: Record<string, unknown>;
 };
 
 /** Envoie un push à tous les abonnés d'un match (filtre smart_mute + preferred_competitions). */

@@ -19,9 +19,17 @@ export async function POST(request: NextRequest) {
     amount_staked?: unknown;
     multiplier?: unknown;
     squad_id?: string | null;
+    booster_id?: string | null;
   };
 
-  const { event_id, chosen_option, amount_staked, multiplier, squad_id } = body;
+  const {
+    event_id,
+    chosen_option,
+    amount_staked,
+    multiplier,
+    squad_id,
+    booster_id,
+  } = body;
 
   if (!event_id || !chosen_option) {
     return errorResponse("Paramètres manquants", 400);
@@ -95,6 +103,7 @@ export async function POST(request: NextRequest) {
     p_amount_staked: amount_staked,
     p_multiplier: validatedMultiplier,
     p_squad_id: squad_id ?? null,
+    p_booster_id: booster_id ?? null,
   });
 
   if (error) {
@@ -108,10 +117,18 @@ export async function POST(request: NextRequest) {
     if (msg.includes("insufficient_balance"))
       return errorResponse("Solde insuffisant", 400);
     if (msg.includes("invalid_amount"))
-      return errorResponse("Mise invalide (min. 10 Pts)", 400);
+      return errorResponse("Mise invalide", 400);
+    if (msg.includes("min_bet_not_reached")) {
+      const minVal = msg.split(":")[1]?.trim() ?? "?";
+      return errorResponse(`Mise minimum sur ton solde : ${minVal} pts`, 400);
+    }
     if (msg.includes("invalid_multiplier"))
       return errorResponse("Multiplicateur invalide", 400);
     if (msg.includes("unauthorized")) return errorResponse("Non autorisé", 401);
+    if (msg.includes("booster_not_found"))
+      return errorResponse("Booster non disponible", 400);
+    if (msg.includes("booster_not_owned"))
+      return errorResponse("Tu ne possèdes plus ce booster", 400);
     return errorResponse(msg);
   }
 

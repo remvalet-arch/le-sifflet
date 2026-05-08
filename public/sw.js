@@ -1,4 +1,5 @@
-const CACHE_NAME = "vartime-offline-v1";
+console.info("[SW] vartime.app — v3");
+const CACHE_NAME = "vartime-offline-v3";
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
@@ -44,10 +45,16 @@ self.addEventListener("push", (event) => {
     body: data.body ?? "Un événement se passe en ce moment !",
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    data: { url: data.url ?? "/lobby" },
-    requireInteraction: false,
+    // Merge url + extra_data into notification.data for notificationclick
+    data: { url: data.url ?? "/lobby", ...(data.extra_data ?? {}) },
+    requireInteraction: data.requireInteraction ?? false,
     silent: false,
   };
+
+  // Optional fields (Android/desktop — iOS ignores gracefully)
+  if (data.tag) options.tag = data.tag;
+  if (data.vibrate) options.vibrate = data.vibrate;
+  if (data.actions) options.actions = data.actions;
 
   // Smart Mute : si l'app est en foreground, l'UI Realtime gère le feedback
   event.waitUntil(
@@ -63,7 +70,48 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? "/lobby";
+
+  const action = event.action; // "bet_yes", "bet_no", or "" (direct tap)
+  const notifData = event.notification.data ?? {};
+  const url = notifData.url ?? "/lobby";
+  const marketEventId = notifData.marketEventId;
+  const type = notifData.type;
+
+  // FK2: action-button quick-bet (Android/desktop only)
+  if (type === "var_alert" && marketEventId && (action === "bet_yes" || action === "bet_no")) {
+    const vote = action === "bet_yes" ? "oui" : "non";
+    event.waitUntil(
+      fetch("/api/var-bets/quick-bet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marketEventId, vote }),
+        credentials: "include",
+      })
+        .then(async (res) => {
+          const result = await res.json().catch(() => ({}));
+          const ok = res.ok && result?.ok;
+          const confirmTitle = ok
+            ? (vote === "oui" ? "✅ Pari OUI posé !" : "❌ Pari NON posé !")
+            : "⚠️ Pari non enregistré";
+          const confirmBody = ok
+            ? (result?.data?.message ?? "Pari enregistré. Attends le verdict !")
+            : (result?.error ?? "Le marché est peut-être fermé.");
+          return self.registration.showNotification(confirmTitle, {
+            body: confirmBody,
+            icon: "/icon-192.png",
+            tag: "quick-bet-confirm",
+            data: { url },
+          });
+        })
+        .catch(() => {
+          // Network error — fall back to opening the match page
+          return self.clients.openWindow(url);
+        })
+    );
+    return;
+  }
+
+  // Default: direct tap on notification → open/focus the app
   event.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })

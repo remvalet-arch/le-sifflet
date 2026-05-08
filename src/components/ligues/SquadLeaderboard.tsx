@@ -13,6 +13,7 @@ type LeaderboardRow = {
   var_xp: number;
   sifflets_balance: number;
   rank: string;
+  season_points: number;
 };
 
 type ActivityItem = {
@@ -112,7 +113,7 @@ export function SquadLeaderboard({
                 }`}
               >
                 {p === "general"
-                  ? "Général"
+                  ? "Saison"
                   : p === "month"
                     ? "Mois"
                     : "Semaine"}
@@ -122,7 +123,7 @@ export function SquadLeaderboard({
         </div>
         <p className="mb-3 text-xs text-zinc-500">
           {period === "general"
-            ? "Points cumulés depuis le début. Solde affiché pour le fun du vestiaire."
+            ? "Points gagnés cette saison (Pronos + Paris Live)."
             : `Points gagnés depuis le début ${period === "month" ? "du mois" : "de la semaine"} (Pronos + Paris Live).`}
         </p>
         <ol className="flex flex-col gap-2">
@@ -155,7 +156,11 @@ export function SquadLeaderboard({
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-sm font-black tabular-nums text-amber-300">
-                    {row.xp.toLocaleString("fr-FR")} pts
+                    {(period === "general"
+                      ? row.season_points
+                      : row.xp
+                    ).toLocaleString("fr-FR")}{" "}
+                    pts
                   </p>
                   <div className="flex gap-2 justify-end mt-0.5">
                     <span className="text-[10px] font-bold text-green-400">

@@ -5,5 +5,15 @@
     "ligues": "Leghe",
     "profil": "Profilo",
     "regles": "Regole"
+  },
+  "TopBar": {
+    "connected": "Connesso",
+    "rules": "Regole del gioco",
+    "laws": "Regolamento IFAB",
+    "settings": "Impostazioni",
+    "language": "Lingua",
+    "logout": "Disconnetti",
+    "leaderboard": "Classifica",
+    "shop": "Negozio"
   }
 }

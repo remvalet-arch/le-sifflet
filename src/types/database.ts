@@ -58,6 +58,19 @@ export interface Database {
           lifetime_points_earned: number;
           monthly_points_earned: number;
           preferred_competitions: string[] | null;
+          default_var_bet_amount: number;
+          season_points: number;
+          current_season_id: string | null;
+          notif_pre_match_5min: boolean;
+          notif_var_results: boolean;
+          notif_prono_results: boolean;
+          notif_daily_digest: boolean;
+          notif_pre_match_2h: boolean;
+          streak_freezes_owned: number;
+          streak_freezes_used_count: number;
+          equipped_avatar_id: string | null;
+          equipped_border_id: string | null;
+          equipped_effect_id: string | null;
         };
         Insert: {
           id: string;
@@ -78,6 +91,19 @@ export interface Database {
           lifetime_points_earned?: number;
           monthly_points_earned?: number;
           preferred_competitions?: string[] | null;
+          default_var_bet_amount?: number;
+          season_points?: number;
+          current_season_id?: string | null;
+          notif_pre_match_5min?: boolean;
+          notif_var_results?: boolean;
+          notif_prono_results?: boolean;
+          notif_daily_digest?: boolean;
+          notif_pre_match_2h?: boolean;
+          streak_freezes_owned?: number;
+          streak_freezes_used_count?: number;
+          equipped_avatar_id?: string | null;
+          equipped_border_id?: string | null;
+          equipped_effect_id?: string | null;
         };
         Update: {
           id?: string;
@@ -98,6 +124,76 @@ export interface Database {
           lifetime_points_earned?: number;
           monthly_points_earned?: number;
           preferred_competitions?: string[] | null;
+          default_var_bet_amount?: number;
+          season_points?: number;
+          current_season_id?: string | null;
+          notif_pre_match_5min?: boolean;
+          notif_var_results?: boolean;
+          notif_prono_results?: boolean;
+          notif_daily_digest?: boolean;
+          notif_pre_match_2h?: boolean;
+          streak_freezes_owned?: number;
+          streak_freezes_used_count?: number;
+          equipped_avatar_id?: string | null;
+          equipped_border_id?: string | null;
+          equipped_effect_id?: string | null;
+        };
+        Relationships: [];
+      };
+      seasons: {
+        Row: {
+          id: string;
+          slug: string;
+          label: string;
+          starts_at: string;
+          ends_at: string;
+          is_current: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          label: string;
+          starts_at: string;
+          ends_at: string;
+          is_current?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          label?: string;
+          starts_at?: string;
+          ends_at?: string;
+          is_current?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      season_archives: {
+        Row: {
+          user_id: string;
+          season_id: string;
+          final_rank: number;
+          final_points: number;
+          final_rank_label: string;
+          archived_at: string;
+        };
+        Insert: {
+          user_id: string;
+          season_id: string;
+          final_rank: number;
+          final_points?: number;
+          final_rank_label?: string;
+          archived_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          season_id?: string;
+          final_rank?: number;
+          final_points?: number;
+          final_rank_label?: string;
+          archived_at?: string;
         };
         Relationships: [];
       };
@@ -491,6 +587,111 @@ export interface Database {
         };
         Relationships: [];
       };
+      shop_items: {
+        Row: {
+          id: string;
+          slug: string;
+          category: "avatar" | "border" | "effect";
+          name: string;
+          description: string;
+          price_pts: number;
+          unlock_rank: string | null;
+          asset_url: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          category: "avatar" | "border" | "effect";
+          name: string;
+          description?: string;
+          price_pts?: number;
+          unlock_rank?: string | null;
+          asset_url?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          category?: "avatar" | "border" | "effect";
+          name?: string;
+          description?: string;
+          price_pts?: number;
+          unlock_rank?: string | null;
+          asset_url?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_shop_inventory: {
+        Row: {
+          user_id: string;
+          shop_item_id: string;
+          purchased_at: string;
+          is_equipped: boolean;
+        };
+        Insert: {
+          user_id: string;
+          shop_item_id: string;
+          purchased_at?: string;
+          is_equipped?: boolean;
+        };
+        Update: {
+          user_id?: string;
+          shop_item_id?: string;
+          purchased_at?: string;
+          is_equipped?: boolean;
+        };
+        Relationships: [];
+      };
+      user_daily_recaps: {
+        Row: {
+          user_id: string;
+          recap_date: string;
+          pronos_total: number;
+          pronos_correct: number;
+          pronos_exact: number;
+          var_bets_total: number;
+          var_bets_won: number;
+          points_earned: number;
+          rank_general: number | null;
+          rank_squad_primary: number | null;
+          dismissed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          recap_date: string;
+          pronos_total?: number;
+          pronos_correct?: number;
+          pronos_exact?: number;
+          var_bets_total?: number;
+          var_bets_won?: number;
+          points_earned?: number;
+          rank_general?: number | null;
+          rank_squad_primary?: number | null;
+          dismissed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          recap_date?: string;
+          pronos_total?: number;
+          pronos_correct?: number;
+          pronos_exact?: number;
+          var_bets_total?: number;
+          var_bets_won?: number;
+          points_earned?: number;
+          rank_general?: number | null;
+          rank_squad_primary?: number | null;
+          dismissed_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       match_subscriptions: {
         Row: {
           user_id: string;
@@ -509,6 +710,48 @@ export interface Database {
           match_id?: string;
           smart_mute?: boolean;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      push_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          match_id: string | null;
+          type:
+            | "var_alert"
+            | "pre_match"
+            | "pre_match_2h"
+            | "resolution"
+            | "digest"
+            | "nudge";
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          match_id?: string | null;
+          type:
+            | "var_alert"
+            | "pre_match"
+            | "pre_match_2h"
+            | "resolution"
+            | "digest"
+            | "nudge";
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          match_id?: string | null;
+          type?:
+            | "var_alert"
+            | "pre_match"
+            | "pre_match_2h"
+            | "resolution"
+            | "digest"
+            | "nudge";
+          sent_at?: string;
         };
         Relationships: [];
       };
@@ -556,6 +799,7 @@ export interface Database {
           placed_at: string;
           status: BetStatus;
           squad_id: string | null;
+          applied_booster_id: string | null;
         };
         Insert: {
           id?: string;
@@ -567,6 +811,7 @@ export interface Database {
           placed_at?: string;
           status?: BetStatus;
           squad_id?: string | null;
+          applied_booster_id?: string | null;
         };
         Update: {
           id?: string;
@@ -578,6 +823,103 @@ export interface Database {
           placed_at?: string;
           status?: BetStatus;
           squad_id?: string | null;
+          applied_booster_id?: string | null;
+        };
+        Relationships: [];
+      };
+      boosters_catalog: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string;
+          price_pts: number;
+          effect_type: "double_xp" | "cote_plus" | "safety_net" | "vision";
+          effect_value: Record<string, unknown>;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string;
+          price_pts?: number;
+          effect_type: "double_xp" | "cote_plus" | "safety_net" | "vision";
+          effect_value?: Record<string, unknown>;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          description?: string;
+          price_pts?: number;
+          effect_type?: "double_xp" | "cote_plus" | "safety_net" | "vision";
+          effect_value?: Record<string, unknown>;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_boosters_inventory: {
+        Row: {
+          id: string;
+          user_id: string;
+          booster_id: string;
+          acquired_at: string;
+          consumed_at: string | null;
+          consumed_on_event_id: string | null;
+          consumed_on_prono_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          booster_id: string;
+          acquired_at?: string;
+          consumed_at?: string | null;
+          consumed_on_event_id?: string | null;
+          consumed_on_prono_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          booster_id?: string;
+          acquired_at?: string;
+          consumed_at?: string | null;
+          consumed_on_event_id?: string | null;
+          consumed_on_prono_id?: string | null;
+        };
+        Relationships: [];
+      };
+      booster_highlights: {
+        Row: {
+          id: string;
+          user_id: string;
+          booster_id: string;
+          match_id: string | null;
+          base_reward: number;
+          boosted_reward: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          booster_id: string;
+          match_id?: string | null;
+          base_reward: number;
+          boosted_reward: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          booster_id?: string;
+          match_id?: string | null;
+          base_reward?: number;
+          boosted_reward?: number;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -782,6 +1124,7 @@ export interface Database {
           status: "pending" | "won" | "lost";
           points_earned: number;
           contre_pied_bonus: number;
+          applied_booster_id: string | null;
         };
         Insert: {
           id?: string;
@@ -794,6 +1137,7 @@ export interface Database {
           status?: "pending" | "won" | "lost";
           points_earned?: number;
           contre_pied_bonus?: number;
+          applied_booster_id?: string | null;
         };
         Update: {
           id?: string;
@@ -806,6 +1150,25 @@ export interface Database {
           status?: "pending" | "won" | "lost";
           points_earned?: number;
           contre_pied_bonus?: number;
+          applied_booster_id?: string | null;
+        };
+        Relationships: [];
+      };
+      match_presence: {
+        Row: {
+          match_id: string;
+          user_id: string;
+          last_seen_at: string;
+        };
+        Insert: {
+          match_id: string;
+          user_id: string;
+          last_seen_at?: string;
+        };
+        Update: {
+          match_id?: string;
+          user_id?: string;
+          last_seen_at?: string;
         };
         Relationships: [];
       };
@@ -1141,11 +1504,91 @@ export interface Database {
         Args: Record<never, never>;
         Returns: void;
       };
+      count_active_users_on_match: {
+        Args: { p_match_id: string; p_window_minutes?: number };
+        Returns: number;
+      };
+      cleanup_match_presence: {
+        Args: Record<never, never>;
+        Returns: void;
+      };
+      get_friend_pronos: {
+        Args: { p_match_id: string; p_user_id: string };
+        Returns: Array<{
+          prono_type: string;
+          prono_value: string;
+          friend_count: number;
+        }>;
+      };
+      purchase_streak_freeze: {
+        Args: Record<never, never>;
+        Returns: {
+          ok: boolean;
+          remaining_balance: number;
+          freezes_owned: number;
+        };
+      };
+      get_my_stats: {
+        Args: {
+          p_competition_id?: string | null;
+          p_team_id?: string | null;
+          p_season_id?: string | null;
+        };
+        Returns: Array<{
+          pronos_total: number;
+          pronos_correct: number;
+          pronos_exact: number;
+          var_bets_total: number;
+          var_bets_won: number;
+          points_total: number;
+          best_win: number;
+        }>;
+      };
+      transition_season: {
+        Args: Record<never, never>;
+        Returns: {
+          ok: boolean;
+          old_season: string;
+          new_season: string;
+          archived: number;
+        };
+      };
+      purchase_shop_item: {
+        Args: { p_item_id: string };
+        Returns: {
+          ok: boolean;
+          new_balance: number;
+          item_id: string;
+          free: boolean;
+          error?: string;
+        };
+      };
+      purchase_booster: {
+        Args: { p_booster_id: string; p_quantity?: number };
+        Returns: {
+          ok: boolean;
+          new_balance: number;
+          quantity: number;
+          booster_id: string;
+          error?: string;
+        };
+      };
+      equip_shop_item: {
+        Args: { p_item_id: string };
+        Returns: { ok: boolean; category: string; error?: string };
+      };
+      unequip_shop_item: {
+        Args: { p_category: string };
+        Returns: { ok: boolean; error?: string };
+      };
     };
   };
 }
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+export type SeasonRow = Database["public"]["Tables"]["seasons"]["Row"];
+export type SeasonArchiveRow =
+  Database["public"]["Tables"]["season_archives"]["Row"];
 export type MatchRow = Database["public"]["Tables"]["matches"]["Row"];
 export type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
 export type SquadMemberRow =
@@ -1187,3 +1630,12 @@ export type FriendRequestInsert =
   Database["public"]["Tables"]["friend_requests"]["Insert"];
 export type SquadMessageRow =
   Database["public"]["Tables"]["squad_messages"]["Row"];
+export type UserDailyRecapRow =
+  Database["public"]["Tables"]["user_daily_recaps"]["Row"];
+export type ShopItemRow = Database["public"]["Tables"]["shop_items"]["Row"];
+export type UserShopInventoryRow =
+  Database["public"]["Tables"]["user_shop_inventory"]["Row"];
+export type BoosterCatalogRow =
+  Database["public"]["Tables"]["boosters_catalog"]["Row"];
+export type UserBoosterInventoryRow =
+  Database["public"]["Tables"]["user_boosters_inventory"]["Row"];

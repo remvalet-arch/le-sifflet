@@ -3,7 +3,11 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { createClient } from "@/lib/supabase/client";
 
-export function SignInWithGoogleButton() {
+export function SignInWithGoogleButton({
+  redirectTo = "/lobby",
+}: {
+  redirectTo?: string;
+}) {
   return (
     <div className="w-full flex justify-center overflow-hidden rounded-2xl">
       <GoogleLogin
@@ -19,7 +23,7 @@ export function SignInWithGoogleButton() {
                 `/?error=oauth&message=${encodeURIComponent(error.message)}`,
               );
             } else if (data?.session) {
-              window.location.assign("/lobby");
+              window.location.assign(redirectTo);
             } else {
               window.location.assign(
                 "/?error=oauth&message=Session_non_cr%C3%A9%C3%A9e",

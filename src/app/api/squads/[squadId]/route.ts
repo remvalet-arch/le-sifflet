@@ -52,6 +52,7 @@ type LeaderboardRow = {
   var_xp: number;
   sifflets_balance: number;
   rank: string;
+  season_points: number;
 };
 
 type ActivityItem = {
@@ -145,7 +146,7 @@ export async function GET(
       await Promise.all([
         supabase
           .from("profiles")
-          .select("id, username, xp, sifflets_balance, rank")
+          .select("id, username, xp, sifflets_balance, rank, season_points")
           .in("id", memberIds),
         adminSupabase
           .from("pronos")
@@ -241,6 +242,7 @@ export async function GET(
         var_xp: varXpByUser.get(p.id) ?? 0,
         sifflets_balance: p.sifflets_balance ?? 0,
         rank: p.rank ?? "—",
+        season_points: p.season_points ?? 0,
       }))
       .sort(
         (a, b) => b.xp - a.xp || a.username.localeCompare(b.username, "fr"),

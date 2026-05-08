@@ -4,7 +4,6 @@ import {
   CircleDollarSign,
   DoorOpen,
   Globe2,
-  QrCode,
   Shuffle,
   Swords,
   Users,
@@ -15,7 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata = {
   title: "VAR Time — La VAR, mais en jeu",
   description:
-    "Parie en temps réel sur les décisions d'arbitre, grimpe au classement et braque tes potes dans tes ligues privées. 100% gratuit.",
+    "Pronostique en temps réel sur les décisions d'arbitre, grimpe au classement et braque tes potes dans tes ligues privées. 100% gratuit.",
 };
 
 type LandingPageProps = {
@@ -131,8 +130,10 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
           </h1>
 
           <p className="mt-4 text-[clamp(1rem,2.5vw,1.2rem)] leading-relaxed text-zinc-400">
-            Parie en temps réel sur les décisions de l&rsquo;arbitre. Grimpe au
-            classement mondial et braque tes potes dans tes ligues privées.
+            Tu regardes le match. VAR TIME te prévient.{" "}
+            <span className="font-bold text-white">
+              1 tap pour parier sur la VAR avant l&rsquo;arbitre.
+            </span>
           </p>
 
           {/* CTAs */}
@@ -208,6 +209,16 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
               Passe d&rsquo;arbitre du dimanche ignoré de tous au rang de Boss
               de la VAR en enchaînant les bons verdicts.
             </p>
+            <div className="mt-6 flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+              <span className="text-xl">🗓️</span>
+              <p className="text-sm text-zinc-400">
+                <span className="font-black text-white">
+                  Saisons mensuelles
+                </span>{" "}
+                — Chaque mois, un nouveau champion est couronné. Tu démarres
+                avec une vraie chance, peu importe quand tu rejoins.
+              </p>
+            </div>
             <ol className="relative mt-8 list-none space-y-0 p-0">
               <KopRankStep
                 step={1}
@@ -235,6 +246,43 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
               />
             </ol>
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          BOUTIQUE — Cosmétiques
+      ═══════════════════════════════════════════ */}
+      <section className="border-t border-white/8 py-14 md:py-16">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+            Affiche ton style.
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-sm text-zinc-400">
+            Collectionne avatars, bordures animées et effets de pari exclusifs
+            en jouant. Visible par tous tes amis et dans les ligues.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            {[
+              { emoji: "🦁", label: "Lion Bronze", desc: "Rang Bronze" },
+              { emoji: "👑", label: "Couronne", desc: "3 000 pts" },
+              { emoji: "💎", label: "Diamant Noir", desc: "1 500 pts" },
+              { emoji: "🦅", label: "Aigle Boss", desc: "Rang Boss" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="flex w-28 flex-col items-center gap-2 rounded-2xl border border-white/8 bg-zinc-900 p-4"
+              >
+                <span className="text-3xl">{item.emoji}</span>
+                <span className="text-[11px] font-black text-white">
+                  {item.label}
+                </span>
+                <span className="text-[10px] text-zinc-500">{item.desc}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-[11px] text-zinc-600">
+            Monnaie virtuelle uniquement — aucun achat réel, jamais.
+          </p>
         </div>
       </section>
 
@@ -328,7 +376,7 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
               Icon={Swords}
               color="blue"
               title="Braquage ou 1vs1"
-              body="Parie en direct contre la communauté quand la VAR s'ouvre — ou lance un Championnat 1vs1 dans ta ligue et affronte un pote différent chaque semaine."
+              body="Pronostique en direct contre la communauté quand la VAR s'ouvre — ou lance un Championnat 1vs1 dans ta ligue et affronte un pote différent chaque semaine."
             />
           </div>
 
@@ -418,60 +466,94 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
       </section>
 
       {/* ═══════════════════════════════════════════
-          MOBILE DOWNLOAD — desktop only
+          PWA INSTALL — LAND-2
       ═══════════════════════════════════════════ */}
-      <section className="hidden border-t border-white/8 md:block">
-        <div className="mx-auto flex max-w-lg flex-col items-center px-5 py-20 sm:px-8">
-          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-            Application mobile
-          </span>
-          <h2 className="mt-3 text-center text-[clamp(1.5rem,4vw,2.4rem)] font-black uppercase leading-tight tracking-tight text-white">
-            Le match se joue
-            <br />
-            <span className="text-green-400">dans ta poche.</span>
-          </h2>
-          <p className="mt-3 max-w-xs text-center text-sm leading-relaxed text-zinc-500">
-            Installe VAR Time sur ton mobile. Chaque match devient ton terrain
-            d&apos;instincts.
-          </p>
-
-          {/* Store buttons */}
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <button
-              disabled
-              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/15 bg-black px-5 py-3.5 transition hover:border-white/30"
-              title="Bientôt disponible"
-            >
-              <AppleIcon className="h-6 w-6 shrink-0 text-white" />
-              <div className="text-left">
-                <p className="text-[9px] text-zinc-500">Download on the</p>
-                <p className="text-sm font-black text-white">App Store</p>
-              </div>
-            </button>
-            <button
-              disabled
-              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/15 bg-black px-5 py-3.5 transition hover:border-white/30"
-              title="Bientôt disponible"
-            >
-              <AndroidIcon className="h-6 w-6 shrink-0 text-white" />
-              <div className="text-left">
-                <p className="text-[9px] text-zinc-500">Get it on</p>
-                <p className="text-sm font-black text-white">Google Play</p>
-              </div>
-            </button>
-          </div>
-
-          {/* QR */}
-          <div className="mt-8 flex h-40 w-40 items-center justify-center rounded-2xl border-2 border-green-500/40 bg-zinc-900 shadow-[0_0_40px_rgba(34,197,94,0.18)]">
-            <div className="flex flex-col items-center gap-2">
-              <QrCode
-                className="h-16 w-16 text-green-400/60"
-                strokeWidth={1.5}
-              />
-              <span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">
-                bientôt disponible
+      <section className="border-t border-white/8 py-14">
+        <div className="mx-auto max-w-2xl px-5 sm:px-8">
+          <div className="flex flex-col items-center gap-6 rounded-3xl border border-white/8 bg-zinc-900/60 p-6 text-center sm:p-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/8 px-3 py-1.5">
+              <span className="text-[9px] font-black uppercase tracking-widest text-green-400">
+                PWA · 100% gratuit · Aucun compte requis pour découvrir
               </span>
             </div>
+            <h2 className="text-[clamp(1.4rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+              Pas d&rsquo;App Store.
+              <br />
+              <span className="text-green-400">
+                3 secondes et c&rsquo;est installé.
+              </span>
+            </h2>
+            <p className="max-w-sm text-sm leading-relaxed text-zinc-400">
+              Ajoute VAR TIME à ton écran d&rsquo;accueil directement depuis{" "}
+              <strong className="text-white">Safari</strong> ou{" "}
+              <strong className="text-white">Chrome</strong> — aucun
+              téléchargement, aucune mise à jour manuelle.
+            </p>
+            <div className="grid w-full max-w-sm grid-cols-2 gap-3 text-left">
+              {[
+                {
+                  icon: "🍎",
+                  step: "iPhone",
+                  desc: "Safari → Partager → Sur l'écran d'accueil",
+                },
+                {
+                  icon: "🤖",
+                  step: "Android",
+                  desc: "Chrome → Menu ⋮ → Ajouter à l'écran d'accueil",
+                },
+              ].map(({ icon, step, desc }) => (
+                <div
+                  key={step}
+                  className="rounded-2xl border border-white/8 bg-zinc-900 p-4"
+                >
+                  <span className="text-2xl">{icon}</span>
+                  <p className="mt-2 text-xs font-black text-white">{step}</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/login"
+              className="flex h-12 items-center justify-center rounded-2xl bg-green-500 px-8 font-black uppercase tracking-wide text-black shadow-[0_0_25px_rgba(34,197,94,0.35)] transition hover:bg-green-400 active:scale-95"
+            >
+              Ouvrir VAR TIME →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          CDM 2026 COUNTDOWN — LAND-3
+      ═══════════════════════════════════════════ */}
+      <CdmCountdown />
+
+      {/* ═══════════════════════════════════════════
+          FAQ — LAND-4
+      ═══════════════════════════════════════════ */}
+      <section className="border-t border-white/8 py-14">
+        <div className="mx-auto max-w-2xl px-5 sm:px-8">
+          <h2 className="mb-8 text-center text-[clamp(1.3rem,4vw,1.8rem)] font-black uppercase leading-tight tracking-tight text-white">
+            ❓ Tout ce que tu te demandes
+          </h2>
+          <div className="flex flex-col gap-3">
+            {FAQ.map(({ q, a }) => (
+              <details
+                key={q}
+                className="group rounded-2xl border border-white/8 bg-zinc-900"
+              >
+                <summary className="flex cursor-pointer items-start justify-between gap-3 px-5 py-4 text-sm font-black text-white [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <span className="shrink-0 text-zinc-500 transition group-open:rotate-180">
+                    ▼
+                  </span>
+                </summary>
+                <p className="px-5 pb-4 text-sm leading-relaxed text-zinc-400">
+                  {a}
+                </p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -511,6 +593,72 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
         </p>
       </footer>
     </main>
+  );
+}
+
+// ── FAQ data ─────────────────────────────────────────────────────────────────
+
+const FAQ = [
+  {
+    q: "C'est quoi VAR TIME ?",
+    a: "VAR TIME est un jeu de pronostics en temps réel autour du football. Quand une décision d'arbitre est contestée (penalty, hors-jeu VAR, carton), la communauté l'anticipe et parie des Sifflets — notre monnaie virtuelle 100% fictive.",
+  },
+  {
+    q: "C'est gratuit ?",
+    a: "Oui, entièrement gratuit. Tu ne dépenses aucun argent réel et tu n'en gagnes pas. Les Sifflets sont une monnaie de jeu sans valeur monétaire.",
+  },
+  {
+    q: "Ça marche sur iPhone ?",
+    a: "Oui. VAR TIME est une PWA (Progressive Web App). Depuis Safari, appuie sur Partager puis \"Sur l'écran d'accueil\" pour l'installer en 3 secondes. Aucun App Store requis.",
+  },
+  {
+    q: "Je peux perdre de l'argent ?",
+    a: "Non. VAR TIME utilise des Sifflets, une monnaie fictive interne au jeu. Aucune transaction financière n'est possible. C'est un jeu de simulation, pas de paris d'argent.",
+  },
+  {
+    q: "C'est légal ?",
+    a: "Oui. VAR TIME est un jeu de simulation avec monnaie virtuelle fictive. Il ne constitue pas un service de paris d'argent au sens de la loi et n'est pas régulé par l'ANJ.",
+  },
+  {
+    q: "Comment inviter mes potes ?",
+    a: "Crée une ligue privée depuis l'onglet Ligues, copie le lien d'invitation et partage-le. Tes potes rejoignent en un clic, sans compte préalable.",
+  },
+] as const;
+
+// ── CDM Countdown (server component, date calculée à la requête) ──────────────
+
+function CdmCountdown() {
+  const cdm = new Date("2026-06-11T14:00:00Z");
+  // eslint-disable-next-line react-hooks/purity
+  const diff = cdm.getTime() - Date.now();
+  const daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+
+  if (daysLeft <= 0) return null;
+
+  return (
+    <section className="border-t border-white/8 py-14">
+      <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
+        <div className="overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-zinc-900/80 p-8">
+          <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/70">
+            ⚽ La CDM 2026 commence bientôt
+          </p>
+          <div className="my-4 text-7xl font-black leading-none tracking-tight text-white">
+            J&#8209;{daysLeft}
+          </div>
+          <p className="text-sm text-zinc-400">
+            Le premier match de la Coupe du Monde 2026 est le{" "}
+            <strong className="text-white">11 juin 2026</strong>. Inscris-toi
+            maintenant pour ne pas rater le coup d&rsquo;envoi.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-flex h-12 items-center justify-center rounded-2xl bg-amber-400 px-8 font-black uppercase tracking-wide text-zinc-900 shadow-[0_0_30px_rgba(251,191,36,0.3)] transition hover:bg-amber-300 active:scale-95"
+          >
+            Je m&rsquo;inscris →
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -726,21 +874,5 @@ function PhoneMockup() {
         <p className="text-[10px] font-black text-green-400">+200 Pts</p>
       </div>
     </div>
-  );
-}
-
-function AppleIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-    </svg>
-  );
-}
-
-function AndroidIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M17.523 15.342a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-11.046 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2M3.513 8.958l1.56-2.702a.499.499 0 0 1 .863.499L4.375 9.457A9.5 9.5 0 0 0 12 18.5a9.5 9.5 0 0 0 7.625-9.043l-1.56-2.702a.499.499 0 0 1 .862-.499l1.56 2.702A11 11 0 0 1 23 11.5C23 17.854 18.075 23 12 23S1 17.854 1 11.5a11 11 0 0 1 2.513-7.042zM8.5 1.5l1.5 3h4l1.5-3H8.5z" />
-    </svg>
   );
 }

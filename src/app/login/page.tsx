@@ -5,13 +5,24 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export const metadata = { title: "Connexion — VAR Time" };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) redirect("/lobby");
+  const { redirect: redirectParam } = await searchParams;
+
+  if (user) redirect(redirectParam ?? "/lobby");
+
+  // Validate redirect to prevent open redirect
+  const safeRedirect = redirectParam?.startsWith("/")
+    ? redirectParam
+    : "/lobby";
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
@@ -39,7 +50,7 @@ export default async function LoginPage() {
 
           {/* Google button */}
           <div className="mt-8 flex justify-center w-full">
-            <SignInWithGoogleButton />
+            <SignInWithGoogleButton redirectTo={safeRedirect} />
           </div>
 
           <p className="mt-6 text-center text-xs text-zinc-600">

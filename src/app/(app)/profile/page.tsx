@@ -14,6 +14,7 @@ import type {
   MarketEventRow,
   MatchRow,
   PronoRow,
+  SeasonArchiveRow,
 } from "@/types/database";
 
 export const metadata = { title: "Mon Profil" };
@@ -89,10 +90,15 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date, login_streak, last_login_date, preferred_competitions",
+      "id, username, avatar_url, sifflets_balance, trust_score, rank, xp, favorite_team_id, last_refill_date, login_streak, last_login_date, preferred_competitions, streak_freezes_owned, equipped_avatar_id, equipped_border_id",
     )
     .eq("id", user.id)
     .single();
+
+  const equippedItemIds = [
+    profile?.equipped_avatar_id,
+    profile?.equipped_border_id,
+  ].filter(Boolean) as string[];
 
   const [
     { data: rawShortBets },
@@ -100,6 +106,9 @@ export default async function ProfilePage() {
     { data: allBadges },
     { data: userBadgesData },
     { data: favoriteTeamData },
+    { data: rawSeasonArchives },
+    { data: currentSeason },
+    { data: equippedItemsData },
   ] = await Promise.all([
     supabase
       .from("bets")
@@ -122,6 +131,25 @@ export default async function ProfilePage() {
           .eq("id", profile.favorite_team_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("season_archives")
+      .select(
+        "user_id, season_id, final_rank, final_points, final_rank_label, archived_at",
+      )
+      .eq("user_id", user.id)
+      .order("archived_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("seasons")
+      .select("id, label, ends_at")
+      .eq("is_current", true)
+      .maybeSingle(),
+    equippedItemIds.length > 0
+      ? supabase
+          .from("shop_items")
+          .select("id, asset_url, category")
+          .in("id", equippedItemIds)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const favoriteTeam: {
@@ -129,6 +157,17 @@ export default async function ProfilePage() {
     name: string;
     logo_url: string | null;
   } | null = favoriteTeamData ?? null;
+  const seasonArchives: SeasonArchiveRow[] = rawSeasonArchives ?? [];
+
+  const equippedItemsMap = new Map(
+    (equippedItemsData ?? []).map((i) => [i.id, i]),
+  );
+  const equippedAvatarAsset = profile?.equipped_avatar_id
+    ? (equippedItemsMap.get(profile.equipped_avatar_id)?.asset_url ?? null)
+    : null;
+  const equippedBorderAsset = profile?.equipped_border_id
+    ? (equippedItemsMap.get(profile.equipped_border_id)?.asset_url ?? null)
+    : null;
 
   void checkAndUnlockBadges(user.id);
 
@@ -330,6 +369,15 @@ export default async function ProfilePage() {
         headerLoginStreak={profile?.login_streak ?? 0}
         headerLastLoginDate={profile?.last_login_date ?? null}
         headerPreferredCompetitions={profile?.preferred_competitions ?? []}
+        headerStreakFreezesOwned={profile?.streak_freezes_owned ?? 0}
+        headerEquippedAvatarAsset={equippedAvatarAsset}
+        headerEquippedBorderAsset={equippedBorderAsset}
+        seasonArchives={seasonArchives}
+        currentSeason={
+          currentSeason
+            ? { label: currentSeason.label, endsAt: currentSeason.ends_at }
+            : null
+        }
       />
     </main>
   );

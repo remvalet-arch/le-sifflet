@@ -5,7 +5,7 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { getApiFootballSeasonYear } from "@/lib/api-football-client";
-import { sendPushToMatchSubscribers } from "@/lib/push-sender";
+import { sendPushToMatchSubscribers, sendPushToUsers } from "@/lib/push-sender";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
 
 export async function POST(request: NextRequest) {
@@ -77,25 +77,194 @@ export async function POST(request: NextRequest) {
     console.warn(`[finish-match] resolve_match_pronos: ${pronoErr.message}`);
   }
 
-  // Push fin de match + badges pronos gagnants (fire-and-forget)
+  // Personalized push + badges (fire-and-forget)
   void (async () => {
-    await sendPushToMatchSubscribers(match_id, {
-      title: "⏱ Match terminé !",
-      body: `${match.team_home} ${match.home_score ?? 0}–${match.away_score ?? 0} ${match.team_away} — Résultats pronos disponibles`,
-      url: `/match/${match_id}`,
-    });
+    const scoreStr = `${match.home_score ?? 0}–${match.away_score ?? 0}`;
 
-    const { data: wonPronos } = await admin
+    const { data: allPronos } = await admin
       .from("pronos")
-      .select("user_id")
+      .select("user_id, status, points_earned")
       .eq("match_id", match_id)
-      .eq("status", "won");
-    const pronoWinnerIds = [
-      ...new Set((wonPronos ?? []).map((p) => p.user_id)),
-    ];
-    if (pronoWinnerIds.length > 0) {
-      await Promise.all(pronoWinnerIds.map((uid) => checkAndUnlockBadges(uid)));
+      .in("status", ["won", "lost"]);
+
+    const pronoUserIds = [...new Set((allPronos ?? []).map((p) => p.user_id))];
+
+    // Aggregate earned points per user
+    const userEarned = new Map<string, number>();
+    for (const p of allPronos ?? []) {
+      if (p.status === "won") {
+        userEarned.set(
+          p.user_id,
+          (userEarned.get(p.user_id) ?? 0) + (p.points_earned ?? 0),
+        );
+      }
     }
+
+    // Badges for prono winners
+    const winnerIds = pronoUserIds.filter(
+      (uid) => (userEarned.get(uid) ?? 0) > 0,
+    );
+    if (winnerIds.length > 0) {
+      await Promise.all(winnerIds.map((uid) => checkAndUnlockBadges(uid)));
+    }
+
+    // Fetch notif opt-outs
+    const { data: prefs } = await admin
+      .from("profiles")
+      .select("id, notif_prono_results")
+      .in("id", pronoUserIds);
+    const optedOut = new Set(
+      (prefs ?? []).filter((p) => !p.notif_prono_results).map((p) => p.id),
+    );
+
+    // Personalized pushes for prono users
+    await Promise.all(
+      pronoUserIds
+        .filter((uid) => !optedOut.has(uid))
+        .map((uid) => {
+          const earned = userEarned.get(uid) ?? 0;
+          const bodyText =
+            earned > 0
+              ? `${match.team_home} ${scoreStr} ${match.team_away} — Tu as gagné +${earned} pts ! 🎯`
+              : `${match.team_home} ${scoreStr} ${match.team_away} — Pas de chance. Retente sur le prochain !`;
+          return sendPushToUsers([uid], {
+            title: "⏱ Match terminé !",
+            body: bodyText,
+            url: `/match/${match_id}`,
+          });
+        }),
+    );
+
+    // Generic push for match subscribers who didn't prono
+    if (pronoUserIds.length === 0) {
+      await sendPushToMatchSubscribers(match_id, {
+        title: "⏱ Match terminé !",
+        body: `${match.team_home} ${scoreStr} ${match.team_away} — Résultats disponibles`,
+        url: `/match/${match_id}`,
+      });
+    }
+  })();
+
+  // V4 — Push "dépassement" quand un ami dépasse un autre dans une ligue
+  void (async () => {
+    const { data: allMatchPronos } = await admin
+      .from("pronos")
+      .select("user_id, status, points_earned")
+      .eq("match_id", match_id);
+
+    if (!allMatchPronos || allMatchPronos.length === 0) return;
+
+    // Sum pts earned per user in this match
+    const matchPtsMap = new Map<string, number>();
+    for (const p of allMatchPronos) {
+      if (p.status === "won" && p.points_earned) {
+        matchPtsMap.set(
+          p.user_id,
+          (matchPtsMap.get(p.user_id) ?? 0) + p.points_earned,
+        );
+      }
+    }
+
+    const allUserIds = [...new Set(allMatchPronos.map((p) => p.user_id))];
+    if (allUserIds.length < 2) return;
+
+    const [profilesRes, membershipsRes, friendsRes] = await Promise.all([
+      admin.from("profiles").select("id, username, xp").in("id", allUserIds),
+      admin
+        .from("squad_members")
+        .select("user_id, squad_id")
+        .in("user_id", allUserIds),
+      admin
+        .from("friend_requests")
+        .select("sender_id, receiver_id")
+        .in("sender_id", allUserIds)
+        .in("receiver_id", allUserIds)
+        .eq("status", "accepted"),
+    ]);
+
+    if (!membershipsRes.data || !friendsRes.data) return;
+
+    // Build friend set (bidirectional)
+    const friendPairs = new Set<string>();
+    for (const f of friendsRes.data) {
+      friendPairs.add(`${f.sender_id}|${f.receiver_id}`);
+      friendPairs.add(`${f.receiver_id}|${f.sender_id}`);
+    }
+    if (friendPairs.size === 0) return;
+
+    // Build squad → members map
+    const squadToMembers = new Map<string, string[]>();
+    for (const m of membershipsRes.data) {
+      const list = squadToMembers.get(m.squad_id) ?? [];
+      list.push(m.user_id);
+      squadToMembers.set(m.squad_id, list);
+    }
+
+    const squadIds = [...squadToMembers.keys()];
+    if (squadIds.length === 0) return;
+
+    const { data: squads } = await admin
+      .from("squads")
+      .select("id, name")
+      .in("id", squadIds);
+    const squadNameMap = new Map((squads ?? []).map((s) => [s.id, s.name]));
+
+    const xpMap = new Map(
+      (profilesRes.data ?? []).map((p) => [p.id, p.xp ?? 0]),
+    );
+    const usernameMap = new Map(
+      (profilesRes.data ?? []).map((p) => [p.id, p.username ?? "Un ami"]),
+    );
+
+    // Detect overtakes: for each squad, for each friend pair (A, B)
+    // B overtook A if B.current_xp > A.current_xp AND B.before_xp <= A.before_xp
+    const overtakePushes = new Map<string, string>(); // userId → push body
+
+    for (const [squadId, members] of squadToMembers) {
+      if (members.length < 2) continue;
+      const squadName = squadNameMap.get(squadId) ?? "ta ligue";
+
+      for (let i = 0; i < members.length; i++) {
+        const bId = members[i];
+        const bPts = matchPtsMap.get(bId) ?? 0;
+        if (bPts === 0) continue; // B gained nothing, can't overtake
+
+        const bCurrentXp = xpMap.get(bId) ?? 0;
+        const bBeforeXp = bCurrentXp - bPts;
+
+        for (let j = 0; j < members.length; j++) {
+          if (i === j) continue;
+          const aId = members[j];
+          if (!friendPairs.has(`${aId}|${bId}`)) continue;
+
+          const aCurrentXp = xpMap.get(aId) ?? 0;
+          const aPts = matchPtsMap.get(aId) ?? 0;
+          const aBeforeXp = aCurrentXp - aPts;
+
+          if (bCurrentXp > aCurrentXp && bBeforeXp <= aBeforeXp) {
+            if (!overtakePushes.has(aId)) {
+              const bUsername = usernameMap.get(bId) ?? "Un ami";
+              overtakePushes.set(
+                aId,
+                `🔥 ${bUsername} vient de te dépasser dans ${squadName} ! Réponds sur le prochain match.`,
+              );
+            }
+          }
+        }
+      }
+    }
+
+    if (overtakePushes.size === 0) return;
+
+    await Promise.all(
+      [...overtakePushes.entries()].map(([userId, body]) =>
+        sendPushToUsers([userId], {
+          title: "🔥 Dépassé !",
+          body,
+          url: "/ligues",
+        }),
+      ),
+    );
   })();
 
   // Async hub stats sync — ne bloque pas la réponse

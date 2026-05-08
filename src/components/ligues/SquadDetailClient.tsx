@@ -24,6 +24,7 @@ type LeaderboardRow = {
   var_xp: number;
   sifflets_balance: number;
   rank: string;
+  season_points: number;
 };
 
 type Period = "general" | "week" | "month";
@@ -198,22 +199,23 @@ export function SquadDetailClient({
       (m) => m.user_id === currentUserId,
     )?.username;
     const from = myUsername ?? "Un pote";
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const message = `Hey ! ⚽ ${from} t'invite à rejoindre sa ligue "${squad.name}" sur VAR TIME.\n\nRentre ce code pour intégrer le vestiaire : ${squad.invite_code}\n\nLien: ${origin}/ligues`;
+    const joinUrl = `https://vartime.app/join/${squad.invite_code}`;
+    const text = `Hey ! ⚽ ${from} t'invite à rejoindre sa ligue "${squad.name}" sur VAR TIME.`;
 
-    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+    if (navigator.share) {
       navigator
         .share({
           title: `Rejoins ${squad.name} sur VAR TIME`,
-          text: message,
+          text,
+          url: joinUrl,
         })
         .catch(() => {
-          void navigator.clipboard.writeText(message);
-          toast.success("Message copié !");
+          void navigator.clipboard.writeText(`${text}\n\n${joinUrl}`);
+          toast.success("Lien copié !");
         });
     } else {
-      void navigator.clipboard.writeText(message);
-      toast.success("Message copié !");
+      void navigator.clipboard.writeText(`${text}\n\n${joinUrl}`);
+      toast.success("Lien copié !");
     }
   }
 

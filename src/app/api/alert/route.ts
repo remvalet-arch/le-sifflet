@@ -6,10 +6,10 @@ import type { AlertActionType } from "@/types/database";
 import { sendPushToMatchSubscribers } from "@/lib/push-sender";
 import { log } from "@/lib/logger";
 import {
-  ALERT_THRESHOLD,
   ALERT_WINDOW_SECONDS,
   COOLDOWN_MINUTES,
   MIN_TRUST_ALERT_SCORE,
+  getRequiredSignals,
 } from "@/lib/constants/alert";
 
 const ACTION_LABELS: Record<AlertActionType, string> = {
@@ -124,14 +124,22 @@ export async function POST(request: NextRequest) {
   ];
   const distinctCount = distinctUsers.length;
 
+  // Seuil dynamique basé sur l'audience active (Sprint Q)
+  const { data: audienceData } = await supabase.rpc(
+    "count_active_users_on_match",
+    { p_match_id: match_id, p_window_minutes: 5 },
+  );
+  const audienceCount = (audienceData as number | null) ?? 0;
+  const requiredSignals = getRequiredSignals(audienceCount);
+
   log.info(
     "alert",
-    `match=${match_id} type=${validType} distinct=${distinctCount}/${ALERT_THRESHOLD}`,
+    `match=${match_id} type=${validType} audience=${audienceCount} seuil=${requiredSignals} signals=${distinctCount}`,
   );
 
   let cooldown_until: string | null = null;
 
-  if (distinctCount >= ALERT_THRESHOLD) {
+  if (distinctCount >= requiredSignals) {
     let admin: ReturnType<typeof createAdminClient>;
     try {
       admin = createAdminClient();
@@ -156,12 +164,16 @@ export async function POST(request: NextRequest) {
       return successResponse({ cooldown_until: null });
     }
 
-    const { error: eventError } = await admin.from("market_events").insert({
-      match_id,
-      type: validType,
-      status: "open",
-      initiators: distinctUsers,
-    });
+    const { data: newEvent, error: eventError } = await admin
+      .from("market_events")
+      .insert({
+        match_id,
+        type: validType,
+        status: "open",
+        initiators: distinctUsers,
+      })
+      .select("id")
+      .single();
 
     if (eventError) {
       log.error("alert", "Échec insert market_event", eventError.message);
@@ -172,11 +184,21 @@ export async function POST(request: NextRequest) {
       `market_event créé match=${match_id} type=${validType} initiators=${distinctUsers.length}`,
     );
 
-    // Fire-and-forget : push aux abonnés du match
+    const marketEventId = newEvent.id;
+
+    // Fire-and-forget : push aux abonnés du match (FK2: action buttons OUI/NON)
     void sendPushToMatchSubscribers(match_id, {
       title: "VAR Time 🟨",
       body: `${ACTION_LABELS[validType]} — le marché vient d'ouvrir, parie !`,
       url: `/match/${match_id}`,
+      actions: [
+        { action: "bet_yes", title: "✅ OUI" },
+        { action: "bet_no", title: "❌ NON" },
+      ],
+      tag: `var-${marketEventId}`,
+      requireInteraction: true,
+      vibrate: [200, 100, 200, 100, 400],
+      extra_data: { marketEventId, matchId: match_id, type: "var_alert" },
     }).catch((e: unknown) => log.error("alert", "push failed", e));
 
     cooldown_until = new Date(
@@ -194,5 +216,10 @@ export async function POST(request: NextRequest) {
     log.info("alert", `cooldown posé jusqu'à ${cooldown_until}`);
   }
 
-  return successResponse({ cooldown_until });
+  return successResponse({
+    cooldown_until,
+    current_signals: distinctCount,
+    required_signals: requiredSignals,
+    market_opened: distinctCount >= requiredSignals,
+  });
 }

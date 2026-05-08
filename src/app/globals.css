@@ -58,6 +58,43 @@
   }
 }
 
+@keyframes verdict-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 20px currentColor;
+  }
+  50% {
+    text-shadow:
+      0 0 50px currentColor,
+      0 0 80px currentColor;
+  }
+}
+
 @theme inline {
   --animate-shimmer: shimmer 2.5s linear infinite;
   --animate-float: float 4s ease-in-out infinite;
@@ -65,6 +102,9 @@
   --animate-modal-sheet: modal-slide-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-modal-center: modal-scale-in 220ms cubic-bezier(0.16, 1, 0.3, 1)
     both;
+  --animate-verdict-pop: verdict-pop 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-float-up: float-up 1.8s ease-out forwards;
+  --animate-pulse-glow: pulse-glow 1.5s ease-in-out infinite;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

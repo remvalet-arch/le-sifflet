@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import {
   Menu,
@@ -10,11 +10,15 @@ import {
   LogOut,
   Scale,
   Trophy,
+  ShoppingBag,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
+import { switchLocale } from "@/app/actions/locale";
 import { createClient } from "@/lib/supabase/client";
-import { useLocale } from "@/lib/i18n/useLocale";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import type { ProfileRow } from "@/types/database";
+import type { Locale } from "@/lib/i18n/locale";
 
 type Props = {
   siffletsBalance: number;
@@ -37,7 +41,10 @@ export function TopBar({
   const [liveXp, setLiveXp] = useState(initialXp);
   const [flash, setFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { locale, setLocale, t } = useLocale();
+  const locale = useLocale() as Locale;
+  const t = useTranslations("TopBar");
+  const router = useRouter();
+  const [, startTransition] = useTransition();
 
   // Realtime : met à jour le solde dès qu'un pari est résolu
   useEffect(() => {
@@ -143,7 +150,7 @@ export function TopBar({
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-              {t.topbar.connected}
+              {t("connected")}
             </p>
             <p className="mt-0.5 text-base font-black text-white">{username}</p>
             <p className="mt-0.5 text-[11px] font-semibold text-zinc-500">
@@ -167,26 +174,32 @@ export function TopBar({
           <SheetLink
             href="/leaderboard"
             icon={<Trophy className="h-4 w-4" />}
-            label="Classement"
+            label={t("leaderboard")}
+            onClick={() => setOpen(false)}
+          />
+          <SheetLink
+            href="/shop"
+            icon={<ShoppingBag className="h-4 w-4" />}
+            label={t("shop")}
             onClick={() => setOpen(false)}
           />
           <SheetLink
             href="/rules"
             icon={<BookOpen className="h-4 w-4" />}
-            label={t.topbar.rules}
+            label={t("rules")}
             onClick={() => setOpen(false)}
           />
           <SheetLink
             href="/laws"
             icon={<Scale className="h-4 w-4" />}
-            label={t.topbar.laws}
+            label={t("laws")}
             onClick={() => setOpen(false)}
             badge="IFAB"
           />
           <SheetLink
             href="/settings"
             icon={<Settings className="h-4 w-4" />}
-            label={t.topbar.settings}
+            label={t("settings")}
             onClick={() => setOpen(false)}
           />
         </nav>
@@ -194,13 +207,18 @@ export function TopBar({
         {/* Language switcher */}
         <div className="mx-3 mt-1 flex items-center justify-between rounded-xl border border-white/8 bg-white/3 px-4 py-3">
           <span className="text-sm font-semibold text-zinc-400">
-            {t.topbar.language}
+            {t("language")}
           </span>
           <div className="flex overflow-hidden rounded-lg border border-white/10">
             {(["fr", "en", "es", "de", "it"] as const).map((l) => (
               <button
                 key={l}
-                onClick={() => setLocale(l)}
+                onClick={() =>
+                  startTransition(async () => {
+                    await switchLocale(l);
+                    router.refresh();
+                  })
+                }
                 className={`px-2.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
                   locale === l
                     ? "bg-green-500 text-zinc-950"
@@ -221,7 +239,7 @@ export function TopBar({
               className="flex w-full items-center gap-3 rounded-xl border border-red-500/20 bg-red-950/20 px-4 py-3 text-sm font-bold text-red-400 transition hover:bg-red-950/40 active:scale-[0.98]"
             >
               <LogOut className="h-4 w-4" />
-              {t.topbar.logout}
+              {t("logout")}
             </button>
           </form>
         </div>

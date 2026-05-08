@@ -5,5 +5,15 @@
     "ligues": "Ligen",
     "profil": "Profil",
     "regles": "Regeln"
+  },
+  "TopBar": {
+    "connected": "Angemeldet",
+    "rules": "Spielregeln",
+    "laws": "Fußballgesetze",
+    "settings": "Einstellungen",
+    "language": "Sprache",
+    "logout": "Abmelden",
+    "leaderboard": "Rangliste",
+    "shop": "Shop"
   }
 }

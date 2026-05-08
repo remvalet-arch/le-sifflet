@@ -1,16 +1,28 @@
-export const metadata = { title: "Paramètres" };
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import SettingsClient from "./SettingsClient";
 
-export default function SettingsPage() {
+export const metadata = { title: "Paramètres — VAR TIME" };
+
+export default async function SettingsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("default_var_bet_amount, sifflets_balance, streak_freezes_owned")
+    .eq("id", user.id)
+    .single();
+
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-      <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-        Paramètres
-      </h1>
-      <p className="mt-1 text-sm text-zinc-400">Configuration de ton compte.</p>
-
-      <div className="mt-6 rounded-2xl border border-white/8 bg-zinc-900 p-6 text-center">
-        <p className="text-sm text-zinc-500">Bientôt disponible.</p>
-      </div>
-    </main>
+    <SettingsClient
+      userId={user.id}
+      initialBetAmount={profile?.default_var_bet_amount ?? 50}
+      initialBalance={profile?.sifflets_balance ?? 0}
+      initialFreezesOwned={profile?.streak_freezes_owned ?? 0}
+    />
   );
 }
