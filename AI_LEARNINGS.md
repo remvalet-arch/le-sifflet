@@ -21,3 +21,24 @@
 
 - **Prop interface cassée sur les pages publiques :** Quand on rewrite les props d'un composant partagé (ex: `ProfileClient`), penser à vérifier toutes les pages qui l'utilisent — pas seulement `/profile/page.tsx` mais aussi `/profile/[id]/page.tsx`. Un rename/suppression de prop génère une erreur TypeScript sur la page oubliée.
 - **Props optionnels pour rétro-compat :** Si une prop n'est plus affichée dans le nouveau design (ex: `karma` dans `ProfileHeader`) mais est encore passée depuis certaines pages, rendre la prop `optional` (`karma?`) plutôt que de la supprimer. Cela évite les erreurs TS sans casser les call-sites.
+
+## 🔑 TypeScript & Supabase Update typé
+
+- **Clé dynamique sur `.update({})` Supabase (TS2345) :** Le client Supabase génère des types stricts pour les objets passés à `.update()`. Un objet construit avec une clé dynamique (`{ [dynamicKey]: value }`) a le type `{ [x: string]: string }` que TS refuse d'assigner à l'interface `Update` typée. **Toujours utiliser un if/else explicite :**
+  ```typescript
+  // ❌ Refuse à la compilation
+  const field = userId < otherId ? "user_a_read_at" : "user_b_read_at";
+  await supabase.from("direct_message_threads").update({ [field]: now });
+
+  // ✅ Correct
+  if (userId < otherId) {
+    await supabase.from("direct_message_threads").update({ user_a_read_at: now });
+  } else {
+    await supabase.from("direct_message_threads").update({ user_b_read_at: now });
+  }
+  ```
+  Ce pattern s'applique partout où on choisit dynamiquement entre deux colonnes (ex: thread read_at selon quel côté du thread on est).
+
+## 📦 skills.sh (npx skills add)
+
+- **Les noms de skills ne correspondent pas aux noms courts "évidents" :** La CLI `npx skills add vercel-labs/agent-skills@<nom>` exige le nom exact du fichier skill. Exemples de noms contre-intuitifs : `vercel-react-best-practices` (pas `react-best-practices`), `vercel-composition-patterns` (pas `composition-patterns`). Toujours vérifier avec `npx skills search <mot-clé>` ou consulter le README du repo avant d'essayer d'installer.
