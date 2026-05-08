@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronLeft, Zap, Trophy, BookOpen, Clock } from "lucide-react";
+import { Bell, ChevronLeft, Zap, Trophy, BookOpen, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
 
 type ToggleKey =
   | "notif_pre_match_5min"
@@ -88,6 +89,30 @@ export default function NotificationsClient({
     notif_daily_digest: initialDailyDigest,
   });
   const [isPending, startTransition] = useTransition();
+  const [subStatus, setSubStatus] = useState<"checking" | "subscribed" | "not_subscribed">("checking");
+  const [subscribing, setSubscribing] = useState(false);
+
+  useEffect(() => {
+    isPushSubscribed().then((ok) =>
+      setSubStatus(ok ? "subscribed" : "not_subscribed"),
+    );
+  }, []);
+
+  async function handleActivatePush() {
+    setSubscribing(true);
+    const ok = await trySubscribePush();
+    setSubscribing(false);
+    if (ok) {
+      setSubStatus("subscribed");
+      toast.success("Notifications push activées !");
+    } else {
+      toast.error(
+        Notification.permission === "denied"
+          ? "Notifications bloquées — autorise-les dans les réglages iOS/Safari."
+          : "Impossible d'activer les notifications push.",
+      );
+    }
+  }
 
   function handleToggle(key: ToggleKey, value: boolean) {
     startTransition(async () => {
@@ -126,6 +151,45 @@ export default function NotificationsClient({
           <p className="text-sm text-zinc-400">Choisis ce qui te réveille.</p>
         </div>
       </div>
+
+      {/* Push subscription status */}
+      {subStatus === "subscribed" ? (
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-green-500/20 bg-green-500/8 px-4 py-3">
+          <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
+          <p className="text-sm font-semibold text-green-300">
+            Cet appareil est bien enregistré pour recevoir les notifications.
+          </p>
+        </div>
+      ) : subStatus === "not_subscribed" ? (
+        <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/8 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-red-300">
+                Cet appareil n&apos;est pas encore enregistré
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Les préférences ci-dessous sont sauvegardées, mais aucune
+                notification ne sera reçue tant que tu n&apos;as pas activé
+                le canal push sur cet appareil.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleActivatePush}
+            disabled={subscribing}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-zinc-900 transition active:scale-[0.98] disabled:opacity-60"
+          >
+            {subscribing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Bell className="h-4 w-4" />
+            )}
+            {subscribing ? "Activation…" : "Activer les notifications push"}
+          </button>
+        </div>
+      ) : null}
 
       {/* Always-on notice */}
       <div className="mb-6 flex items-start gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/8 p-4">
