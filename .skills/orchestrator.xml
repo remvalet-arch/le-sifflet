@@ -1,0 +1,87 @@
+<skill>
+  <name>Orchestrator — Chaîne d'agents</name>
+  <description>Guide de coordination multi-agents pour ce projet. À lire quand tu dois planifier un sprint complet ou coordonner plusieurs rôles (PM → Dev → QA). Claude Code lui-même est l'orchestrateur — il n'existe pas d'agent "master" séparé.</description>
+
+  <model>
+    <principle>Il n'y a pas de "master agent" distinct. Claude Code (l'agent principal dans ce terminal) EST l'orchestrateur. Il spawne des sous-agents via l'outil Agent, leur délègue des tâches, récupère leurs résultats, et décide de la suite.</principle>
+    <principle>Les sous-agents sont des instances Claude isolées, sans mémoire de la conversation principale. Chaque prompt d'invocation doit donc être auto-contenu (contexte + objectif + fichiers concernés).</principle>
+    <principle>La communication entre agents se fait par deux canaux : (1) la valeur de retour du sous-agent (texte structuré), (2) les fichiers sur le filesystem (SPRINT_SPEC.md, QA_REPORT.md, etc.).</principle>
+  </model>
+
+  <chain>
+    <step order="1" role="PM Agent">
+      <trigger>L'utilisateur demande de planifier ou de prioriser un sprint.</trigger>
+      <skill_file>.skills/pm-agent.xml</skill_file>
+      <inputs>TASKS_v2.md, PROJECT_STATE.md, TECH_BIBLE.md, AI_LEARNINGS.md</inputs>
+      <output>SPRINT_SPEC.md — spec atomique avec critères d'acceptation, complexité S/M/L, risques.</output>
+      <handoff>L'orchestrateur lit SPRINT_SPEC.md et demande validation humaine avant de passer au Dev Agent.</handoff>
+    </step>
+
+    <step order="2" role="Dev Agent">
+      <trigger>SPRINT_SPEC.md validé par l'humain (ou l'orchestrateur selon le niveau d'autonomie).</trigger>
+      <skill_file>Pas de fichier dédié — l'orchestrateur applique les conventions CLAUDE.md + AI_LEARNINGS.md.</skill_file>
+      <inputs>SPRINT_SPEC.md, fichiers cibles listés dans la spec.</inputs>
+      <output>Code modifié/créé + npm run ai:check passant sans erreur + TASKS.md coché.</output>
+      <handoff>L'orchestrateur passe le diff au QA Agent.</handoff>
+    </step>
+
+    <step order="3" role="QA Agent">
+      <trigger>Après chaque implémentation Dev, avant tout commit.</trigger>
+      <skill_file>.skills/qa-agent.xml</skill_file>
+      <inputs>Le diff git (git diff HEAD), les fichiers modifiés, le résultat de npm run ai:check.</inputs>
+      <output>Rapport QA structuré (✅ / ❌ / ⚠️ / 💡) avec verdict APPROVED ou CHANGES REQUESTED.</output>
+      <handoff>Si APPROVED → l'orchestrateur commit. Si CHANGES REQUESTED → retour au Dev Agent avec la liste des corrections.</handoff>
+    </step>
+
+    <step order="4" role="CI/CD (optionnel)" status="futur">
+      <trigger>Après commit sur main.</trigger>
+      <note>Pas encore implémenté. Prévu : GitHub Action qui lance npm run build + typecheck + lint, puis notifie en cas d'échec. L'orchestrateur pourrait invoquer un CI Agent pour lire les logs et corriger.</note>
+    </step>
+  </chain>
+
+  <invocation_patterns>
+    <pattern name="Sprint complet autonome">
+      <description>L'orchestrateur enchaîne PM → Dev → QA sans intervention humaine entre les étapes.</description>
+      <example>
+        1. Orchestrateur lit TASKS_v2.md, identifie le prochain sprint.
+        2. Invoque PM Agent (Agent tool, foreground) → SPRINT_SPEC.md créé.
+        3. Présente la spec à l'humain pour validation.
+        4. Implémente en Dev Agent mode (inline, pas de sous-agent distinct).
+        5. Invoque QA Agent (Agent tool, foreground, subagent_type="Explore" ou général).
+        6. Si APPROVED → commit. Si CHANGES REQUESTED → corrige et relance QA.
+      </example>
+    </pattern>
+
+    <pattern name="QA post-hoc">
+      <description>L'humain a déjà codé, il veut une revue avant de committer.</description>
+      <example>
+        Utilisateur : "/qa"
+        Orchestrateur : invoque QA Agent avec git diff HEAD comme contexte.
+        Résultat : rapport QA affiché dans la conversation.
+      </example>
+    </pattern>
+
+    <pattern name="PM seul">
+      <description>L'humain veut juste une spec, pas d'implémentation.</description>
+      <example>
+        Utilisateur : "/pm"
+        Orchestrateur : invoque PM Agent → SPRINT_SPEC.md créé → s'arrête.
+      </example>
+    </pattern>
+  </invocation_patterns>
+
+  <filesystem_convention>
+    <file name="SPRINT_SPEC.md">Spec temporaire produite par PM Agent. Peut être supprimée après implémentation.</file>
+    <file name="QA_REPORT.md">Rapport QA optionnel. Utile pour des revues longues avec beaucoup de checks.</file>
+    <file name="TASKS.md">Source de vérité du Dev Agent — cocher les cases au fur et à mesure.</file>
+    <file name="AI_LEARNINGS.md">Journal des pièges techniques — mettre à jour après chaque session difficile.</file>
+    <file name="PROJECT_STATE.md">État architectural — mettre à jour après chaque sprint qui ajoute des migrations ou des routes.</file>
+  </filesystem_convention>
+
+  <rules>
+    <rule>Ne jamais spawner un sous-agent sans lui fournir le contexte nécessaire dans le prompt (fichiers clés, objectif précis, format de sortie attendu).</rule>
+    <rule>Un sous-agent ne peut pas accéder à la mémoire de la conversation principale — tout doit être explicité dans son prompt d'invocation.</rule>
+    <rule>Préférer les agents en foreground (résultat immédiat) pour PM et QA. Utiliser background uniquement pour des tâches vraiment parallèles et indépendantes.</rule>
+    <rule>L'orchestrateur reste responsable de la cohérence finale — ne pas déléguer le "est-ce que tout est bon ?" à un sous-agent.</rule>
+  </rules>
+</skill>

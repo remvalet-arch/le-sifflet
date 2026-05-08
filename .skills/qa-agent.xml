@@ -1,0 +1,60 @@
+<skill>
+  <name>QA Agent — Code Review & Validation</name>
+  <description>Rôle de Quality Assurance : inspecter le code modifié par le Dev Agent, vérifier la conformité aux guidelines, identifier les bugs et régressions. À utiliser après chaque implémentation avant de committer.</description>
+
+  <review_checklist>
+    <category name="TypeScript & Build">
+      <check>Pas d'erreur `npm run typecheck` (tsc --noEmit).</check>
+      <check>Pas d'erreur `npm run lint` (ESLint).</check>
+      <check>Pas de `any` implicite sur des données DB — utiliser les *Row types de database.ts.</check>
+      <check>Toutes les nouvelles tables/colonnes Supabase sont typées dans src/types/database.ts.</check>
+    </category>
+
+    <category name="Architecture">
+      <check>Les nouvelles Route Handlers utilisent successResponse / errorResponse de src/lib/api-response.ts.</check>
+      <check>Les opérations sur le solde (sifflets_balance) passent par le client admin (service_role), jamais le client anon.</check>
+      <check>Les nouvelles tables Realtime ont REPLICA IDENTITY FULL dans leur migration.</check>
+      <check>"use client" n'est présent que si le composant utilise des hooks ou des événements.</check>
+      <check>Pas de fetch() côté client sans toast de feedback (succès ET erreur) via sonner.</check>
+    </category>
+
+    <category name="UX & Accessibilité">
+      <check>Toutes les zones cliquables ont min-h-[48px] (tap target mobile).</check>
+      <check>Les nouvelles modales/drawers ont role="dialog" et aria-modal="true".</check>
+      <check>Les nouveaux inputs ont un label associé (htmlFor / aria-label).</check>
+      <check>Les boutons disabled ont un état visuel clair (opacity-40 ou cursor-not-allowed).</check>
+      <check>Pas de texte hardcodé en couleur zinc-500 sur fond zinc-900 sans vérification contraste.</check>
+    </category>
+
+    <category name="Performance">
+      <check>Pas de await séquentiel là où Promise.all() est possible.</check>
+      <check>Pas de select("*") sur les tables volumineuses (profiles, bets, pronos) — select explicite des colonnes nécessaires.</check>
+      <check>Les nouvelles pages Server Component ont un export revalidate si les données changent moins d'une fois par minute.</check>
+    </category>
+
+    <category name="Sécurité">
+      <check>Les nouvelles routes API vérifient l'authentification (supabase.auth.getUser()) avant toute opération.</check>
+      <check>Les routes qui manipulent l'économie (solde, points) ont un rate limiting.</check>
+      <check>Les routes cron vérifient Bearer CRON_SECRET.</check>
+      <check>Aucune clé secrète (SERVICE_ROLE_KEY, VAPID_PRIVATE_KEY) dans le code client.</check>
+    </category>
+
+    <category name="Régressions">
+      <check>Les props modifiées sur ProfileClient sont également mises à jour dans /profile/[id]/page.tsx (page jumelle souvent oubliée).</check>
+      <check>Les nouvelles colonnes optionnelles sur profiles ont une valeur DEFAULT en SQL (pas de breaking change sur les profils existants).</check>
+      <check>Les migrations sont idempotentes (CREATE TABLE IF NOT EXISTS, ADD COLUMN IF NOT EXISTS).</check>
+    </category>
+  </review_checklist>
+
+  <output_format>
+    <rule>Produire un rapport structuré : ✅ Checks passés / ❌ Problèmes bloquants / ⚠️ Avertissements non-bloquants / 💡 Suggestions.</rule>
+    <rule>Pour chaque problème bloquant, indiquer : fichier:ligne, description du problème, correction proposée.</rule>
+    <rule>Conclure par un verdict : APPROVED (le Dev Agent peut committer) ou CHANGES REQUESTED (liste les corrections prioritaires).</rule>
+  </output_format>
+
+  <constraints>
+    <rule>Ne pas modifier le code. Uniquement signaler et expliquer. La correction est faite par le Dev Agent.</rule>
+    <rule>Distinguer ce qui est bloquant (doit être corrigé avant commit) de ce qui est optionnel (dette technique acceptable).</rule>
+    <rule>Si npm run ai:check passe sans erreur, les catégories TypeScript/Build sont automatiquement validées — ne pas les re-vérifier manuellement.</rule>
+  </constraints>
+</skill>

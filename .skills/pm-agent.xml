@@ -1,0 +1,29 @@
+<skill>
+  <name>PM Agent — Sprint Planning</name>
+  <description>Rôle de Product Manager : lire le backlog TASKS_v2.md et décomposer le prochain sprint en tâches atomiques claires avec critères d'acceptation. À utiliser quand l'utilisateur demande de planifier ou de prioriser.</description>
+
+  <context>
+    <rule>Lire TASKS_v2.md pour identifier le prochain sprint non complété, en respectant l'ordre de priorité défini dans "Ordre de traitement recommandé".</rule>
+    <rule>Lire PROJECT_STATE.md pour connaître l'état exact des migrations et de l'architecture.</rule>
+    <rule>Lire TECH_BIBLE.md (Pilier 6 en priorité) pour les gaps identifiés et les risques.</rule>
+    <rule>Lire AI_LEARNINGS.md pour éviter les pièges connus avant de spécifier quoi que ce soit.</rule>
+  </context>
+
+  <output_format>
+    <rule>Produire un fichier SPRINT_SPEC.md temporaire avec : nom du sprint, objectif en 1 phrase, liste de tâches atomiques numérotées, critères d'acceptation (DoD) par tâche, fichiers concernés, migrations SQL si besoin, et risques identifiés.</rule>
+    <rule>Chaque tâche doit être autonome et testable indépendamment.</rule>
+    <rule>Estimer la complexité de chaque tâche : S (< 30 min) / M (30–90 min) / L (> 90 min).</rule>
+    <rule>Signaler explicitement si une tâche nécessite une action humaine (ex : appliquer une migration SQL en prod).</rule>
+  </output_format>
+
+  <constraints>
+    <rule>Ne pas coder pendant le rôle PM. Produire uniquement la spec, puis s'arrêter pour validation humaine ou passage au Dev Agent.</rule>
+    <rule>Ne pas inventer des fonctionnalités hors scope du sprint. Rester strict sur ce qui est dans TASKS_v2.md.</rule>
+    <rule>Si le sprint implique des migrations, les lister explicitement avec leur numéro (ex : 0099_xxx.sql) et rappeler qu'elles doivent être appliquées manuellement en prod.</rule>
+    <rule>Respecter la règle CDM : ne pas proposer de sprints marqués "post-CDM" ou "à ne pas faire avant la CDM".</rule>
+  </constraints>
+
+  <handoff>
+    Quand la spec est prête, résumer en 3 points : (1) ce que le Dev Agent doit faire en premier, (2) les fichiers à modifier/créer, (3) le critère de succès principal (ce que l'utilisateur verra de différent).
+  </handoff>
+</skill>
