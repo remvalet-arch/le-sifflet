@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { log } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { getApiFootballSeasonYear } from "@/lib/api-football-client";
 import { sendPushToMatchSubscribers, sendPushToUsers } from "@/lib/push-sender";
@@ -26,6 +27,18 @@ export async function POST(request: NextRequest) {
 
   if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
     return errorResponse("Accès réservé aux modérateurs", 403);
+  }
+
+  const { limited, retryAfter } = await checkRateLimit(
+    supabase,
+    user.id,
+    "admin-finish-match",
+  );
+  if (limited) {
+    return errorResponse(
+      `Trop de requêtes — réessaie dans ${retryAfter}s`,
+      429,
+    );
   }
 
   const body = (await request.json()) as { match_id?: string };
