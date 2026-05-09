@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
   const apiResult = await verifyMarketEventWithApiFootball({
     matchId: event.match_id,
     marketType: event.type,
+    marketCreatedAt: event.created_at,
   });
 
   if (apiResult === "WAIT") {

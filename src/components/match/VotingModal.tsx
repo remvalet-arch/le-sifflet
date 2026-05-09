@@ -40,12 +40,6 @@ const EVENT_CONFIG: Record<
     yes: "ROUGE",
     no: "JAUNE",
   },
-  injury_sub: {
-    question: "Cinéma ou civière ?",
-    emoji: "🚑",
-    yes: "CIVIÈRE",
-    no: "CINÉMA",
-  },
   free_kick: {
     question: "Coup franc à 20m — but dans 3 min ?",
     emoji: "🎯",
@@ -132,9 +126,8 @@ export function VotingModal({
   const isStoppage = isStoppageType(event.type);
 
   const [poolOdds, setPoolOdds] = useState<Record<string, number>>({});
+  const [poolStaked, setPoolStaked] = useState<Record<string, number>>({});
   const [oddsLoading, setOddsLoading] = useState(true);
-  const [oddsFlash, setOddsFlash] = useState(false);
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refreshOdds = useCallback(async () => {
     const { data, error } = await supabase.rpc("get_event_odds", {
@@ -144,29 +137,29 @@ export function VotingModal({
       console.error("[VotingModal] get_event_odds", error.message);
       return;
     }
-    const next = parseOddsRows(data ?? null);
-    setPoolOdds((prev) => {
-      const changed = Object.keys({ ...prev, ...next }).some(
-        (k) => prev[k] !== next[k],
+    const nextOdds = parseOddsRows(data ?? null);
+    setPoolOdds(nextOdds);
+    // Collect pool_staked per option
+    const nextStaked: Record<string, number> = {};
+    for (const r of data ?? []) {
+      const staked = Number(
+        (r as { option: string; pool_staked: number }).pool_staked ?? 0,
       );
-      if (changed) {
-        setOddsFlash(true);
-        if (flashTimer.current) clearTimeout(flashTimer.current);
-        flashTimer.current = setTimeout(() => setOddsFlash(false), 280);
-      }
-      return next;
-    });
-    setOddsLoading(false);
+      nextStaked[(r as { option: string; pool_staked: number }).option] =
+        staked;
+    }
+    setPoolStaked(nextStaked);
+    setTimeout(() => setOddsLoading(false), 0);
   }, [event.id, supabase]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshOdds();
     const id = setInterval(() => {
       void refreshOdds();
     }, 2000);
     return () => {
       clearInterval(id);
-      if (flashTimer.current) clearTimeout(flashTimer.current);
     };
   }, [refreshOdds]);
 
@@ -634,7 +627,6 @@ export function VotingModal({
             <StoppageButtons
               options={STOPPAGE_OPTIONS}
               poolOdds={poolOdds}
-              oddsFlash={oddsFlash}
               amount={amount}
               disabled={!!voteLoading || expired || !canBet || oddsLoading}
               voteLoading={voteLoading}
@@ -644,23 +636,15 @@ export function VotingModal({
             <BinaryButtons
               cfg={cfg}
               poolOdds={poolOdds}
-              oddsFlash={oddsFlash}
-              amount={amount}
+              poolStaked={poolStaked}
               disabled={!!voteLoading || expired || !canBet || oddsLoading}
               voteLoading={voteLoading}
               onVote={(v) => void handleVote(v)}
             />
           )}
 
-          <p className="mt-2 flex items-center justify-center gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-            Cotes estimées (masse des mises)
-            <span
-              title="Cote parimutuelle : elle s'ajuste selon les mises de tous les joueurs jusqu'à la fin du chrono."
-              className="cursor-help text-zinc-600 hover:text-zinc-400"
-              aria-label="Comment sont calculées les cotes ?"
-            >
-              ⓘ
-            </span>
+          <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
+            Répartition des mises en temps réel
           </p>
 
           {!canBet && !expired && (
@@ -704,79 +688,100 @@ function computePct(
 function BinaryButtons({
   cfg,
   poolOdds,
-  oddsFlash,
-  amount,
+  poolStaked,
   disabled,
   voteLoading,
   onVote,
 }: {
   cfg: { yes: string; no: string };
   poolOdds: Record<string, number>;
-  oddsFlash: boolean;
-  amount: number;
+  poolStaked: Record<string, number>;
   disabled: boolean;
   voteLoading: string | null;
   onVote: (v: string) => void;
 }) {
   const pct = computePct(poolOdds, ["oui", "non"]);
+  const ouiPct = pct["oui"] ?? 50;
+  const nonPct = pct["non"] ?? 50;
+  const totalInJeu = (poolStaked["oui"] ?? 0) + (poolStaked["non"] ?? 0);
+
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {(["oui", "non"] as const).map((v) => {
-        const odd = poolOdds[v] ?? DEFAULT_ODD;
-        const gain = Math.floor(amount * odd);
-        const isLoading = voteLoading === v;
-        const label = v === "oui" ? cfg.yes : cfg.no;
-        const votePct = pct[v];
-        return (
-          <button
-            type="button"
-            key={v}
-            onClick={() => onVote(v)}
-            disabled={disabled}
-            aria-label={`${label}, cote estimée ${odd.toFixed(2)}, gain potentiel environ ${gain} points`}
-            className={`flex h-28 flex-col items-center justify-center gap-0.5 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
-              v === "oui"
-                ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
-                : "border-blue-500/60 bg-blue-500/10 hover:border-blue-500 hover:bg-blue-500/20"
-            }`}
-          >
-            {isLoading ? (
-              <LoaderCircle
-                className="h-6 w-6 animate-spin text-white"
-                aria-hidden
-              />
-            ) : (
-              <>
-                <span className="text-xl font-black uppercase tracking-wide text-white">
-                  {label}
-                </span>
-                <span
-                  className={`text-lg font-black tabular-nums transition-colors ${
-                    oddsFlash
-                      ? "text-yellow-400"
-                      : v === "oui"
-                        ? "text-green-400"
-                        : "text-blue-400"
-                  }`}
-                  aria-live="polite"
-                >
-                  ×{odd.toFixed(2)}
-                  {votePct !== undefined && (
-                    <span className="ml-1 text-xs font-bold opacity-60">
-                      · {votePct}%
-                    </span>
-                  )}
-                </span>
-                <span
-                  className={`text-xs font-bold ${v === "oui" ? "text-green-500/70" : "text-blue-500/70"}`}
-                >
-                  +{gain.toLocaleString("fr-FR")} 🪙
-                </span>
-              </>
-            )}
-          </button>
-        );
-      })}
+    <div className="flex flex-col gap-3">
+      {/* Barre OUI/NON */}
+      <div className="flex flex-col gap-1.5">
+        <div
+          className="flex h-3 overflow-hidden rounded-full"
+          role="img"
+          aria-label={`${ouiPct}% OUI, ${nonPct}% NON`}
+        >
+          <div
+            className="bg-green-500 transition-[width] duration-700 ease-out"
+            style={{ width: `${ouiPct}%` }}
+          />
+          <div
+            className="bg-red-500 transition-[width] duration-700 ease-out"
+            style={{ width: `${nonPct}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-green-400">
+            {ouiPct}% OUI
+          </span>
+          <span className="text-[10px] font-semibold text-zinc-500">
+            {totalInJeu > 0
+              ? `${totalInJeu.toLocaleString("fr-FR")} 🪙 en jeu`
+              : "Aucune mise"}
+          </span>
+          <span className="text-xs font-black text-red-400">{nonPct}% NON</span>
+        </div>
+      </div>
+
+      {/* Boutons OUI / NON */}
+      <div className="grid grid-cols-2 gap-3">
+        {(["oui", "non"] as const).map((v) => {
+          const odd = poolOdds[v] ?? DEFAULT_ODD;
+          const isLoading = voteLoading === v;
+          const label = v === "oui" ? cfg.yes : cfg.no;
+          const votePct = v === "oui" ? ouiPct : nonPct;
+          return (
+            <button
+              type="button"
+              key={v}
+              onClick={() => onVote(v)}
+              disabled={disabled}
+              aria-label={`${label} — ${votePct}%`}
+              className={`flex h-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+                v === "oui"
+                  ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
+                  : "border-red-500/60 bg-red-500/10 hover:border-red-500 hover:bg-red-500/20"
+              }`}
+            >
+              {isLoading ? (
+                <LoaderCircle
+                  className="h-6 w-6 animate-spin text-white"
+                  aria-hidden
+                />
+              ) : (
+                <>
+                  <span className="text-xl font-black uppercase tracking-wide text-white">
+                    {label}
+                  </span>
+                  <span
+                    className={`text-sm font-black tabular-nums ${
+                      v === "oui" ? "text-green-400" : "text-red-400"
+                    }`}
+                    aria-live="polite"
+                  >
+                    {votePct}%
+                  </span>
+                  {/* Multiplier caché mais disponible pour le backend */}
+                  <span className="sr-only">cote ×{odd.toFixed(2)}</span>
+                </>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -793,7 +798,6 @@ const OPTION_COLORS = [
 function StoppageButtons({
   options,
   poolOdds,
-  oddsFlash,
   amount,
   disabled,
   voteLoading,
@@ -801,7 +805,6 @@ function StoppageButtons({
 }: {
   options: readonly string[];
   poolOdds: Record<string, number>;
-  oddsFlash: boolean;
   amount: number;
   disabled: boolean;
   voteLoading: string | null;
@@ -837,7 +840,7 @@ function StoppageButtons({
                   min
                 </span>
                 <span
-                  className={`text-xs font-black tabular-nums transition-colors ${oddsFlash ? "text-yellow-400" : ""}`}
+                  className="text-xs font-black tabular-nums"
                   aria-live="polite"
                 >
                   ×{odd.toFixed(2)}

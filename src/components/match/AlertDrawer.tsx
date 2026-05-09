@@ -18,7 +18,6 @@ const ALERTS: {
   { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND OU PAS ?" },
   { type: "var_goal", emoji: "🚩", label: "HORS-JEU / BUT ANNULÉ ?" },
   { type: "red_card", emoji: "🟥", label: "SORTEZ LE ROUGE !" },
-  { type: "injury_sub", emoji: "🚑", label: "CINÉMA OU CIVIÈRE ?" },
 ];
 
 type Props = {

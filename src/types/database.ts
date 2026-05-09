@@ -19,7 +19,6 @@ export type MarketEventType =
   | "penalty_outcome"
   | "var_goal"
   | "red_card"
-  | "injury_sub"
   | "free_kick"
   | "corner"
   | "stoppage_ht"
@@ -31,7 +30,6 @@ export type AlertActionType =
   | "penalty_outcome"
   | "var_goal"
   | "red_card"
-  | "injury_sub"
   | "free_kick"
   | "corner";
 
