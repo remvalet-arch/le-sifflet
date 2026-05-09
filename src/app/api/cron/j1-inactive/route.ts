@@ -60,6 +60,8 @@ export async function GET(request: Request) {
     return successResponse({ targeted: 0, sent: 0 });
   }
 
+  // La subscription push est le mécanisme de consentement pour ce nudge J+1 one-shot.
+  // sendPushToUsers skippe silencieusement les users sans subscription active.
   await sendPushToUsers(inactiveIds, {
     title: "Tu es là pour parier ou pour regarder ? 👀",
     body: "Des matchs t'attendent sur VAR TIME. Lance ton premier prono →",
