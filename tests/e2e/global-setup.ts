@@ -6,6 +6,7 @@
 
 import { chromium, type FullConfig } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 import { config as loadEnv } from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
@@ -25,6 +26,8 @@ const AUTH_FILE = path.join(__dirname, ".auth", "user.json");
 async function ensureTestUser() {
   const admin = createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    realtime: { transport: WebSocket as any },
   });
 
   const {
@@ -67,27 +70,32 @@ export default async function globalSetup(_config: FullConfig) {
 
   await ensureTestUser();
 
-  // Récupérer le magic link via l'endpoint de test
-  const res = await fetch(
-    `${BASE_URL}/api/test/auth?email=${encodeURIComponent(TEST_USER_EMAIL)}&secret=${encodeURIComponent(TEST_AUTH_SECRET)}`,
-  );
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`/api/test/auth a retourné ${res.status} : ${body}`);
-  }
-  const { action_link } = (await res.json()) as { action_link: string };
-
-  // Lancer un navigateur headless, suivre le magic link, sauvegarder les cookies
+  // Signe l'utilisateur via /api/test/session (signInWithPassword server-side)
+  // → évite le flow magic-link qui nécessite que localhost soit whitelisté
+  //   dans les redirect URLs du dashboard Supabase.
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  console.log("[setup] Navigation vers le magic link…");
-  await page.goto(action_link, { waitUntil: "networkidle" });
+  const sessionUrl =
+    `${BASE_URL}/api/test/session` +
+    `?email=${encodeURIComponent(TEST_USER_EMAIL)}` +
+    `&password=${encodeURIComponent(TEST_USER_PASSWORD)}` +
+    `&secret=${encodeURIComponent(TEST_AUTH_SECRET)}`;
 
-  // Le callback Supabase redirige vers /lobby après l'échange de code
+  console.log("[setup] Connexion via /api/test/session…");
+  await page.goto(sessionUrl, { waitUntil: "networkidle" });
+
   await page.waitForURL(`${BASE_URL}/lobby`, { timeout: 15_000 }).catch(() => {
-    // Si la redirection est sur une sous-page, on continue quand même
+    console.warn(
+      "[setup] Redirection /lobby non détectée — on continue quand même.",
+    );
+  });
+
+  // Marquer l'onboarding comme complété pour éviter que le modal OnboardingTour
+  // n'apparaisse dans chaque test et intercepte les clics.
+  await page.evaluate(() => {
+    localStorage.setItem("hasCompletedOnboarding", "true");
   });
 
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
