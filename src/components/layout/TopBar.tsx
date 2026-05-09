@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   X,
@@ -21,9 +22,25 @@ import { useRouter } from "next/navigation";
 import type { ProfileRow } from "@/types/database";
 import type { Locale } from "@/lib/i18n/locale";
 
+const SECTION_LABELS: { pattern: RegExp; label: string }[] = [
+  { pattern: /^\/lobby/, label: "LE STADE" },
+  { pattern: /^\/pronos/, label: "MES PRONOS" },
+  { pattern: /^\/ligues/, label: "MES LIGUES" },
+  { pattern: /^\/profile/, label: "MON PROFIL" },
+  { pattern: /^\/match\//, label: "EN DIRECT" },
+  { pattern: /^\/messages/, label: "MESSAGES" },
+  { pattern: /^\/leaderboard/, label: "CLASSEMENT" },
+  { pattern: /^\/shop/, label: "BOUTIQUE" },
+];
+
+function useSectionLabel(): string | null {
+  const pathname = usePathname();
+  return (
+    SECTION_LABELS.find(({ pattern }) => pattern.test(pathname))?.label ?? null
+  );
+}
+
 type Props = {
-  siffletsBalance: number;
-  seasonPoints: number;
   username: string;
   userId: string;
   rank: string;
@@ -32,8 +49,6 @@ type Props = {
 };
 
 export function TopBar({
-  siffletsBalance,
-  seasonPoints,
   username,
   userId,
   rank,
@@ -41,17 +56,15 @@ export function TopBar({
   hasUnreadDm = false,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [balance, setBalance] = useState(siffletsBalance);
   const [liveRank, setLiveRank] = useState(rank);
   const [liveXp, setLiveXp] = useState(initialXp);
-  const [flash, setFlash] = useState(false);
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locale = useLocale() as Locale;
   const t = useTranslations("TopBar");
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const sectionLabel = useSectionLabel();
 
-  // Realtime : met à jour le solde dès qu'un pari est résolu
+  // Realtime : met à jour rang/XP dès qu'un pari est résolu
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -66,12 +79,6 @@ export function TopBar({
         },
         (payload) => {
           const updated = payload.new as ProfileRow;
-          if (updated.sifflets_balance > balance) {
-            setFlash(true);
-            if (flashTimer.current) clearTimeout(flashTimer.current);
-            flashTimer.current = setTimeout(() => setFlash(false), 2000);
-          }
-          setBalance(updated.sifflets_balance);
           setLiveRank(updated.rank);
           if (typeof updated.xp === "number") setLiveXp(updated.xp);
         },
@@ -79,10 +86,8 @@ export function TopBar({
       .subscribe();
 
     return () => {
-      if (flashTimer.current) clearTimeout(flashTimer.current);
       void supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return (
@@ -101,31 +106,12 @@ export function TopBar({
             </span>
           </Link>
 
-          {/* Balances — Sifflets + Points saison */}
-          <Link href="/profile" className="flex items-center gap-2">
-            <span
-              className={`rounded-full border px-3 py-1 text-base font-black tabular-nums transition-all duration-500 ${
-                flash
-                  ? "border-green-400 bg-green-400/20 text-green-300 shadow-lg shadow-green-400/30"
-                  : "border-whistle/40 bg-whistle/10 text-whistle"
-              }`}
-            >
-              {balance.toLocaleString("fr-FR")}
-              <span
-                className={`ml-1 text-xs font-normal transition-colors duration-500 ${
-                  flash ? "text-green-300/80" : "text-whistle/60"
-                }`}
-              >
-                🪙
-              </span>
+          {/* Section label */}
+          {sectionLabel && (
+            <span className="text-[11px] font-black uppercase tracking-widest text-zinc-400">
+              {sectionLabel}
             </span>
-            <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-sm font-black tabular-nums text-blue-300">
-              {seasonPoints.toLocaleString("fr-FR")}
-              <span className="ml-1 text-[10px] font-normal text-blue-300/60">
-                Pts
-              </span>
-            </span>
-          </Link>
+          )}
 
           <div className="flex items-center gap-2">
             {/* Messages privés */}

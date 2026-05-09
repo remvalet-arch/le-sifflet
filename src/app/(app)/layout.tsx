@@ -74,7 +74,7 @@ export default async function AppLayout({
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("username, sifflets_balance, rank, xp, season_points")
+    .select("username, rank, xp")
     .eq("id", user.id)
     .single();
 
@@ -105,8 +105,6 @@ export default async function AppLayout({
           <DailyRecapChecker />
           <TopBar
             username={profile.username}
-            siffletsBalance={profile.sifflets_balance}
-            seasonPoints={profile.season_points ?? 0}
             rank={profile.rank}
             xp={profile.xp ?? 0}
             userId={user.id}
