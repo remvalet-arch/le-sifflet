@@ -334,15 +334,13 @@ function MatchPronoCard({
       hour: "2-digit",
       minute: "2-digit",
     });
-    if (isToday) return `Auj. · ${timeStr}`;
-    if (isTomorrow) return `Demain · ${timeStr}`;
-    return (
-      kickoff.toLocaleDateString("fr-FR", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      }) + ` · ${timeStr}`
-    );
+    if (isToday) return timeStr;
+    const weekday = kickoff
+      .toLocaleDateString("fr-FR", { weekday: "short" })
+      .replace(/\.$/, "");
+    const day = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    if (isTomorrow) return `Dem. ${timeStr}`;
+    return `${day}. ${timeStr}`;
   })();
 
   const homeAgg = aggregateSlots(homeSlots);
