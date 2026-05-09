@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   if (!secret) return errorResponse("CRON_SECRET manquant", 500);
 
   // Build absolute URL to call the cron route
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vartime.app";
+  const baseUrl = "https://vartime.app";
   const cronUrl = `${baseUrl}/api/cron/${cronId}`;
 
   const cronRes = await fetch(cronUrl, {
