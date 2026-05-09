@@ -202,7 +202,7 @@ export function MatchCard({
     </span>
   ) : (
     <span className="text-xs font-medium tabular-nums tracking-wide text-zinc-500">
-      {kickoffTime}
+      {when}
     </span>
   );
 
@@ -290,7 +290,7 @@ export function MatchCard({
           ? "Rejoindre le kop →"
           : isFinished
             ? "Voir le résumé →"
-            : `Coup d'envoi : ${kickoffTime}`}
+            : `Coup d'envoi : ${when}`}
       </p>
     </Link>
   );
