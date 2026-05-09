@@ -166,10 +166,14 @@ Génère 3 propositions de tweets pour aujourd'hui.`;
 
   let tweets: Array<{ type: string; text: string }> = [];
   try {
-    const parsed = JSON.parse(raw) as { tweets: typeof tweets };
+    const clean = raw
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
+    const parsed = JSON.parse(clean) as { tweets: typeof tweets };
     tweets = parsed.tweets;
   } catch {
-    return errorResponse("Claude parse error", 502);
+    return errorResponse(`Claude parse error: ${raw.slice(0, 200)}`, 502);
   }
 
   const date = now.toLocaleDateString("fr-FR", {

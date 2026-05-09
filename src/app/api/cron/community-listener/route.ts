@@ -174,7 +174,11 @@ export async function GET(request: Request) {
           .filter((c) => c.type === "text")
           .map((c) => c.text)
           .join("");
-        const parsed = JSON.parse(text) as {
+        const clean = text
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/```\s*$/i, "")
+          .trim();
+        const parsed = JSON.parse(clean) as {
           classifications: Classification[];
         };
         classifications = parsed.classifications;
