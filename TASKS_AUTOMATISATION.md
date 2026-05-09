@@ -87,21 +87,20 @@ Trois règles pour tout ce qui suit :
 
 **Pourquoi maintenant** : c'est le vrai pattern de rétention de MPG, MPP et Sorare. Sans rituel quotidien, l'app sera utilisée pendant la CDM puis oubliée.
 
-- [ ] **AUTO-2.1 : Génération du recap matinal**
-  - _Trigger :_ Cron quotidien 9h00 Paris
-  - _Action :_ Pour chaque user actif la veille, l'agent génère un mail/push personnalisé via Claude API : "Hier, tu as misé sur X, gagné Y points, position Z dans Les bêtas testeurs. Aujourd'hui, 4 matchs t'attendent."
-  - _Source data :_ Tables `pronos`, `bets`, `squad_members` déjà existantes
-  - _Fallback :_ Si Claude API down, fallback sur template statique simple
+- [x] **AUTO-2.1 : Génération du recap matinal**
+  - _Trigger :_ Cron quotidien 9h00 Paris → `https://vartime.app/api/cron/daily-digest`
+  - _Action :_ Push + email HTML statique personnalisé (pronos, paris VAR, Points gagnés)
+  - _Source data :_ Tables `pronos`, `bets`, `user_daily_recaps`
 
 - [ ] **AUTO-2.2 : Push notification soirée**
   - _Trigger :_ Cron quotidien 18h00 si matchs prévus dans la soirée
   - _Action :_ Push de rappel pour les matchs du soir, ciblée selon les `preferred_competitions`
   - _Already partially done :_ cf. Sprint FK1 dans TASKS_v2.md
 
-- [ ] **AUTO-2.3 : Recap hebdomadaire le dimanche**
-  - _Trigger :_ Cron dimanche 11h00
-  - _Action :_ Mail récapitulatif de la semaine : performance perso, top 3 ligue, badges débloqués, matchs à venir
-  - _Format :_ HTML stylé avec data viz (graphique de progression)
+- [x] **AUTO-2.3 : Recap hebdomadaire le dimanche**
+  - _Trigger :_ Cron dimanche 11h00 → `https://vartime.app/api/cron/weekly-recap`
+  - _Action :_ Email HTML récapitulatif 7 jours (Points, pronos, paris VAR, jours actifs)
+  - _Source data :_ Table `user_daily_recaps` agrégée sur 7 jours
 
 **Effort :** 3-4 jours
 **Coût mensuel :** Claude API ~10-20€ + Resend ~10€
