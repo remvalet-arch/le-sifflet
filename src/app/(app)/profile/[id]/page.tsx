@@ -1,4 +1,5 @@
 import { Target, TrendingUp, Trophy, MessageCircle } from "lucide-react";
+import Image from "next/image";
 import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileClient } from "@/components/profile/ProfileClient";
@@ -316,10 +317,11 @@ export default async function PublicProfilePage({
           <div className="flex items-start gap-4">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ring-2 ring-white/20">
               {avatar.startsWith("http") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={avatar}
                   alt={profile.username}
+                  width={80}
+                  height={80}
                   className="h-20 w-20 rounded-full object-cover"
                 />
               ) : (
@@ -344,10 +346,11 @@ export default async function PublicProfilePage({
               {favoriteTeam && (
                 <div className="mt-1.5 flex items-center gap-1.5">
                   {favoriteTeam.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={favoriteTeam.logo_url}
                       alt={favoriteTeam.name}
+                      width={16}
+                      height={16}
                       className="h-4 w-4 object-contain"
                     />
                   ) : (

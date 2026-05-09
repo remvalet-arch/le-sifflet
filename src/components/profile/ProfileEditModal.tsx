@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { X, Search, LoaderCircle, Check, Lock } from "lucide-react";
@@ -363,10 +364,11 @@ export function ProfileEditModal({
               <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-whistle/30 bg-whistle/10 px-4 py-3">
                 <div className="flex items-center gap-2">
                   {teamLogo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={teamLogo}
                       alt={teamName ?? ""}
+                      width={28}
+                      height={28}
                       className="h-7 w-7 object-contain"
                     />
                   ) : (
@@ -421,10 +423,11 @@ export function ProfileEditModal({
                       className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-zinc-800"
                     >
                       {t.logo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={t.logo_url}
                           alt={t.name}
+                          width={24}
+                          height={24}
                           className="h-6 w-6 shrink-0 object-contain"
                         />
                       ) : (

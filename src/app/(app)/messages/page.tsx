@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { MessageCircle } from "lucide-react";
@@ -70,10 +71,11 @@ export default async function MessagesPage() {
               >
                 <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-base font-black text-zinc-300">
                   {other?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={other.avatar_url}
                       alt={other.username}
+                      width={40}
+                      height={40}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                   ) : (
