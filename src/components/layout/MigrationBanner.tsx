@@ -10,6 +10,13 @@ export function MigrationBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // Never show in PWA standalone mode — user already installed the app
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in navigator &&
+        (navigator as { standalone?: boolean }).standalone === true);
+    if (isStandalone) return;
+
     const dismissed = localStorage.getItem(STORAGE_KEY);
     if (!dismissed) {
       setTimeout(() => setVisible(true), 0);

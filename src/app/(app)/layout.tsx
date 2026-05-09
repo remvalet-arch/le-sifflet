@@ -103,7 +103,6 @@ export default async function AppLayout({
           are normal flex-col siblings (no position:fixed), main scrolls internally.
           This avoids all iOS Safari position:fixed / overflow container traps. */}
       <div className="mx-auto flex h-[100dvh] w-full max-w-md flex-col bg-zinc-950 shadow-2xl">
-        <MigrationBanner />
         <DailyRecapChecker />
         <TopBar
           username={profile.username}
@@ -114,6 +113,7 @@ export default async function AppLayout({
         />
 
         <main className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden text-white">
+          <MigrationBanner />
           {children}
         </main>
 
