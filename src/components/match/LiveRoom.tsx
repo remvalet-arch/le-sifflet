@@ -440,10 +440,7 @@ export function LiveRoom({
     <>
       <LiveRoomTutorial />
       {!realtimeConnected && (
-        <div
-          className="fixed left-1/2 top-[4rem] z-[55] -translate-x-1/2"
-          style={{ marginTop: "env(safe-area-inset-top, 0px)" }}
-        >
+        <div className="sticky top-0 z-[55] flex justify-center py-1.5">
           <div className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/80 px-3 py-1.5 text-[10px] font-black text-red-400 shadow-lg backdrop-blur-sm">
             <WifiOff className="h-3 w-3" />
             Reconnexion…
@@ -451,10 +448,7 @@ export function LiveRoom({
         </div>
       )}
       {/* En-tête sticky : scoreboard + onglets */}
-      <div
-        className="sticky z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md"
-        style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
-      >
+      <div className="sticky top-0 z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md">
         <div className="relative px-6 pt-2">
           <div className="absolute right-4 top-2 z-10 flex items-center gap-2">
             {/* Badge audience (Sprint Q) */}
