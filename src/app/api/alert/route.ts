@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { AlertActionType } from "@/types/database";
-import { sendPushToMatchSubscribers } from "@/lib/push-sender";
+import { sendPushToMatchSubscribers, sendPushToUsers } from "@/lib/push-sender";
 import { log } from "@/lib/logger";
 import {
   ALERT_WINDOW_SECONDS,
@@ -203,6 +203,61 @@ export async function POST(request: NextRequest) {
       },
       distinctUsers,
     ).catch((e: unknown) => log.error("alert", "push failed", e));
+
+    // Fire-and-forget : push VAR aux joueurs en présence active (app fermée / écran verrouillé)
+    void (async () => {
+      const since15 = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+      const [{ data: presenceRows }, { data: matchData }] = await Promise.all([
+        admin
+          .from("match_presence")
+          .select("user_id")
+          .eq("match_id", match_id)
+          .gte("last_seen_at", since15),
+        admin
+          .from("matches")
+          .select("team_home, team_away")
+          .eq("id", match_id)
+          .single(),
+      ]);
+
+      const initiatorSet = new Set(distinctUsers);
+      const candidateIds = (presenceRows ?? [])
+        .map((r) => r.user_id)
+        .filter((id) => !initiatorSet.has(id));
+
+      if (candidateIds.length === 0) return;
+
+      const { data: eligible } = await admin
+        .from("profiles")
+        .select("id")
+        .in("id", candidateIds)
+        .or("notif_var_results.is.null,notif_var_results.eq.true");
+
+      const presenceUserIds = (eligible ?? []).map((r) => r.id);
+      if (presenceUserIds.length === 0) return;
+
+      const homeTeam = matchData?.team_home ?? "Match";
+      const awayTeam = matchData?.team_away ?? "";
+      const teamLabel = awayTeam ? `${homeTeam}–${awayTeam}` : homeTeam;
+
+      await sendPushToUsers(presenceUserIds, {
+        title: "⚡ VAR en cours !",
+        body: `${ACTION_LABELS[validType]} sur ${teamLabel} — parie maintenant !`,
+        url: `/match/${match_id}`,
+        tag: `var-${marketEventId}`,
+        requireInteraction: true,
+        vibrate: [200, 100, 200, 100, 400],
+        extra_data: { marketEventId, matchId: match_id, type: "var_open" },
+      });
+
+      log.info(
+        "alert",
+        `VAR presence push envoyé à ${presenceUserIds.length} joueur(s) — match=${match_id}`,
+      );
+    })().catch((e: unknown) =>
+      log.error("alert", "VAR presence push failed", e),
+    );
 
     cooldown_until = new Date(
       Date.now() + COOLDOWN_MINUTES * 60 * 1000,
