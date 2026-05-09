@@ -11,6 +11,9 @@ const ALLOWED_CRONS = [
   "daily-digest",
   "weekly-recap",
   "solo-activation",
+  "twitter-live",
+  "community-listener",
+  "personal-branding",
 ] as const;
 
 type CronId = (typeof ALLOWED_CRONS)[number];
