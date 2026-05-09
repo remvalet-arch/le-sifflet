@@ -17,7 +17,6 @@ const ACTION_LABELS: Record<AlertActionType, string> = {
   penalty_outcome: "Résultat penalty",
   var_goal: "But sous VAR",
   red_card: "Carton rouge",
-  injury_sub: "Blessure / Remplacement",
   free_kick: "Coup franc dangereux",
   corner: "Corner",
 };
@@ -27,7 +26,6 @@ const VALID_TYPES: AlertActionType[] = [
   "penalty_outcome",
   "var_goal",
   "red_card",
-  "injury_sub",
   "free_kick",
   "corner",
 ];

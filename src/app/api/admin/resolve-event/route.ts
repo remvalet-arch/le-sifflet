@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 import { resolveEvent } from "@/lib/resolve-event";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { postSystemMessageToUserSquads } from "@/lib/squad-messages";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 const EVENT_LABEL: Record<string, string> = {
@@ -12,7 +13,6 @@ const EVENT_LABEL: Record<string, string> = {
   penalty_outcome: "Résultat penalty",
   var_goal: "But sous VAR",
   red_card: "Carton rouge",
-  injury_sub: "Blessure / Remplacement",
   free_kick: "Coup franc dangereux",
   corner: "Corner",
 };
@@ -23,7 +23,6 @@ const OUI_VERDICT: Record<string, string> = {
   penalty_outcome: "PENALTY marqué !",
   var_goal: "BUT VALIDÉ !",
   red_card: "ROUGE confirmé !",
-  injury_sub: "Remplacement confirmé",
   free_kick: "COUP FRANC !",
   corner: "Corner confirmé",
 };
@@ -32,7 +31,6 @@ const NON_VERDICT: Record<string, string> = {
   penalty_outcome: "Penalty raté.",
   var_goal: "BUT ANNULÉ.",
   red_card: "Carton annulé.",
-  injury_sub: "Remplacement annulé.",
   free_kick: "Coup franc refusé.",
   corner: "Corner annulé.",
 };
@@ -122,6 +120,33 @@ export async function POST(request: NextRequest) {
           });
         }),
     );
+
+    // Squad system messages — "Gros gain" (≥200 Sifflets)
+    const bigWinners = bets.filter(
+      (b) => b.status === "won" && (b.potential_reward ?? 0) >= 200,
+    );
+    if (bigWinners.length > 0) {
+      const { data: profiles } = await adminClient
+        .from("profiles")
+        .select("id, username")
+        .in(
+          "id",
+          bigWinners.map((b) => b.user_id),
+        );
+      const usernameMap = new Map(
+        (profiles ?? []).map((p) => [p.id, p.username ?? "Un arbitre"]),
+      );
+      const userScores = new Map(
+        bigWinners.map((b) => [
+          b.user_id,
+          {
+            score: b.potential_reward ?? 0,
+            message: `🔥 **${usernameMap.get(b.user_id) ?? "Un arbitre"}** vient d'empocher +${b.potential_reward} 🪙 sur une VAR — folie ou génie ?`,
+          },
+        ]),
+      );
+      await postSystemMessageToUserSquads(userScores);
+    }
   })();
 
   return successResponse({ resolved: true });

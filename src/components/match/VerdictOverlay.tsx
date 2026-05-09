@@ -8,7 +8,6 @@ const EVENT_LABEL: Record<MarketEventType, string> = {
   penalty_outcome: "PÉNALTY TIRÉ",
   var_goal: "VAR BUT",
   red_card: "CARTON ROUGE",
-  injury_sub: "BLESSURE",
   free_kick: "COUP FRANC",
   corner: "CORNER",
   stoppage_ht: "ARRÊTS MT",

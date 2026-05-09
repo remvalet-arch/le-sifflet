@@ -89,7 +89,6 @@ const SHORT_LABELS: Record<string, { label: string; emoji: string }> = {
   penalty_outcome: { label: "Résultat péno", emoji: "🥅" },
   var_goal: { label: "Hors-jeu / But", emoji: "🚩" },
   red_card: { label: "Carton rouge", emoji: "🟥" },
-  injury_sub: { label: "Changement", emoji: "🔄" },
   free_kick: { label: "Coup franc", emoji: "🎯" },
   corner: { label: "Corner", emoji: "🏁" },
   stoppage_ht: { label: "Arrêts HT", emoji: "⏱️" },
@@ -127,8 +126,14 @@ function formatPronoValue(
         const label = s.name === "CSC" ? "CSC (csc)" : s.name;
         return `${label}${s.goals > 1 ? ` (×${s.goals})` : ""}`;
       };
-      if (parsed.home) parsed.home.forEach((s: { name: string; goals: number }) => names.push(fmtScorer(s)));
-      if (parsed.away) parsed.away.forEach((s: { name: string; goals: number }) => names.push(fmtScorer(s)));
+      if (parsed.home)
+        parsed.home.forEach((s: { name: string; goals: number }) =>
+          names.push(fmtScorer(s)),
+        );
+      if (parsed.away)
+        parsed.away.forEach((s: { name: string; goals: number }) =>
+          names.push(fmtScorer(s)),
+        );
       if (names.length === 0) return `⚽ Buteurs : Aucun (Bunker)`;
       return `⚽ Buteurs : ${names.join(", ")}`;
     } catch {
@@ -637,7 +642,7 @@ function HistoriqueTab({
             className={`text-sm font-black ${recentPts >= 0 ? "text-green-400" : "text-red-400"}`}
           >
             {recentPts > 0 ? "+" : ""}
-            {recentPts.toLocaleString("fr-FR")} 🪙
+            {recentPts.toLocaleString("fr-FR")} Points
             {recentWon > 0 && (
               <span className="ml-2 font-semibold text-zinc-400">
                 · {recentWon} gagné{recentWon > 1 ? "s" : ""}
