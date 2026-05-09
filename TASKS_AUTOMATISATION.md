@@ -224,15 +224,14 @@ Trois règles pour tout ce qui suit :
 
 **Insight clé** : les utilisateurs en ligue restent 5-10x plus longtemps que les utilisateurs solo. Pousser le rejoindre/créer une ligue est le levier de rétention #1.
 
-- [ ] **AUTO-6.1 : Détection des users solo après 3 jours**
-  - _Trigger :_ Cron quotidien
-  - _Détection :_ Users actifs depuis 3 jours sans `squad_members` actif
-  - _Action :_ Notification push + email "Joue avec tes potes ! Voici un code d'invitation à partager : [CODE]"
+- [x] **AUTO-6.1 : Détection des users solo après 3 jours**
+  - _Trigger :_ Cron quotidien 11h00 UTC → `https://vartime.app/api/cron/solo-activation`
+  - _Détection :_ Users actifs (≥1 prono ou bet) créés il y a 71-73h, sans entrée dans `squad_members`
+  - _Action :_ Push + email "Joue avec tes potes !"
 
-- [ ] **AUTO-6.2 : Suggestion automatique de ligues publiques**
-  - _Action :_ Pour les users solo qui n'ont pas de potes à inviter, créer un système de "Ligues publiques officielles VAR TIME" auto-créées (ex: "Bêta CDM 2026 - Groupe A", "Fans Ligue 1", "Fans Premier League")
-  - _Auto-attribution :_ L'utilisateur est automatiquement proposé pour rejoindre une de ces ligues s'il est solo après 7 jours
-  - _Note :_ Ces ligues publiques deviennent ensuite le ferment de communauté
+- [x] **AUTO-6.2 : Suggestion automatique de ligues publiques**
+  - _Action :_ Inclus dans l'email solo-activation : top 3 squads `is_private=false` triés par nombre de membres
+  - _Fallback :_ Si aucune ligue publique → section absente proprement
 
 - [ ] **AUTO-6.3 : Messages auto dans les chats de ligue**
   - _Lien avec :_ Sprint CHAT-LIVE de TASKS_v2.md

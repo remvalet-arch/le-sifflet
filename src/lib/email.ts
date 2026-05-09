@@ -247,6 +247,68 @@ export function emailWeeklyRecap(
 </html>`;
 }
 
+export type PublicSquad = { id: string; name: string; memberCount: number };
+
+export function emailSquadActivation(
+  username: string,
+  publicSquads: PublicSquad[],
+): string {
+  const squadsSection =
+    publicSquads.length > 0
+      ? `
+          <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#a0a090;text-transform:uppercase;letter-spacing:1px;">Ligues ouvertes à rejoindre</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            ${publicSquads
+              .map(
+                (s) => `
+            <tr><td style="padding:0 0 8px;">
+              <a href="https://vartime.app/ligues" style="display:flex;align-items:center;justify-content:space-between;background:#0f1a0f;border-radius:10px;padding:12px 16px;text-decoration:none;">
+                <span style="font-size:14px;font-weight:700;color:#f0f0e8;">${s.name}</span>
+                <span style="font-size:12px;color:#606060;">${s.memberCount} membre${s.memberCount > 1 ? "s" : ""}</span>
+              </a>
+            </td></tr>`,
+              )
+              .join("")}
+          </table>`
+      : "";
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0f0a;font-family:Inter,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f0a;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:24px;text-align:center;">
+          <span style="font-size:28px;font-weight:900;color:#f0f0e8;letter-spacing:-1px;">⚽ VAR TIME</span>
+        </td></tr>
+        <tr><td style="background:#141a14;border-radius:16px;padding:32px;">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:900;color:#f0f0e8;">${username}, joue avec tes potes ! 🏆</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#a0a090;line-height:1.6;">Les joueurs en ligue restent 5x plus longtemps — et s'amusent 10x plus. Crée ta ligue ou rejoins-en une en 30 secondes.</p>
+
+          ${squadsSection}
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+            <tr><td style="padding:0 0 10px;">
+              <a href="https://vartime.app/ligues" style="display:block;background:#d4a017;color:#0a0f0a;text-align:center;padding:14px 20px;border-radius:12px;font-weight:900;font-size:15px;text-decoration:none;">🏟️ Rejoindre une ligue</a>
+            </td></tr>
+            <tr><td>
+              <a href="https://vartime.app/ligues" style="display:block;background:#1e2a1e;color:#f0f0e8;text-align:center;padding:14px 20px;border-radius:12px;font-weight:900;font-size:15px;text-decoration:none;border:1px solid rgba(255,255,255,0.1);">➕ Créer ma propre ligue</a>
+            </td></tr>
+          </table>
+
+          <p style="margin:0;font-size:13px;color:#606060;line-height:1.6;">Tu peux désactiver ces emails dans tes <a href="https://vartime.app/settings/notifications" style="color:#808070;">préférences de notification</a>.</p>
+        </td></tr>
+        <tr><td style="padding-top:20px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#404040;">VAR TIME · <a href="https://vartime.app" style="color:#606060;">vartime.app</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function emailJ7Churn(username: string, tallyUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="fr">
