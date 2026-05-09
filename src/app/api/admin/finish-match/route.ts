@@ -7,6 +7,7 @@ import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { getApiFootballSeasonYear } from "@/lib/api-football-client";
 import { sendPushToMatchSubscribers, sendPushToUsers } from "@/lib/push-sender";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
+import { postSystemMessageToUserSquads } from "@/lib/squad-messages";
 
 export async function POST(request: NextRequest) {
   // ── Guard modérateur ────────────────────────────────────────────────────────
@@ -265,6 +266,40 @@ export async function POST(request: NextRequest) {
         }),
       ),
     );
+  })();
+
+  // Squad system messages — "Score exact trouvé" (fire-and-forget)
+  void (async () => {
+    const scoreStr = `${match.home_score ?? 0}–${match.away_score ?? 0}`;
+
+    const { data: exactWinners } = await admin
+      .from("pronos")
+      .select("user_id, prono_value, points_earned")
+      .eq("match_id", match_id)
+      .eq("prono_type", "exact_score")
+      .eq("status", "won");
+
+    if (!exactWinners?.length) return;
+
+    const winnerIds = exactWinners.map((p) => p.user_id);
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, username")
+      .in("id", winnerIds);
+    const usernameMap = new Map(
+      (profiles ?? []).map((p) => [p.id, p.username ?? "Un arbitre"]),
+    );
+
+    const userScores = new Map(
+      exactWinners.map((p) => [
+        p.user_id,
+        {
+          score: p.points_earned ?? 0,
+          message: `🎯 **${usernameMap.get(p.user_id) ?? "Un arbitre"}** avait prédit le score exact **${scoreStr}** sur ${match.team_home} — ${match.team_away}. Respect. 👏`,
+        },
+      ]),
+    );
+    await postSystemMessageToUserSquads(userScores);
   })();
 
   // Async hub stats sync — ne bloque pas la réponse

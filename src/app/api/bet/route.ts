@@ -108,6 +108,12 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     const msg = error.message ?? "";
+    if (
+      (error as { code?: string }).code === "23505" ||
+      msg.includes("duplicate key") ||
+      msg.includes("already_bet")
+    )
+      return errorResponse("Tu as déjà parié sur cet événement", 409);
     if (msg.includes("not_squad_member"))
       return errorResponse("Tu n’es pas membre de cette ligue", 403);
     if (msg.includes("event_not_open"))
