@@ -184,20 +184,25 @@ export async function POST(request: NextRequest) {
 
     const marketEventId = newEvent.id;
 
-    // Fire-and-forget : push aux abonnés du match (FK2: action buttons OUI/NON)
-    void sendPushToMatchSubscribers(match_id, {
-      title: "VAR Time 🟨",
-      body: `${ACTION_LABELS[validType]} — le marché vient d'ouvrir, parie !`,
-      url: `/match/${match_id}`,
-      actions: [
-        { action: "bet_yes", title: "✅ OUI" },
-        { action: "bet_no", title: "❌ NON" },
-      ],
-      tag: `var-${marketEventId}`,
-      requireInteraction: true,
-      vibrate: [200, 100, 200, 100, 400],
-      extra_data: { marketEventId, matchId: match_id, type: "var_alert" },
-    }).catch((e: unknown) => log.error("alert", "push failed", e));
+    // Fire-and-forget : push aux abonnés du match — exclut les initiateurs
+    // (ils sont déjà sur la page match et ont déclenché l'alerte eux-mêmes)
+    void sendPushToMatchSubscribers(
+      match_id,
+      {
+        title: "VAR Time 🟨",
+        body: `${ACTION_LABELS[validType]} — le marché vient d'ouvrir, parie !`,
+        url: `/match/${match_id}`,
+        actions: [
+          { action: "bet_yes", title: "✅ OUI" },
+          { action: "bet_no", title: "❌ NON" },
+        ],
+        tag: `var-${marketEventId}`,
+        requireInteraction: true,
+        vibrate: [200, 100, 200, 100, 400],
+        extra_data: { marketEventId, matchId: match_id, type: "var_alert" },
+      },
+      distinctUsers,
+    ).catch((e: unknown) => log.error("alert", "push failed", e));
 
     cooldown_until = new Date(
       Date.now() + COOLDOWN_MINUTES * 60 * 1000,
