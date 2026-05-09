@@ -29,6 +29,7 @@ export type PushPayload = {
 export async function sendPushToMatchSubscribers(
   matchId: string,
   payload: PushPayload,
+  excludeUserIds?: string[],
 ): Promise<number> {
   ensureVapid();
   if (!vapidConfigured) return 0;
@@ -71,6 +72,11 @@ export async function sendPushToMatchSubscribers(
       if (!prefs || prefs.length === 0) return true;
       return prefs.includes(competitionId);
     });
+  }
+
+  if (excludeUserIds?.length) {
+    const excluded = new Set(excludeUserIds);
+    userIds = userIds.filter((id) => !excluded.has(id));
   }
 
   if (userIds.length === 0) return 0;
