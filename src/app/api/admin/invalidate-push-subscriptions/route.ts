@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +36,15 @@ export async function POST(request: Request) {
     .neq("id", "00000000-0000-0000-0000-000000000000"); // delete all
 
   if (error) {
-    console.error("[invalidate-push-subscriptions]", error);
+    log.error("admin-invalidate-push", "DB delete error", {
+      error: error.message,
+    });
     return errorResponse("Erreur lors de la suppression", 500);
   }
 
-  console.info(
-    `[invalidate-push-subscriptions] ${count ?? 0} subscriptions supprimées`,
-  );
+  log.info("admin-invalidate-push", "Subscriptions deleted", {
+    count: count ?? 0,
+  });
   return successResponse({
     deleted: count ?? 0,
     message: `${count ?? 0} subscriptions supprimées. Les utilisateurs devront réactiver les notifications.`,

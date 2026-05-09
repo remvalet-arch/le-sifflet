@@ -17,6 +17,7 @@ import {
 } from "@/services/api-football-sync";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { resolveEvent } from "@/lib/resolve-event";
+import { log } from "@/lib/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MatchStatus, Database } from "@/types/database";
 
@@ -454,7 +455,7 @@ export async function GET(request: Request) {
   for (const m of active) {
     const short = (shortByMatchId.get(m.id) ?? "").toUpperCase();
     if (!END_STATUS_SHORT.has(short)) continue;
-    console.log(`[monitor] Full FT sync: Match ${m.id}`);
+    log.info("cron-match-monitor", "Full FT sync", { matchId: m.id });
     try {
       const r = await syncApiFootballMatch(m.id);
       if (r.skippedReason) {
@@ -527,7 +528,9 @@ export async function GET(request: Request) {
           p_round_number: f.round_number,
         });
       } catch (err) {
-        console.error("[monitor] resolve_squad_round error:", err);
+        log.error("cron-match-monitor", "resolve_squad_round error", {
+          error: String(err),
+        });
       }
     }
   })();

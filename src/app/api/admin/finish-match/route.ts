@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { log } from "@/lib/logger";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { getApiFootballSeasonYear } from "@/lib/api-football-client";
 import { sendPushToMatchSubscribers, sendPushToUsers } from "@/lib/push-sender";
@@ -75,7 +76,9 @@ export async function POST(request: NextRequest) {
     p_match_id: match_id,
   });
   if (pronoErr) {
-    console.warn(`[finish-match] resolve_match_pronos: ${pronoErr.message}`);
+    log.warn("admin-finish-match", "resolve_match_pronos failed", {
+      error: pronoErr.message,
+    });
   }
 
   // Personalized push + badges (fire-and-forget)

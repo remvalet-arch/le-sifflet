@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { log } from "@/lib/logger";
 
 type ChampionshipStanding = {
   user_id: string;
@@ -98,7 +99,9 @@ export async function GET(
       .maybeSingle();
 
     if (memErr) {
-      console.error("Supabase Error:", memErr);
+      log.error("squads-id", "Check membership error", {
+        error: memErr.message,
+      });
       return errorResponse(memErr.message, 500);
     }
     if (!membership)
@@ -111,7 +114,8 @@ export async function GET(
       .maybeSingle();
 
     if (sErr || !squad) {
-      if (sErr) console.error("Supabase Error:", sErr);
+      if (sErr)
+        log.error("squads-id", "Get squad error", { error: sErr.message });
       return errorResponse("Ligue introuvable", 404);
     }
 
@@ -119,7 +123,9 @@ export async function GET(
       "squad_members_for_my_squads",
     );
     if (rpcErr) {
-      console.error("Supabase Error:", rpcErr);
+      log.error("squads-id", "RPC squad_members_for_my_squads error", {
+        error: rpcErr.message,
+      });
       return errorResponse(rpcErr.message, 500);
     }
 
@@ -161,7 +167,7 @@ export async function GET(
       ]);
 
     if (pErr) {
-      console.error("Supabase Error:", pErr);
+      log.error("squads-id", "Get profiles error", { error: pErr.message });
       return errorResponse(pErr.message, 500);
     }
 
@@ -208,12 +214,12 @@ export async function GET(
       await Promise.all([pronosQuery, betsQuery]);
 
     if (wErr) {
-      console.error("Supabase Error (pronos):", wErr);
+      log.error("squads-id", "Get pronos error", { error: wErr.message });
       return errorResponse(wErr.message, 500);
     }
 
     if (bErr) {
-      console.error("Supabase Error (bets):", bErr);
+      log.error("squads-id", "Get bets error", { error: bErr.message });
       return errorResponse(bErr.message, 500);
     }
 
@@ -411,7 +417,7 @@ export async function GET(
       past_seasons,
     });
   } catch (error) {
-    console.error("Supabase Error:", error);
+    log.error("squads-id", "Unexpected error", { error: String(error) });
     return errorResponse("Erreur serveur", 500);
   }
 }

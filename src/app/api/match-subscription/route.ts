@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { log } from "@/lib/logger";
 
 type Intent = "subscribe" | "mute" | "unmute";
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       { onConflict: "user_id,match_id" },
     );
     if (error) {
-      console.error("[match-subscription]", error.message);
+      log.error("match-subscription", "Upsert error", { error: error.message });
       return errorResponse(error.message, 500);
     }
     return successResponse({ smart_mute });
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (selErr) {
-    console.error("[match-subscription]", selErr.message);
+    log.error("match-subscription", "Select error", { error: selErr.message });
     return errorResponse(selErr.message, 500);
   }
   if (!existing) {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
     .eq("match_id", match_id);
 
   if (upErr) {
-    console.error("[match-subscription]", upErr.message);
+    log.error("match-subscription", "Update error", { error: upErr.message });
     return errorResponse(upErr.message, 500);
   }
   return successResponse({ smart_mute: false });

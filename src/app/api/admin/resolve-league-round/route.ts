@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -146,7 +147,9 @@ export async function POST(request: Request) {
           url: `/ligues/${season.squad_id}`,
         });
       } catch (e) {
-        console.error("[resolve-league-round] season-end push failed:", e);
+        log.error("admin-resolve-league-round", "season-end push failed", {
+          error: String(e),
+        });
       }
     })();
   }

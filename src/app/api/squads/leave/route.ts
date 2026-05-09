@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     try {
       body = (await request.json()) as { squad_id?: string };
     } catch (error) {
-      console.error("Supabase Error:", error);
+      log.error("squads-leave", "Supabase error", { error: String(error) });
       return errorResponse("Corps JSON invalide", 400);
     }
     const { squad_id } = body;
@@ -27,13 +28,13 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id);
 
     if (error) {
-      console.error("Supabase Error:", error);
+      log.error("squads-leave", "Supabase error", { error: String(error) });
       return errorResponse(error.message, 500);
     }
 
     return successResponse({});
   } catch (error) {
-    console.error("Supabase Error:", error);
+    log.error("squads-leave", "Unexpected error", { error: String(error) });
     return errorResponse("Erreur serveur", 500);
   }
 }
