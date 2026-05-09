@@ -11,9 +11,7 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   return output.buffer;
 }
 
-export type PushSubscribeResult =
-  | { ok: true }
-  | { ok: false; reason: string };
+export type PushSubscribeResult = { ok: true } | { ok: false; reason: string };
 
 /**
  * Demande la permission push, souscrit et enregistre la souscription en base.
@@ -89,7 +87,10 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
     }
   } catch (err) {
     console.error("[Push] fetch /api/push/subscribe échoué:", err);
-    return { ok: false, reason: `network_error: ${err instanceof Error ? err.message : String(err)}` };
+    return {
+      ok: false,
+      reason: `network_error: ${err instanceof Error ? err.message : String(err)}`,
+    };
   }
 
   return { ok: true };

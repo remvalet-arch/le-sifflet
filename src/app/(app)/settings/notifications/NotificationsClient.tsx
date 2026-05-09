@@ -2,7 +2,18 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronLeft, Zap, Trophy, BookOpen, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Bell,
+  ChevronLeft,
+  Zap,
+  Trophy,
+  BookOpen,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
@@ -12,7 +23,8 @@ type ToggleKey =
   | "notif_pre_match_2h"
   | "notif_var_results"
   | "notif_prono_results"
-  | "notif_daily_digest";
+  | "notif_daily_digest"
+  | "notif_squad_chat";
 
 const NOTIFICATION_GROUPS = [
   {
@@ -64,6 +76,17 @@ const NOTIFICATION_GROUPS = [
       },
     ],
   },
+  {
+    title: "Ligues",
+    icon: Users,
+    items: [
+      {
+        key: "notif_squad_chat" as ToggleKey,
+        label: "Chat de ligue actif",
+        desc: "Reçois un push quand quelqu'un écrit dans ton chat de ligue. Max 1 push / ligue / 30 min.",
+      },
+    ],
+  },
 ];
 
 export default function NotificationsClient({
@@ -73,6 +96,7 @@ export default function NotificationsClient({
   initialVarResults,
   initialPronoResults,
   initialDailyDigest,
+  initialSquadChat,
 }: {
   userId: string;
   initialPreMatch5: boolean;
@@ -80,6 +104,7 @@ export default function NotificationsClient({
   initialVarResults: boolean;
   initialPronoResults: boolean;
   initialDailyDigest: boolean;
+  initialSquadChat: boolean;
 }) {
   const [values, setValues] = useState<Record<ToggleKey, boolean>>({
     notif_pre_match_5min: initialPreMatch5,
@@ -87,9 +112,12 @@ export default function NotificationsClient({
     notif_var_results: initialVarResults,
     notif_prono_results: initialPronoResults,
     notif_daily_digest: initialDailyDigest,
+    notif_squad_chat: initialSquadChat,
   });
   const [isPending, startTransition] = useTransition();
-  const [subStatus, setSubStatus] = useState<"checking" | "subscribed" | "not_subscribed">("checking");
+  const [subStatus, setSubStatus] = useState<
+    "checking" | "subscribed" | "not_subscribed"
+  >("checking");
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
@@ -111,7 +139,8 @@ export default function NotificationsClient({
           "Notifications bloquées — autorise-les dans Réglages > Safari > Notifications.",
         push_not_supported:
           "Web Push non supporté. Sur iPhone, l'app doit être installée sur l'écran d'accueil.",
-        no_vapid_key: "Configuration serveur manquante (VAPID). Contacte l'admin.",
+        no_vapid_key:
+          "Configuration serveur manquante (VAPID). Contacte l'admin.",
         sw_not_ready:
           "Service Worker non prêt. Ferme l'app, réouvre-la et réessaie.",
       };
@@ -178,8 +207,8 @@ export default function NotificationsClient({
               </p>
               <p className="mt-0.5 text-xs text-zinc-400">
                 Les préférences ci-dessous sont sauvegardées, mais aucune
-                notification ne sera reçue tant que tu n&apos;as pas activé
-                le canal push sur cet appareil.
+                notification ne sera reçue tant que tu n&apos;as pas activé le
+                canal push sur cet appareil.
               </p>
             </div>
           </div>

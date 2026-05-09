@@ -54,7 +54,11 @@ export function PushTestClient({
   subscriptionCount: number;
 }) {
   const [statuses, setStatuses] = useState<Record<ScenarioId, Status>>(
-    () => Object.fromEntries(SCENARIOS.map((s) => [s.id, "idle"])) as Record<ScenarioId, Status>,
+    () =>
+      Object.fromEntries(SCENARIOS.map((s) => [s.id, "idle"])) as Record<
+        ScenarioId,
+        Status
+      >,
   );
 
   async function send(scenario: ScenarioId) {

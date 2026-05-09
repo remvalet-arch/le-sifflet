@@ -214,7 +214,7 @@ export function ShopClient({
               {balance.toLocaleString("fr-FR")}
             </span>
             <span className="text-[9px] font-black uppercase tracking-widest text-green-500/60">
-              pts
+              🪙
             </span>
           </div>
         </div>
@@ -309,7 +309,7 @@ export function ShopClient({
                           : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
                     }`}
                   >
-                    {loading ? "…" : `${booster.price_pts} pts`}
+                    {loading ? "…" : `${booster.price_pts} 🪙`}
                   </button>
                 </div>
               );
@@ -402,8 +402,8 @@ export function ShopClient({
                         : rankUnlocked
                           ? "Réclamer gratuitement"
                           : canAfford
-                            ? `Acheter · ${price.toLocaleString("fr-FR")} pts`
-                            : `${price.toLocaleString("fr-FR")} pts`}
+                            ? `Acheter · ${price.toLocaleString("fr-FR")} 🪙`
+                            : `${price.toLocaleString("fr-FR")} 🪙`}
                     </button>
                   ) : (
                     <button

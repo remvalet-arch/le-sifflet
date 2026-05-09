@@ -69,5 +69,8 @@ export async function GET(request: Request) {
   });
 
   console.info(`[cron/j1-inactive] Pushed to ${inactiveIds.length} users`);
-  return successResponse({ targeted: inactiveIds.length, sent: inactiveIds.length });
+  return successResponse({
+    targeted: inactiveIds.length,
+    sent: inactiveIds.length,
+  });
 }

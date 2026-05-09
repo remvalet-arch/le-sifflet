@@ -13,6 +13,13 @@ type MessageWithProfile = SquadMessageRow & {
 const RATE_LIMIT_MS = 3000;
 const MAX_CHARS = 200;
 
+function renderBold(text: string): React.ReactNode {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
+  );
+}
+
 export function SquadChat({
   squadId,
   currentUserId,
@@ -127,20 +134,23 @@ export function SquadChat({
     setSending(true);
     setLastSentAt(now);
 
-    const { error } = await supabase.from("squad_messages").insert({
-      squad_id: squadId,
-      user_id: currentUserId,
-      content: trimmed,
-    });
-
-    setSending(false);
-
-    if (error) {
-      toast.error("Message non envoyé, réessaie.");
-    } else {
-      setText("");
+    try {
+      const res = await fetch(`/api/squads/${squadId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: trimmed }),
+      });
+      if (!res.ok) {
+        toast.error("Message non envoyé, réessaie.");
+      } else {
+        setText("");
+      }
+    } catch {
+      toast.error("Connexion perdue, réessaie.");
+    } finally {
+      setSending(false);
     }
-  }, [text, sending, lastSentAt, squadId, currentUserId, supabase]);
+  }, [text, sending, lastSentAt, squadId]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -179,7 +189,7 @@ export function SquadChat({
                     <span className="not-italic mr-1.5 rounded border border-green-700/30 bg-green-900/30 px-1 py-0.5 text-[8px] font-black uppercase tracking-widest text-green-500/70">
                       VAR TIME
                     </span>
-                    {msg.content}
+                    {renderBold(msg.content)}
                   </p>
                   <div className="h-px flex-1 bg-white/5" />
                 </div>

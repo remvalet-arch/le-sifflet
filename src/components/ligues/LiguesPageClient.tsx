@@ -255,21 +255,24 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                     </button>
                     {menuOpenSquadId === s.id && (
                       <>
-                      <div className="fixed inset-0 z-10" onClick={() => setMenuOpenSquadId(null)} />
-                      <div className="absolute right-0 bottom-full z-20 mb-1 min-w-[160px] overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-xl">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMenuOpenSquadId(null);
-                            void handleLeave(s);
-                          }}
-                          disabled={submitting}
-                          className="flex w-full items-center gap-2 px-4 py-3 text-left text-[12px] font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-40"
-                        >
-                          <LogOut className="h-3.5 w-3.5" />
-                          Quitter la ligue
-                        </button>
-                      </div>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setMenuOpenSquadId(null)}
+                        />
+                        <div className="absolute right-0 bottom-full z-20 mb-1 min-w-[160px] overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-xl">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMenuOpenSquadId(null);
+                              void handleLeave(s);
+                            }}
+                            disabled={submitting}
+                            className="flex w-full items-center gap-2 px-4 py-3 text-left text-[12px] font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-40"
+                          >
+                            <LogOut className="h-3.5 w-3.5" />
+                            Quitter la ligue
+                          </button>
+                        </div>
                       </>
                     )}
                   </div>

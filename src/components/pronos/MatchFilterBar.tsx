@@ -72,49 +72,54 @@ export function MatchFilterBar({
 
           return (
             <span key={dk} className="flex shrink-0 items-center gap-2">
-            {hasGap && (
-              <span className="self-center text-zinc-700 select-none" aria-hidden>·</span>
-            )}
-            <button
-              type="button"
-              onClick={() => onSelectedDayChange(dk)}
-              className={`relative flex shrink-0 flex-col items-center rounded-2xl px-4 py-2.5 transition active:scale-[0.96] ${
-                isSelected
-                  ? "bg-whistle text-pitch-900"
-                  : "bg-zinc-800/70 text-zinc-400 hover:bg-zinc-800"
-              }`}
-            >
-              <span className="text-[11px] font-black capitalize leading-tight">
-                {pill.abbrev}
-              </span>
-              {pill.num && (
+              {hasGap && (
                 <span
-                  className={`text-[13px] font-black leading-tight tabular-nums ${
-                    isSelected ? "text-pitch-900" : "text-zinc-300"
-                  }`}
+                  className="self-center text-zinc-700 select-none"
+                  aria-hidden
                 >
-                  {pill.num}
+                  ·
                 </span>
               )}
-              {pill.sub && (
-                <span
-                  className={`text-[8px] font-bold leading-tight ${isSelected ? "text-pitch-900/70" : "text-zinc-500"}`}
-                >
-                  {pill.sub}
-                </span>
-              )}
-              <span
-                className={`mt-1 h-1 w-1 rounded-full transition-colors ${
-                  allDone
-                    ? isSelected
-                      ? "bg-pitch-900/50"
-                      : "bg-green-400"
-                    : isSelected
-                      ? "bg-pitch-900/30"
-                      : "bg-zinc-600"
+              <button
+                type="button"
+                onClick={() => onSelectedDayChange(dk)}
+                className={`relative flex shrink-0 flex-col items-center rounded-2xl px-4 py-2.5 transition active:scale-[0.96] ${
+                  isSelected
+                    ? "bg-whistle text-pitch-900"
+                    : "bg-zinc-800/70 text-zinc-400 hover:bg-zinc-800"
                 }`}
-              />
-            </button>
+              >
+                <span className="text-[11px] font-black capitalize leading-tight">
+                  {pill.abbrev}
+                </span>
+                {pill.num && (
+                  <span
+                    className={`text-[13px] font-black leading-tight tabular-nums ${
+                      isSelected ? "text-pitch-900" : "text-zinc-300"
+                    }`}
+                  >
+                    {pill.num}
+                  </span>
+                )}
+                {pill.sub && (
+                  <span
+                    className={`text-[8px] font-bold leading-tight ${isSelected ? "text-pitch-900/70" : "text-zinc-500"}`}
+                  >
+                    {pill.sub}
+                  </span>
+                )}
+                <span
+                  className={`mt-1 h-1 w-1 rounded-full transition-colors ${
+                    allDone
+                      ? isSelected
+                        ? "bg-pitch-900/50"
+                        : "bg-green-400"
+                      : isSelected
+                        ? "bg-pitch-900/30"
+                        : "bg-zinc-600"
+                  }`}
+                />
+              </button>
             </span>
           );
         })}
