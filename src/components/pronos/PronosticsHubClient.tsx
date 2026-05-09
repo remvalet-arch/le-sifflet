@@ -106,9 +106,9 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
           return (
             <div
               key={i}
-              className="flex h-3 w-3 items-center justify-center rounded-full bg-green-500"
+              className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500"
             >
-              <Check className="h-2 w-2 text-white" strokeWidth={4} />
+              <Check className="h-1.5 w-1.5 text-white" strokeWidth={4} />
             </div>
           );
         }
@@ -116,9 +116,9 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
           return (
             <div
               key={i}
-              className="flex h-3 w-3 items-center justify-center rounded-full bg-red-500"
+              className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500"
             >
-              <X className="h-2 w-2 text-white" strokeWidth={4} />
+              <X className="h-1.5 w-1.5 text-white" strokeWidth={4} />
             </div>
           );
         }
@@ -126,16 +126,16 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
           return (
             <div
               key={i}
-              className="flex h-3 w-3 items-center justify-center rounded-full bg-zinc-500"
+              className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-zinc-500"
             >
-              <Minus className="h-2 w-2 text-white" strokeWidth={4} />
+              <Minus className="h-1.5 w-1.5 text-white" strokeWidth={4} />
             </div>
           );
         }
         return (
           <div
             key={i}
-            className="flex h-3 w-3 items-center justify-center rounded-full bg-zinc-800 border border-white/10"
+            className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-zinc-800 border border-white/10"
           />
         );
       })}
@@ -535,12 +535,12 @@ function MatchPronoCard({
   return (
     <>
       <div
-        className={`overflow-hidden rounded-2xl border bg-zinc-900/60 px-4 pb-5 pt-4 ${
+        className={`overflow-hidden rounded-2xl border bg-zinc-900/60 px-4 pb-3 pt-3 ${
           isLocked ? "border-zinc-700/30" : "border-white/8"
         }`}
       >
         {/* Match header */}
-        <div className="mb-3 flex items-center gap-2 overflow-hidden">
+        <div className="mb-2 flex items-center gap-2 overflow-hidden">
           {match.round_short && (
             <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-widest text-zinc-500">
               {match.round_short}
@@ -552,27 +552,24 @@ function MatchPronoCard({
         </div>
 
         {/* Teams + score inputs */}
-        <div className="flex items-start justify-between mt-2 mb-2">
+        <div className="flex items-start justify-between mt-1 mb-1">
           {/* Left Team */}
           <div className="flex min-w-0 flex-1 flex-col items-center overflow-hidden text-center">
             <TeamLogo logo={match.home_team_logo} name={match.team_home} />
-            <span className="mt-2 line-clamp-1 w-full text-xs font-bold leading-tight text-white">
+            <span className="mt-1.5 line-clamp-1 w-full text-sm font-bold leading-tight text-white">
               {match.team_home}
             </span>
             <div className="mt-1.5 max-w-full overflow-hidden">
               <TeamFormPills
                 form={parseFormString(match.community_stats?.home_form)}
               />
-              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">
-                5 derniers
-              </p>
             </div>
           </div>
 
           {/* Center Block */}
           <div className="flex flex-col items-center mx-2 shrink-0">
             {/* Inputs */}
-            <div className="flex items-center gap-2.5 mb-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
               <ScoreInput
                 value={homeScore}
                 onChange={(val) => {
@@ -610,71 +607,52 @@ function MatchPronoCard({
               const is1 = scoresValid && homeInt > awayInt;
               const isN = scoresValid && homeInt === awayInt;
               const is2 = scoresValid && homeInt < awayInt;
+              const isFirstProno =
+                (match.community_stats?.total_pronos ?? 0) < 10;
 
               return (
                 <>
-                  <div className="flex items-center justify-center gap-1.5">
-                    <div
-                      className={`flex flex-col items-center justify-center rounded-[6px] px-1.5 py-1 min-w-[2rem] transition-all ${is1 ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
-                    >
-                      <span
-                        className={`text-[11px] font-black tabular-nums ${is1 ? "text-amber-400" : "text-zinc-400"}`}
+                  <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">
+                    Gain potentiel
+                  </p>
+                  <div className="flex items-center justify-center gap-1">
+                    {[
+                      { pts: pts1, active: is1 },
+                      { pts: ptsN, active: isN },
+                      { pts: pts2, active: is2 },
+                    ].map(({ pts, active }, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-center justify-center rounded-[5px] px-1.5 py-0.5 min-w-[1.8rem] transition-all ${active ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_6px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
                       >
-                        {pts1}
-                      </span>
-                      <span className="text-[8px] text-zinc-600 leading-none">
-                        pts si ✓
-                      </span>
-                    </div>
-                    <div
-                      className={`flex flex-col items-center justify-center rounded-[6px] px-1.5 py-1 min-w-[2rem] transition-all ${isN ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
-                    >
-                      <span
-                        className={`text-[11px] font-black tabular-nums ${isN ? "text-amber-400" : "text-zinc-400"}`}
-                      >
-                        {ptsN}
-                      </span>
-                      <span className="text-[8px] text-zinc-600 leading-none">
-                        pts si ✓
-                      </span>
-                    </div>
-                    <div
-                      className={`flex flex-col items-center justify-center rounded-[6px] px-1.5 py-1 min-w-[2rem] transition-all ${is2 ? "bg-zinc-900 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.1)]" : "bg-zinc-800/80 border border-white/5"}`}
-                    >
-                      <span
-                        className={`text-[11px] font-black tabular-nums ${is2 ? "text-amber-400" : "text-zinc-400"}`}
-                      >
-                        {pts2}
-                      </span>
-                      <span className="text-[8px] text-zinc-600 leading-none">
-                        pts si ✓
-                      </span>
-                    </div>
+                        <span
+                          className={`text-[10px] font-black tabular-nums ${active ? "text-amber-400" : "text-zinc-500"}`}
+                        >
+                          {pts}
+                        </span>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Community Percentages */}
-                  {(match.community_stats?.total_pronos ?? 0) >= 10 ? (
-                    <div className="flex items-center justify-center gap-1.5 mt-1 opacity-75">
-                      <div className="min-w-[2rem] text-center">
-                        <span className="text-[10px] font-medium text-zinc-500">
-                          {match.community_stats?.community_1_pct ?? 0}%
-                        </span>
-                      </div>
-                      <div className="min-w-[2rem] text-center">
-                        <span className="text-[10px] font-medium text-zinc-500">
-                          {match.community_stats?.community_N_pct ?? 0}%
-                        </span>
-                      </div>
-                      <div className="min-w-[2rem] text-center">
-                        <span className="text-[10px] font-medium text-zinc-500">
-                          {match.community_stats?.community_2_pct ?? 0}%
-                        </span>
-                      </div>
-                    </div>
+                  {/* Community % or first-prono badge */}
+                  {isFirstProno ? (
+                    <span className="mt-1.5 inline-flex items-center gap-0.5 rounded-full border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[8px] font-black text-whistle">
+                      ⚡ Premier à pronostiquer
+                    </span>
                   ) : (
-                    <p className="mt-1 text-center text-[10px] font-black text-amber-400">
-                      ⚡ Sois le premier à pronostiquer
-                    </p>
+                    <div className="flex items-center justify-center gap-1 mt-1 opacity-70">
+                      {[
+                        match.community_stats?.community_1_pct ?? 0,
+                        match.community_stats?.community_N_pct ?? 0,
+                        match.community_stats?.community_2_pct ?? 0,
+                      ].map((pct, idx) => (
+                        <div key={idx} className="min-w-[1.8rem] text-center">
+                          <span className="text-[9px] font-medium text-zinc-500">
+                            {pct}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </>
               );
@@ -684,16 +662,13 @@ function MatchPronoCard({
           {/* Right Team */}
           <div className="flex min-w-0 flex-1 flex-col items-center overflow-hidden text-center">
             <TeamLogo logo={match.away_team_logo} name={match.team_away} />
-            <span className="mt-2 line-clamp-1 w-full text-xs font-bold leading-tight text-white">
+            <span className="mt-1.5 line-clamp-1 w-full text-sm font-bold leading-tight text-white">
               {match.team_away}
             </span>
             <div className="mt-1.5 max-w-full overflow-hidden">
               <TeamFormPills
                 form={parseFormString(match.community_stats?.away_form)}
               />
-              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">
-                5 derniers
-              </p>
             </div>
           </div>
         </div>
