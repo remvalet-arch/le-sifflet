@@ -35,10 +35,12 @@ export async function POST(request: Request) {
 
   const keys = { p256dh, auth };
 
-  const { error } = await supabase.from("push_subscriptions").upsert(
-    { user_id: user.id, endpoint, keys },
-    { onConflict: "user_id,endpoint" },
-  );
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .upsert(
+      { user_id: user.id, endpoint, keys },
+      { onConflict: "user_id,endpoint" },
+    );
 
   if (error) {
     console.error("[push/subscribe] DB error:", error.message);

@@ -55,7 +55,10 @@ export async function POST(request: Request) {
       subject: "Bienvenue sur VAR TIME ⚽ — C'est toi l'arbitre !",
       html: emailWelcome(username),
     });
-    console.info("[webhook/new-profile] Welcome email sent to", authUser.user.email);
+    console.info(
+      "[webhook/new-profile] Welcome email sent to",
+      authUser.user.email,
+    );
   } catch (err) {
     console.error("[webhook/new-profile] Email send failed:", err);
     return successResponse({ sent: false, reason: "resend_error" });

@@ -44,10 +44,7 @@ export default async function PushTestPage() {
         Envoie un push à ton propre appareil pour valider chaque scénario.
       </p>
 
-      <PushTestClient
-        userId={user.id}
-        subscriptionCount={subs?.length ?? 0}
-      />
+      <PushTestClient userId={user.id} subscriptionCount={subs?.length ?? 0} />
     </main>
   );
 }

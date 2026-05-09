@@ -57,7 +57,7 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
         return;
       }
       toast.success(
-        `+500 Pts ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} pts 🎉`,
+        `+500 🪙 Sifflets ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} 🪙 🎉`,
       );
       router.refresh();
     } catch {

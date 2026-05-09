@@ -11,7 +11,9 @@ export async function POST() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("sifflets_balance, login_streak, last_login_date, lifetime_points_earned")
+    .select(
+      "sifflets_balance, login_streak, last_login_date, lifetime_points_earned",
+    )
     .eq("id", user.id)
     .single();
 
