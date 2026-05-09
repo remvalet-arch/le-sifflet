@@ -25,5 +25,6 @@
 
   <handoff>
     Quand la spec est prête, résumer en 3 points : (1) ce que le Dev Agent doit faire en premier, (2) les fichiers à modifier/créer, (3) le critère de succès principal (ce que l'utilisateur verra de différent).
+    Si le sprint introduit des actions manuelles (migration SQL, variable d'env, webhook, service externe), les lister explicitement dans la spec ET signaler qu'elles devront être ajoutées à V-CODER_GUIDE.md section "Actions en attente" après implémentation.
   </handoff>
 </skill>

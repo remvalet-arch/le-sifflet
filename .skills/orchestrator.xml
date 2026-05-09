@@ -94,6 +94,7 @@
     <file name="TASKS.md">Source de vérité du Dev Agent — cocher les cases au fur et à mesure.</file>
     <file name="AI_LEARNINGS.md">Journal des pièges techniques — mettre à jour après chaque session difficile.</file>
     <file name="PROJECT_STATE.md">État architectural — mettre à jour après chaque sprint qui ajoute des migrations ou des routes.</file>
+    <file name="V-CODER_GUIDE.md">Guide non-technique du Directeur Technique. Mettre à jour dans deux cas : (1) un sprint introduit de nouvelles actions manuelles (migration SQL, variable d'env, webhook, service externe) → ajouter dans la section "Actions en attente" et cocher les complétées ; (2) le workflow change (nouvelles commandes, nouveau flow git, nouveaux agents) → mettre à jour les sections concernées. Ce fichier est la seule documentation que le non-développeur lit.</file>
   </filesystem_convention>
 
   <rules>
