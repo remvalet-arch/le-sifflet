@@ -18,7 +18,12 @@ function getDayPill(dayKey: string): {
 } {
   const [y, mo, d] = dayKey.split("-").map(Number);
   const date = new Date(y!, mo! - 1, d!);
-  if (isToday(date)) return { abbrev: "Auj.", num: "" };
+  if (isToday(date))
+    return {
+      abbrev: format(date, "EEE", { locale: fr }),
+      num: format(date, "d", { locale: fr }),
+      sub: "Auj.",
+    };
   const abbrev = format(date, "EEE", { locale: fr });
   const num = format(date, "d", { locale: fr });
   if (isTomorrow(date)) return { abbrev, num, sub: "Demain" };
