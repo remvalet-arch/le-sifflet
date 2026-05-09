@@ -7,6 +7,7 @@ import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { postSystemMessageToUserSquads } from "@/lib/squad-messages";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 const EVENT_LABEL: Record<string, string> = {
   penalty_check: "Penalty en discussion",
@@ -50,6 +51,18 @@ export async function POST(request: NextRequest) {
 
   if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
     return errorResponse("Accès réservé aux modérateurs", 403);
+  }
+
+  const { limited, retryAfter } = await checkRateLimit(
+    supabase,
+    user.id,
+    "admin-resolve-event",
+  );
+  if (limited) {
+    return errorResponse(
+      `Trop de requêtes — réessaie dans ${retryAfter}s`,
+      429,
+    );
   }
 
   const body = (await request.json()) as {
