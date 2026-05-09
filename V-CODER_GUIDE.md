@@ -121,7 +121,31 @@ main   ←   production uniquement, jamais de commit direct
 
 ---
 
-#### C. Formulaire Feedback — Email J+7 churners
+#### C. Créer les 3 crons sur cron-job.org
+
+**Où :** [cron-job.org](https://cron-job.org) (gratuit) — c'est le service qu'on utilise déjà pour les autres crons
+
+**Pourquoi :** Les crons automatiques ne tournent PAS tout seuls — il faut un service externe qui les appelle à heure fixe (Vercel ne gère ça qu'en plan payant)
+
+**Comment (à répéter 3 fois) :**
+1. Connecte-toi → clique **Create cronjob**
+2. **Title :** (voir tableau ci-dessous)
+3. **URL :** (voir tableau ci-dessous)
+4. **Schedule :** Every day à l'heure indiquée
+5. **Request method :** GET
+6. **Headers** → Add header :
+   - `Authorization` = `Bearer VALEUR_DE_TON_CRON_SECRET` ← trouve cette valeur dans Vercel → Settings → Environment Variables → `CRON_SECRET`
+7. Clique **Create**
+
+| # | Title | URL | Heure |
+|---|---|---|---|
+| 1 | `j1-inactive-push` | `https://vartime.app/api/cron/j1-inactive` | 8h00 UTC |
+| 2 | `j3-inactive-email` | `https://vartime.app/api/cron/j3-inactive` | 9h00 UTC |
+| 3 | `j7-churn-email` | `https://vartime.app/api/cron/j7-churn` | 10h00 UTC |
+
+---
+
+#### D. Formulaire Feedback — Email J+7 churners
 
 **Où :** [tally.so](https://tally.so) (gratuit) ou [typeform.com](https://typeform.com)
 
@@ -218,9 +242,9 @@ Tu reçois un email récap
 | Agent | Status | Ce qu'il fait |
 |:---|:---:|:---|
 | AUTO-1.1 — Email bienvenue | 🟡 Attente webhook Supabase | Email dès qu'un user s'inscrit |
-| AUTO-1.2 — Push J+1 inactif | ✅ Actif (cron 8h UTC) | Push si pas de prono après 24h |
-| AUTO-1.3 — Email J+3 inactif | 🟡 Attente RESEND_API_KEY prod | Email "ligue CDM réservée" |
-| AUTO-1.4 — Email J+7 churn | 🟡 Attente TALLY_FEEDBACK_URL | Email feedback pour les churners |
+| AUTO-1.2 — Push J+1 inactif | 🔴 Attente cron-job.org | Push si pas de prono après 24h |
+| AUTO-1.3 — Email J+3 inactif | 🔴 Attente cron-job.org | Email "ligue CDM réservée" |
+| AUTO-1.4 — Email J+7 churn | 🔴 Attente cron-job.org + Tally | Email feedback pour les churners |
 | AUTO-2 — Daily Recap push | ✅ Actif (cron quotidien) | Récap push quotidien aux actifs |
 | AUTO-3 — Twitter Live | ⏳ Planifié semaine 3 | Tweets auto pendant les matchs |
 
