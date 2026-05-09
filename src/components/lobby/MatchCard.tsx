@@ -4,10 +4,7 @@ import type { MatchRow } from "@/lib/matches";
 import { formatMatchStatus, isLobbyLiveStatus } from "@/lib/matches";
 import { LiveBadge } from "@/components/lobby/LiveBadge";
 import { MatchCardCountdown } from "@/components/lobby/MatchCardCountdown";
-import {
-  formatMatchDateTimeParis,
-  formatMatchTime,
-} from "@/lib/format-match-time";
+import { formatMatchDateTimeParis } from "@/lib/format-match-time";
 import { isNextImageRemoteLogoUrl } from "@/lib/remote-logo-hosts";
 
 /** Blason équipe — taille MPG (40px) ou standard (32px). */
@@ -117,7 +114,6 @@ export function MatchCard({
   const isFinished = match.status === "finished";
 
   const when = formatMatchDateTimeParis(match.start_time);
-  const kickoffTime = formatMatchTime(match.start_time);
   const lineupsFlag = hasLineups ?? match.has_lineups;
   // eslint-disable-next-line react-hooks/purity
   const msUntilKickoff = new Date(match.start_time).getTime() - Date.now();
@@ -184,12 +180,9 @@ export function MatchCard({
     ) : isWithin24h ? (
       <MatchCardCountdown startTime={match.start_time} />
     ) : (
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-base">🕐</span>
-        <span className="text-[11px] font-black tabular-nums text-zinc-400">
-          {kickoffTime}
-        </span>
-      </div>
+      <span className="text-sm font-black tracking-widest text-zinc-600">
+        VS
+      </span>
     );
 
   const metaRowMpg = isLive ? null : isFinished ? (
@@ -197,9 +190,14 @@ export function MatchCard({
       {formatMatchStatus("finished")}
     </span>
   ) : lineupsFlag ? (
-    <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-400">
-      Compos dispos
-    </span>
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-medium tabular-nums text-zinc-500">
+        {when}
+      </span>
+      <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-400">
+        Compos ✓
+      </span>
+    </div>
   ) : (
     <span className="text-xs font-medium tabular-nums tracking-wide text-zinc-500">
       {when}
@@ -290,7 +288,7 @@ export function MatchCard({
           ? "Rejoindre le kop →"
           : isFinished
             ? "Voir le résumé →"
-            : `Coup d'envoi : ${when}`}
+            : "Voir la fiche →"}
       </p>
     </Link>
   );
