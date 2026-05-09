@@ -28,6 +28,7 @@ export function BottomNav({ userId }: { userId?: string }) {
   const [hasUnread, setHasUnread] = useState(false);
   const squadIdsRef = useRef<string[]>([]);
   const isOnLiguesRef = useRef(isOnLigues);
+  const wasOnLiguesRef = useRef(isOnLigues);
 
   useEffect(() => {
     isOnLiguesRef.current = isOnLigues;
@@ -36,7 +37,20 @@ export function BottomNav({ userId }: { userId?: string }) {
   // Vérifie les non-lus à l'init et après chaque retour de /ligues
   // (SquadChat met à jour last_read_at → la re-vérif retourne 0 non-lus)
   useEffect(() => {
-    if (!userId || isOnLigues) return;
+    const wasOnLigues = wasOnLiguesRef.current;
+    wasOnLiguesRef.current = isOnLigues;
+
+    if (!userId) return;
+    if (isOnLigues) {
+      setTimeout(() => setHasUnread(false), 0);
+      return;
+    }
+    // Quand on quitte /ligues, on suppose que l'utilisateur a tout lu :
+    // le badge ne revient que via realtime (nouveau message d'un autre user)
+    if (wasOnLigues) {
+      setTimeout(() => setHasUnread(false), 0);
+      return;
+    }
     let cancelled = false;
     const supabase = createClient();
 

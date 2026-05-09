@@ -190,7 +190,7 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
               <p className="text-[9px] font-bold text-zinc-500">
                 Prédiction juste
               </p>
-              <p className="text-[13px] font-black text-green-400">+500 Pts</p>
+              <p className="text-[13px] font-black text-green-400">+500 🪙</p>
             </div>
           </div>
         </div>
@@ -264,8 +264,8 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             {[
               { emoji: "🦁", label: "Lion Bronze", desc: "Rang Bronze" },
-              { emoji: "👑", label: "Couronne", desc: "3 000 pts" },
-              { emoji: "💎", label: "Diamant Noir", desc: "1 500 pts" },
+              { emoji: "👑", label: "Couronne", desc: "3 000 🪙" },
+              { emoji: "💎", label: "Diamant Noir", desc: "1 500 🪙" },
               { emoji: "🦅", label: "Aigle Boss", desc: "Rang Boss" },
             ].map((item) => (
               <div
@@ -871,7 +871,7 @@ function PhoneMockup() {
       {/* Notification bubble — mobile only */}
       <div className="absolute -left-6 bottom-[12%] max-w-[130px] rounded-2xl border border-white/10 bg-zinc-800 px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.15)] lg:hidden">
         <p className="text-[8px] font-bold text-zinc-400">Prédiction juste</p>
-        <p className="text-[10px] font-black text-green-400">+200 Pts</p>
+        <p className="text-[10px] font-black text-green-400">+200 🪙</p>
       </div>
     </div>
   );

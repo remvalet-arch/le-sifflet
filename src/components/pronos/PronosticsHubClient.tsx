@@ -15,8 +15,6 @@ import {
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
-import { formatRelative } from "date-fns";
-import { fr } from "date-fns/locale";
 import { convertOddToPoints } from "@/lib/odds";
 import {
   ScorerAllocationEditor,
@@ -276,6 +274,7 @@ function MatchPronoCard({
         p_home_score: homeInt,
         p_away_score: awayInt,
         p_scorers_json: scorersObj,
+        p_booster_id: null,
       });
 
       if (error) {
@@ -325,7 +324,26 @@ function MatchPronoCard({
   ]);
 
   const kickoff = new Date(match.start_time);
-  const relativeTime = formatRelative(kickoff, new Date(), { locale: fr });
+  const relativeTime = (() => {
+    const now = new Date();
+    const isToday = kickoff.toDateString() === now.toDateString();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow = kickoff.toDateString() === tomorrow.toDateString();
+    const timeStr = kickoff.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    if (isToday) return `Auj. · ${timeStr}`;
+    if (isTomorrow) return `Demain · ${timeStr}`;
+    return (
+      kickoff.toLocaleDateString("fr-FR", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }) + ` · ${timeStr}`
+    );
+  })();
 
   const homeAgg = aggregateSlots(homeSlots);
   const awayAgg = aggregateSlots(awaySlots);
@@ -398,7 +416,7 @@ function MatchPronoCard({
 
             {isWon && pointsEarned > 0 ? (
               <span className="rounded-full border border-green-500/30 bg-green-500/15 px-3 py-0.5 text-[11px] font-black text-green-400">
-                +{pointsEarned.toLocaleString("fr-FR")} Pts
+                +{pointsEarned.toLocaleString("fr-FR")} Points
               </span>
             ) : isLost ? (
               <span className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-0.5 text-[11px] font-bold text-zinc-500">
@@ -425,13 +443,13 @@ function MatchPronoCard({
 
   // Compact submitted card
   if (submitted) {
+    const fmtScorer = (e: { name: string; goals: number }) => {
+      const label = e.name === "CSC" ? "🔙 CSC" : e.name;
+      return e.goals > 1 ? `${label} (×${e.goals})` : label;
+    };
     const scorerText = [
-      homeAgg
-        .map((e) => (e.goals > 1 ? `${e.name} (×${e.goals})` : e.name))
-        .join(", "),
-      awayAgg
-        .map((e) => (e.goals > 1 ? `${e.name} (×${e.goals})` : e.name))
-        .join(", "),
+      homeAgg.map(fmtScorer).join(", "),
+      awayAgg.map(fmtScorer).join(", "),
     ]
       .filter(Boolean)
       .join(" / ");
@@ -486,7 +504,7 @@ function MatchPronoCard({
                   ? existingProno.points_earned!
                   : existingProno.reward_amount!
                 ).toLocaleString("fr-FR")}{" "}
-                Pts
+                Points
               </span>
             )}
             <button
@@ -545,7 +563,9 @@ function MatchPronoCard({
               <TeamFormPills
                 form={parseFormString(match.community_stats?.home_form)}
               />
-              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">5 derniers</p>
+              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">
+                5 derniers
+              </p>
             </div>
           </div>
 
@@ -671,7 +691,9 @@ function MatchPronoCard({
               <TeamFormPills
                 form={parseFormString(match.community_stats?.away_form)}
               />
-              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">5 derniers</p>
+              <p className="mt-0.5 text-[8px] uppercase tracking-widest text-zinc-600">
+                5 derniers
+              </p>
             </div>
           </div>
         </div>
@@ -818,7 +840,11 @@ export function PronosticsHubClient({
   if (!dayMap.has(todayKey)) {
     const todayDate = new Date(todayKey);
     const insertIdx = dayOrder.findIndex((dk) => new Date(dk) > todayDate);
-    dayOrder.splice(insertIdx === -1 ? dayOrder.length : insertIdx, 0, todayKey);
+    dayOrder.splice(
+      insertIdx === -1 ? dayOrder.length : insertIdx,
+      0,
+      todayKey,
+    );
     dayMap.set(todayKey, new Map());
   }
 
