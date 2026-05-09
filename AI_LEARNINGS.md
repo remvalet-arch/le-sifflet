@@ -45,6 +45,10 @@
 
   Ce pattern s'applique partout où on choisit dynamiquement entre deux colonnes (ex: thread read_at selon quel côté du thread on est).
 
+## 📦 `npm install` sans commit de `package.json` / `package-lock.json`
+
+- **Toujours inclure `package.json` ET `package-lock.json` dans le commit après un `npm install`.** Si on commit uniquement les fichiers source (`git add src/...`) sans ajouter les fichiers de dépendances, le build Vercel échoue avec "Module not found" même si le package fonctionne en local. Pattern à suivre après tout `npm install` : `git add package.json package-lock.json`.
+
 ## 🔔 Colonnes `notif_*` sur `profiles` — nommage réel vs documenté
 
 - **PROJECT_STATE.md (et les descriptions de migration) ne sont pas la source de vérité pour les noms de colonnes.** La migration 0084 est documentée avec `notif_nudge`, `notif_match_start`, `notif_var_result` (singulier) mais les colonnes réellement en base sont `notif_pre_match_5min`, `notif_pre_match_2h`, `notif_var_results` (pluriel). **Toujours vérifier dans `src/types/database.ts`** avant d'utiliser une colonne `notif_*` — c'est la seule source de vérité fiable.
