@@ -23,6 +23,7 @@ import type { Locale } from "@/lib/i18n/locale";
 
 type Props = {
   siffletsBalance: number;
+  seasonPoints: number;
   username: string;
   userId: string;
   rank: string;
@@ -32,6 +33,7 @@ type Props = {
 
 export function TopBar({
   siffletsBalance,
+  seasonPoints,
   username,
   userId,
   rank,
@@ -99,22 +101,29 @@ export function TopBar({
             </span>
           </Link>
 
-          {/* Balance — flash vert quand le solde augmente, clique → profil */}
-          <Link
-            href="/profile"
-            className={`rounded-full border px-3 py-1 text-base font-black tabular-nums transition-all duration-500 ${
-              flash
-                ? "border-green-400 bg-green-400/20 text-green-300 shadow-lg shadow-green-400/30"
-                : "border-whistle/40 bg-whistle/10 text-whistle"
-            }`}
-          >
-            {balance.toLocaleString("fr-FR")}
+          {/* Balances — Sifflets + Points saison */}
+          <Link href="/profile" className="flex items-center gap-2">
             <span
-              className={`ml-1 text-xs font-normal transition-colors duration-500 ${
-                flash ? "text-green-300/80" : "text-whistle/60"
+              className={`rounded-full border px-3 py-1 text-base font-black tabular-nums transition-all duration-500 ${
+                flash
+                  ? "border-green-400 bg-green-400/20 text-green-300 shadow-lg shadow-green-400/30"
+                  : "border-whistle/40 bg-whistle/10 text-whistle"
               }`}
             >
-              🪙
+              {balance.toLocaleString("fr-FR")}
+              <span
+                className={`ml-1 text-xs font-normal transition-colors duration-500 ${
+                  flash ? "text-green-300/80" : "text-whistle/60"
+                }`}
+              >
+                🪙
+              </span>
+            </span>
+            <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-sm font-black tabular-nums text-blue-300">
+              {seasonPoints.toLocaleString("fr-FR")}
+              <span className="ml-1 text-[10px] font-normal text-blue-300/60">
+                Pts
+              </span>
             </span>
           </Link>
 
