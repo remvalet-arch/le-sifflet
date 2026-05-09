@@ -15,5 +15,34 @@
     "logout": "Abmelden",
     "leaderboard": "Rangliste",
     "shop": "Shop"
+  },
+  "Match": {
+    "live": "Live",
+    "upcoming": "Demnächst",
+    "finished": "Beendet",
+    "firstHalf": "1. Halbzeit",
+    "halfTime": "Halbzeit",
+    "secondHalf": "2. Halbzeit",
+    "paused": "Unterbrochen"
+  },
+  "Lobby": {
+    "title": "Spiele",
+    "noMatches": "Keine Spiele verfügbar",
+    "today": "Heute"
+  },
+  "Voting": {
+    "decision": "Entscheidung läuft",
+    "timeLeft": "Verbleibende Zeit",
+    "closed": "Abstimmung geschlossen",
+    "yes": "JA",
+    "no": "NEIN",
+    "stake": "Einsatz",
+    "min": "MIN",
+    "half": "HALB",
+    "allIn": "ALL IN"
+  },
+  "Common": {
+    "pts": "Pkt",
+    "loading": "Laden…"
   }
 }

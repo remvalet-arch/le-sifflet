@@ -15,5 +15,34 @@
     "logout": "Disconnetti",
     "leaderboard": "Classifica",
     "shop": "Negozio"
+  },
+  "Match": {
+    "live": "In Diretta",
+    "upcoming": "In Arrivo",
+    "finished": "Terminato",
+    "firstHalf": "1° Tempo",
+    "halfTime": "Intervallo",
+    "secondHalf": "2° Tempo",
+    "paused": "Sospeso"
+  },
+  "Lobby": {
+    "title": "Le Partite",
+    "noMatches": "Nessuna partita disponibile",
+    "today": "Oggi"
+  },
+  "Voting": {
+    "decision": "Decisione in corso",
+    "timeLeft": "Tempo rimanente",
+    "closed": "Voti chiusi",
+    "yes": "SÌ",
+    "no": "NO",
+    "stake": "Puntata",
+    "min": "MIN",
+    "half": "METÀ",
+    "allIn": "ALL IN"
+  },
+  "Common": {
+    "pts": "Pti",
+    "loading": "Caricamento…"
   }
 }
