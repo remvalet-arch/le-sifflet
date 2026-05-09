@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
+import Image from "next/image";
 import type { PlayerForSelect } from "./ScorerAllocationEditor";
 
 function getPosLabel(pos: string | null | undefined) {
@@ -231,10 +232,11 @@ function PlayerAvatar({
   const img = player.cutout_url || player.image_url;
   if (img) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={img}
         alt={player.player_name}
+        width={40}
+        height={40}
         className={`shrink-0 rounded-full object-cover bg-zinc-800 border border-white/5 ${d}`}
       />
     );

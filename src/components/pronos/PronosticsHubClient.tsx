@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { MatchFilterBar } from "./MatchFilterBar";
 import { CompetitionFilter } from "@/components/shared/CompetitionFilter";
@@ -312,10 +313,11 @@ export function PronosticsHubClient({
                         className="flex min-w-0 flex-1 items-center gap-2.5 transition active:opacity-70"
                       >
                         {comp?.badge_url?.startsWith("http") ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={comp.badge_url}
                             alt={comp.name}
+                            width={20}
+                            height={20}
                             className="h-5 w-5 shrink-0 object-contain"
                           />
                         ) : (

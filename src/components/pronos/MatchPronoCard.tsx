@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Bell, Check, Minus, Share2, Target, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
@@ -140,10 +141,11 @@ function parseFormString(
 function TeamLogo({ logo, name }: { logo: string | null; name: string }) {
   if (logo?.startsWith("http")) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={logo}
         alt={name}
+        width={40}
+        height={40}
         className="h-10 w-10 object-contain drop-shadow-md"
       />
     );

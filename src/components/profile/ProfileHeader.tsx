@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 import { ProfileEditModal } from "./ProfileEditModal";
 
 type TeamInfo = { id: string; name: string; logo_url: string | null } | null;
@@ -161,10 +162,11 @@ export function ProfileHeader({
       <div className="mb-3 flex h-14 items-center gap-3 rounded-xl border border-white/8 bg-zinc-900/80 px-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg">
           {avatar.startsWith("http") ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={avatar}
               alt={username}
+              width={36}
+              height={36}
               className="h-9 w-9 rounded-full object-cover"
             />
           ) : (
@@ -246,10 +248,11 @@ export function ProfileHeader({
               className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ${ringCls}`}
             >
               {avatar.startsWith("http") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={avatar}
                   alt={username}
+                  width={80}
+                  height={80}
                   className="h-20 w-20 rounded-full object-cover"
                 />
               ) : (
@@ -267,10 +270,11 @@ export function ProfileHeader({
               {team && (
                 <div className="mt-2 flex items-center gap-1.5">
                   {team.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={team.logo_url}
                       alt={team.name}
+                      width={16}
+                      height={16}
                       className="h-4 w-4 object-contain"
                     />
                   ) : (

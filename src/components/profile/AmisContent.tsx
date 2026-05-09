@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Users,
   Check,
@@ -49,10 +50,11 @@ function AvatarCircle({
 
   if (avatarUrl && avatarUrl.startsWith("http")) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={avatarUrl}
         alt={username}
+        width={40}
+        height={40}
         className={`${dim} rounded-full object-cover ring-2 ring-white/10`}
       />
     );

@@ -3,6 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Search, X } from "lucide-react";
+import Image from "next/image";
 import type { PlayerForSelect } from "./ScorerAllocationEditor";
 import {
   SCORER_DEFAULT_ODDS,
@@ -46,10 +47,11 @@ function PlayerAvatar({ player }: { player: PlayerForSelect }) {
   const img = player.cutout_url || player.image_url;
   if (img) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={img}
         alt={player.player_name}
+        width={48}
+        height={48}
         className="h-12 w-12 shrink-0 rounded-full border border-white/5 bg-zinc-800 object-cover"
       />
     );
