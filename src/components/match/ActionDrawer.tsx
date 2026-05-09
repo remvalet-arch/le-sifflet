@@ -13,6 +13,8 @@ import type {
   TimelineEventType,
 } from "@/types/database";
 import { syncMatchData, syncTeamRoster } from "@/app/actions/syncData";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 // ── Alertes communautaires ────────────────────────────────────────────────────
 
@@ -138,6 +140,8 @@ export function ActionDrawer({
   const [activeTab, setActiveTab] = useState<"alert" | "match" | "control">(
     "alert",
   );
+  const drawerRef = useFocusTrap(open, onClose);
+  useScrollLock(open);
 
   // Feuille de match
   const [lineups, setLineups] = useState<LineupRow[]>([]);
@@ -352,11 +356,14 @@ export function ActionDrawer({
     });
   }
 
+  const titleId = "action-drawer-title";
+
   return (
     <>
       {/* Backdrop */}
       <div
         onClick={onClose}
+        aria-hidden="true"
         className={`fixed inset-0 z-[90] bg-black/60 transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
@@ -364,6 +371,10 @@ export function ActionDrawer({
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={`fixed bottom-0 left-0 right-0 z-[100] rounded-t-3xl border-t border-white/10 bg-zinc-900 pt-4 transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
@@ -371,6 +382,9 @@ export function ActionDrawer({
       >
         {/* Drag handle */}
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-zinc-700" />
+        <h2 id={titleId} className="sr-only">
+          {isModerator ? "Panneau modérateur" : "Signaler une action"}
+        </h2>
 
         {isModerator ? (
           <>

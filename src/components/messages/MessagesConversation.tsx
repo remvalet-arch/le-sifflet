@@ -156,6 +156,7 @@ export function MessagesConversation({
       <div className="flex items-center gap-2 border-t border-white/8 px-3 py-2">
         <input
           type="text"
+          aria-label="Écrire un message"
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
           onKeyDown={handleKeyDown}

@@ -2,6 +2,8 @@
 
 import { LoaderCircle } from "lucide-react";
 import type { AlertActionType } from "@/types/database";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 const ALERTS: {
   type: AlertActionType;
@@ -41,11 +43,15 @@ export function AlertDrawer({
   signaledTypes,
   onAlert,
 }: Props) {
+  const drawerRef = useFocusTrap(open, onClose);
+  useScrollLock(open);
+
   return (
     <>
       {/* Backdrop — au-dessus de la BottomNav (z-50) */}
       <div
         onClick={onClose}
+        aria-hidden="true"
         className={`fixed inset-0 z-[90] bg-black/60 transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
@@ -53,6 +59,10 @@ export function AlertDrawer({
 
       {/* Drawer — colle au bas de l'écran */}
       <div
+        ref={drawerRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="alert-drawer-title"
         className={`fixed bottom-0 left-0 right-0 z-[100] rounded-t-3xl border-t border-white/10 bg-zinc-900 pt-4 transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
@@ -60,7 +70,10 @@ export function AlertDrawer({
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-zinc-700" />
 
-        <p className="mb-4 text-center text-xs font-black uppercase tracking-widest text-zinc-500">
+        <p
+          id="alert-drawer-title"
+          className="mb-4 text-center text-xs font-black uppercase tracking-widest text-zinc-500"
+        >
           T&apos;as vu quelque chose ?
         </p>
 

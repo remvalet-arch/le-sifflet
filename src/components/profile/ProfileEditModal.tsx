@@ -6,6 +6,8 @@ import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { X, Search, LoaderCircle, Check, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type AvatarTier = { emoji: string; minXp: number };
 
@@ -109,14 +111,8 @@ export function ProfileEditModal({
   const [saving, setSaving] = useState(false);
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Body scroll lock (pure DOM mutation — not setState, allowed in effects)
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
+  const dialogRef = useFocusTrap(true, onClose);
+  useScrollLock(true);
 
   // Fetch available competitions on mount
   useEffect(() => {
@@ -210,25 +206,31 @@ export function ProfileEditModal({
   if (!isClient) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div className="fixed inset-0 z-[60] flex items-end justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Sheet */}
-      <div className="relative z-10 mx-auto flex w-full max-w-md flex-col rounded-t-3xl bg-zinc-950 shadow-2xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-edit-title"
+        className="relative z-10 mx-auto flex w-full max-w-md flex-col rounded-t-3xl bg-zinc-950 shadow-2xl"
+      >
         {/* Handle */}
         <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-zinc-700" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
-          <h2 className="text-base font-black text-white">
+          <h2
+            id="profile-edit-title"
+            className="text-base font-black text-white"
+          >
             Modifier mon profil
           </h2>
           <button

@@ -357,6 +357,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
             </p>
             <input
               type="text"
+              aria-label="Code d'invitation"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               onKeyDown={(e) => {
