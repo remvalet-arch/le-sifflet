@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 
 let vapidConfigured = false;
 function ensureVapid() {
@@ -114,10 +115,10 @@ export async function sendPushToUsers(
         if ((err as { statusCode?: number }).statusCode === 410)
           expiredEndpoints.push(sub.endpoint);
         else
-          console.error(
-            "Push notification failed for endpoint:",
-            sub.endpoint,
-            err,
+          log.error(
+            "push-sender",
+            `Push failed for endpoint ${sub.endpoint}`,
+            String(err),
           );
       }
     }),

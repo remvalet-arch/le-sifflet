@@ -106,7 +106,7 @@ export async function POST(
   if (recipient?.notif_dm && sender) {
     void sendPushToUsers([otherId], {
       title: `💬 ${sender.username}`,
-      body: content.substring(0, 80),
+      body: "Nouveau message",
       url: `/messages/${user.id}`,
     });
   }
