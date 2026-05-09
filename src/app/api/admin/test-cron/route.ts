@@ -10,6 +10,7 @@ const ALLOWED_CRONS = [
   "j7-churn",
   "daily-digest",
   "weekly-recap",
+  "solo-activation",
 ] as const;
 
 type CronId = (typeof ALLOWED_CRONS)[number];

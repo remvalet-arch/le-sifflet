@@ -8,6 +8,7 @@ import {
   emailJ7Churn,
   emailDailyDigest,
   emailWeeklyRecap,
+  emailSquadActivation,
 } from "@/lib/email";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
@@ -19,6 +20,7 @@ const TEMPLATES = [
   "j7-churn",
   "daily-digest",
   "weekly-recap",
+  "squad-activation",
 ] as const;
 
 type TemplateId = (typeof TEMPLATES)[number];
@@ -116,6 +118,15 @@ export async function POST(request: Request) {
         },
         "2026-05-03 → 2026-05-09",
       );
+      break;
+
+    case "squad-activation":
+      subject = `[PREVIEW] 🏆 ${username}, il te manque une ligue !`;
+      html = emailSquadActivation(username, [
+        { id: "1", name: "Bêta CDM 2026", memberCount: 12 },
+        { id: "2", name: "Fans Ligue 1", memberCount: 8 },
+        { id: "3", name: "Les Arbitres du Peuple", memberCount: 5 },
+      ]);
       break;
   }
 

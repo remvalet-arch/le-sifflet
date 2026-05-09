@@ -141,13 +141,14 @@ main   ←   production uniquement, jamais de commit direct
    - `Authorization` = `Bearer VALEUR_DE_TON_CRON_SECRET` ← trouve cette valeur dans Vercel → Settings → Environment Variables → `CRON_SECRET`
 7. Clique **Create**
 
-| #   | Title                  | URL                                              | Schedule              |
-| --- | ---------------------- | ------------------------------------------------ | --------------------- |
-| 1   | `j1-inactive-push`     | `https://vartime.app/api/cron/j1-inactive`       | Every day · 8h00 UTC  |
-| 2   | `j3-inactive-email`    | `https://vartime.app/api/cron/j3-inactive`       | Every day · 9h00 UTC  |
-| 3   | `j7-churn-email`       | `https://vartime.app/api/cron/j7-churn`          | Every day · 10h00 UTC |
-| 4   | `daily-digest`         | `https://vartime.app/api/cron/daily-digest`      | Every day · 9h00 UTC  |
-| 5   | `weekly-recap-dimanche`| `https://vartime.app/api/cron/weekly-recap`      | Every Sunday · 11h00 UTC |
+| #   | Title                   | URL                                         | Schedule                 |
+| --- | ----------------------- | ------------------------------------------- | ------------------------ |
+| 1   | `j1-inactive-push`      | `https://vartime.app/api/cron/j1-inactive`  | Every day · 8h00 UTC     |
+| 2   | `j3-inactive-email`     | `https://vartime.app/api/cron/j3-inactive`  | Every day · 9h00 UTC     |
+| 3   | `j7-churn-email`        | `https://vartime.app/api/cron/j7-churn`     | Every day · 10h00 UTC    |
+| 4   | `daily-digest`          | `https://vartime.app/api/cron/daily-digest` | Every day · 9h00 UTC     |
+| 5   | `weekly-recap-dimanche` | `https://vartime.app/api/cron/weekly-recap`      | Every Sunday · 11h00 UTC |
+| 6   | `solo-activation`       | `https://vartime.app/api/cron/solo-activation`   | Every day · 11h00 UTC    |
 
 ---
 
@@ -248,15 +249,15 @@ Tu reçois un email récap
 
 ## 7. 📊 Tableau de Bord des Agents d'Automatisation
 
-| Agent                        |           Status            | Ce qu'il fait                                           |
-| :--------------------------- | :-------------------------: | :------------------------------------------------------ |
-| AUTO-1.1 — Email bienvenue   | 🟡 Attente webhook Supabase | Email dès qu'un user s'inscrit                          |
-| AUTO-1.2 — Push J+1 inactif  |   🔴 Attente cron-job.org   | Push si pas de prono après 24h                          |
-| AUTO-1.3 — Email J+3 inactif |   🔴 Attente cron-job.org   | Email "ligue CDM réservée"                              |
-| AUTO-1.4 — Email J+7 churn   |   🔴 Attente cron-job.org   | Email feedback (Tally ✅ → `https://tally.so/r/Zjv6QV`) |
-| AUTO-2.1 — Daily Recap push + email | 🔴 Attente cron-job.org | Push + email bilan du jour aux actifs |
-| AUTO-2.3 — Weekly Recap email       | 🔴 Attente cron-job.org | Email récap 7 jours (dimanche 11h UTC) |
-| AUTO-3 — Twitter Live        |    ⏳ Planifié semaine 3    | Tweets auto pendant les matchs                          |
+| Agent                               |           Status            | Ce qu'il fait                                           |
+| :---------------------------------- | :-------------------------: | :------------------------------------------------------ |
+| AUTO-1.1 — Email bienvenue          | 🟡 Attente webhook Supabase | Email dès qu'un user s'inscrit                          |
+| AUTO-1.2 — Push J+1 inactif         |   🔴 Attente cron-job.org   | Push si pas de prono après 24h                          |
+| AUTO-1.3 — Email J+3 inactif        |   🔴 Attente cron-job.org   | Email "ligue CDM réservée"                              |
+| AUTO-1.4 — Email J+7 churn          |   🔴 Attente cron-job.org   | Email feedback (Tally ✅ → `https://tally.so/r/Zjv6QV`) |
+| AUTO-2.1 — Daily Recap push + email |   🔴 Attente cron-job.org   | Push + email bilan du jour aux actifs                   |
+| AUTO-2.3 — Weekly Recap email       |   🔴 Attente cron-job.org   | Email récap 7 jours (dimanche 11h UTC)                  |
+| AUTO-3 — Twitter Live               |    ⏳ Planifié semaine 3    | Tweets auto pendant les matchs                          |
 
 ---
 

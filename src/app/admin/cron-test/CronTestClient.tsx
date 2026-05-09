@@ -40,6 +40,13 @@ const CRONS = [
     emoji: "📅",
     emailTemplate: "weekly-recap" as const,
   },
+  {
+    id: "solo-activation",
+    label: "Solo Activation",
+    description: "Push + email aux users actifs sans ligue à J+3",
+    emoji: "🏟️",
+    emailTemplate: "squad-activation" as const,
+  },
 ] as const;
 
 type CronId = (typeof CRONS)[number]["id"];
@@ -48,7 +55,8 @@ type TemplateId =
   | "j7-churn"
   | "daily-digest"
   | "weekly-recap"
-  | "welcome";
+  | "welcome"
+  | "squad-activation";
 type Status = "idle" | "loading" | "ok" | "error";
 
 export function CronTestClient() {
@@ -74,6 +82,7 @@ export function CronTestClient() {
     "j7-churn": "idle",
     "daily-digest": "idle",
     "weekly-recap": "idle",
+    "squad-activation": "idle",
   });
 
   async function runCron(cronId: CronId) {
@@ -224,6 +233,7 @@ export function CronTestClient() {
               { id: "j7-churn", label: "J+7 churn", emoji: "🙏" },
               { id: "daily-digest", label: "Daily Digest", emoji: "📊" },
               { id: "weekly-recap", label: "Weekly Recap", emoji: "📅" },
+              { id: "squad-activation", label: "Solo Activation", emoji: "🏟️" },
             ] as { id: TemplateId; label: string; emoji: string }[]
           ).map((t) => {
             const status = emailStatuses[t.id];
