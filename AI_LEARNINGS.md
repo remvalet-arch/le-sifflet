@@ -25,6 +25,7 @@
 ## 🔑 TypeScript & Supabase Update typé
 
 - **Clé dynamique sur `.update({})` Supabase (TS2345) :** Le client Supabase génère des types stricts pour les objets passés à `.update()`. Un objet construit avec une clé dynamique (`{ [dynamicKey]: value }`) a le type `{ [x: string]: string }` que TS refuse d'assigner à l'interface `Update` typée. **Toujours utiliser un if/else explicite :**
+
   ```typescript
   // ❌ Refuse à la compilation
   const field = userId < otherId ? "user_a_read_at" : "user_b_read_at";
@@ -32,12 +33,21 @@
 
   // ✅ Correct
   if (userId < otherId) {
-    await supabase.from("direct_message_threads").update({ user_a_read_at: now });
+    await supabase
+      .from("direct_message_threads")
+      .update({ user_a_read_at: now });
   } else {
-    await supabase.from("direct_message_threads").update({ user_b_read_at: now });
+    await supabase
+      .from("direct_message_threads")
+      .update({ user_b_read_at: now });
   }
   ```
+
   Ce pattern s'applique partout où on choisit dynamiquement entre deux colonnes (ex: thread read_at selon quel côté du thread on est).
+
+## 🔔 Colonnes `notif_*` sur `profiles` — nommage réel vs documenté
+
+- **PROJECT_STATE.md (et les descriptions de migration) ne sont pas la source de vérité pour les noms de colonnes.** La migration 0084 est documentée avec `notif_nudge`, `notif_match_start`, `notif_var_result` (singulier) mais les colonnes réellement en base sont `notif_pre_match_5min`, `notif_pre_match_2h`, `notif_var_results` (pluriel). **Toujours vérifier dans `src/types/database.ts`** avant d'utiliser une colonne `notif_*` — c'est la seule source de vérité fiable.
 
 ## 📦 skills.sh (npx skills add)
 
