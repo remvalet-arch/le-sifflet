@@ -95,6 +95,10 @@ export function ShopClient({
         data?: { new_balance: number; free: boolean };
         error?: string;
       };
+      if (res.status === 429) {
+        toast.error("Doucement l'arbitre, tu siffles trop vite !");
+        return;
+      }
       if (!json.ok) {
         toast.error(json.error ?? "Achat impossible");
         return;
@@ -168,6 +172,10 @@ export function ShopClient({
         data?: { new_balance: number };
         error?: string;
       };
+      if (res.status === 429) {
+        toast.error("Doucement l'arbitre, tu siffles trop vite !");
+        return;
+      }
       if (!json.ok) {
         toast.error(json.error ?? "Achat impossible");
         return;

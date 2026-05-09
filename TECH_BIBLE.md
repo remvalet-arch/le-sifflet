@@ -24,12 +24,12 @@ Toutes les requêtes passent par `fetchApiFootball<T>(endpoint, params)` — un 
 
 ### 1.2 Les Services de Synchronisation
 
-| Fichier | Rôle | Endpoints API-Football |
-|---------|------|------------------------|
-| `src/services/api-football-sync.ts` (~1000 lignes) | Sync principal : fixtures, events, stats, lineups | `/fixtures`, `/fixtures/events`, `/fixtures/statistics`, `/fixtures/lineups` |
-| `src/services/api-football-fixtures-import.ts` | Import calendrier (Top 5 + Coupes UEFA) | `/fixtures?league=&date=` |
-| `src/services/api-football-hub-sync.ts` | Stats de ligue (classements, buteurs) | `/standings`, `/players/topscorers`, `/players/topassists` |
-| `src/lib/sports/api-football-market-bridge.ts` | Détection auto VAR/Penalty → ouverture/résolution de marchés | (lit les events déjà fetchés) |
+| Fichier                                            | Rôle                                                         | Endpoints API-Football                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `src/services/api-football-sync.ts` (~1000 lignes) | Sync principal : fixtures, events, stats, lineups            | `/fixtures`, `/fixtures/events`, `/fixtures/statistics`, `/fixtures/lineups` |
+| `src/services/api-football-fixtures-import.ts`     | Import calendrier (Top 5 + Coupes UEFA)                      | `/fixtures?league=&date=`                                                    |
+| `src/services/api-football-hub-sync.ts`            | Stats de ligue (classements, buteurs)                        | `/standings`, `/players/topscorers`, `/players/topassists`                   |
+| `src/lib/sports/api-football-market-bridge.ts`     | Détection auto VAR/Penalty → ouverture/résolution de marchés | (lit les events déjà fetchés)                                                |
 
 **Les 4 fonctions atomiques de `api-football-sync.ts` :**
 
@@ -44,24 +44,24 @@ Toutes les requêtes passent par `fetchApiFootball<T>(endpoint, params)` — un 
 
 > ⚠️ **`vercel.json` ne contient AUCUN cron.** Tous les jobs sont gérés via **cron-job.org** (appels GET avec Bearer CRON_SECRET). `vercel.json` ne contient qu'une règle de redirect `le-sifflet.vercel.app → vartime.app`.
 
-| Job | Route | Fréquence estimée | Auth |
-|-----|-------|-------------------|------|
-| **match-monitor** | `GET /api/cron/match-monitor` | ~1 min (cron-job.org) | Bearer CRON_SECRET |
-| **match-imminent** | `GET /api/cron/match-imminent` | Toutes les 5 min | Bearer CRON_SECRET |
-| **match-reminder-2h** | `GET /api/cron/match-reminder-2h` | Toutes les 30 min | Bearer CRON_SECRET |
-| **prono-reminders** | `GET /api/cron/prono-reminders` | Toutes les 30 min | Bearer CRON_SECRET |
-| **daily-digest** | `GET /api/cron/daily-digest` | 8h UTC quotidien | Bearer CRON_SECRET |
-| **weekly-recap** | `GET /api/cron/weekly-recap` | Hebdomadaire | Bearer CRON_SECRET |
-| **sync-odds** | `GET /api/cron/sync-odds` | Lundi 6h UTC | Bearer CRON_SECRET |
-| **reset-monthly-points** | `GET /api/cron/reset-monthly-points` | 1er du mois | Bearer CRON_SECRET |
-| **transition-season** | `GET /api/cron/transition-season` | 1er du mois minuit | Bearer CRON_SECRET |
-| **solo-activation** | `GET /api/cron/solo-activation` | J+3 après inscription | Bearer CRON_SECRET |
-| **j1-inactive** | `GET /api/cron/j1-inactive` | J+1 sans activité | Bearer CRON_SECRET |
-| **j3-inactive** | `GET /api/cron/j3-inactive` | J+3 sans ligue | Bearer CRON_SECRET |
-| **j7-churn** | `GET /api/cron/j7-churn` | J+7 churned | Bearer CRON_SECRET |
-| **community-listener** | `GET /api/cron/community-listener` | Périodique | Bearer CRON_SECRET |
-| **twitter-live** | `GET /api/cron/twitter-live` | Live matches | Bearer CRON_SECRET |
-| **personal-branding** | `GET /api/cron/personal-branding` | Périodique | Bearer CRON_SECRET |
+| Job                      | Route                                | Fréquence estimée     | Auth               |
+| ------------------------ | ------------------------------------ | --------------------- | ------------------ |
+| **match-monitor**        | `GET /api/cron/match-monitor`        | ~1 min (cron-job.org) | Bearer CRON_SECRET |
+| **match-imminent**       | `GET /api/cron/match-imminent`       | Toutes les 5 min      | Bearer CRON_SECRET |
+| **match-reminder-2h**    | `GET /api/cron/match-reminder-2h`    | Toutes les 30 min     | Bearer CRON_SECRET |
+| **prono-reminders**      | `GET /api/cron/prono-reminders`      | Toutes les 30 min     | Bearer CRON_SECRET |
+| **daily-digest**         | `GET /api/cron/daily-digest`         | 8h UTC quotidien      | Bearer CRON_SECRET |
+| **weekly-recap**         | `GET /api/cron/weekly-recap`         | Hebdomadaire          | Bearer CRON_SECRET |
+| **sync-odds**            | `GET /api/cron/sync-odds`            | Lundi 6h UTC          | Bearer CRON_SECRET |
+| **reset-monthly-points** | `GET /api/cron/reset-monthly-points` | 1er du mois           | Bearer CRON_SECRET |
+| **transition-season**    | `GET /api/cron/transition-season`    | 1er du mois minuit    | Bearer CRON_SECRET |
+| **solo-activation**      | `GET /api/cron/solo-activation`      | J+3 après inscription | Bearer CRON_SECRET |
+| **j1-inactive**          | `GET /api/cron/j1-inactive`          | J+1 sans activité     | Bearer CRON_SECRET |
+| **j3-inactive**          | `GET /api/cron/j3-inactive`          | J+3 sans ligue        | Bearer CRON_SECRET |
+| **j7-churn**             | `GET /api/cron/j7-churn`             | J+7 churned           | Bearer CRON_SECRET |
+| **community-listener**   | `GET /api/cron/community-listener`   | Périodique            | Bearer CRON_SECRET |
+| **twitter-live**         | `GET /api/cron/twitter-live`         | Live matches          | Bearer CRON_SECRET |
+| **personal-branding**    | `GET /api/cron/personal-branding`    | Périodique            | Bearer CRON_SECRET |
 
 ---
 
@@ -100,15 +100,15 @@ PST / CANC / ABD / SUSP →  "paused"
 
 ### 1.6 Détection Automatique des Marchés VAR
 
-| Marché | Trigger d'ouverture | Trigger de résolution |
-|--------|--------------------|-----------------------|
-| `var_goal` | Mot-clé VAR : "possible/review/check/offside/await/pending" | "confirmed/awarded/stands" OU "cancelled/disallowed/no goal" |
-| `penalty_check` | "possible penalty/penalty check/penalty+review" OU type="penalty" | "confirmed/awarded" OU "cancelled/not awarded/no penalty" |
-| `red_card` | type="Card" + detail contenant "red" | API-Football event confirmé ✅ |
-| `corner` | type="Corner" | API-Football event confirmé ✅ |
-| `free_kick` | type="Free Kick" dans zone dangereuse | API-Football event confirmé ✅ |
-| `stoppage_ht` | elapsed ≥ 41 ET status = first_half | Status = half_time (résultat = elapsed-41) |
-| `stoppage_ft` | elapsed ≥ 86 ET status = second_half | Status = finished (résultat = elapsed-86) |
+| Marché          | Trigger d'ouverture                                               | Trigger de résolution                                        |
+| --------------- | ----------------------------------------------------------------- | ------------------------------------------------------------ |
+| `var_goal`      | Mot-clé VAR : "possible/review/check/offside/await/pending"       | "confirmed/awarded/stands" OU "cancelled/disallowed/no goal" |
+| `penalty_check` | "possible penalty/penalty check/penalty+review" OU type="penalty" | "confirmed/awarded" OU "cancelled/not awarded/no penalty"    |
+| `red_card`      | type="Card" + detail contenant "red"                              | API-Football event confirmé ✅                               |
+| `corner`        | type="Corner"                                                     | API-Football event confirmé ✅                               |
+| `free_kick`     | type="Free Kick" dans zone dangereuse                             | API-Football event confirmé ✅                               |
+| `stoppage_ht`   | elapsed ≥ 41 ET status = first_half                               | Status = half_time (résultat = elapsed-41)                   |
+| `stoppage_ft`   | elapsed ≥ 86 ET status = second_half                              | Status = finished (résultat = elapsed-86)                    |
 
 **Effet Domino :** `penalty_check` → OUI → ouvre automatiquement `penalty_outcome` (`src/lib/resolve-event.ts`).
 
@@ -120,13 +120,13 @@ PST / CANC / ABD / SUSP →  "paused"
 
 ### 1.7 Gaps Identifiés — Pilier 1
 
-| Criticité | Gap | Impact |
-|-----------|-----|--------|
-| 🟡 MOYEN | Pas de webhook API-Football | Latence 1 min max entre un événement réel et l'app |
-| 🟡 MOYEN | Fixture ID ambigu si 2 matchs home/away même jour | `syncApiFootballMatch` abandonne la sync |
-| 🟡 MOYEN | `console.log` dans match-monitor (nombreux) | Logs parasites en production — logger.ts créé mais pas migré |
-| 🟢 RÉSOLU | Pas de retry/backoff sur `fetchApiFootball` | Sprint C5 ✅ |
-| 🟢 RÉSOLU | `injury_sub` type invalide dans les marchés | Migration 0100 ✅ |
+| Criticité | Gap                                               | Impact                                                       |
+| --------- | ------------------------------------------------- | ------------------------------------------------------------ |
+| 🟡 MOYEN  | Pas de webhook API-Football                       | Latence 1 min max entre un événement réel et l'app           |
+| 🟡 MOYEN  | Fixture ID ambigu si 2 matchs home/away même jour | `syncApiFootballMatch` abandonne la sync                     |
+| 🟡 MOYEN  | `console.log` dans match-monitor (nombreux)       | Logs parasites en production — logger.ts créé mais pas migré |
+| 🟢 RÉSOLU | Pas de retry/backoff sur `fetchApiFootball`       | Sprint C5 ✅                                                 |
+| 🟢 RÉSOLU | `injury_sub` type invalide dans les marchés       | Migration 0100 ✅                                            |
 
 ---
 
@@ -151,34 +151,34 @@ Budget     : src/lib/push-budget.ts → logPushSent() / dedup via push_logs
 
 ### 2.2 Triggers Implémentés ✅
 
-| # | Trigger | Fichier | Condition |
-|---|---------|---------|-----------|
-| 1 | **VAR Market Opening** | `/api/alert/route.ts` | ≥ seuil signaux distincts en 30s (dynamique par audience) — initiateurs exclus |
-| 2 | **Squad VAR Siren** | `/api/squads/var-alert/route.ts` | Manuel par l'utilisateur (cooldown 15 min) |
-| 3 | **Prono Nudge** | `/api/squads/nudge/route.ts` | Squad leader (cooldown 30 min/squad) |
-| 4 | **VAR Résolue** | `/api/admin/resolve-event/route.ts` | Après `resolveEvent()` ✅ |
-| 5 | **Fin de match** | `/api/admin/finish-match/route.ts` | Après résolution pronos ✅ |
-| 6 | **Nouveau membre** | `/api/squads/join/route.ts` | ✅ |
-| 7 | **Rappel prono H-2h** | `/api/cron/match-reminder-2h` | Exclut users ayant déjà un prono ✅ |
-| 8 | **Rappel match imminent (H-5min)** | `/api/cron/match-imminent` | FK2 ✅ |
-| 9 | **Fin de saison 1v1** | Cron resolve-league-round | ✅ |
-| 10 | **Quick-bet VAR** (action) | `/api/var-bets/quick-bet` | Depuis SW notificationclick — FK1 ✅ |
-| 11 | **Badge débloqué** | `/api/admin/resolve-event` | `checkAndUnlockBadges()` — BadgeUnlockListener |
-| 12 | **Daily Digest** | `/api/cron/daily-digest` | 8h UTC ✅ |
-| 13 | **Chat de ligue** | `/api/squads/[id]/messages` | Cooldown 30 min/squad via `chat_last_push_at` — CHAT-3 ✅ |
-| 14 | **Solo Activation (J+3)** | `/api/cron/solo-activation` | Users actifs (≥1 prono/bet) sans ligue à J+71-73h → push + email top 3 squads |
-| 15 | **J+1 inactif** | `/api/cron/j1-inactive` | Push de réengagement J+1 |
-| 16 | **J+3 sans ligue** | `/api/cron/j3-inactive` | Push invitation ligue J+3 |
-| 17 | **J+7 churn** | `/api/cron/j7-churn` | Push anti-churn J+7 |
-| 18 | **Streak Freeze utilisé** | `src/app/(app)/layout.tsx` | Fire-and-forget si freeze consommé à la connexion |
+| #   | Trigger                            | Fichier                             | Condition                                                                      |
+| --- | ---------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | **VAR Market Opening**             | `/api/alert/route.ts`               | ≥ seuil signaux distincts en 30s (dynamique par audience) — initiateurs exclus |
+| 2   | **Squad VAR Siren**                | `/api/squads/var-alert/route.ts`    | Manuel par l'utilisateur (cooldown 15 min)                                     |
+| 3   | **Prono Nudge**                    | `/api/squads/nudge/route.ts`        | Squad leader (cooldown 30 min/squad)                                           |
+| 4   | **VAR Résolue**                    | `/api/admin/resolve-event/route.ts` | Après `resolveEvent()` ✅                                                      |
+| 5   | **Fin de match**                   | `/api/admin/finish-match/route.ts`  | Après résolution pronos ✅                                                     |
+| 6   | **Nouveau membre**                 | `/api/squads/join/route.ts`         | ✅                                                                             |
+| 7   | **Rappel prono H-2h**              | `/api/cron/match-reminder-2h`       | Exclut users ayant déjà un prono ✅                                            |
+| 8   | **Rappel match imminent (H-5min)** | `/api/cron/match-imminent`          | FK2 ✅                                                                         |
+| 9   | **Fin de saison 1v1**              | Cron resolve-league-round           | ✅                                                                             |
+| 10  | **Quick-bet VAR** (action)         | `/api/var-bets/quick-bet`           | Depuis SW notificationclick — FK1 ✅                                           |
+| 11  | **Badge débloqué**                 | `/api/admin/resolve-event`          | `checkAndUnlockBadges()` — BadgeUnlockListener                                 |
+| 12  | **Daily Digest**                   | `/api/cron/daily-digest`            | 8h UTC ✅                                                                      |
+| 13  | **Chat de ligue**                  | `/api/squads/[id]/messages`         | Cooldown 30 min/squad via `chat_last_push_at` — CHAT-3 ✅                      |
+| 14  | **Solo Activation (J+3)**          | `/api/cron/solo-activation`         | Users actifs (≥1 prono/bet) sans ligue à J+71-73h → push + email top 3 squads  |
+| 15  | **J+1 inactif**                    | `/api/cron/j1-inactive`             | Push de réengagement J+1                                                       |
+| 16  | **J+3 sans ligue**                 | `/api/cron/j3-inactive`             | Push invitation ligue J+3                                                      |
+| 17  | **J+7 churn**                      | `/api/cron/j7-churn`                | Push anti-churn J+7                                                            |
+| 18  | **Streak Freeze utilisé**          | `src/app/(app)/layout.tsx`          | Fire-and-forget si freeze consommé à la connexion                              |
 
 ### 2.3 Triggers Manquants ❌
 
-| # | Trigger manquant | Priorité |
-|---|-----------------|----------|
-| 19 | **Badge débloqué (app fermée)** | 🟡 MOYEN |
-| 20 | **Rappel streak quotidien** | 🟢 FAIBLE |
-| 21 | **DM reçu (push)** | 🟡 MOYEN — colonne `notif_dm` dans profiles, push non implémenté |
+| #   | Trigger manquant                | Priorité                                                         |
+| --- | ------------------------------- | ---------------------------------------------------------------- |
+| 19  | **Badge débloqué (app fermée)** | 🟡 MOYEN                                                         |
+| 20  | **Rappel streak quotidien**     | 🟢 FAIBLE                                                        |
+| 21  | **DM reçu (push)**              | 🟡 MOYEN — colonne `notif_dm` dans profiles, push non implémenté |
 
 ---
 
@@ -236,21 +236,21 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ### 3.3 Système XP & Grades
 
-| Action | XP gagné |
-|--------|----------|
+| Action                              | XP gagné   |
+| ----------------------------------- | ---------- |
 | Prono gagné (score exact ou buteur) | **+45 XP** |
-| Paris VAR gagné | **+30 XP** |
-| Bonus Braquage (ligue) | **+8 XP** |
-| Prono perdu / VAR perdu | 0 |
+| Paris VAR gagné                     | **+30 XP** |
+| Bonus Braquage (ligue)              | **+8 XP**  |
+| Prono perdu / VAR perdu             | 0          |
 
 **Grades (fonction `profile_rank_from_xp()`) :**
 
-| Seuil XP | Grade | Avatar tier |
-|----------|-------|-------------|
-| 0 – 499 | Arbitre de District | district |
-| 500 – 1 999 | Sifflet de Bronze | bronze |
-| 2 000 – 4 999 | Sifflet d'Argent | argent |
-| ≥ 5 000 | Boss de la VAR | boss |
+| Seuil XP      | Grade               | Avatar tier |
+| ------------- | ------------------- | ----------- |
+| 0 – 499       | Arbitre de District | district    |
+| 500 – 1 999   | Sifflet de Bronze   | bronze      |
+| 2 000 – 4 999 | Sifflet d'Argent    | argent      |
+| ≥ 5 000       | Boss de la VAR      | boss        |
 
 ---
 
@@ -267,16 +267,17 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 **Badges actifs (6) :**
 
-| Badge | Critère | Statut |
-|-------|---------|--------|
-| Oeil de Faucon | 3 VAR gagnés consécutifs | ✅ |
-| Nostradamus | Score exact trouvé | ✅ |
-| Pierluigi Collina | trust_score ≥ MODERATOR_THRESHOLD | ✅ |
-| Le Chat Noir | 5 VAR perdus sur même match | ✅ |
-| Fidèle au Poste | login_streak ≥ 3 | ✅ |
-| Goleador | Buteur correct trouvé | ✅ |
+| Badge             | Critère                           | Statut |
+| ----------------- | --------------------------------- | ------ |
+| Oeil de Faucon    | 3 VAR gagnés consécutifs          | ✅     |
+| Nostradamus       | Score exact trouvé                | ✅     |
+| Pierluigi Collina | trust_score ≥ MODERATOR_THRESHOLD | ✅     |
+| Le Chat Noir      | 5 VAR perdus sur même match       | ✅     |
+| Fidèle au Poste   | login_streak ≥ 3                  | ✅     |
+| Goleador          | Buteur correct trouvé             | ✅     |
 
 **Où `checkAndUnlockBadges()` est appelé :**
+
 - `/api/admin/resolve-event` ✅
 - `/api/admin/finish-match` ✅
 - `profile/page.tsx` ✅
@@ -294,13 +295,13 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 **Mises Minimum (`src/lib/economy/min-bet.ts`) :**
 
-| Solde | Mise minimum |
-|-------|-------------|
-| < 5 000 pts | 5 pts |
-| 5 000 – 19 999 pts | 50 pts |
-| 20 000 – 49 999 pts | 200 pts |
-| 50 000 – 99 999 pts | 500 pts |
-| ≥ 100 000 pts | 1 000 pts |
+| Solde               | Mise minimum |
+| ------------------- | ------------ |
+| < 5 000 pts         | 5 pts        |
+| 5 000 – 19 999 pts  | 50 pts       |
+| 20 000 – 49 999 pts | 200 pts      |
+| 50 000 – 99 999 pts | 500 pts      |
+| ≥ 100 000 pts       | 1 000 pts    |
 
 **Points Saison (`season_points`) :** Séparés de `sifflets_balance`. Reset mensuel via `/api/cron/reset-monthly-points`. Alimentent `/leaderboard`. Archive via `season_archives`.
 
@@ -308,12 +309,12 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ### 3.7 Boosters (Eco2 ✅)
 
-| Booster | Effet | Durée |
-|---------|-------|-------|
-| `double_xp` | XP × 2 sur le prochain pari VAR gagné | 1 usage |
-| `cote_plus` | Multiplicateur majoré de +0.25x | 1 usage |
-| `safety_net` | Rembourse la mise si défaite | 1 usage |
-| `vision` | Affiche la répartition des mises | 1 match |
+| Booster      | Effet                                 | Durée   |
+| ------------ | ------------------------------------- | ------- |
+| `double_xp`  | XP × 2 sur le prochain pari VAR gagné | 1 usage |
+| `cote_plus`  | Multiplicateur majoré de +0.25x       | 1 usage |
+| `safety_net` | Rembourse la mise si défaite          | 1 usage |
+| `vision`     | Affiche la répartition des mises      | 1 match |
 
 ---
 
@@ -325,7 +326,7 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ---
 
-### 3.9 Messagerie Privée (DMs — migration 0098)  
+### 3.9 Messagerie Privée (DMs — migration 0098)
 
 - Tables : `direct_message_threads` (threads), `direct_messages` (messages)
 - Rate limit : 1 message / 2s par user (query count sur `direct_messages`)
@@ -336,16 +337,16 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ### 3.10 Automatisation Croissance (Sprint AUTO-1–7)
 
-| Cron | Rôle |
-|------|------|
-| `solo-activation` | J+71-73h : users actifs sans ligue → push + email top 3 squads |
-| `j1-inactive` | J+1 : réengagement si pas de prono ni bet |
-| `j3-inactive` | J+3 : invitation ligue si toujours solo |
-| `j7-churn` | J+7 : anti-churn |
-| `twitter-live` | Tweet automatique sur matchs live (OAuth2 — migration 0099) |
-| `community-listener` | Monitoring communauté (Twitter/Discord) |
-| `personal-branding` | Contenu social automatisé |
-| `weekly-recap` | Récap hebdomadaire utilisateurs |
+| Cron                 | Rôle                                                           |
+| -------------------- | -------------------------------------------------------------- |
+| `solo-activation`    | J+71-73h : users actifs sans ligue → push + email top 3 squads |
+| `j1-inactive`        | J+1 : réengagement si pas de prono ni bet                      |
+| `j3-inactive`        | J+3 : invitation ligue si toujours solo                        |
+| `j7-churn`           | J+7 : anti-churn                                               |
+| `twitter-live`       | Tweet automatique sur matchs live (OAuth2 — migration 0099)    |
+| `community-listener` | Monitoring communauté (Twitter/Discord)                        |
+| `personal-branding`  | Contenu social automatisé                                      |
+| `weekly-recap`       | Récap hebdomadaire utilisateurs                                |
 
 ---
 
@@ -377,14 +378,14 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ### 4.2 Composants Critiques — Taille & Responsabilités (Audit 2026-05-09)
 
-| Composant | Lignes | État | Problème principal |
-|-----------|--------|------|--------------------|
-| `PronosticsHubClient.tsx` | **1 106** | ⚠️ Lourd | Mix score picker + scorer + date filter |
-| `VotingModal.tsx` | **892** | ⚠️ Lourd | 3 setIntervals, scroll lock manquant |
-| `ProfileClient.tsx` | **843** | ⚠️ Lourd | Onglets profil/amis/badges/historique mélangés |
-| `LiveRoom.tsx` | **628** | ✅ OK | Bien structuré, cleanup correct |
-| `MatchLobby.tsx` | **539** | ✅ OK | Europe hub extrait proprement |
-| `LeagueHub.tsx` | **309** | ✅ OK | Tri journées par numéro ✅ |
+| Composant                 | Lignes    | État     | Problème principal                             |
+| ------------------------- | --------- | -------- | ---------------------------------------------- |
+| `PronosticsHubClient.tsx` | **1 106** | ⚠️ Lourd | Mix score picker + scorer + date filter        |
+| `VotingModal.tsx`         | **892**   | ⚠️ Lourd | 3 setIntervals, scroll lock manquant           |
+| `ProfileClient.tsx`       | **843**   | ⚠️ Lourd | Onglets profil/amis/badges/historique mélangés |
+| `LiveRoom.tsx`            | **628**   | ✅ OK    | Bien structuré, cleanup correct                |
+| `MatchLobby.tsx`          | **539**   | ✅ OK    | Europe hub extrait proprement                  |
+| `LeagueHub.tsx`           | **309**   | ✅ OK    | Tri journées par numéro ✅                     |
 
 ### 4.3 Contexte React & Hooks Personnalisés
 
@@ -392,10 +393,10 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 **Hooks personnalisés :**
 
-| Hook | Fichier | Rôle |
-|------|---------|------|
-| `useActiveSquad` | `src/hooks/useActiveSquad.ts` | localStorage + `useSyncExternalStore` |
-| `usePreferredCompetitions` | `src/hooks/usePreferredCompetitions.ts` | Sync optimiste API competition prefs |
+| Hook                       | Fichier                                 | Rôle                                  |
+| -------------------------- | --------------------------------------- | ------------------------------------- |
+| `useActiveSquad`           | `src/hooks/useActiveSquad.ts`           | localStorage + `useSyncExternalStore` |
+| `usePreferredCompetitions` | `src/hooks/usePreferredCompetitions.ts` | Sync optimiste API competition prefs  |
 
 ### 4.4 Patterns de Données — Bon vs Mauvais
 
@@ -418,17 +419,17 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ### 4.5 État des Subscriptions Realtime
 
-| Table | Composant | REPLICA IDENTITY | Statut |
-|-------|-----------|-----------------|--------|
-| `matches` | LiveRoom | FULL | ✅ |
-| `market_events` | LiveRoom | FULL | ✅ |
-| `bets` | LiveRoom/TopBar | FULL | ✅ |
-| `profiles` | TopBar | FULL | ✅ |
-| `alert_signals` | LiveRoom | FULL | ✅ |
-| `squad_messages` | SquadDetailClient | FULL | ✅ |
-| `friend_requests` | AmisContent | ? | ⚠️ À vérifier |
-| `match_presence` | LiveRoom | ? | ⚠️ À vérifier |
-| `user_badges` | BadgeUnlockListener | ? | ⚠️ À vérifier |
+| Table             | Composant           | REPLICA IDENTITY | Statut        |
+| ----------------- | ------------------- | ---------------- | ------------- |
+| `matches`         | LiveRoom            | FULL             | ✅            |
+| `market_events`   | LiveRoom            | FULL             | ✅            |
+| `bets`            | LiveRoom/TopBar     | FULL             | ✅            |
+| `profiles`        | TopBar              | FULL             | ✅            |
+| `alert_signals`   | LiveRoom            | FULL             | ✅            |
+| `squad_messages`  | SquadDetailClient   | FULL             | ✅            |
+| `friend_requests` | AmisContent         | ?                | ⚠️ À vérifier |
+| `match_presence`  | LiveRoom            | ?                | ⚠️ À vérifier |
+| `user_badges`     | BadgeUnlockListener | ?                | ⚠️ À vérifier |
 
 **Manque :** Aucun indicateur de connexion Realtime ("En ligne / Reconnexion...") visible pour l'utilisateur.
 
@@ -462,21 +463,21 @@ Résidu potentiel : `src/services/sportsdb-sync.ts` — vérifier si encore impo
 
 ### 5.2 Risques de Sécurité (Audit 2026-05-09)
 
-| Risque | Sévérité | État |
-|--------|----------|------|
-| Pas de rate limiting sur `/api/claim-daily-streak` | 🔴 | ❌ Non traité |
-| Pas de rate limiting sur `/api/claim-rsa` | 🔴 | ❌ Non traité |
-| Pas de rate limiting sur `/api/shop/purchase` | 🔴 | ❌ Non traité |
-| Pas de rate limiting sur `/api/boosters/purchase` | 🔴 | ❌ Non traité |
-| Pas de rate limiting sur `/api/var-bets/quick-bet` | 🔴 | ❌ Non traité |
-| Rate limiting sur `/api/bet` | ✅ | 10 req/min |
-| Rate limiting sur `/api/alert` | ✅ | 5 req/min |
-| Rate limiting sur `/api/messages/[otherId]` | ✅ | 1 msg/2s |
-| Cooldown 30min sur `/api/squads/nudge` | ✅ | DB-based |
-| Cron routes vérifient Bearer CRON_SECRET | ✅ | Toutes |
-| Admin routes vérifient trust_score ≥ 150 | ✅ | Toutes |
-| Pas de validation structurée (no zod) | 🟡 | ❌ Non traité |
-| `console.log` directs en production | 🟡 | ⚠️ Partiel — logger.ts créé, 17 fichiers non migrés |
+| Risque                                             | Sévérité | État                                                |
+| -------------------------------------------------- | -------- | --------------------------------------------------- |
+| Pas de rate limiting sur `/api/claim-daily-streak` | 🔴       | ❌ Non traité                                       |
+| Pas de rate limiting sur `/api/claim-rsa`          | 🔴       | ❌ Non traité                                       |
+| Pas de rate limiting sur `/api/shop/purchase`      | 🔴       | ❌ Non traité                                       |
+| Pas de rate limiting sur `/api/boosters/purchase`  | 🔴       | ❌ Non traité                                       |
+| Pas de rate limiting sur `/api/var-bets/quick-bet` | 🔴       | ❌ Non traité                                       |
+| Rate limiting sur `/api/bet`                       | ✅       | 10 req/min                                          |
+| Rate limiting sur `/api/alert`                     | ✅       | 5 req/min                                           |
+| Rate limiting sur `/api/messages/[otherId]`        | ✅       | 1 msg/2s                                            |
+| Cooldown 30min sur `/api/squads/nudge`             | ✅       | DB-based                                            |
+| Cron routes vérifient Bearer CRON_SECRET           | ✅       | Toutes                                              |
+| Admin routes vérifient trust_score ≥ 150           | ✅       | Toutes                                              |
+| Pas de validation structurée (no zod)              | 🟡       | ❌ Non traité                                       |
+| `console.log` directs en production                | 🟡       | ⚠️ Partiel — logger.ts créé, 17 fichiers non migrés |
 
 ---
 
@@ -484,17 +485,17 @@ Résidu potentiel : `src/services/sportsdb-sync.ts` — vérifier si encore impo
 
 **ISR manquante sur 9 pages :**
 
-| Page | revalidate cible | État actuel |
-|------|-----------------|-------------|
-| `/lobby` | 30s | ❌ dynamic |
-| `/shop` | 3600s (1h) | ❌ dynamic |
-| `/settings` | 86400s (24h) | ❌ dynamic |
-| `/ligues` | 300s (5min) | ❌ dynamic |
-| `/profile` | 300s | ❌ dynamic |
-| `/profile/[id]` | 300s | ❌ dynamic |
-| `/rules`, `/laws` | 86400s | ❌ dynamic |
-| `/messages` | N/A (dynamique) | acceptable |
-| `/squads` | 300s | ❌ dynamic |
+| Page              | revalidate cible | État actuel |
+| ----------------- | ---------------- | ----------- |
+| `/lobby`          | 30s              | ❌ dynamic  |
+| `/shop`           | 3600s (1h)       | ❌ dynamic  |
+| `/settings`       | 86400s (24h)     | ❌ dynamic  |
+| `/ligues`         | 300s (5min)      | ❌ dynamic  |
+| `/profile`        | 300s             | ❌ dynamic  |
+| `/profile/[id]`   | 300s             | ❌ dynamic  |
+| `/rules`, `/laws` | 86400s           | ❌ dynamic  |
+| `/messages`       | N/A (dynamique)  | acceptable  |
+| `/squads`         | 300s             | ❌ dynamic  |
 
 **Images non optimisées :** 7 balises `<img>` brutes (hôtes hors remotePatterns) dans : `MatchCard`, `MatchLobby`, `MatchLineupsPitch`, `MatchLineups`, `MatchStats`, `PolymarketTab`, `Scoreboard`. Chaque `<img>` contient un commentaire eslint-disable car l'hôte image (API-Sports) n'est pas dans `remotePatterns` — à ajouter ou à rendre dynamique.
 
@@ -504,10 +505,10 @@ Résidu potentiel : `src/services/sportsdb-sync.ts` — vérifier si encore impo
 
 ### 5.4 Type Safety
 
-| Fichier | Problème | Sprint |
-|---------|---------|--------|
-| `src/app/(app)/match/[id]/page.tsx` | `// @ts-ignore` sur join relationship | En cours |
-| `src/types/database.ts` | `Relationships: []` vide (joins typés impossibles) | Structurel |
+| Fichier                             | Problème                                           | Sprint     |
+| ----------------------------------- | -------------------------------------------------- | ---------- |
+| `src/app/(app)/match/[id]/page.tsx` | `// @ts-ignore` sur join relationship              | En cours   |
+| `src/types/database.ts`             | `Relationships: []` vide (joins typés impossibles) | Structurel |
 
 ---
 
@@ -515,24 +516,24 @@ Résidu potentiel : `src/services/sportsdb-sync.ts` — vérifier si encore impo
 
 Valeurs hardcodées restantes à extraire dans `src/lib/constants/` :
 
-| Valeur | Localisation | Constante cible |
-|--------|-------------|-----------------|
-| `24 * 60 * 60 * 1000` | Répété ~8× dans le code | `MS_PER_DAY` |
-| `signal timer 30s` | `LiveRoom.tsx` | `SIGNAL_TIMEOUT_MS` |
-| Seuils journées crons (71-73h, 24h, 72h, 168h) | Crons j1/j3/j7/solo | `src/lib/constants/activation.ts` |
+| Valeur                                         | Localisation            | Constante cible                   |
+| ---------------------------------------------- | ----------------------- | --------------------------------- |
+| `24 * 60 * 60 * 1000`                          | Répété ~8× dans le code | `MS_PER_DAY`                      |
+| `signal timer 30s`                             | `LiveRoom.tsx`          | `SIGNAL_TIMEOUT_MS`               |
+| Seuils journées crons (71-73h, 24h, 72h, 168h) | Crons j1/j3/j7/solo     | `src/lib/constants/activation.ts` |
 
 ---
 
 ### 5.6 Accessibilité (WCAG 2.1 AA) — Audit 2026-05-09
 
-| Problème | Composant(s) | Sévérité |
-|----------|-------------|----------|
-| Zéro attribut ARIA dialog (`role`, `aria-modal`) | ActionDrawer, AlertDrawer | 🔴 Haute |
-| `aria-labelledby` manquant | ProfileEditModal | 🟡 Moyen |
-| Scroll lock body manquant lors d'une modale ouverte | VotingModal, ActionDrawer | 🟡 Moyen |
-| 29+ inputs de formulaire sans `<label>` associé | Formulaires partout | 🟡 Moyen |
-| `text-zinc-500` sur `bg-zinc-900` ≈ ratio 4:1 | Labels partout | Limite AA |
-| ✅ VotingModal: role="dialog", aria-modal, focus trap, role="timer", aria-live | VotingModal | Excellent |
+| Problème                                                                       | Composant(s)              | Sévérité  |
+| ------------------------------------------------------------------------------ | ------------------------- | --------- |
+| Zéro attribut ARIA dialog (`role`, `aria-modal`)                               | ActionDrawer, AlertDrawer | 🔴 Haute  |
+| `aria-labelledby` manquant                                                     | ProfileEditModal          | 🟡 Moyen  |
+| Scroll lock body manquant lors d'une modale ouverte                            | VotingModal, ActionDrawer | 🟡 Moyen  |
+| 29+ inputs de formulaire sans `<label>` associé                                | Formulaires partout       | 🟡 Moyen  |
+| `text-zinc-500` sur `bg-zinc-900` ≈ ratio 4:1                                  | Labels partout            | Limite AA |
+| ✅ VotingModal: role="dialog", aria-modal, focus trap, role="timer", aria-live | VotingModal               | Excellent |
 
 ---
 
@@ -550,14 +551,14 @@ Conflits potentiels: 2 systèmes i18n actifs (translations.ts vs next-intl)
 
 ### 5.8 Indexes DB Manquants
 
-| Table | Colonne | Impact |
-|-------|---------|--------|
-| `user_badges` | `badge_id` | Lookups lents sur badges |
-| `friend_requests` | `receiver_id` | Liste amis en attente non indexée |
-| `push_logs` | `user_id` | Logs push non indexés |
-| `user_daily_recaps` | `user_id` | Recap quotidien non indexé |
-| `direct_messages` | `thread_id, sent_at` | Messages DM non indexés |
-| `tweet_log` | `match_id` | Logs Twitter non indexés |
+| Table               | Colonne              | Impact                            |
+| ------------------- | -------------------- | --------------------------------- |
+| `user_badges`       | `badge_id`           | Lookups lents sur badges          |
+| `friend_requests`   | `receiver_id`        | Liste amis en attente non indexée |
+| `push_logs`         | `user_id`            | Logs push non indexés             |
+| `user_daily_recaps` | `user_id`            | Recap quotidien non indexé        |
+| `direct_messages`   | `thread_id, sent_at` | Messages DM non indexés           |
+| `tweet_log`         | `match_id`           | Logs Twitter non indexés          |
 
 ---
 
@@ -575,25 +576,25 @@ log.error(service: string, msg: string, data?: unknown)
 
 **17 fichiers utilisant encore `console.log/error/warn` directs :**
 
-| Fichier | Type |
-|---------|------|
-| `admin/finish-match/route.ts` | Debug flows |
-| `admin/invalidate-push-subscriptions/route.ts` | Admin |
-| `admin/resolve-league-round/route.ts` | Admin |
-| `claim-rsa/route.ts` | Économie |
-| `cron/community-listener/route.ts` | Cron |
-| `cron/j3-inactive/route.ts` | Cron |
-| `cron/j7-churn/route.ts` | Cron |
-| `cron/match-monitor/route.ts` | Nombreux |
-| `cron/reset-monthly-points/route.ts` | Cron |
-| `cron/twitter-live/route.ts` | Cron |
-| `match-subscription/route.ts` | Route |
-| `push/subscribe/route.ts` | Push |
-| `squads/join/route.ts` | Squad |
-| `squads/leave/route.ts` | Squad |
-| `squads/route.ts` | Squad |
-| `squads/[squadId]/route.ts` | Squad |
-| `webhooks/new-profile/route.ts` | Webhook |
+| Fichier                                        | Type        |
+| ---------------------------------------------- | ----------- |
+| `admin/finish-match/route.ts`                  | Debug flows |
+| `admin/invalidate-push-subscriptions/route.ts` | Admin       |
+| `admin/resolve-league-round/route.ts`          | Admin       |
+| `claim-rsa/route.ts`                           | Économie    |
+| `cron/community-listener/route.ts`             | Cron        |
+| `cron/j3-inactive/route.ts`                    | Cron        |
+| `cron/j7-churn/route.ts`                       | Cron        |
+| `cron/match-monitor/route.ts`                  | Nombreux    |
+| `cron/reset-monthly-points/route.ts`           | Cron        |
+| `cron/twitter-live/route.ts`                   | Cron        |
+| `match-subscription/route.ts`                  | Route       |
+| `push/subscribe/route.ts`                      | Push        |
+| `squads/join/route.ts`                         | Squad       |
+| `squads/leave/route.ts`                        | Squad       |
+| `squads/route.ts`                              | Squad       |
+| `squads/[squadId]/route.ts`                    | Squad       |
+| `webhooks/new-profile/route.ts`                | Webhook     |
 
 ---
 
@@ -603,103 +604,103 @@ log.error(service: string, msg: string, data?: unknown)
 
 Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant le CDM.
 
-| Tâche | Description | Priorité |
-|-------|-------------|----------|
-| S1 | Rate limiting sur `/api/claim-daily-streak` (1 req/24h/user via DB) | 🔴 |
-| S2 | Rate limiting sur `/api/shop/purchase` (10 req/min/user) | 🔴 |
-| S3 | Rate limiting sur `/api/boosters/purchase` (10 req/min/user) | 🔴 |
-| S4 | Rate limiting sur `/api/var-bets/quick-bet` (10 req/min/user) | 🔴 |
-| S5 | Rate limiting sur `/api/claim-rsa` et `/api/refill` (1 req/24h/user) | 🔴 |
+| Tâche | Description                                                          | Priorité |
+| ----- | -------------------------------------------------------------------- | -------- |
+| S1    | Rate limiting sur `/api/claim-daily-streak` (1 req/24h/user via DB)  | 🔴       |
+| S2    | Rate limiting sur `/api/shop/purchase` (10 req/min/user)             | 🔴       |
+| S3    | Rate limiting sur `/api/boosters/purchase` (10 req/min/user)         | 🔴       |
+| S4    | Rate limiting sur `/api/var-bets/quick-bet` (10 req/min/user)        | 🔴       |
+| S5    | Rate limiting sur `/api/claim-rsa` et `/api/refill` (1 req/24h/user) | 🔴       |
 
 ### 🟠 Sprint PERF — "Images & ISR"
 
-| Tâche | Description | Fichier(s) |
-|-------|-------------|-----------|
-| P1 | Ajouter api-sports.io aux `remotePatterns` next.config.ts → convertir les 7 `<img>` en `next/image` | `next.config.ts` + 7 fichiers |
-| P2 | Ajouter `revalidate` sur lobby (30s), shop (1h), ligues (5min), squads (5min) | Pages concernées |
-| P3 | Ajouter `revalidate` sur profile/settings/rules/laws (300s / 24h) | Pages concernées |
-| P4 | Paralléliser les awaits séquentiels dans profile/[id] et profile | `src/app/(app)/profile/` |
-| P5 | Ajouter Suspense + skeleton loaders sur pronos, shop, profile | Composants concernés |
+| Tâche | Description                                                                                         | Fichier(s)                    |
+| ----- | --------------------------------------------------------------------------------------------------- | ----------------------------- |
+| P1    | Ajouter api-sports.io aux `remotePatterns` next.config.ts → convertir les 7 `<img>` en `next/image` | `next.config.ts` + 7 fichiers |
+| P2    | Ajouter `revalidate` sur lobby (30s), shop (1h), ligues (5min), squads (5min)                       | Pages concernées              |
+| P3    | Ajouter `revalidate` sur profile/settings/rules/laws (300s / 24h)                                   | Pages concernées              |
+| P4    | Paralléliser les awaits séquentiels dans profile/[id] et profile                                    | `src/app/(app)/profile/`      |
+| P5    | Ajouter Suspense + skeleton loaders sur pronos, shop, profile                                       | Composants concernés          |
 
 ### 🟡 Sprint LOGGER — "Observabilité Complète"
 
-| Tâche | Description | Impact |
-|-------|-------------|--------|
-| LOG1 | Migrer les 17 fichiers restants de `console.*` vers `log.*` | Logs propres en prod |
-| LOG2 | Ajouter indexes DB manquants (6 tables, voir §5.8) | Performance requêtes |
-| LOG3 | Push DM (`notif_dm`) — colonne existe, push manquant | Feature complète |
+| Tâche | Description                                                 | Impact               |
+| ----- | ----------------------------------------------------------- | -------------------- |
+| LOG1  | Migrer les 17 fichiers restants de `console.*` vers `log.*` | Logs propres en prod |
+| LOG2  | Ajouter indexes DB manquants (6 tables, voir §5.8)          | Performance requêtes |
+| LOG3  | Push DM (`notif_dm`) — colonne existe, push manquant        | Feature complète     |
 
 ### 🟡 Sprint ARIA — "Accessibilité Critique"
 
-| Tâche | Description | Fichier(s) |
-|-------|-------------|-----------|
-| A1 | Ajouter `role="dialog"`, `aria-modal`, `aria-labelledby` sur ActionDrawer | `ActionDrawer.tsx` |
-| A2 | Même chose sur AlertDrawer | `AlertDrawer.tsx` |
-| A3 | Connecter le `<h2>` à `aria-labelledby` dans ProfileEditModal | `ProfileEditModal.tsx` |
-| A4 | Ajouter scroll lock body (`overflow-hidden`) sur ouverture modales | VotingModal, ActionDrawer |
+| Tâche | Description                                                               | Fichier(s)                |
+| ----- | ------------------------------------------------------------------------- | ------------------------- |
+| A1    | Ajouter `role="dialog"`, `aria-modal`, `aria-labelledby` sur ActionDrawer | `ActionDrawer.tsx`        |
+| A2    | Même chose sur AlertDrawer                                                | `AlertDrawer.tsx`         |
+| A3    | Connecter le `<h2>` à `aria-labelledby` dans ProfileEditModal             | `ProfileEditModal.tsx`    |
+| A4    | Ajouter scroll lock body (`overflow-hidden`) sur ouverture modales        | VotingModal, ActionDrawer |
 
 ### 🟢 Sprint REFACTOR — "Architecture Composants"
 
-| Tâche | Description | Fichier(s) |
-|-------|-------------|-----------|
-| R1 | Extraire `ScorerAllocationEditor` de `PronosticsHubClient` (~300L) | Nouveau `src/components/pronos/` |
-| R2 | Extraire `MatchFilterBar` + `DateSlider` de `PronosticsHubClient` | Nouveau `src/components/pronos/` |
-| R3 | Extraire `AmisContent` de `ProfileClient` (déjà en fichier séparé, vérifier) | `src/components/profile/` |
+| Tâche | Description                                                                  | Fichier(s)                       |
+| ----- | ---------------------------------------------------------------------------- | -------------------------------- |
+| R1    | Extraire `ScorerAllocationEditor` de `PronosticsHubClient` (~300L)           | Nouveau `src/components/pronos/` |
+| R2    | Extraire `MatchFilterBar` + `DateSlider` de `PronosticsHubClient`            | Nouveau `src/components/pronos/` |
+| R3    | Extraire `AmisContent` de `ProfileClient` (déjà en fichier séparé, vérifier) | `src/components/profile/`        |
 
 ---
 
 ## ANNEXE A — INVENTAIRE DES ROUTES API
 
-| Route | Méthode | Auth | Rôle |
-|-------|---------|------|------|
-| `/api/cron/match-monitor` | GET | Bearer CRON_SECRET | Sync live principale (~1 min) |
-| `/api/cron/sync-odds` | GET | Bearer CRON_SECRET | Odds hebdomadaires |
-| `/api/cron/prono-reminders` | GET | Bearer CRON_SECRET | Push H-1 avant matchs |
-| `/api/cron/match-imminent` | GET | Bearer CRON_SECRET | Push H-5min avant matchs ✅ |
-| `/api/cron/match-reminder-2h` | GET | Bearer CRON_SECRET | Push H-2h — exclut users avec prono ✅ |
-| `/api/cron/daily-digest` | GET | Bearer CRON_SECRET | Résumé quotidien 8h UTC ✅ |
-| `/api/cron/weekly-recap` | GET | Bearer CRON_SECRET | Récap hebdomadaire ✅ |
-| `/api/cron/reset-monthly-points` | GET | Bearer CRON_SECRET | Reset points mensuels |
-| `/api/cron/transition-season` | GET | Bearer CRON_SECRET | Archive + reset saison ✅ |
-| `/api/cron/solo-activation` | GET | Bearer CRON_SECRET | J+3 actifs sans ligue → push + email ✅ |
-| `/api/cron/j1-inactive` | GET | Bearer CRON_SECRET | Réengagement J+1 |
-| `/api/cron/j3-inactive` | GET | Bearer CRON_SECRET | Invitation ligue J+3 |
-| `/api/cron/j7-churn` | GET | Bearer CRON_SECRET | Anti-churn J+7 |
-| `/api/cron/community-listener` | GET | Bearer CRON_SECRET | Monitoring communauté |
-| `/api/cron/twitter-live` | GET | Bearer CRON_SECRET | Tweets live automatiques |
-| `/api/cron/personal-branding` | GET | Bearer CRON_SECRET | Contenu social auto |
-| `/api/alert` | POST | User (trust ≥ 50) | Signal VAR → marché si seuil dynamique |
-| `/api/bet` | POST | User | Place un pari VAR (RPC atomique) |
-| `/api/verify-event` | POST | User | Vérifie VAR > 6 min via API-Football |
-| `/api/claim-daily-streak` | POST | User | Récompense streak quotidienne |
-| `/api/claim-rsa` | POST | User | RSA si solde trop bas ✅ |
-| `/api/refill` | POST | User | Refill manuel si solde < 500 |
-| `/api/profile` | PATCH | User | Mise à jour profil (username, avatar) |
-| `/api/var-bets/quick-bet` | POST | User | Quick-bet depuis notification SW ✅ |
-| `/api/shop/purchase` | POST | User | Achat item cosmétique ✅ |
-| `/api/shop/equip` | POST | User | Équiper item acheté |
-| `/api/boosters/purchase` | POST | User | Achat booster ✅ |
-| `/api/recap/today` | GET | User | Résumé pronos du jour |
-| `/api/match-subscription` | POST | User | Subscribe/mute un match |
-| `/api/messages/[otherId]` | GET/POST | User | Messagerie privée DMs (0098) |
-| `/api/admin/resolve-event` | POST | Modérateur | Force OUI/NON sur un événement |
-| `/api/admin/finish-match` | POST | Modérateur | Termine match + résout paris + pronos |
-| `/api/admin/sync-apifootball-fixtures` | GET | Modérateur | Import matchs par date |
-| `/api/admin/sync-apifootball-round` | GET | Modérateur | Import par journée de championnat |
-| `/api/admin/sync-live` | GET | Modérateur | Sync ad-hoc matchs actifs |
-| `/api/admin/resolve-league-round` | POST | Modérateur | Résolution hebdo 1v1 |
-| `/api/admin/health` | GET | Modérateur | Status dernier tick monitor |
-| `/api/squads` | GET/POST | User | Liste/Création ligues |
-| `/api/squads/[id]` | GET | Membre | Détail ligue + classement hybride |
-| `/api/squads/[id]/start-season` | POST | Owner | Lance championnat 1v1 |
-| `/api/squads/[id]/messages` | POST | Membre | Chat ligue + push (cooldown 30min) ✅ |
-| `/api/squads/join` | POST | User | Rejoindre via invite_code |
-| `/api/squads/leave` | POST | User | Quitter une ligue |
-| `/api/squads/var-alert` | POST | User | Sirène VAR → push squad members |
-| `/api/squads/nudge` | POST | User | Rappel pronos → push squad members |
-| `/api/push/subscribe` | POST | User | Enregistrement subscription web push |
-| `/api/webhooks/new-profile` | POST | Supabase | Webhook création profil |
-| `/api/og/victory/[id]` | GET | Public | OG image dynamique résultats ✅ |
+| Route                                  | Méthode  | Auth               | Rôle                                    |
+| -------------------------------------- | -------- | ------------------ | --------------------------------------- |
+| `/api/cron/match-monitor`              | GET      | Bearer CRON_SECRET | Sync live principale (~1 min)           |
+| `/api/cron/sync-odds`                  | GET      | Bearer CRON_SECRET | Odds hebdomadaires                      |
+| `/api/cron/prono-reminders`            | GET      | Bearer CRON_SECRET | Push H-1 avant matchs                   |
+| `/api/cron/match-imminent`             | GET      | Bearer CRON_SECRET | Push H-5min avant matchs ✅             |
+| `/api/cron/match-reminder-2h`          | GET      | Bearer CRON_SECRET | Push H-2h — exclut users avec prono ✅  |
+| `/api/cron/daily-digest`               | GET      | Bearer CRON_SECRET | Résumé quotidien 8h UTC ✅              |
+| `/api/cron/weekly-recap`               | GET      | Bearer CRON_SECRET | Récap hebdomadaire ✅                   |
+| `/api/cron/reset-monthly-points`       | GET      | Bearer CRON_SECRET | Reset points mensuels                   |
+| `/api/cron/transition-season`          | GET      | Bearer CRON_SECRET | Archive + reset saison ✅               |
+| `/api/cron/solo-activation`            | GET      | Bearer CRON_SECRET | J+3 actifs sans ligue → push + email ✅ |
+| `/api/cron/j1-inactive`                | GET      | Bearer CRON_SECRET | Réengagement J+1                        |
+| `/api/cron/j3-inactive`                | GET      | Bearer CRON_SECRET | Invitation ligue J+3                    |
+| `/api/cron/j7-churn`                   | GET      | Bearer CRON_SECRET | Anti-churn J+7                          |
+| `/api/cron/community-listener`         | GET      | Bearer CRON_SECRET | Monitoring communauté                   |
+| `/api/cron/twitter-live`               | GET      | Bearer CRON_SECRET | Tweets live automatiques                |
+| `/api/cron/personal-branding`          | GET      | Bearer CRON_SECRET | Contenu social auto                     |
+| `/api/alert`                           | POST     | User (trust ≥ 50)  | Signal VAR → marché si seuil dynamique  |
+| `/api/bet`                             | POST     | User               | Place un pari VAR (RPC atomique)        |
+| `/api/verify-event`                    | POST     | User               | Vérifie VAR > 6 min via API-Football    |
+| `/api/claim-daily-streak`              | POST     | User               | Récompense streak quotidienne           |
+| `/api/claim-rsa`                       | POST     | User               | RSA si solde trop bas ✅                |
+| `/api/refill`                          | POST     | User               | Refill manuel si solde < 500            |
+| `/api/profile`                         | PATCH    | User               | Mise à jour profil (username, avatar)   |
+| `/api/var-bets/quick-bet`              | POST     | User               | Quick-bet depuis notification SW ✅     |
+| `/api/shop/purchase`                   | POST     | User               | Achat item cosmétique ✅                |
+| `/api/shop/equip`                      | POST     | User               | Équiper item acheté                     |
+| `/api/boosters/purchase`               | POST     | User               | Achat booster ✅                        |
+| `/api/recap/today`                     | GET      | User               | Résumé pronos du jour                   |
+| `/api/match-subscription`              | POST     | User               | Subscribe/mute un match                 |
+| `/api/messages/[otherId]`              | GET/POST | User               | Messagerie privée DMs (0098)            |
+| `/api/admin/resolve-event`             | POST     | Modérateur         | Force OUI/NON sur un événement          |
+| `/api/admin/finish-match`              | POST     | Modérateur         | Termine match + résout paris + pronos   |
+| `/api/admin/sync-apifootball-fixtures` | GET      | Modérateur         | Import matchs par date                  |
+| `/api/admin/sync-apifootball-round`    | GET      | Modérateur         | Import par journée de championnat       |
+| `/api/admin/sync-live`                 | GET      | Modérateur         | Sync ad-hoc matchs actifs               |
+| `/api/admin/resolve-league-round`      | POST     | Modérateur         | Résolution hebdo 1v1                    |
+| `/api/admin/health`                    | GET      | Modérateur         | Status dernier tick monitor             |
+| `/api/squads`                          | GET/POST | User               | Liste/Création ligues                   |
+| `/api/squads/[id]`                     | GET      | Membre             | Détail ligue + classement hybride       |
+| `/api/squads/[id]/start-season`        | POST     | Owner              | Lance championnat 1v1                   |
+| `/api/squads/[id]/messages`            | POST     | Membre             | Chat ligue + push (cooldown 30min) ✅   |
+| `/api/squads/join`                     | POST     | User               | Rejoindre via invite_code               |
+| `/api/squads/leave`                    | POST     | User               | Quitter une ligue                       |
+| `/api/squads/var-alert`                | POST     | User               | Sirène VAR → push squad members         |
+| `/api/squads/nudge`                    | POST     | User               | Rappel pronos → push squad members      |
+| `/api/push/subscribe`                  | POST     | User               | Enregistrement subscription web push    |
+| `/api/webhooks/new-profile`            | POST     | Supabase           | Webhook création profil                 |
+| `/api/og/victory/[id]`                 | GET      | Public             | OG image dynamique résultats ✅         |
 
 ---
 
@@ -708,6 +709,7 @@ Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant l
 ### 1. Design System — État
 
 **✅ Cohérent :**
+
 - Fond dark : `zinc-900` / `zinc-800` / `zinc-950` uniforme
 - Accent primaire : `green-500` (CTAs) + `whistle` (alerte/jaune) + `amber-500` (économie)
 - Radius : `rounded-2xl` dominant, `rounded-3xl` sur les cartes hero
@@ -716,45 +718,47 @@ Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant l
 - TopBar simplifié : section label dynamique ("MES PRONOS", "LE STADE"…) au lieu de balance/points ✅
 
 **✅ UX Lobby résolus (2026-05-09) :**
+
 - Tri journées par numéro (fini le bug match reporté) ✅
 - Cartes match : date+heure en source unique (fini la triple redondance) ✅
 - Centre carte : `VS` pour matchs lointains, countdown pour <24h ✅
 - "Compos ✓" inline avec la date dans metaRow ✅
 
 **⚠️ Incohérences restantes :**
+
 - Hauteurs de boutons hétérogènes : `h-10` / `h-11` / `h-12` / `h-14`
 - `text-[10px]`, `text-xs`, `text-sm` coexistent sans type scale clair
 - Contraste `text-zinc-500` sur `bg-zinc-900` ≈ ratio 4:1 (limite WCAG AA)
 
 ### 2. Accessibilité — Bilan Global
 
-| Composant | Statut ARIA | Scroll Lock | Labels |
-|-----------|------------|-------------|--------|
-| VotingModal | ✅ Excellent | ❌ Manquant | ✅ |
-| ActionDrawer | ❌ Zéro | ❌ Manquant | ⚠️ Partiel |
-| AlertDrawer | ❌ Zéro | ❌ Manquant | ⚠️ Partiel |
-| ProfileEditModal | ⚠️ aria-labelledby manquant | N/A | ✅ |
+| Composant        | Statut ARIA                 | Scroll Lock | Labels     |
+| ---------------- | --------------------------- | ----------- | ---------- |
+| VotingModal      | ✅ Excellent                | ❌ Manquant | ✅         |
+| ActionDrawer     | ❌ Zéro                     | ❌ Manquant | ⚠️ Partiel |
+| AlertDrawer      | ❌ Zéro                     | ❌ Manquant | ⚠️ Partiel |
+| ProfileEditModal | ⚠️ aria-labelledby manquant | N/A         | ✅         |
 
 ### 3. Gamification — État
 
-| Feature | Statut |
-|---------|--------|
-| Streak quotidien visible + claim | ✅ |
-| Streak Freeze (protection série) | ✅ |
-| XP bar dans ProfileHeader | ✅ |
-| Badges avec progress + critères | ✅ |
-| Leaderboard hybride saison/all-time | ✅ |
-| Historique groupé par match | ✅ |
-| Récap post-match | ✅ |
-| Overlay post-pari VAR | ✅ |
-| Séparation sous-scores ligue pronos/VAR | ✅ |
-| Boutique cosmétique | ✅ |
-| Boosters (4 types) | ✅ |
-| RSA solde minimum | ✅ |
-| Mise minimum dynamique | ✅ |
-| Messagerie privée (DMs) | ✅ |
-| Chat de ligue | ✅ |
-| Automatisation acquisition (solo, j1/j3/j7) | ✅ |
+| Feature                                     | Statut |
+| ------------------------------------------- | ------ |
+| Streak quotidien visible + claim            | ✅     |
+| Streak Freeze (protection série)            | ✅     |
+| XP bar dans ProfileHeader                   | ✅     |
+| Badges avec progress + critères             | ✅     |
+| Leaderboard hybride saison/all-time         | ✅     |
+| Historique groupé par match                 | ✅     |
+| Récap post-match                            | ✅     |
+| Overlay post-pari VAR                       | ✅     |
+| Séparation sous-scores ligue pronos/VAR     | ✅     |
+| Boutique cosmétique                         | ✅     |
+| Boosters (4 types)                          | ✅     |
+| RSA solde minimum                           | ✅     |
+| Mise minimum dynamique                      | ✅     |
+| Messagerie privée (DMs)                     | ✅     |
+| Chat de ligue                               | ✅     |
+| Automatisation acquisition (solo, j1/j3/j7) | ✅     |
 
 ### 4. Top 5 Priorités UX Restantes
 
@@ -815,13 +819,14 @@ twitter_tokens (OAuth2 tokens — 0099)
 
 **Migrations notables depuis V5 (0098–0100) :**
 
-| Migration | Contenu |
-|-----------|---------|
-| **0098** | `direct_message_threads` + `direct_messages` — messagerie privée complète avec `user_a/b_read_at` |
-| **0099** | `tweet_log` + `twitter_tokens` — intégration Twitter OAuth2 pour tweets live automatiques |
-| **0100** | Fix `place_bet` et market_events : supprime le type `injury_sub` des CHECK constraints |
+| Migration | Contenu                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| **0098**  | `direct_message_threads` + `direct_messages` — messagerie privée complète avec `user_a/b_read_at` |
+| **0099**  | `tweet_log` + `twitter_tokens` — intégration Twitter OAuth2 pour tweets live automatiques         |
+| **0100**  | Fix `place_bet` et market_events : supprime le type `injury_sub` des CHECK constraints            |
 
 **Fixes critiques appliqués (V5 → V6) :**
+
 - `0095` : `lifetime_points_earned` non incrémenté → `season_points` restait à 0. Fixed.
 - `0097` : `place_bet()` rejetait les options stoppage (`1`/`2`/`3`/`4`/`5`/`6+`). Fixed.
 - `0100` : `injury_sub` type invalide bloquait l'insertion de certains marchés. Fixed.

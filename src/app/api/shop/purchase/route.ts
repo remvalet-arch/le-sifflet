@@ -1,5 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  errorResponse,
+  rateLimitResponse,
+} from "@/lib/api-response";
+
+const SHOP_RATE_LIMIT = 10;
+const SHOP_WINDOW_SECS = 60;
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -7,6 +14,15 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
+
+  const since = new Date(Date.now() - SHOP_WINDOW_SECS * 1000).toISOString();
+  const { count } = await supabase
+    .from("user_shop_inventory")
+    .select("shop_item_id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("purchased_at", since);
+  if ((count ?? 0) >= SHOP_RATE_LIMIT)
+    return rateLimitResponse(SHOP_WINDOW_SECS);
 
   let body: { item_id?: string };
   try {
