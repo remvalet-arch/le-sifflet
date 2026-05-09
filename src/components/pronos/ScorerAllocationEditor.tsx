@@ -26,20 +26,42 @@ async function fetchPlayersForMatch(
 ): Promise<{ home: PlayerForSelect[]; away: PlayerForSelect[] }> {
   const supabase = createClient();
 
-  const { data: lineups } = await supabase
-    .from("lineups")
-    .select("player_name, team_side, position")
-    .eq("match_id", matchId);
+  const [{ data: lineups }, { data: oddsRows }] = await Promise.all([
+    supabase
+      .from("lineups")
+      .select("player_name, team_side, position")
+      .eq("match_id", matchId),
+    supabase
+      .from("player_odds")
+      .select("player_name, odd_anytime, odd_first")
+      .eq("match_id", matchId),
+  ]);
+
+  const oddsMap = new Map((oddsRows ?? []).map((r) => [r.player_name, r]));
+
+  function withOdds(p: PlayerForSelect): PlayerForSelect {
+    const o = oddsMap.get(p.player_name);
+    if (!o) return p;
+    return {
+      ...p,
+      odd_anytime: o.odd_anytime ?? undefined,
+      odd_first: o.odd_first ?? undefined,
+    };
+  }
 
   const VALID_POSITIONS = new Set(["A", "M", "D", "G"]);
 
   if (lineups && lineups.length > 0) {
     const home = lineups
       .filter((r) => r.team_side === "home" && VALID_POSITIONS.has(r.position))
-      .map((r) => ({ player_name: r.player_name, position: r.position }));
+      .map((r) =>
+        withOdds({ player_name: r.player_name, position: r.position }),
+      );
     const away = lineups
       .filter((r) => r.team_side === "away" && VALID_POSITIONS.has(r.position))
-      .map((r) => ({ player_name: r.player_name, position: r.position }));
+      .map((r) =>
+        withOdds({ player_name: r.player_name, position: r.position }),
+      );
     return { home: [CSC_ENTRY, ...home], away: [CSC_ENTRY, ...away] };
   }
 
@@ -56,8 +78,14 @@ async function fetchPlayersForMatch(
 
   const rows = players ?? [];
   return {
-    home: [CSC_ENTRY, ...rows.filter((p) => p.team_id === homeTeamId)],
-    away: [CSC_ENTRY, ...rows.filter((p) => p.team_id === awayTeamId)],
+    home: [
+      CSC_ENTRY,
+      ...rows.filter((p) => p.team_id === homeTeamId).map(withOdds),
+    ],
+    away: [
+      CSC_ENTRY,
+      ...rows.filter((p) => p.team_id === awayTeamId).map(withOdds),
+    ],
   };
 }
 

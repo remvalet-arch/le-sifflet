@@ -1116,6 +1116,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      player_odds: {
+        Row: {
+          id: string;
+          match_id: string;
+          player_name: string;
+          odd_anytime: number | null;
+          odd_first: number | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          player_name: string;
+          odd_anytime?: number | null;
+          odd_first?: number | null;
+          synced_at?: string;
+        };
+        Update: {
+          id?: string;
+          match_id?: string;
+          player_name?: string;
+          odd_anytime?: number | null;
+          odd_first?: number | null;
+          synced_at?: string;
+        };
+        Relationships: [];
+      };
       players: {
         Row: {
           id: string;
@@ -1789,3 +1816,5 @@ export type RateLimitLogRow =
   Database["public"]["Tables"]["rate_limit_log"]["Row"];
 export type RateLimitLogInsert =
   Database["public"]["Tables"]["rate_limit_log"]["Insert"];
+
+export type PlayerOddsRow = Database["public"]["Tables"]["player_odds"]["Row"];
