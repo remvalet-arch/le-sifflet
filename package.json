@@ -17,7 +17,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "sprint:recap": "node scripts/sprint-recap.mjs",
-    "sprint:ship": "git checkout main && git merge stage --no-ff && git push origin main && npm run sprint:recap && git checkout stage"
+    "sprint:ship": "PREV_MAIN=$(git rev-parse main) && git checkout main && git merge stage --no-ff && git push origin main && PREV_MAIN=$PREV_MAIN npm run sprint:recap && git checkout stage"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",

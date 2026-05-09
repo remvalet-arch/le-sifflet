@@ -41,24 +41,39 @@ function git(cmd) {
 }
 
 const branch = git("git rev-parse --abbrev-ref HEAD");
-const lastTag = git("git describe --tags --abbrev=0 2>/dev/null") || "";
-const logRange = lastTag ? `${lastTag}..HEAD` : "-10";
-const commits = git(
-  `git log ${logRange} --oneline --no-merges`
-).split("\n").filter(Boolean);
 
-const diffStat = git(`git diff ${lastTag || "HEAD~" + commits.length}..HEAD --stat`);
+// PREV_MAIN est passé par sprint:ship — c'est le SHA de main avant le merge.
+// Sans lui, on prend le dernier tag ou les 20 derniers commits.
+const prevMain = process.env.PREV_MAIN?.trim() || "";
+const lastTag = git("git describe --tags --abbrev=0 2>/dev/null") || "";
+const base = prevMain || lastTag || "";
+const logRange = base ? `${base}..HEAD` : "-20";
+
+const commits = git(`git log ${logRange} --oneline --no-merges`)
+  .split("\n")
+  .filter(Boolean);
+
+const diffBase = base || `HEAD~${Math.max(commits.length, 1)}`;
+const diffStat = git(`git diff ${diffBase}..HEAD --stat`);
 const filesChanged = (diffStat.match(/(\d+) files? changed/) || [])[1] ?? "?";
 const insertions = (diffStat.match(/(\d+) insertions?/) || [])[1] ?? "0";
 const deletions = (diffStat.match(/(\d+) deletions?/) || [])[1] ?? "0";
 
-// Nom du sprint depuis SPRINT_SPEC.md si dispo
-let sprintName = "Sprint";
+// Nom du sprint : 1er commit du sprint, ou SPRINT_SPEC.md, ou date
+let sprintName = "";
 if (existsSync("SPRINT_SPEC.md")) {
-  const firstLine = readFileSync("SPRINT_SPEC.md", "utf-8").split("\n")[0] ?? "";
+  const firstLine =
+    readFileSync("SPRINT_SPEC.md", "utf-8").split("\n")[0] ?? "";
   const m = firstLine.match(/^#\s+(.+)/);
-  if (m) sprintName = m[1].replace(/^SPRINT SPEC — /, "");
+  if (m) sprintName = m[1].replace(/^SPRINT SPEC[^—]*— ?/, "");
 }
+if (!sprintName && commits.length > 0) {
+  // Prend le message du premier commit du sprint (le plus ancien)
+  const firstCommit = commits[commits.length - 1];
+  sprintName = firstCommit.replace(/^[a-f0-9]+ /, "").slice(0, 60);
+}
+if (!sprintName)
+  sprintName = `Sprint du ${new Date().toLocaleDateString("fr-FR")}`;
 
 const now = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris" });
 const repoUrl = "https://github.com/remvalet-arch/le-sifflet";
