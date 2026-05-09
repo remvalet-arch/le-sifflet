@@ -188,7 +188,7 @@ Pas encore implémenté côté code, mais à préparer dès maintenant :
 | `CRON_SECRET` | ✅ | Sécurise les crons automatiques |
 | `API_FOOTBALL_KEY` | ✅ | Données de matchs live |
 | `SUPABASE_WEBHOOK_SECRET` | 🔴 À ajouter | Sécurise le webhook bienvenue |
-| `TALLY_FEEDBACK_URL` | 🔴 À ajouter | Lien formulaire feedback J+7 |
+| `TALLY_FEEDBACK_URL` | 🔴 À ajouter dans Vercel | `https://tally.so/r/Zjv6QV` |
 
 ### `.env.local` (sur ton ordinateur)
 
@@ -244,7 +244,7 @@ Tu reçois un email récap
 | AUTO-1.1 — Email bienvenue | 🟡 Attente webhook Supabase | Email dès qu'un user s'inscrit |
 | AUTO-1.2 — Push J+1 inactif | 🔴 Attente cron-job.org | Push si pas de prono après 24h |
 | AUTO-1.3 — Email J+3 inactif | 🔴 Attente cron-job.org | Email "ligue CDM réservée" |
-| AUTO-1.4 — Email J+7 churn | 🔴 Attente cron-job.org + Tally | Email feedback pour les churners |
+| AUTO-1.4 — Email J+7 churn | 🔴 Attente cron-job.org | Email feedback (Tally ✅ → `https://tally.so/r/Zjv6QV`) |
 | AUTO-2 — Daily Recap push | ✅ Actif (cron quotidien) | Récap push quotidien aux actifs |
 | AUTO-3 — Twitter Live | ⏳ Planifié semaine 3 | Tweets auto pendant les matchs |
 
