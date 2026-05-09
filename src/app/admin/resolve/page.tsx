@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchRow } from "@/types/database";
 import { AdminEventCard } from "./AdminEventCard";
@@ -56,9 +57,25 @@ export default async function AdminResolvePage() {
   return (
     <main className="min-h-screen bg-gray-950 px-4 py-8 text-white">
       <div className="mx-auto max-w-2xl space-y-10">
-        <h1 className="text-2xl font-black uppercase tracking-widest text-yellow-400">
-          Admin — Résolution
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-black uppercase tracking-widest text-yellow-400">
+            Admin — Résolution
+          </h1>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/push-test"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-white/10"
+            >
+              🔔 Push
+            </Link>
+            <Link
+              href="/admin/cron-test"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-white/10"
+            >
+              ⏰ Crons
+            </Link>
+          </div>
+        </div>
 
         <section>
           <h2 className="mb-1 text-sm font-black uppercase tracking-widest text-zinc-400">
