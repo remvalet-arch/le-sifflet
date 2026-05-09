@@ -28,29 +28,24 @@ export function BottomNav({ userId }: { userId?: string }) {
   const [hasUnread, setHasUnread] = useState(false);
   const squadIdsRef = useRef<string[]>([]);
   const isOnLiguesRef = useRef(isOnLigues);
-  const wasOnLiguesRef = useRef(isOnLigues);
+  // Once the user visits /ligues, stop re-checking the DB (trust SquadChat to
+  // update last_read_at). The badge can only come back via realtime after that.
+  const visitedLiguesRef = useRef(false);
 
   useEffect(() => {
     isOnLiguesRef.current = isOnLigues;
   }, [isOnLigues]);
 
-  // Vérifie les non-lus à l'init et après chaque retour de /ligues
-  // (SquadChat met à jour last_read_at → la re-vérif retourne 0 non-lus)
   useEffect(() => {
-    const wasOnLigues = wasOnLiguesRef.current;
-    wasOnLiguesRef.current = isOnLigues;
-
     if (!userId) return;
     if (isOnLigues) {
-      setTimeout(() => setHasUnread(false), 0);
+      visitedLiguesRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHasUnread(false);
       return;
     }
-    // Quand on quitte /ligues, on suppose que l'utilisateur a tout lu :
-    // le badge ne revient que via realtime (nouveau message d'un autre user)
-    if (wasOnLigues) {
-      setTimeout(() => setHasUnread(false), 0);
-      return;
-    }
+    if (visitedLiguesRef.current) return;
+
     let cancelled = false;
     const supabase = createClient();
 
@@ -97,10 +92,13 @@ export function BottomNav({ userId }: { userId?: string }) {
           const msg = payload.new as {
             squad_id: string;
             user_id: string | null;
+            is_system_message?: boolean;
           };
           if (
             squadIdsRef.current.includes(msg.squad_id) &&
+            msg.user_id !== null &&
             msg.user_id !== userId &&
+            !msg.is_system_message &&
             !isOnLiguesRef.current
           ) {
             setTimeout(() => setHasUnread(true), 0);

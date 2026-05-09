@@ -92,6 +92,18 @@ export async function GET(request: Request) {
 
     if (eligibleUserIds.length === 0) continue;
 
+    // Skip users who already have a prono for this match
+    const { data: existingPronos } = await admin
+      .from("pronos")
+      .select("user_id")
+      .eq("match_id", match.id)
+      .in("user_id", eligibleUserIds);
+
+    const alreadyProno = new Set((existingPronos ?? []).map((p) => p.user_id));
+    eligibleUserIds = eligibleUserIds.filter((id) => !alreadyProno.has(id));
+
+    if (eligibleUserIds.length === 0) continue;
+
     const sent = await sendPushToUsers(eligibleUserIds, {
       title: `⚽ ${match.team_home} – ${match.team_away} dans 2h !`,
       body: "Fais ton prono maintenant avant le coup d'envoi →",
