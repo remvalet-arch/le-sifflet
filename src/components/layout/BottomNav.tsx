@@ -113,7 +113,7 @@ export function BottomNav({ userId }: { userId?: string }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
+      className="relative z-10 w-full shrink-0 border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div

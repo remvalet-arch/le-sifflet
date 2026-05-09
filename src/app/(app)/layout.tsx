@@ -99,32 +99,23 @@ export default async function AppLayout({
 
   return (
     <LiveRoomProvider>
-      {/* overflow-x-hidden is intentionally on a separate wrapper so the fixed
-          BottomNav/TopBar are not trapped inside an overflow scroll container
-          (iOS Safari positions fixed elements relative to overflow ancestors). */}
-      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col bg-zinc-950 shadow-2xl">
-        <div className="overflow-x-hidden flex min-h-full flex-1 flex-col text-white">
-          <MigrationBanner />
-          <DailyRecapChecker />
-          <TopBar
-            username={profile.username}
-            rank={profile.rank}
-            xp={profile.xp ?? 0}
-            userId={user.id}
-            hasUnreadDm={hasUnreadDm}
-          />
+      {/* Shell layout: outer div is exactly h-[100dvh], TopBar and BottomNav
+          are normal flex-col siblings (no position:fixed), main scrolls internally.
+          This avoids all iOS Safari position:fixed / overflow container traps. */}
+      <div className="mx-auto flex h-[100dvh] w-full max-w-md flex-col bg-zinc-950 shadow-2xl">
+        <MigrationBanner />
+        <DailyRecapChecker />
+        <TopBar
+          username={profile.username}
+          rank={profile.rank}
+          xp={profile.xp ?? 0}
+          userId={user.id}
+          hasUnreadDm={hasUnreadDm}
+        />
 
-          {/* Scrollable content — clears fixed TopBar and BottomNav */}
-          <div
-            className="flex flex-1 flex-col"
-            style={{
-              paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))",
-              paddingBottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))",
-            }}
-          >
-            {children}
-          </div>
-        </div>
+        <main className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden text-white">
+          {children}
+        </main>
 
         <BottomNav userId={user.id} />
       </div>

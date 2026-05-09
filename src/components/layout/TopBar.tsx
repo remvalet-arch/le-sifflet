@@ -93,7 +93,7 @@ export function TopBar({
   return (
     <>
       <header
-        className="fixed left-1/2 top-0 z-50 w-full max-w-md -translate-x-1/2 border-b border-white/8 bg-zinc-950/95 backdrop-blur-xl"
+        className="relative z-10 w-full shrink-0 border-b border-white/8 bg-zinc-950/95 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="flex h-14 items-center justify-between px-4">

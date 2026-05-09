@@ -1,6 +1,6 @@
-# 📖 BIBLE TECHNIQUE — VAR TIME (Le Sifflet) — V6
+# 📖 BIBLE TECHNIQUE — VAR TIME (Le Sifflet) — V7
 
-> Audit CTO • 2026-05-09 • Base : sprints 1–8 + A–UX8 + Eco1–4 + FK1/FK2 + Push + LAND + CHAT-1/2/3 + MON-1 + AUTO-1–7 + DMs + Twitter + bug fixes (badge, VAR options, journée sort, lobby UX) • **100 migrations Supabase** • **72 tables** • **~85 composants client**
+> Audit CTO • 2026-05-09 • Base : sprints 1–8 + A–UX8 + Eco1–4 + FK1/FK2 + Push + LAND + CHAT-1/2/3 + MON-1 + AUTO-1–7 + DMs + Twitter + bug fixes + **5 sprints qualité (SECURITY / LOGGER / PERF / ARIA / REFACTOR)** • **100 migrations Supabase** • **72 tables** • **~85 composants client**
 
 ---
 
@@ -120,13 +120,13 @@ PST / CANC / ABD / SUSP →  "paused"
 
 ### 1.7 Gaps Identifiés — Pilier 1
 
-| Criticité | Gap                                               | Impact                                                       |
-| --------- | ------------------------------------------------- | ------------------------------------------------------------ |
-| 🟡 MOYEN  | Pas de webhook API-Football                       | Latence 1 min max entre un événement réel et l'app           |
-| 🟡 MOYEN  | Fixture ID ambigu si 2 matchs home/away même jour | `syncApiFootballMatch` abandonne la sync                     |
-| 🟡 MOYEN  | `console.log` dans match-monitor (nombreux)       | Logs parasites en production — logger.ts créé mais pas migré |
-| 🟢 RÉSOLU | Pas de retry/backoff sur `fetchApiFootball`       | Sprint C5 ✅                                                 |
-| 🟢 RÉSOLU | `injury_sub` type invalide dans les marchés       | Migration 0100 ✅                                            |
+| Criticité | Gap                                               | Impact                                                                                    |
+| --------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 🟡 MOYEN  | Pas de webhook API-Football                       | Latence 1 min max entre un événement réel et l'app                                        |
+| 🟡 MOYEN  | Fixture ID ambigu si 2 matchs home/away même jour | `syncApiFootballMatch` abandonne la sync                                                  |
+| 🟢 RÉSOLU | `console.log` dans les routes API                 | Sprint LOGGER ✅ — routes API migrées, reste services/ (api-football-sync, sportsdb-sync) |
+| 🟢 RÉSOLU | Pas de retry/backoff sur `fetchApiFootball`       | Sprint C5 ✅                                                                              |
+| 🟢 RÉSOLU | `injury_sub` type invalide dans les marchés       | Migration 0100 ✅                                                                         |
 
 ---
 
@@ -371,21 +371,27 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
   leaderboard/          → Server Component, revalidate=86400 (24h ISR ✅)
   settings/             → Server Component (⚠️ revalidate manquant)
   shop/                 → Server Component (⚠️ revalidate manquant)
-  rules/ laws/          → Server Components statiques (⚠️ revalidate manquant)
+  rules/ laws/          → Server Components statiques (revalidate=86400 ✅ Sprint PERF)
 /admin/resolve          → Admin UI (protégé trust_score ≥ 150)
 /api/og/victory/[id]    → OG image dynamique ✅
 ```
 
-### 4.2 Composants Critiques — Taille & Responsabilités (Audit 2026-05-09)
+### 4.2 Composants Critiques — Taille & Responsabilités (Audit 2026-05-09, post-sprints)
 
-| Composant                 | Lignes    | État     | Problème principal                             |
-| ------------------------- | --------- | -------- | ---------------------------------------------- |
-| `PronosticsHubClient.tsx` | **1 106** | ⚠️ Lourd | Mix score picker + scorer + date filter        |
-| `VotingModal.tsx`         | **892**   | ⚠️ Lourd | 3 setIntervals, scroll lock manquant           |
-| `ProfileClient.tsx`       | **843**   | ⚠️ Lourd | Onglets profil/amis/badges/historique mélangés |
-| `LiveRoom.tsx`            | **628**   | ✅ OK    | Bien structuré, cleanup correct                |
-| `MatchLobby.tsx`          | **539**   | ✅ OK    | Europe hub extrait proprement                  |
-| `LeagueHub.tsx`           | **309**   | ✅ OK    | Tri journées par numéro ✅                     |
+| Composant                 | Lignes   | État     | Note                                                      |
+| ------------------------- | -------- | -------- | --------------------------------------------------------- |
+| `page.tsx` (landing)      | **878**  | ⚠️ Lourd | À extraire en sous-sections                               |
+| `LiveRoom.tsx`            | **634**  | ⚠️ Lourd | Bien structuré mais peut encore être découpé              |
+| `ShopClient.tsx`          | **446**  | ✅ OK    | Contenu dense mais cohérent                               |
+| `LiguesPageClient.tsx`    | **400**  | ✅ OK    | —                                                         |
+| `PronosticsHubClient.tsx` | **387**  | ✅ OK    | ↓ de 1106L — MatchFilterBar + useVotingMarket extraits ✅ |
+| `ProfileHistorique.tsx`   | **455**  | ✅ OK    | **NEW** — extrait de ProfileClient (Sprint REFACTOR)      |
+| `ProfileOverview.tsx`     | **205**  | ✅ OK    | **NEW** — extrait de ProfileClient (Sprint REFACTOR)      |
+| `ProfileClient.tsx`       | **~200** | ✅ OK    | ↓ de 843L — Sprint REFACTOR ✅                            |
+| `SquadChat.tsx`           | **260**  | ✅ OK    | —                                                         |
+| `MatchFilterBar.tsx`      | **159**  | ✅ OK    | **NEW** — extrait de PronosticsHubClient                  |
+| `FriendPronoHints.tsx`    | **117**  | ✅ OK    | —                                                         |
+| `ProfileBadges.tsx`       | **28**   | ✅ OK    | **NEW** — extrait de ProfileClient                        |
 
 ### 4.3 Contexte React & Hooks Personnalisés
 
@@ -393,10 +399,13 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 **Hooks personnalisés :**
 
-| Hook                       | Fichier                                 | Rôle                                  |
-| -------------------------- | --------------------------------------- | ------------------------------------- |
-| `useActiveSquad`           | `src/hooks/useActiveSquad.ts`           | localStorage + `useSyncExternalStore` |
-| `usePreferredCompetitions` | `src/hooks/usePreferredCompetitions.ts` | Sync optimiste API competition prefs  |
+| Hook                       | Fichier                                 | Rôle                                                                                                            |
+| -------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `useActiveSquad`           | `src/hooks/useActiveSquad.ts`           | localStorage + `useSyncExternalStore`                                                                           |
+| `usePreferredCompetitions` | `src/hooks/usePreferredCompetitions.ts` | Sync optimiste API competition prefs avec rollback Sonner                                                       |
+| `useFocusTrap`             | `src/hooks/useFocusTrap.ts`             | **NEW** — focus clavier circulaire (Tab/Shift+Tab) + Escape restaure focus. Sprint ARIA ✅                      |
+| `useScrollLock`            | `src/hooks/useScrollLock.ts`            | **NEW** — lock body scroll (iOS Safari compatible, scrollbar-width aware). Sprint ARIA ✅                       |
+| `useVotingMarket`          | `src/hooks/useVotingMarket.ts`          | **NEW** — logique paris live complète (odds polling 2s, timer, boosters, vibration urgence). Sprint REFACTOR ✅ |
 
 ### 4.4 Patterns de Données — Bon vs Mauvais
 
@@ -415,7 +424,7 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 - **Sequential awaits** dans `profile/[id]` et `profile/page.tsx` qui pourraient être parallélisés
 - Polling toutes les 5s dans `SquadDetailClient` sans backoff
-- 17 fichiers route avec `console.log/error/warn` directs — `logger.ts` créé mais pas encore migré partout
+- `console.*` restants dans `src/services/` (api-football-sync, sportsdb-sync) — routes API migrées ✅
 
 ### 4.5 État des Subscriptions Realtime
 
@@ -461,45 +470,48 @@ Résidu potentiel : `src/services/sportsdb-sync.ts` — vérifier si encore impo
 
 ---
 
-### 5.2 Risques de Sécurité (Audit 2026-05-09)
+### 5.2 Risques de Sécurité (Audit 2026-05-09, post-SECURITY sprint)
 
-| Risque                                             | Sévérité | État                                                |
-| -------------------------------------------------- | -------- | --------------------------------------------------- |
-| Pas de rate limiting sur `/api/claim-daily-streak` | 🔴       | ❌ Non traité                                       |
-| Pas de rate limiting sur `/api/claim-rsa`          | 🔴       | ❌ Non traité                                       |
-| Pas de rate limiting sur `/api/shop/purchase`      | 🔴       | ❌ Non traité                                       |
-| Pas de rate limiting sur `/api/boosters/purchase`  | 🔴       | ❌ Non traité                                       |
-| Pas de rate limiting sur `/api/var-bets/quick-bet` | 🔴       | ❌ Non traité                                       |
-| Rate limiting sur `/api/bet`                       | ✅       | 10 req/min                                          |
-| Rate limiting sur `/api/alert`                     | ✅       | 5 req/min                                           |
-| Rate limiting sur `/api/messages/[otherId]`        | ✅       | 1 msg/2s                                            |
-| Cooldown 30min sur `/api/squads/nudge`             | ✅       | DB-based                                            |
-| Cron routes vérifient Bearer CRON_SECRET           | ✅       | Toutes                                              |
-| Admin routes vérifient trust_score ≥ 150           | ✅       | Toutes                                              |
-| Pas de validation structurée (no zod)              | 🟡       | ❌ Non traité                                       |
-| `console.log` directs en production                | 🟡       | ⚠️ Partiel — logger.ts créé, 17 fichiers non migrés |
+| Risque                                             | Sévérité | État                                                                 |
+| -------------------------------------------------- | -------- | -------------------------------------------------------------------- |
+| Rate limiting sur `/api/claim-daily-streak`        | ✅       | Sprint SECURITY ✅ — checkRateLimit, 5 req/60s                       |
+| Rate limiting sur `/api/claim-rsa`                 | ✅       | Sprint SECURITY ✅ — checkRateLimit, 5 req/60s                       |
+| Rate limiting sur `/api/admin/finish-match`        | ✅       | Sprint SECURITY ✅ — checkRateLimit, 10 req/60s                      |
+| Rate limiting sur `/api/admin/resolve-event`       | ✅       | Sprint SECURITY ✅ — checkRateLimit, 20 req/60s                      |
+| Pas de rate limiting sur `/api/shop/purchase`      | 🔴       | ❌ Non traité                                                        |
+| Pas de rate limiting sur `/api/boosters/purchase`  | 🔴       | ❌ Non traité                                                        |
+| Pas de rate limiting sur `/api/var-bets/quick-bet` | 🔴       | ❌ Non traité                                                        |
+| Rate limiting sur `/api/bet`                       | ✅       | 10 req/min natif                                                     |
+| Rate limiting sur `/api/alert`                     | ✅       | 5 req/min                                                            |
+| Rate limiting sur `/api/messages/[otherId]`        | ✅       | 1 msg/2s                                                             |
+| Cooldown 30min sur `/api/squads/nudge`             | ✅       | DB-based                                                             |
+| Cron routes vérifient Bearer CRON_SECRET           | ✅       | Toutes                                                               |
+| Admin routes vérifient trust_score ≥ 150           | ✅       | Toutes                                                               |
+| Pas de validation structurée (no zod)              | 🟡       | ❌ Non traité                                                        |
+| `console.log` directs en production                | 🟢       | Routes API migrées — `logger.ts` ✅. Reste services/ (faible impact) |
 
 ---
 
 ### 5.3 Performance — Gaps Identifiés (Audit 2026-05-09)
 
-**ISR manquante sur 9 pages :**
+**État ISR (post-Sprint PERF) :**
 
-| Page              | revalidate cible | État actuel |
-| ----------------- | ---------------- | ----------- |
-| `/lobby`          | 30s              | ❌ dynamic  |
-| `/shop`           | 3600s (1h)       | ❌ dynamic  |
-| `/settings`       | 86400s (24h)     | ❌ dynamic  |
-| `/ligues`         | 300s (5min)      | ❌ dynamic  |
-| `/profile`        | 300s             | ❌ dynamic  |
-| `/profile/[id]`   | 300s             | ❌ dynamic  |
-| `/rules`, `/laws` | 86400s           | ❌ dynamic  |
-| `/messages`       | N/A (dynamique)  | acceptable  |
-| `/squads`         | 300s             | ❌ dynamic  |
+| Page              | revalidate cible | État actuel                       |
+| ----------------- | ---------------- | --------------------------------- |
+| `/pronos`         | 60s              | ✅ Sprint PERF                    |
+| `/leaderboard`    | 86400s (24h)     | ✅ Sprint PERF                    |
+| `/rules`, `/laws` | 86400s (24h)     | ✅ Sprint PERF                    |
+| `/lobby`          | 30s              | ❌ dynamic — force-dynamic (auth) |
+| `/shop`           | 3600s (1h)       | ❌ dynamic                        |
+| `/settings`       | 86400s (24h)     | ❌ dynamic — force-dynamic (auth) |
+| `/ligues`         | 300s (5min)      | ❌ dynamic                        |
+| `/profile`        | 300s             | ❌ dynamic — force-dynamic (auth) |
+| `/profile/[id]`   | 300s             | ❌ dynamic                        |
+| `/messages`       | N/A (dynamique)  | acceptable                        |
 
-**Images non optimisées :** 7 balises `<img>` brutes (hôtes hors remotePatterns) dans : `MatchCard`, `MatchLobby`, `MatchLineupsPitch`, `MatchLineups`, `MatchStats`, `PolymarketTab`, `Scoreboard`. Chaque `<img>` contient un commentaire eslint-disable car l'hôte image (API-Sports) n'est pas dans `remotePatterns` — à ajouter ou à rendre dynamique.
+**Images non optimisées :** 7 balises `<img>` brutes (hôtes hors remotePatterns) dans : `MatchCard`, `MatchLobby`, `MatchLineupsPitch`, `MatchLineups`, `MatchStats`, `PolymarketTab`, `Scoreboard`. Hôte API-Sports non dans `remotePatterns` — LCP dégradé.
 
-**Suspense boundaries manquants :** pages profile, ligues, shop (skeleton loader non implémenté).
+**Skeleton loaders ajoutés :** ligues (LiguesPageClient), shop (ShopClient) — Sprint PERF ✅.
 
 ---
 
@@ -524,16 +536,18 @@ Valeurs hardcodées restantes à extraire dans `src/lib/constants/` :
 
 ---
 
-### 5.6 Accessibilité (WCAG 2.1 AA) — Audit 2026-05-09
+### 5.6 Accessibilité (WCAG 2.1 AA) — Audit post-Sprint ARIA (2026-05-09)
 
-| Problème                                                                       | Composant(s)              | Sévérité  |
-| ------------------------------------------------------------------------------ | ------------------------- | --------- |
-| Zéro attribut ARIA dialog (`role`, `aria-modal`)                               | ActionDrawer, AlertDrawer | 🔴 Haute  |
-| `aria-labelledby` manquant                                                     | ProfileEditModal          | 🟡 Moyen  |
-| Scroll lock body manquant lors d'une modale ouverte                            | VotingModal, ActionDrawer | 🟡 Moyen  |
-| 29+ inputs de formulaire sans `<label>` associé                                | Formulaires partout       | 🟡 Moyen  |
-| `text-zinc-500` sur `bg-zinc-900` ≈ ratio 4:1                                  | Labels partout            | Limite AA |
-| ✅ VotingModal: role="dialog", aria-modal, focus trap, role="timer", aria-live | VotingModal               | Excellent |
+| État                                                                           | Composant(s)        | Sévérité       |
+| ------------------------------------------------------------------------------ | ------------------- | -------------- |
+| ✅ role="dialog" + aria-modal + aria-labelledby + useFocusTrap                 | ActionDrawer        | Résolu ✅      |
+| ⚠️ aria-modal ✅ + aria-labelledby ✅ mais role="dialog" manquant              | AlertDrawer         | 🟡 Moyen       |
+| ✅ role="dialog", aria-modal, focus trap, role="timer", aria-live, scroll lock | VotingModal         | Excellent      |
+| `aria-labelledby` manquant                                                     | ProfileEditModal    | 🟡 Moyen       |
+| Scroll lock body (`useScrollLock`) ajouté sur VotingModal + ActionDrawer       | —                   | ✅ Sprint ARIA |
+| aria-live manquant sur notifications temps réel                                | LiveRoom            | 🟡 Moyen       |
+| 29+ inputs de formulaire sans `<label>` associé                                | Formulaires partout | 🟡 Moyen       |
+| `text-zinc-500` sur `bg-zinc-900` ≈ ratio 4:1                                  | Labels partout      | Limite AA      |
 
 ---
 
@@ -562,9 +576,9 @@ Conflits potentiels: 2 systèmes i18n actifs (translations.ts vs next-intl)
 
 ---
 
-### 5.9 Console & Logging — État Réel
+### 5.9 Console & Logging — État Réel (post-Sprint LOGGER)
 
-**`src/lib/logger.ts` ✅ — Créé et partiellement adopté.**
+**`src/lib/logger.ts` ✅ — Migration routes API complète.**
 
 ```typescript
 log.info(service: string, msg: string, data?: unknown)
@@ -572,80 +586,55 @@ log.warn(service: string, msg: string, data?: unknown)
 log.error(service: string, msg: string, data?: unknown)
 ```
 
-**Routes utilisant `log.*` correctement :** `alert/route.ts`, `match-reminder-2h/route.ts`, `solo-activation/route.ts`, et quelques autres.
+**Sprint LOGGER ✅ :** les 17 routes API ont été migrées de `console.*` vers `log.*`.
 
-**17 fichiers utilisant encore `console.log/error/warn` directs :**
+**`console.*` résiduels acceptables (~14 occurrences) :**
 
-| Fichier                                        | Type        |
-| ---------------------------------------------- | ----------- |
-| `admin/finish-match/route.ts`                  | Debug flows |
-| `admin/invalidate-push-subscriptions/route.ts` | Admin       |
-| `admin/resolve-league-round/route.ts`          | Admin       |
-| `claim-rsa/route.ts`                           | Économie    |
-| `cron/community-listener/route.ts`             | Cron        |
-| `cron/j3-inactive/route.ts`                    | Cron        |
-| `cron/j7-churn/route.ts`                       | Cron        |
-| `cron/match-monitor/route.ts`                  | Nombreux    |
-| `cron/reset-monthly-points/route.ts`           | Cron        |
-| `cron/twitter-live/route.ts`                   | Cron        |
-| `match-subscription/route.ts`                  | Route       |
-| `push/subscribe/route.ts`                      | Push        |
-| `squads/join/route.ts`                         | Squad       |
-| `squads/leave/route.ts`                        | Squad       |
-| `squads/route.ts`                              | Squad       |
-| `squads/[squadId]/route.ts`                    | Squad       |
-| `webhooks/new-profile/route.ts`                | Webhook     |
+| Fichier / Context                              | Type               | Justification                          |
+| ---------------------------------------------- | ------------------ | -------------------------------------- |
+| `src/app/error.tsx`, `src/app/(app)/error.tsx` | Error boundary     | Toujours approprié dans error boundary |
+| `src/components/pwa/PushOptIn.tsx`             | Client component   | `log.*` est server-only                |
+| `src/components/match/MatchNotificationBell`   | Client component   | idem                                   |
+| `src/components/match/MatchLineups.tsx`        | Client component   | idem                                   |
+| `src/hooks/useVotingMarket.ts`                 | Client hook        | idem                                   |
+| `src/lib/resolve-event.ts`                     | Lib server         | À migrer vers `log.*`                  |
+| `src/lib/squad-messages.ts`                    | Lib server         | À migrer vers `log.*`                  |
+| `src/lib/push-sender.ts`                       | Lib server         | À migrer vers `log.*`                  |
+| `src/services/api-football-sync.ts`            | Service (nombreux) | À migrer — impact faible               |
+| `src/services/sportsdb-sync.ts`                | Service            | À migrer — impact faible               |
 
 ---
 
-## PILIER 6 — PLAN DES PROCHAINS SPRINTS
+## PILIER 6 — PLAN DES SPRINTS
 
-### 🔴 Sprint SECURITY — "Rate Limiting des Routes Économiques"
+### ✅ Sprints Complétés (2026-05)
 
-Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant le CDM.
+| Sprint       | Portée                                                                                                           | Statut |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- | ------ |
+| **SECURITY** | Rate limiting checkRateLimit sur claim-daily-streak, claim-rsa, admin-finish-match, admin-resolve-event          | ✅     |
+| **LOGGER**   | Migration console._ → log._ sur toutes les routes API (17 fichiers)                                              | ✅     |
+| **PERF**     | ISR sur leaderboard (24h), rules/laws (24h), pronos (60s) ; skeleton loaders ligues + shop                       | ✅     |
+| **ARIA**     | role="dialog" + aria-modal + aria-labelledby + useFocusTrap + useScrollLock sur ActionDrawer, VotingModal        | ✅     |
+| **REFACTOR** | ProfileClient 843L → ~200L (+ ProfileHistorique/Overview/Badges) ; MatchFilterBar extrait ; useVotingMarket hook | ✅     |
 
-| Tâche | Description                                                          | Priorité |
-| ----- | -------------------------------------------------------------------- | -------- |
-| S1    | Rate limiting sur `/api/claim-daily-streak` (1 req/24h/user via DB)  | 🔴       |
-| S2    | Rate limiting sur `/api/shop/purchase` (10 req/min/user)             | 🔴       |
-| S3    | Rate limiting sur `/api/boosters/purchase` (10 req/min/user)         | 🔴       |
-| S4    | Rate limiting sur `/api/var-bets/quick-bet` (10 req/min/user)        | 🔴       |
-| S5    | Rate limiting sur `/api/claim-rsa` et `/api/refill` (1 req/24h/user) | 🔴       |
+---
 
-### 🟠 Sprint PERF — "Images & ISR"
+### 🔴 Gaps Restants — Priorité Haute
 
-| Tâche | Description                                                                                         | Fichier(s)                    |
-| ----- | --------------------------------------------------------------------------------------------------- | ----------------------------- |
-| P1    | Ajouter api-sports.io aux `remotePatterns` next.config.ts → convertir les 7 `<img>` en `next/image` | `next.config.ts` + 7 fichiers |
-| P2    | Ajouter `revalidate` sur lobby (30s), shop (1h), ligues (5min), squads (5min)                       | Pages concernées              |
-| P3    | Ajouter `revalidate` sur profile/settings/rules/laws (300s / 24h)                                   | Pages concernées              |
-| P4    | Paralléliser les awaits séquentiels dans profile/[id] et profile                                    | `src/app/(app)/profile/`      |
-| P5    | Ajouter Suspense + skeleton loaders sur pronos, shop, profile                                       | Composants concernés          |
-
-### 🟡 Sprint LOGGER — "Observabilité Complète"
-
-| Tâche | Description                                                 | Impact               |
-| ----- | ----------------------------------------------------------- | -------------------- |
-| LOG1  | Migrer les 17 fichiers restants de `console.*` vers `log.*` | Logs propres en prod |
-| LOG2  | Ajouter indexes DB manquants (6 tables, voir §5.8)          | Performance requêtes |
-| LOG3  | Push DM (`notif_dm`) — colonne existe, push manquant        | Feature complète     |
-
-### 🟡 Sprint ARIA — "Accessibilité Critique"
-
-| Tâche | Description                                                               | Fichier(s)                |
-| ----- | ------------------------------------------------------------------------- | ------------------------- |
-| A1    | Ajouter `role="dialog"`, `aria-modal`, `aria-labelledby` sur ActionDrawer | `ActionDrawer.tsx`        |
-| A2    | Même chose sur AlertDrawer                                                | `AlertDrawer.tsx`         |
-| A3    | Connecter le `<h2>` à `aria-labelledby` dans ProfileEditModal             | `ProfileEditModal.tsx`    |
-| A4    | Ajouter scroll lock body (`overflow-hidden`) sur ouverture modales        | VotingModal, ActionDrawer |
-
-### 🟢 Sprint REFACTOR — "Architecture Composants"
-
-| Tâche | Description                                                                  | Fichier(s)                       |
-| ----- | ---------------------------------------------------------------------------- | -------------------------------- |
-| R1    | Extraire `ScorerAllocationEditor` de `PronosticsHubClient` (~300L)           | Nouveau `src/components/pronos/` |
-| R2    | Extraire `MatchFilterBar` + `DateSlider` de `PronosticsHubClient`            | Nouveau `src/components/pronos/` |
-| R3    | Extraire `AmisContent` de `ProfileClient` (déjà en fichier séparé, vérifier) | `src/components/profile/`        |
+| ID      | Description                                                                                                                      | Priorité |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| SEC-1   | Rate limiting sur `/api/shop/purchase` (10 req/min/user)                                                                         | 🔴       |
+| SEC-2   | Rate limiting sur `/api/boosters/purchase` (10 req/min/user)                                                                     | 🔴       |
+| SEC-3   | Rate limiting sur `/api/var-bets/quick-bet` (10 req/min/user)                                                                    | 🔴       |
+| PERF-1  | Ajouter `revalidate` sur ligues (5min), shop (1h), profile/[id] (300s)                                                           | 🟠       |
+| PERF-2  | Convertir 7 `<img>` bruts → `next/image` (LCP — api-sports.io dans remotePatterns)                                               | 🟠       |
+| ARIA-1  | `role="dialog"` manquant sur AlertDrawer (aria-modal ✅, aria-labelledby ✅ mais role ❌)                                        | 🟡       |
+| ARIA-2  | `aria-live` sur LiveRoom pour notifications temps réel (mises à jour balance, VAR)                                               | 🟡       |
+| ARIA-3  | `aria-labelledby` sur ProfileEditModal                                                                                           | 🟡       |
+| DB-1    | Indexes manquants : user_badges(badge_id), friend_requests(receiver_id), push_logs(user_id), direct_messages(thread_id, sent_at) | 🟡       |
+| NOTIF-1 | Push DM (`notif_dm`) — colonne existe dans profiles, push non implémenté                                                         | 🟡       |
+| LOG-1   | Migrer `console.*` dans libs server (resolve-event, squad-messages, push-sender)                                                 | 🟢       |
+| LOG-2   | Migrer `console.*` dans services/ (api-football-sync, sportsdb-sync)                                                             | 🟢       |
 
 ---
 
@@ -730,14 +719,14 @@ Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant l
 - `text-[10px]`, `text-xs`, `text-sm` coexistent sans type scale clair
 - Contraste `text-zinc-500` sur `bg-zinc-900` ≈ ratio 4:1 (limite WCAG AA)
 
-### 2. Accessibilité — Bilan Global
+### 2. Accessibilité — Bilan Global (post-Sprint ARIA)
 
-| Composant        | Statut ARIA                 | Scroll Lock | Labels     |
-| ---------------- | --------------------------- | ----------- | ---------- |
-| VotingModal      | ✅ Excellent                | ❌ Manquant | ✅         |
-| ActionDrawer     | ❌ Zéro                     | ❌ Manquant | ⚠️ Partiel |
-| AlertDrawer      | ❌ Zéro                     | ❌ Manquant | ⚠️ Partiel |
-| ProfileEditModal | ⚠️ aria-labelledby manquant | N/A         | ✅         |
+| Composant        | Statut ARIA                                                    | Scroll Lock      | Labels     |
+| ---------------- | -------------------------------------------------------------- | ---------------- | ---------- |
+| VotingModal      | ✅ Excellent (role, aria-modal, focus trap, timer)             | ✅ useScrollLock | ✅         |
+| ActionDrawer     | ✅ role="dialog" + aria-modal + aria-labelledby + useFocusTrap | ✅ useScrollLock | ✅         |
+| AlertDrawer      | ⚠️ aria-modal ✅ + aria-labelledby ✅ — role="dialog" ❌       | ❌               | ⚠️ Partiel |
+| ProfileEditModal | ⚠️ aria-labelledby manquant                                    | N/A              | ✅         |
 
 ### 3. Gamification — État
 
@@ -760,13 +749,13 @@ Routes manipulant l'économie sans rate limiting = vecteur d'abus majeur avant l
 | Chat de ligue                               | ✅     |
 | Automatisation acquisition (solo, j1/j3/j7) | ✅     |
 
-### 4. Top 5 Priorités UX Restantes
+### 4. Top 5 Priorités UX Restantes (post-5 sprints qualité)
 
-1. **Rate limiting routes économiques** — abus economy = jeu cassé avant CDM.
-2. **ARIA sur ActionDrawer/AlertDrawer** — lecteurs d'écran complètement aveuglés.
-3. **Images next/image** — LCP dégradé sur lobby et match rooms.
-4. **ISR manquante sur 9 pages** — coût DB élevé en période de pointe CDM.
-5. **Logger migration complète** — 17 routes avec `console.*` en prod, logs illisibles sur Vercel.
+1. **Rate limiting shop/boosters/quick-bet** — 3 routes économiques encore sans rate limit = vecteur d'abus avant CDM.
+2. **Images next/image** — 7 `<img>` bruts, LCP dégradé sur lobby et match rooms (api-sports.io pas dans remotePatterns).
+3. **ISR sur ligues/shop/profile/[id]** — coût DB élevé en période de pointe CDM, ces pages sont force-dynamic sans nécessité.
+4. **AlertDrawer role="dialog"** — aria-modal ✅ mais role manquant, lecteurs d'écran partiellement aveuglés.
+5. **Push DM** — notif_dm colonne ready, push non implémenté — feature attendue.
 
 ---
 
