@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { sendEmail, emailDailyDigest } from "@/lib/email";
 import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -116,14 +117,26 @@ export async function GET(request: Request) {
     return successResponse({ sent: 0, recaps: 0 });
   }
 
-  // Fetch notif preferences
+  // Fetch notif preferences + username
   const { data: profiles } = await admin
     .from("profiles")
-    .select("id, notif_daily_digest")
+    .select("id, username, notif_daily_digest")
     .in("id", allActivityUserIds);
 
   const optedIn = new Set(
     (profiles ?? []).filter((p) => p.notif_daily_digest).map((p) => p.id),
+  );
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+  // Fetch emails for opted-in users
+  const optedInIds = allActivityUserIds.filter((uid) => optedIn.has(uid));
+  const emailMap = new Map<string, string>();
+  await Promise.allSettled(
+    optedInIds.map(async (uid) => {
+      const { data } = await admin.auth.admin.getUserById(uid);
+      if (data.user?.email) emailMap.set(uid, data.user.email);
+    }),
   );
 
   // Insert recap rows (idempotent via ON CONFLICT DO NOTHING)
@@ -144,7 +157,7 @@ export async function GET(request: Request) {
     log.info("daily-digest", `Recap insert error: ${insertErr.message}`);
   }
 
-  // Send personalized digest pushes to opted-in users
+  // Send personalized digest pushes + emails to opted-in users
   let sent = 0;
   await Promise.allSettled(
     allActivityUserIds
@@ -152,15 +165,37 @@ export async function GET(request: Request) {
       .map(async (uid) => {
         const recap = userRecaps.get(uid)!;
         const earned = recap.points_earned;
+        const profile = profileMap.get(uid);
+        const username = profile?.username ?? "Arbitre";
         const bodyText =
           earned > 0
             ? `🏆 C'est l'heure du bilan ! Tu as gagné +${earned} Points hier. Découvre ton classement →`
             : `📊 C'est l'heure du bilan ! Retrouve tes résultats d'hier →`;
-        await sendPushToUsers([uid], {
-          title: "📊 Bilan du jour — VAR TIME",
-          body: bodyText,
-          url: "/profile",
-        });
+
+        await Promise.allSettled([
+          sendPushToUsers([uid], {
+            title: "📊 Bilan du jour — VAR TIME",
+            body: bodyText,
+            url: "/profile",
+          }),
+          emailMap.has(uid)
+            ? sendEmail({
+                to: emailMap.get(uid)!,
+                subject: `📊 Ton bilan du ${recapDate} — VAR TIME`,
+                html: emailDailyDigest(
+                  username,
+                  {
+                    pronos_total: recap.pronos_total,
+                    pronos_correct: recap.pronos_correct,
+                    var_bets_total: recap.var_bets_total,
+                    var_bets_won: recap.var_bets_won,
+                    points_earned: recap.points_earned,
+                  },
+                  recapDate,
+                ),
+              })
+            : Promise.resolve(),
+        ]);
         sent++;
       }),
   );
