@@ -15,5 +15,34 @@
     "logout": "Sign Out",
     "leaderboard": "Leaderboard",
     "shop": "Shop"
+  },
+  "Match": {
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "finished": "Final",
+    "firstHalf": "1st Half",
+    "halfTime": "Half Time",
+    "secondHalf": "2nd Half",
+    "paused": "Stopped"
+  },
+  "Lobby": {
+    "title": "Matches",
+    "noMatches": "No matches available",
+    "today": "Today"
+  },
+  "Voting": {
+    "decision": "Decision in progress",
+    "timeLeft": "Time left",
+    "closed": "Voting closed",
+    "yes": "YES",
+    "no": "NO",
+    "stake": "Stake",
+    "min": "MIN",
+    "half": "HALF",
+    "allIn": "ALL IN"
+  },
+  "Common": {
+    "pts": "Pts",
+    "loading": "Loading…"
   }
 }
