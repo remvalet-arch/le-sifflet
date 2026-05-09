@@ -1,132 +1,171 @@
-# SPRINT SPEC — AUTO-1 : Welcome & Onboarding
+# SPRINT — Moteur VAR : Résolutions Auto + UX VotingModal
 
 > Produit par PM Agent — 2026-05-09
-> Source : TASKS_AUTOMATISATION.md
 > Statut : **EN ATTENTE DE VALIDATION HUMAINE**
 
----
-
-## Objectif en 1 phrase
-
-Transformer chaque nouveau signup en utilisateur engagé via une séquence email+push automatisée (J0 → J7), ciblant directement la rétention J7.
+**Objectif :** Rendre le moteur de paris VAR plus autonome (4 nouveaux types auto-résolus, suppression `injury_sub`) et simplifier l'UX de la VotingModal (% communauté + pot, sans côtes visibles).
 
 ---
 
-## ⚠️ Prérequis & Risques avant de démarrer
-
-| # | Prérequis | Type | Bloquant ? |
-|---|-----------|------|-----------|
-| P1 | **Sprint OBSERV (Sentry + PostHog)** non fait — on automatise "dans le noir" | Produit (TASKS_v2.md) | ⚠️ Recommandé mais non bloquant si on accepte de logger dans la console pour l'instant |
-| P2 | **Compte Resend créé** (resend.com, gratuit jusqu'à 100 emails/jour) + `RESEND_API_KEY` | Action humaine | ✅ Bloquant pour AUTO-1.1 / 1.3 / 1.4 |
-| P3 | **Lien Typeform ou Tally** pour le formulaire feedback J+7 | Action humaine | ✅ Bloquant pour AUTO-1.4 uniquement |
-| P4 | **Domaine d'envoi Resend** vérifié (`no-reply@vartime.app`) | Action humaine | ✅ Bloquant pour tous les emails |
-
-**État existant favorable découvert :**
-- Infrastructure cron déjà en place (`/api/cron/*` avec pattern `timingSafeEqual` + `CRON_SECRET`) ✅
-- `sendPushToUsers()` déjà opérationnel (`src/lib/push-sender.ts`) ✅
-- `user_daily_recaps` table déjà créée (migration 0087) ✅
-- **Resend non installé** — `npm install resend` requis
+## Tâches
 
 ---
 
-## Tâches atomiques
+### T1 — Migration SQL : supprimer `injury_sub` · `S` · ⚠️ Action humaine
 
-### AUTO-1.1 — Email de bienvenue personnalisé (J0) `L`
+**Fichier :** `supabase/migrations/XXXX_remove_injury_sub.sql`
 
-**Critères d'acceptation (DoD) :**
-- [ ] Package `resend` installé et `RESEND_API_KEY` en env Vercel + `.env.local`
-- [ ] Utility `src/lib/email.ts` — client Resend réutilisable, fonction `sendEmail({ to, subject, html })`
-- [ ] Template email HTML : tutoiement, 3 CTAs ("Fais ton premier prono", "Crée ta ligue", "Active les notifs"), lien deep link vers `/pronos`, `/lobby`, `/settings/notifications`
-- [ ] Route handler `POST /api/webhooks/new-profile` — vérifie `x-webhook-secret` header (variable `SUPABASE_WEBHOOK_SECRET` dans env), envoie le mail de bienvenue au `email` de l'auth user correspondant au `profiles.id` reçu
-- [ ] Database Webhook configuré dans Supabase : INSERT sur `profiles` → `https://vartime.app/api/webhooks/new-profile`
-- [ ] Si Resend échoue → `console.error` (+ Sentry quand disponible, cf. OBSERV)
+```sql
+-- Neutraliser les lignes injury_sub existantes
+UPDATE market_events SET status = 'resolved', result = 'non'
+  WHERE type = 'injury_sub' AND status IN ('open', 'closed');
 
-**Fichiers à créer/modifier :**
-- `src/lib/email.ts` (nouveau)
-- `src/app/api/webhooks/new-profile/route.ts` (nouveau)
-- `.env.local` + Vercel env vars : `RESEND_API_KEY`, `SUPABASE_WEBHOOK_SECRET`
+-- Recréer le CHECK sans injury_sub sur market_events
+ALTER TABLE market_events DROP CONSTRAINT IF EXISTS market_events_type_check;
+ALTER TABLE market_events ADD CONSTRAINT market_events_type_check
+  CHECK (type IN ('penalty','offside','card','var_goal','penalty_check',
+                  'penalty_outcome','red_card','free_kick','corner'));
 
-**Action humaine requise :** configurer le webhook dans Supabase Dashboard > Database > Webhooks
+-- Recréer le CHECK sans injury_sub sur alert_signals
+ALTER TABLE alert_signals DROP CONSTRAINT IF EXISTS alert_signals_action_type_check;
+ALTER TABLE alert_signals ADD CONSTRAINT alert_signals_action_type_check
+  CHECK (action_type IN ('penalty','offside','card','var_goal','penalty_check',
+                         'penalty_outcome','red_card','free_kick','corner'));
+```
 
----
-
-### AUTO-1.2 — Push notification J+1 si inactif `M`
-
-**Critères d'acceptation (DoD) :**
-- [ ] Cron route `GET /api/cron/j1-inactive` — vérifie `CRON_SECRET` via `timingSafeEqual` (même pattern que les crons existants)
-- [ ] Requête admin : `profiles` créés entre NOW()-25h et NOW()-23h, n'ayant aucune ligne dans `pronos` ni dans `bets`
-- [ ] Push envoyé via `sendPushToUsers()` : titre "Tu es là pour parier ou pour regarder ? 👀", body "4 matchs t'attendent sur VAR TIME", deep link `/pronos`
-- [ ] Schedule ajoutée dans `vercel.json` : `{ "path": "/api/cron/j1-inactive", "schedule": "0 8 * * *" }` (8h00 UTC)
-- [ ] Log du nombre de users ciblés et de pushes envoyés
-
-**Fichiers à créer/modifier :**
-- `src/app/api/cron/j1-inactive/route.ts` (nouveau)
-- `vercel.json` (ajout entrée `crons`)
+**DoD :** Aucun `injury_sub` ne peut plus être inséré.
+**⚠️ À appliquer manuellement dans Supabase SQL Editor (prod + staging).**
 
 ---
 
-### AUTO-1.3 — Email J+3 si toujours inactif `S`
+### T2 — `src/types/database.ts` : retirer `injury_sub` · `S`
 
-**Critères d'acceptation (DoD) :**
-- [ ] Cron route `GET /api/cron/j3-inactive` — même pattern CRON_SECRET
-- [ ] Requête admin : `profiles` créés entre NOW()-73h et NOW()-71h, sans prono ni bet
-- [ ] Email via `sendEmail()` : objet "On a réservé une place dans la ligue Bêta CDM 🏆", corps court avec sentiment d'urgence honnête + lien `/lobby`
-- [ ] Schedule dans `vercel.json` : `0 9 * * *` (9h00 UTC)
+Retirer `"injury_sub"` de `MarketEventType` et de `alert_signals.action_type`.
 
-**Fichiers à créer/modifier :**
-- `src/app/api/cron/j3-inactive/route.ts` (nouveau)
-- `vercel.json` (ajout entrée `crons`)
+**DoD :** `tsc --noEmit` passe sans erreur.
 
 ---
 
-### AUTO-1.4 — Email J+7 feedback ou churn `S`
+### T3 — Bridge : résolution auto `offside` · `M`
 
-**Critères d'acceptation (DoD) :**
-- [ ] Cron route `GET /api/cron/j7-churn` — même pattern CRON_SECRET
-- [ ] Requête admin : `profiles` créés entre NOW()-169h et NOW()-167h, sans prono ni bet depuis J+3
-- [ ] Email court : "Avant de partir, dis-nous ce qui t'a freiné" + lien Typeform/Tally
-- [ ] Schedule dans `vercel.json` : `0 10 * * *` (10h00 UTC)
-- [ ] `TALLY_FEEDBACK_URL` en variable d'env (pour pouvoir changer sans redéployer)
+**Fichier :** `src/lib/sports/api-football-market-bridge.ts`
 
-**Fichiers à créer/modifier :**
-- `src/app/api/cron/j7-churn/route.ts` (nouveau)
-- `vercel.json` (ajout entrée `crons`)
-- `.env.local` + Vercel : `TALLY_FEEDBACK_URL`
+**Logique :** Le marché `offside` = « Y a-t-il hors-jeu ? »
+Utilise les mêmes events VAR que `var_goal` mais **OUI/NON inversés** :
 
----
+- `"goal confirmed"` / `"goal stands"` → **NON** (pas de hors-jeu, but validé)
+- `"goal cancelled"` / `"goal disallowed"` / `"no goal"` → **OUI** (hors-jeu, but refusé)
 
-## Migrations SQL requises
+S'ouvre sur un event VAR avec `detailLower.includes("offside")`.
 
-**Aucune migration SQL nécessaire** pour ce sprint. La table `profiles` et l'infrastructure push/cron existantes sont suffisantes.
+**DoD :** Event VAR "offside" ouvre marché ; "goal confirmed/cancelled" le résout automatiquement.
 
 ---
 
-## Ordre d'exécution recommandé pour le Dev Agent
+### T4 — Bridge : résolution auto `red_card` · `M`
 
-1. `npm install resend` + créer `src/lib/email.ts`
-2. AUTO-1.1 (le webhook bienvenue — livrable le plus visible)
-3. AUTO-1.2 (cron J+1 push — le plus rapide car push déjà dispo)
-4. AUTO-1.3 + AUTO-1.4 (email J+3 / J+7 — même pattern, rapides)
-5. Mettre à jour `vercel.json` pour tous les crons en une fois
-6. `npm run ai:check` — 0 erreur avant commit
+**Fichier :** `src/lib/sports/api-football-market-bridge.ts`
 
----
+**Logique :** Le marché `red_card` = « Va t-il y avoir un rouge ? »
 
-## Complexité globale
+- Event `type: "Card"` + `detail` contient `"red card"` (insensible casse) → **OUI**
+- Expiration sans red card → **NON** (géré par le cron existant `close_expired_market_events`)
+- Vérifier que l'event card est **postérieur à `market_events.created_at`**
 
-**Effort estimé :** 2-3 jours (aligné TASKS_AUTOMATISATION.md)
-**Coût infra :** 0€ (Resend free tier : 100 emails/jour, Vercel Cron inclus)
+**DoD :** API-Football remonte "Red Card" → marché résolu OUI sans admin.
 
 ---
 
-## KPI de succès (à mesurer semaine 3)
+### T5 — Bridge : résolution auto `corner` et `free_kick` · `M`
 
-- Taux d'ouverture email bienvenue (cible > 40%)
-- % users actifs à J7 parmi ceux ayant reçu la séquence vs ceux sans (cohorte témoin)
-- Taux de réponse Typeform J+7 (cible > 5%)
+**Fichier :** `src/lib/sports/api-football-market-bridge.ts`
+
+**Logique :** « Va t-il y avoir un but dans les 3 prochaines minutes ? »
+
+- Event `type: "Goal"` (hors penalty) dans une **fenêtre de 3 min** après `created_at` → **OUI**
+- Expiration → **NON**
+- Edge case accepté : but de contre-attaque dans la fenêtre = OUI (approximation raisonnable)
+
+**DoD :** Goal dans les 3 min après ouverture → résolu OUI.
 
 ---
 
-## Ce que tu verras de différent après ce sprint
+### T6 — Bridge : résolution auto `penalty_outcome` · `S`
 
-Chaque nouveau signup recevra automatiquement un email de bienvenue dans les minutes suivant l'inscription, puis des relances ciblées J+1/J+3/J+7 s'ils restent inactifs — sans aucune intervention manuelle.
+**Fichier :** `src/lib/sports/api-football-market-bridge.ts`
+
+**Logique :** « Le penalty va-t-il être transformé ? »
+
+- `type: "Goal"` + detail contient `"penalty"` → **OUI**
+- `type: "Miss"` ou detail contient `"missed penalty"` / `"saved penalty"` → **NON**
+
+**DoD :** Goal sur penalty ou raté → résolu automatiquement.
+
+---
+
+### T7 — VotingModal : % communauté + pot (sans côtes) · `M`
+
+**Fichier :** `src/components/match/VotingModal.tsx`
+
+**Supprime :** multiplicateur `×1.45`, gain potentiel `→ 145 🪙`, explication parimutuel, flash côte.
+
+**Affiche à la place :**
+
+```
+┌─────────────────────────────────────┐
+│  OUI ████████████░░░░  68%  │  32%  NON │
+│         1 240 🪙 en jeu              │
+└─────────────────────────────────────┘
+```
+
+- Deux barres de progression proportionnelles au %
+- Pot total centré : `{total.toLocaleString("fr-FR")} 🪙 en jeu`
+- Calculé depuis `get_event_odds` existant (`pool_staked` / `total_pool`) — poll 2s inchangé
+- Le multiplier est toujours **calculé et envoyé au backend**, juste **caché côté UI**
+- Slider de mise, boutons OUI/NON, timer 90s : inchangés
+
+**DoD :** Plus de `×` visible. % + pot s'actualisent en temps réel. `npm run ai:check` passe.
+
+---
+
+### T8 — Retirer `injury_sub` de l'UI · `S`
+
+**Fichiers :** `src/components/match/LiveRoom.tsx`, drawer alertes, libellés, constantes.
+
+**DoD :** `injury_sub` n'apparaît plus nulle part dans l'UI.
+
+---
+
+## Ordre d'exécution
+
+```
+T2 (types DB) → T8 (UI cleanup)
+             → T3 + T4 + T5 + T6 (bridge — parallélisables entre eux)
+             → T7 (VotingModal)
+T1 (migration SQL) → action humaine, peut être faite en parallèle
+```
+
+---
+
+## Risques
+
+| Risque                                                                  | Mitigation                                            |
+| ----------------------------------------------------------------------- | ----------------------------------------------------- |
+| API-Football : variantes de libellé "Red Card"                          | `includes()` insensible à la casse sur tout le détail |
+| Fenêtre 3 min corner/free_kick : `match_minute` null                    | Fallback sur `created_at` + calcul temporel           |
+| `latestMarketVerdictFromFixtureEvents` typé `var_goal \| penalty_check` | Élargir l'union type pour tous les nouveaux types     |
+| Migration CHECK : lignes invalides existantes                           | UPDATE préalable neutralise les `injury_sub`          |
+
+---
+
+## Actions humaines requises
+
+1. **Appliquer T1** dans Supabase SQL Editor (prod + staging)
+2. Vérifier qu'aucun cron/webhook externe ne génère des alertes `injury_sub`
+
+---
+
+## Critère de succès principal
+
+Marché `red_card` ouvert sur match live → API-Football remonte "Red Card" → résolu OUI automatiquement.
+VotingModal : `68% OUI · 32% NON · 1 240 🪙 en jeu` à la place de `×1.47`.

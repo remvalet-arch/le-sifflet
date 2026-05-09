@@ -186,18 +186,18 @@ Pas encore implémenté côté code, mais à préparer dès maintenant :
 
 ### Vercel (Settings → Environment Variables)
 
-| Variable                        |       Obligatoire        | À quoi ça sert                  |
-| :------------------------------ | :----------------------: | :------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`      |            ✅            | Connexion Supabase              |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` |            ✅            | Clé publique Supabase           |
-| `SUPABASE_SERVICE_ROLE_KEY`     |            ✅            | Clé admin (routes sécurisées)   |
-| `RESEND_API_KEY`                |            ✅            | Emails automatiques             |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`  |            ✅            | Push notifications              |
-| `VAPID_PRIVATE_KEY`             |            ✅            | Push notifications              |
-| `CRON_SECRET`                   |            ✅            | Sécurise les crons automatiques |
-| `API_FOOTBALL_KEY`              |            ✅            | Données de matchs live          |
-| `SUPABASE_WEBHOOK_SECRET`       |       🔴 À ajouter       | Sécurise le webhook bienvenue   |
-| `TALLY_FEEDBACK_URL`            | 🔴 À ajouter dans Vercel | `https://tally.so/r/Zjv6QV`     |
+| Variable                        |       Obligatoire        | À quoi ça sert                                             |
+| :------------------------------ | :----------------------: | :--------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      |            ✅            | Connexion Supabase                                         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` |            ✅            | Clé publique Supabase                                      |
+| `SUPABASE_SERVICE_ROLE_KEY`     |            ✅            | Clé admin (routes sécurisées)                              |
+| `RESEND_API_KEY`                |            ✅            | Emails automatiques                                        |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`  |            ✅            | Push notifications                                         |
+| `VAPID_PRIVATE_KEY`             |            ✅            | Push notifications                                         |
+| `CRON_SECRET`                   |            ✅            | Sécurise les crons automatiques                            |
+| `API_FOOTBALL_KEY`              |            ✅            | Données de matchs live                                     |
+| `SUPABASE_WEBHOOK_SECRET`       |       🔴 À ajouter       | Sécurise le webhook bienvenue                              |
+| `TALLY_FEEDBACK_URL`            | 🔴 À ajouter dans Vercel | `https://tally.so/r/Zjv6QV`                                |
 | `ANTHROPIC_API_KEY`             |       🔴 À ajouter       | Génération emails press outreach (`/admin/press-outreach`) |
 
 ### `.env.local` (sur ton ordinateur)
