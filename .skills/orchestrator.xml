@@ -8,34 +8,52 @@
     <principle>La communication entre agents se fait par deux canaux : (1) la valeur de retour du sous-agent (texte structuré), (2) les fichiers sur le filesystem (SPRINT_SPEC.md, QA_REPORT.md, etc.).</principle>
   </model>
 
+  <git_flow>
+    <rule>JAMAIS de commit direct sur main. Tout le travail se fait sur la branche `stage`.</rule>
+    <rule>main = production. On n'y merge que via `npm run sprint:ship` après QA APPROVED.</rule>
+    <rule>Au démarrage de chaque sprint, vérifier qu'on est sur `stage` : `git checkout stage`.</rule>
+    <rule>`npm run sprint:ship` enchaîne : merge stage→main + push origin main + email recap → retour sur stage.</rule>
+  </git_flow>
+
   <chain>
     <step order="1" role="PM Agent">
       <trigger>L'utilisateur demande de planifier ou de prioriser un sprint.</trigger>
       <skill_file>.skills/pm-agent.xml</skill_file>
-      <inputs>TASKS_v2.md, PROJECT_STATE.md, TECH_BIBLE.md, AI_LEARNINGS.md</inputs>
+      <inputs>TASKS_v2.md (ou TASKS_AUTOMATISATION.md), PROJECT_STATE.md, TECH_BIBLE.md, AI_LEARNINGS.md</inputs>
       <output>SPRINT_SPEC.md — spec atomique avec critères d'acceptation, complexité S/M/L, risques.</output>
-      <handoff>L'orchestrateur lit SPRINT_SPEC.md et demande validation humaine avant de passer au Dev Agent.</handoff>
+      <handoff>L'orchestrateur présente la spec et attend validation humaine avant de passer au Dev Agent.</handoff>
     </step>
 
     <step order="2" role="Dev Agent">
-      <trigger>SPRINT_SPEC.md validé par l'humain (ou l'orchestrateur selon le niveau d'autonomie).</trigger>
-      <skill_file>Pas de fichier dédié — l'orchestrateur applique les conventions CLAUDE.md + AI_LEARNINGS.md.</skill_file>
+      <trigger>SPRINT_SPEC.md validé par l'humain.</trigger>
+      <git>S'assurer d'être sur `stage` avant tout commit : `git checkout stage`.</git>
+      <skill_file>Conventions CLAUDE.md + AI_LEARNINGS.md. Lire les skills métier concernés (.skills/).</skill_file>
       <inputs>SPRINT_SPEC.md, fichiers cibles listés dans la spec.</inputs>
-      <output>Code modifié/créé + npm run ai:check passant sans erreur + TASKS.md coché.</output>
-      <handoff>L'orchestrateur passe le diff au QA Agent.</handoff>
+      <output>Code modifié/créé sur `stage` + npm run ai:check passant sans erreur + tâches cochées.</output>
+      <handoff>L'orchestrateur commit sur `stage` et passe au QA Agent.</handoff>
     </step>
 
     <step order="3" role="QA Agent">
-      <trigger>Après chaque implémentation Dev, avant tout commit.</trigger>
+      <trigger>Après chaque implémentation Dev sur `stage`, avant tout merge vers main.</trigger>
       <skill_file>.skills/qa-agent.xml</skill_file>
-      <inputs>Le diff git (git diff HEAD), les fichiers modifiés, le résultat de npm run ai:check.</inputs>
+      <inputs>git diff HEAD (sur stage), fichiers modifiés, résultat de npm run ai:check.</inputs>
       <output>Rapport QA structuré (✅ / ❌ / ⚠️ / 💡) avec verdict APPROVED ou CHANGES REQUESTED.</output>
-      <handoff>Si APPROVED → l'orchestrateur commit. Si CHANGES REQUESTED → retour au Dev Agent avec la liste des corrections.</handoff>
+      <handoff>
+        Si APPROVED → l'orchestrateur exécute `npm run sprint:ship` (merge stage→main + push + recap email).
+        Si CHANGES REQUESTED → retour au Dev Agent sur `stage` avec la liste des corrections, puis re-QA.
+      </handoff>
     </step>
 
-    <step order="4" role="CI/CD (optionnel)" status="futur">
-      <trigger>Après commit sur main.</trigger>
-      <note>Pas encore implémenté. Prévu : GitHub Action qui lance npm run build + typecheck + lint, puis notifie en cas d'échec. L'orchestrateur pourrait invoquer un CI Agent pour lire les logs et corriger.</note>
+    <step order="4" role="Ship &amp; Recap">
+      <trigger>QA APPROVED.</trigger>
+      <command>npm run sprint:ship</command>
+      <what_it_does>
+        1. git checkout main
+        2. git merge stage --no-ff (conserve l'historique de branche)
+        3. git push origin main
+        4. node scripts/sprint-recap.mjs → email recap envoyé à rem.valet@gmail.com
+        5. git checkout stage (retour sur stage pour le sprint suivant)
+      </what_it_does>
     </step>
   </chain>
 

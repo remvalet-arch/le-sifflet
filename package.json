@@ -15,7 +15,9 @@
     "test:backend": "tsx --tsconfig tsconfig.json scripts/simulate-match-scenario.ts",
     "sync:odds": "tsx --tsconfig tsconfig.json scripts/sync-odds.ts",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "sprint:recap": "node scripts/sprint-recap.mjs",
+    "sprint:ship": "git checkout main && git merge stage --no-ff && git push origin main && npm run sprint:recap && git checkout stage"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
@@ -28,6 +30,7 @@
     "next-intl": "^4.11.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "resend": "^6.12.3",
     "sonner": "^2.0.7",
     "web-push": "^3.6.7"
   },
