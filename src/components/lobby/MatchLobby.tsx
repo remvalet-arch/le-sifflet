@@ -80,8 +80,14 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   if (trimmed.startsWith("http")) {
     return (
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={trimmed} alt={alt} className="h-full w-full object-contain" />
+        <Image
+          src={trimmed}
+          alt={alt}
+          width={32}
+          height={32}
+          className="h-full w-full object-contain"
+          unoptimized
+        />
       </div>
     );
   }

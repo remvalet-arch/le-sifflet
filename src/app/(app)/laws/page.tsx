@@ -1,3 +1,5 @@
+export const revalidate = 86400;
+
 export const metadata = { title: "Lois du Jeu — VAR Time" };
 
 const VAR_SITUATIONS = [

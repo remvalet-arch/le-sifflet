@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen } from "lucide-react";
 
+export const revalidate = 86400;
+
 export const metadata = { title: "Règles du jeu — VAR Time" };
 
 const PRONO_RULES = [

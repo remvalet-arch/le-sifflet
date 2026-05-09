@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { SquadProno } from "./LiveRoom";
 
 type Props = {
@@ -88,11 +89,13 @@ export function PostMatchRecap({
             </span>
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs">
               {entry.avatar_url?.startsWith("http") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={entry.avatar_url}
                   alt={entry.username}
+                  width={28}
+                  height={28}
                   className="h-7 w-7 rounded-full object-cover"
+                  unoptimized
                 />
               ) : (
                 "🎽"
