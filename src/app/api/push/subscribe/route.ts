@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     );
 
   if (error) {
-    console.error("[push/subscribe] DB error:", error.message);
+    log.error("push-subscribe", "DB upsert error", { error: error.message });
     return errorResponse(error.message, 500);
   }
 

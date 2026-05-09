@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendEmail, emailWelcome } from "@/lib/email";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,10 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const { data: authUser, error } = await admin.auth.admin.getUserById(id);
   if (error || !authUser.user?.email) {
-    console.error("[webhook/new-profile] Cannot resolve email for", id, error);
+    log.error("webhook-new-profile", "Cannot resolve email", {
+      userId: id,
+      error: String(error),
+    });
     return successResponse({ sent: false, reason: "no_email" });
   }
 
@@ -55,12 +59,13 @@ export async function POST(request: Request) {
       subject: "Bienvenue sur VAR TIME ⚽ — C'est toi l'arbitre !",
       html: emailWelcome(username),
     });
-    console.info(
-      "[webhook/new-profile] Welcome email sent to",
-      authUser.user.email,
-    );
+    log.info("webhook-new-profile", "Welcome email sent", {
+      email: authUser.user.email,
+    });
   } catch (err) {
-    console.error("[webhook/new-profile] Email send failed:", err);
+    log.error("webhook-new-profile", "Email send failed", {
+      error: String(err),
+    });
     return successResponse({ sent: false, reason: "resend_error" });
   }
 

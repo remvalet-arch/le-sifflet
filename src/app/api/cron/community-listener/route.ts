@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendEmail } from "@/lib/email";
 import { searchRecentTweets, type TwitterTweet } from "@/lib/twitter";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +124,10 @@ export async function GET(request: Request) {
       const tweets = await searchRecentTweets(query, 10);
       allTweets.push(...tweets);
     } catch (err) {
-      console.error(`[community-listener] search error for "${query}":`, err);
+      log.error("cron-community-listener", "Twitter search error", {
+        query,
+        error: String(err),
+      });
     }
   }
 
@@ -184,7 +188,9 @@ export async function GET(request: Request) {
         classifications = parsed.classifications;
       }
     } catch (err) {
-      console.error("[community-listener] Claude error:", err);
+      log.error("cron-community-listener", "Claude API error", {
+        error: String(err),
+      });
     }
   }
 
@@ -211,7 +217,9 @@ export async function GET(request: Request) {
       html: emailCommunityListener(date, enriched),
     });
   } catch (err) {
-    console.error("[community-listener] sendEmail error:", err);
+    log.error("cron-community-listener", "sendEmail failed", {
+      error: String(err),
+    });
   }
 
   return successResponse({ analyzed: uniqueTweets.length, priority });

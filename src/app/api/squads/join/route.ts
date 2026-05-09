@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     try {
       body = (await request.json()) as { invite_code?: string };
     } catch (error) {
-      console.error("Supabase Error:", error);
+      log.error("squads-join", "Supabase error", { error: String(error) });
       return errorResponse("Corps JSON invalide", 400);
     }
     const { invite_code } = body;
@@ -30,7 +31,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (squadErr) {
-      console.error("Supabase Error:", squadErr);
+      log.error("squads-join", "squad_by_invite_code error", {
+        error: String(squadErr),
+      });
       return errorResponse(squadErr.message, 500);
     }
     const rows = inviteRows ?? [];
@@ -46,7 +49,9 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (existingErr) {
-      console.error("Supabase Error:", existingErr);
+      log.error("squads-join", "Check existing member error", {
+        error: String(existingErr),
+      });
       return errorResponse(existingErr.message, 500);
     }
 
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
       .insert({ squad_id: squad.id, user_id: user.id });
 
     if (error) {
-      console.error("Supabase Error:", error);
+      log.error("squads-join", "Supabase error", { error: String(error) });
       return errorResponse(error.message, 500);
     }
 
@@ -82,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     return successResponse({ squad });
   } catch (error) {
-    console.error("Supabase Error:", error);
+    log.error("squads-join", "Unexpected error", { error: String(error) });
     return errorResponse("Erreur serveur", 500);
   }
 }

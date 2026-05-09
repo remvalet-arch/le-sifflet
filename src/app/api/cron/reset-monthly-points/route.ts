@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,9 @@ export async function POST(request: Request) {
   const { error } = await admin.rpc("reset_monthly_points");
 
   if (error) {
-    console.error("[reset-monthly-points] RPC error:", error);
+    log.error("cron-reset-monthly-points", "RPC error", {
+      error: error.message,
+    });
     return errorResponse("Erreur lors du reset mensuel", 500);
   }
 

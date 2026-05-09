@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import {
   successResponse,
   errorResponse,
@@ -43,7 +44,7 @@ export async function POST() {
     .eq("id", user.id);
 
   if (error) {
-    console.error("[claim-rsa] Erreur recrédit:", error.message);
+    log.error("claim-rsa", "Erreur recrédit", { error: error.message });
     return errorResponse("Erreur lors du recrédit", 500);
   }
 

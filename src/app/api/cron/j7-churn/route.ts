@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendEmail, emailJ7Churn } from "@/lib/email";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -74,11 +75,14 @@ export async function GET(request: Request) {
         });
         sent++;
       } catch (err) {
-        console.error("[cron/j7-churn] Email failed for", profile.id, err);
+        log.error("cron-j7-churn", "Email failed", {
+          userId: profile.id,
+          error: String(err),
+        });
       }
     }),
   );
 
-  console.info(`[cron/j7-churn] Sent ${sent}/${inactive.length} emails`);
+  log.info("cron-j7-churn", "Emails sent", { sent, total: inactive.length });
   return successResponse({ targeted: inactive.length, sent });
 }

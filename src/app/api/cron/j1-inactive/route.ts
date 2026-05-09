@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
     url: "/pronos",
   });
 
-  console.info(`[cron/j1-inactive] Pushed to ${inactiveIds.length} users`);
+  log.info("cron-j1-inactive", "Push sent", { count: inactiveIds.length });
   return successResponse({
     targeted: inactiveIds.length,
     sent: inactiveIds.length,

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { log } from "@/lib/logger";
 
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -26,7 +27,7 @@ export async function GET() {
       .eq("user_id", user.id);
 
     if (mErr) {
-      console.error("Supabase Error:", mErr);
+      log.error("squads", "Get member_rows error", { error: mErr.message });
       return errorResponse(mErr.message, 500);
     }
 
@@ -39,7 +40,7 @@ export async function GET() {
       .select("*")
       .in("id", ids);
     if (sErr) {
-      console.error("Supabase Error:", sErr);
+      log.error("squads", "Get squads error", { error: sErr.message });
       return errorResponse(sErr.message, 500);
     }
 
@@ -47,7 +48,9 @@ export async function GET() {
       "squad_members_for_my_squads",
     );
     if (amErr) {
-      console.error("Supabase Error:", amErr);
+      log.error("squads", "RPC squad_members_for_my_squads error", {
+        error: amErr.message,
+      });
       return errorResponse(amErr.message, 500);
     }
     const membersInSquads = (allMembers ?? []).filter((m) =>
@@ -60,7 +63,7 @@ export async function GET() {
       .select("id, username, xp, sifflets_balance")
       .in("id", userIds);
     if (pErr) {
-      console.error("Supabase Error:", pErr);
+      log.error("squads", "Get profiles error", { error: pErr.message });
       return errorResponse(pErr.message, 500);
     }
     const profileMap = new Map(
@@ -127,7 +130,7 @@ export async function GET() {
 
     return successResponse({ squads: squadsPayload });
   } catch (error) {
-    console.error("Supabase Error:", error);
+    log.error("squads", "GET unexpected error", { error: String(error) });
     return errorResponse("Erreur serveur", 500);
   }
 }
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
     try {
       body = (await request.json()) as { name?: string; is_private?: boolean };
     } catch (error) {
-      console.error("Supabase Error:", error);
+      log.warn("squads", "Invalid JSON body", { error: String(error) });
       return errorResponse("Corps JSON invalide", 400);
     }
     const { name, is_private = true } = body;
@@ -163,7 +166,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (squadErr ?? !squad) {
-      if (squadErr) console.error("Supabase Error:", squadErr);
+      if (squadErr)
+        log.error("squads", "Insert squad error", { error: squadErr.message });
       return errorResponse(
         squadErr?.message ?? "Erreur lors de la création",
         500,
@@ -175,7 +179,9 @@ export async function POST(request: NextRequest) {
       .insert({ squad_id: squad.id, user_id: user.id });
 
     if (memberErr) {
-      console.error("Supabase Error:", memberErr);
+      log.error("squads", "Insert owner member error", {
+        error: memberErr.message,
+      });
       return errorResponse(memberErr.message, 500);
     }
 
@@ -197,7 +203,7 @@ export async function POST(request: NextRequest) {
       201,
     );
   } catch (error) {
-    console.error("Supabase Error:", error);
+    log.error("squads", "POST unexpected error", { error: String(error) });
     return errorResponse("Erreur serveur", 500);
   }
 }

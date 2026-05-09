@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { postTweet } from "@/lib/twitter";
+import { log } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -133,9 +134,14 @@ export async function GET(request: Request) {
           tweet_type: "event_open",
         });
         tweeted++;
-        console.info(`[twitter-live] Tweeted event_open for ${event.id}`);
+        log.info("cron-twitter-live", "Tweeted event_open", {
+          eventId: event.id,
+        });
       } catch (err) {
-        console.error("[twitter-live] postTweet error:", err);
+        log.error("cron-twitter-live", "postTweet error (event_open)", {
+          eventId: event.id,
+          error: String(err),
+        });
       }
     }
 
@@ -172,9 +178,14 @@ export async function GET(request: Request) {
           tweet_type: "event_resolved",
         });
         tweeted++;
-        console.info(`[twitter-live] Tweeted event_resolved for ${event.id}`);
+        log.info("cron-twitter-live", "Tweeted event_resolved", {
+          eventId: event.id,
+        });
       } catch (err) {
-        console.error("[twitter-live] resolve tweet error:", err);
+        log.error("cron-twitter-live", "postTweet error (event_resolved)", {
+          eventId: event.id,
+          error: String(err),
+        });
       }
     }
   }
