@@ -141,14 +141,14 @@ main   ←   production uniquement, jamais de commit direct
    - `Authorization` = `Bearer VALEUR_DE_TON_CRON_SECRET` ← trouve cette valeur dans Vercel → Settings → Environment Variables → `CRON_SECRET`
 7. Clique **Create**
 
-| #   | Title                   | URL                                         | Schedule                 |
-| --- | ----------------------- | ------------------------------------------- | ------------------------ |
-| 1   | `j1-inactive-push`      | `https://vartime.app/api/cron/j1-inactive`  | Every day · 8h00 UTC     |
-| 2   | `j3-inactive-email`     | `https://vartime.app/api/cron/j3-inactive`  | Every day · 9h00 UTC     |
-| 3   | `j7-churn-email`        | `https://vartime.app/api/cron/j7-churn`     | Every day · 10h00 UTC    |
-| 4   | `daily-digest`          | `https://vartime.app/api/cron/daily-digest` | Every day · 9h00 UTC     |
-| 5   | `weekly-recap-dimanche` | `https://vartime.app/api/cron/weekly-recap`      | Every Sunday · 11h00 UTC |
-| 6   | `solo-activation`       | `https://vartime.app/api/cron/solo-activation`   | Every day · 11h00 UTC    |
+| #   | Title                   | URL                                            | Schedule                 |
+| --- | ----------------------- | ---------------------------------------------- | ------------------------ |
+| 1   | `j1-inactive-push`      | `https://vartime.app/api/cron/j1-inactive`     | Every day · 8h00 UTC     |
+| 2   | `j3-inactive-email`     | `https://vartime.app/api/cron/j3-inactive`     | Every day · 9h00 UTC     |
+| 3   | `j7-churn-email`        | `https://vartime.app/api/cron/j7-churn`        | Every day · 10h00 UTC    |
+| 4   | `daily-digest`          | `https://vartime.app/api/cron/daily-digest`    | Every day · 9h00 UTC     |
+| 5   | `weekly-recap-dimanche` | `https://vartime.app/api/cron/weekly-recap`    | Every Sunday · 11h00 UTC |
+| 6   | `solo-activation`       | `https://vartime.app/api/cron/solo-activation` | Every day · 11h00 UTC    |
 
 ---
 
@@ -198,6 +198,7 @@ Pas encore implémenté côté code, mais à préparer dès maintenant :
 | `API_FOOTBALL_KEY`              |            ✅            | Données de matchs live          |
 | `SUPABASE_WEBHOOK_SECRET`       |       🔴 À ajouter       | Sécurise le webhook bienvenue   |
 | `TALLY_FEEDBACK_URL`            | 🔴 À ajouter dans Vercel | `https://tally.so/r/Zjv6QV`     |
+| `ANTHROPIC_API_KEY`             |       🔴 À ajouter       | Génération emails press outreach (`/admin/press-outreach`) |
 
 ### `.env.local` (sur ton ordinateur)
 
