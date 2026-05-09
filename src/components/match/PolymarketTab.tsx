@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Check, ChevronDown, ChevronUp, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -78,8 +79,14 @@ function TeamBadge({ name, logo }: { name: string; logo?: string | null }) {
     <div className="flex flex-1 flex-col items-center gap-1.5">
       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-700">
         {isUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo!} alt={name} className="h-10 w-10 object-contain" />
+          <Image
+            src={logo!}
+            alt={name}
+            width={40}
+            height={40}
+            className="h-10 w-10 object-contain"
+            unoptimized
+          />
         ) : (
           <span className="text-lg font-black text-white">
             {name[0]?.toUpperCase() ?? "?"}
@@ -456,11 +463,13 @@ export function PolymarketTab({
                     <div className="mb-3 flex items-center gap-2">
                       <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-700">
                         {isUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={teamLogo!}
                             alt={teamName}
+                            width={20}
+                            height={20}
                             className="h-5 w-5 object-contain"
+                            unoptimized
                           />
                         ) : (
                           <span className="text-[9px] font-black text-white">

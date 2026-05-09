@@ -35,8 +35,14 @@ function LobbyTeamLogo({
   }
   if (trimmed.startsWith("http")) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- hôte hors remotePatterns
-      <img src={trimmed} alt="" className={common} />
+      <Image
+        src={trimmed}
+        alt=""
+        width={dim}
+        height={dim}
+        className={common}
+        unoptimized
+      />
     );
   }
   return (

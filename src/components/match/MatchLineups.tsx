@@ -52,8 +52,17 @@ function TeamLogo({
     );
   }
   if (trimmed.startsWith("http")) {
-    // eslint-disable-next-line @next/next/no-img-element -- hôte hors remotePatterns
-    return <img src={trimmed} alt="" className={box} title={label} />;
+    return (
+      <Image
+        src={trimmed}
+        alt=""
+        width={28}
+        height={28}
+        className={box}
+        title={label}
+        unoptimized
+      />
+    );
   }
   return (
     <div
@@ -130,12 +139,14 @@ function PlayerRosterAvatar({
 
   if (showImg) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- hôte hors remotePatterns
-      <img
+      <Image
         src={url}
         alt=""
+        width={28}
+        height={28}
         className={`${ring} object-cover`}
         onError={() => setBroken(true)}
+        unoptimized
       />
     );
   }

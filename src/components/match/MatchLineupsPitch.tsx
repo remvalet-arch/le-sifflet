@@ -41,8 +41,17 @@ function TeamLogoSmall({
     );
   }
   if (trimmed.startsWith("http")) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={trimmed} alt="" className={box} title={label} />;
+    return (
+      <Image
+        src={trimmed}
+        alt=""
+        width={24}
+        height={24}
+        className={box}
+        title={label}
+        unoptimized
+      />
+    );
   }
   return (
     <div

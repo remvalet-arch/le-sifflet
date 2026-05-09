@@ -194,33 +194,47 @@ export default async function ProfilePage() {
 
   const pronoMatchIds = [...new Set(pronos.map((p) => p.match_id))];
 
-  if (eventIds.length > 0) {
-    const { data: events } = await supabase
-      .from("market_events")
-      .select("*")
-      .in("id", eventIds);
-    (events ?? []).forEach((e) => eventMap.set(e.id, e));
+  // Parallelize: events + prono matches can be fetched simultaneously
+  const [eventsResult, pronoMatchesResult] = await Promise.all([
+    eventIds.length > 0
+      ? supabase.from("market_events").select("*").in("id", eventIds)
+      : Promise.resolve({ data: [] as MarketEventRow[] }),
+    pronoMatchIds.length > 0
+      ? supabase
+          .from("matches")
+          .select(
+            "id, team_home, team_away, home_score, away_score, status, start_time",
+          )
+          .in("id", pronoMatchIds)
+      : Promise.resolve({
+          data: [] as Pick<
+            MatchRow,
+            | "id"
+            | "team_home"
+            | "team_away"
+            | "home_score"
+            | "away_score"
+            | "status"
+            | "start_time"
+          >[],
+        }),
+  ]);
 
-    const fromShortMatchIds = [
-      ...new Set((events ?? []).map((e) => e.match_id)),
-    ];
-    const allMatchIds = [...new Set([...fromShortMatchIds, ...pronoMatchIds])];
-    if (allMatchIds.length > 0) {
-      const { data: matches } = await supabase
-        .from("matches")
-        .select(
-          "id, team_home, team_away, home_score, away_score, status, start_time",
-        )
-        .in("id", allMatchIds);
-      (matches ?? []).forEach((m) => matchMap.set(m.id, m));
-    }
-  } else if (pronoMatchIds.length > 0) {
+  (eventsResult.data ?? []).forEach((e) => eventMap.set(e.id, e));
+  (pronoMatchesResult.data ?? []).forEach((m) => matchMap.set(m.id, m));
+
+  // Fetch match IDs from events not yet covered by prono matches
+  const eventMatchIds = [
+    ...new Set((eventsResult.data ?? []).map((e) => e.match_id)),
+  ];
+  const missingMatchIds = eventMatchIds.filter((id) => !matchMap.has(id));
+  if (missingMatchIds.length > 0) {
     const { data: matches } = await supabase
       .from("matches")
       .select(
         "id, team_home, team_away, home_score, away_score, status, start_time",
       )
-      .in("id", pronoMatchIds);
+      .in("id", missingMatchIds);
     (matches ?? []).forEach((m) => matchMap.set(m.id, m));
   }
 

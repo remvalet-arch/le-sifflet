@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { LeagueStandingRow } from "@/types/database";
@@ -57,11 +58,13 @@ function StandingsGrid({ rows }: { rows: LeagueStandingRow[] }) {
             <span className="text-xs font-bold text-zinc-500">{s.rank}</span>
             <div className="flex min-w-0 items-center gap-2">
               {s.team_logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={s.team_logo}
                   alt={s.team_name}
+                  width={20}
+                  height={20}
                   className="h-5 w-5 shrink-0 object-contain"
+                  unoptimized
                 />
               ) : (
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-600">

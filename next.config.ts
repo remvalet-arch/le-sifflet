@@ -23,7 +23,27 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "media-1.api-sports.io",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "media-2.api-sports.io",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "v3.football.api-sports.io",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
         pathname: "/**",
       },
     ],

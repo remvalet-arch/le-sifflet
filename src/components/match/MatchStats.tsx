@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { BarChart2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -336,8 +337,14 @@ function TeamHeader({
     >
       <div className="relative shrink-0">
         {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt={name} className="h-7 w-7 object-contain" />
+          <Image
+            src={logo}
+            alt={name}
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
+            unoptimized
+          />
         ) : (
           <div
             className="h-7 w-7 rounded-full"
