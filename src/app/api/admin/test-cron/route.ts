@@ -72,7 +72,11 @@ export async function POST(request: Request) {
   }
 
   if (!cronRes.ok) {
-    return errorResponse(`Le cron a répondu ${cronRes.status}`, 502);
+    const detail =
+      cronData && typeof cronData === "object" && "error" in cronData
+        ? (cronData as { error: string }).error
+        : `status ${cronRes.status}`;
+    return errorResponse(`Cron ${cronId}: ${detail}`, 502);
   }
 
   return successResponse({
