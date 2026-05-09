@@ -1,7 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { ShopClient } from "@/components/shop/ShopClient";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
+
+// Catalog is the same for all users — cache for 1h
+const getCatalog = unstable_cache(
+  async () => {
+    const admin = createAdminClient();
+    const [{ data: items }, { data: boosters }] = await Promise.all([
+      admin
+        .from("shop_items")
+        .select("*")
+        .eq("is_active", true)
+        .order("price_pts", { ascending: true }),
+      admin
+        .from("boosters_catalog")
+        .select("*")
+        .eq("is_active", true)
+        .order("price_pts", { ascending: true }),
+    ]);
+    return {
+      items: (items ?? []) as ShopItemRow[],
+      boosters: (boosters ?? []) as BoosterCatalogRow[],
+    };
+  },
+  ["shop-catalog"],
+  { revalidate: 3600 },
+);
 
 export const metadata = { title: "Boutique — Le Sifflet" };
 
@@ -13,17 +40,12 @@ export default async function ShopPage() {
   if (!user) redirect("/");
 
   const [
-    { data: items },
+    { items, boosters },
     { data: profile },
     { data: inventory },
-    { data: boosters },
     { data: boosterInv },
   ] = await Promise.all([
-    supabase
-      .from("shop_items")
-      .select("*")
-      .eq("is_active", true)
-      .order("price_pts", { ascending: true }),
+    getCatalog(),
     supabase
       .from("profiles")
       .select(
@@ -35,11 +57,6 @@ export default async function ShopPage() {
       .from("user_shop_inventory")
       .select("shop_item_id, is_equipped")
       .eq("user_id", user.id),
-    supabase
-      .from("boosters_catalog")
-      .select("*")
-      .eq("is_active", true)
-      .order("price_pts", { ascending: true }),
     supabase
       .from("user_boosters_inventory")
       .select("booster_id, consumed_at")
@@ -57,14 +74,14 @@ export default async function ShopPage() {
 
   return (
     <ShopClient
-      items={(items ?? []) as ShopItemRow[]}
+      items={items}
       ownedIds={[...ownedIds]}
       balance={profile?.sifflets_balance ?? 0}
       userRank={profile?.rank ?? ""}
       equippedAvatarId={profile?.equipped_avatar_id ?? null}
       equippedBorderId={profile?.equipped_border_id ?? null}
       equippedEffectId={profile?.equipped_effect_id ?? null}
-      boosters={(boosters ?? []) as BoosterCatalogRow[]}
+      boosters={boosters}
       boosterCounts={boosterCounts}
     />
   );

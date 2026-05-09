@@ -4,6 +4,19 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Search, X } from "lucide-react";
 import type { PlayerForSelect } from "./ScorerAllocationEditor";
+import {
+  SCORER_DEFAULT_ODDS,
+  SCORER_MAX_POINTS,
+  convertOddToPoints,
+} from "@/lib/odds";
+
+function getScorerPts(player: PlayerForSelect): number | null {
+  if (player.player_name === "CSC") return null;
+  const odd =
+    player.odd_anytime ?? SCORER_DEFAULT_ODDS[player.position ?? ""] ?? null;
+  if (!odd) return null;
+  return convertOddToPoints(odd, SCORER_MAX_POINTS);
+}
 
 /** Detects client-side rendering without triggering set-state-in-effect. */
 function useIsClient() {
@@ -184,6 +197,11 @@ export function PlayerPickerSheet({
                         </span>
                       )}
                     </div>
+                    {getScorerPts(p) !== null && (
+                      <span className="ml-auto shrink-0 rounded-full bg-whistle/10 px-2 py-0.5 text-xs font-bold text-whistle">
+                        ~{getScorerPts(p)} pts
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>

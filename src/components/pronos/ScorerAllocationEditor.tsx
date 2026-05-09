@@ -10,6 +10,8 @@ export type PlayerForSelect = {
   position?: string | null;
   cutout_url?: string | null;
   image_url?: string | null;
+  odd_anytime?: number | null;
+  odd_first?: number | null;
 };
 
 type ScorerEntry = { name: string; goals: number };

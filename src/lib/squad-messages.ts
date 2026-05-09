@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 
 const SYSTEM_MSG_RATE_LIMIT = 5;
 
@@ -29,7 +30,7 @@ export async function postSquadSystemMessage(
     is_system_message: true,
   });
   if (error) {
-    console.error("[postSquadSystemMessage]", error.message);
+    log.error("squad-messages", "postSquadSystemMessage", error.message);
   }
 }
 

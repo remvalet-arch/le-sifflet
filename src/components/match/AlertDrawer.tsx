@@ -57,13 +57,13 @@ export function AlertDrawer({
         }`}
       />
 
-      {/* Drawer — colle au bas de l'écran */}
+      {/* Drawer — colle au bas, centré sur desktop (max-w-md comme le shell) */}
       <div
         ref={drawerRef}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="alert-drawer-title"
-        className={`fixed bottom-0 left-0 right-0 z-[100] rounded-t-3xl border-t border-white/10 bg-zinc-900 pt-4 transition-transform duration-300 ${
+        className={`fixed bottom-0 left-1/2 z-[100] w-full max-w-md -translate-x-1/2 rounded-t-3xl border-t border-white/10 bg-zinc-900 pt-4 transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}

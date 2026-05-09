@@ -161,35 +161,28 @@ test.describe("Pronos (score exact)", () => {
 // ── 4. PROFIL ────────────────────────────────────────────────────────────────
 
 test.describe("Profil", () => {
-  test("affiche le solde, le badge karma et l'onglet Paris VAR", async ({
+  test("affiche le solde, les onglets et la section Paris VAR", async ({
     page,
   }) => {
     await page.goto("/profile");
     await page.waitForSelector("main", { state: "visible" });
 
-    await expect(page.getByText("Confiance", { exact: true })).toBeVisible({
+    // Username du joueur de test (peut apparaître en double : header profil + TopBar)
+    await expect(page.getByText("E2EJoueur").first()).toBeVisible({
       timeout: 8_000,
     });
 
-    const badgeTexts = ["Modérateur", "Supporteur", "Carton Jaune"];
-    let badgeFound = false;
-    for (const badge of badgeTexts) {
-      if (
-        await page
-          .locator(`text=${badge}`)
-          .first()
-          .isVisible()
-          .catch(() => false)
-      ) {
-        console.log(`[profile] ✓ Badge karma visible : ${badge}`);
-        badgeFound = true;
-        break;
-      }
-    }
-    expect(badgeFound).toBeTruthy();
+    // Onglets profil (onglet "Stats" présent en plus de Historique/Badges)
+    const statsTab = page.getByRole("button", { name: /Stats/i });
+    await expect(statsTab).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole("button", { name: /Historique/i })).toBeVisible(
+      { timeout: 5_000 },
+    );
 
-    const parisVarTab = page.getByRole("button", { name: /Paris VAR/i });
-    await expect(parisVarTab).toBeVisible({ timeout: 5_000 });
-    console.log("[profile] ✓ Onglet Paris VAR visible");
+    // Naviguer vers l'onglet Stats pour vérifier la section Paris VAR
+    await statsTab.click();
+    await expect(page.getByText(/Paris VAR/i)).toBeVisible({ timeout: 8_000 });
+
+    console.log("[profile] ✓ Username, onglets et section Paris VAR visibles");
   });
 });

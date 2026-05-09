@@ -11,6 +11,7 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { applyApiFootballSignalsToMarkets } from "@/lib/sports/api-football-market-bridge";
 import {
   API_FOOTBALL_BASE_URL,
@@ -565,7 +566,7 @@ export async function syncMatchEvents(
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[api-football-market] match ${matchId}:`, msg);
+    log.error("api-football-market", `match ${matchId}`, msg);
     apiMarketSync = {
       var_goal_opened: false,
       var_goal_resolved: false,
@@ -575,8 +576,9 @@ export async function syncMatchEvents(
     };
   }
 
-  console.log(
-    `⚡ Fast-Sync Events: Match ${matchId} — ${events.length} events (${timelineUpserted} upserted)`,
+  log.info(
+    "sync-events",
+    `Match ${matchId} — ${events.length} events (${timelineUpserted} upserted)`,
   );
 
   return { matchId, fixtureId: ctx.fixtureId, timelineUpserted, apiMarketSync };
@@ -661,9 +663,7 @@ export async function syncMatchStatistics(
     .update({ last_stats_sync_at: new Date().toISOString() })
     .eq("id", matchId);
 
-  console.log(
-    `📊 Heartbeat Stats: Match ${matchId} — ${upserts.length} stats upserted`,
-  );
+  log.info("sync-stats", `Match ${matchId} — ${upserts.length} stats upserted`);
 
   return {
     matchId,
@@ -878,13 +878,17 @@ export async function syncApiFootballMatch(
     const debugUrl = new URL(`${API_FOOTBALL_BASE_URL}/fixtures`);
     for (const [k, v] of Object.entries(fixturesParams))
       debugUrl.searchParams.set(k, v);
-    console.log("[syncApiFootballMatch] GET /fixtures (résolution)", {
-      homeApiId,
-      awayApiId,
-      date,
-      season,
-      url: debugUrl.toString(),
-    });
+    log.info(
+      "sync-fixture",
+      "GET /fixtures (résolution)",
+      JSON.stringify({
+        homeApiId,
+        awayApiId,
+        date,
+        season,
+        url: debugUrl.toString(),
+      }),
+    );
 
     const payload = await fetchApiFootball<unknown>("fixtures", fixturesParams);
     const rows = extractFixtureList(payload);
@@ -947,8 +951,9 @@ export async function syncApiFootballMatch(
   // Sync parallèle : compos + events + stats (api_football_id est maintenant en DB)
   const [lineupsResult, eventsResult, statsResult] = await Promise.all([
     syncMatchLineups(matchId).catch((err) => {
-      console.warn(
-        `[syncApiFootballMatch] lineups: ${err instanceof Error ? err.message : String(err)}`,
+      log.warn(
+        "sync-match",
+        `lineups: ${err instanceof Error ? err.message : String(err)}`,
       );
       return {
         matchId,
@@ -958,8 +963,9 @@ export async function syncApiFootballMatch(
       } as SyncLineupsResult;
     }),
     syncMatchEvents(matchId).catch((err) => {
-      console.warn(
-        `[syncApiFootballMatch] events: ${err instanceof Error ? err.message : String(err)}`,
+      log.warn(
+        "sync-match",
+        `events: ${err instanceof Error ? err.message : String(err)}`,
       );
       return {
         matchId,
@@ -969,8 +975,9 @@ export async function syncApiFootballMatch(
       } as SyncEventsResult;
     }),
     syncMatchStatistics(matchId).catch((err) => {
-      console.warn(
-        `[syncApiFootballMatch] stats: ${err instanceof Error ? err.message : String(err)}`,
+      log.warn(
+        "sync-match",
+        `stats: ${err instanceof Error ? err.message : String(err)}`,
       );
       return {
         matchId,
@@ -991,9 +998,7 @@ export async function syncApiFootballMatch(
       p_match_id: matchId,
     });
     if (pronoResErr) {
-      console.warn(
-        `[syncApiFootballMatch] resolve_match_pronos: ${pronoResErr.message}`,
-      );
+      log.warn("sync-match", `resolve_match_pronos: ${pronoResErr.message}`);
     }
   }
 

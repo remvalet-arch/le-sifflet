@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { MarketEventType } from "@/types/database";
+import { log } from "@/lib/logger";
 
 // Effet Domino — quand un événement est validé (OUI), déclenche le suivant
 const CHAIN_MAP: Partial<Record<MarketEventType, MarketEventType>> = {
@@ -37,7 +38,7 @@ export async function resolveEvent(
       .update({ alert_cooldown_until: null })
       .eq("id", event.match_id);
     if (cooldownErr) {
-      console.error("[resolve] Reset cooldown failed:", cooldownErr.message);
+      log.error("resolve-event", "Reset cooldown failed", cooldownErr.message);
     }
   }
 
@@ -65,7 +66,11 @@ export async function resolveEvent(
           })
           .then(({ error: chainErr }) => {
             if (chainErr)
-              console.error("[resolve] Chain event failed:", chainErr.message);
+              log.error(
+                "resolve-event",
+                "Chain event failed",
+                chainErr.message,
+              );
           });
       }
     }

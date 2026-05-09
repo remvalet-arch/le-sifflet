@@ -439,8 +439,18 @@ export function LiveRoom({
   return (
     <>
       <LiveRoomTutorial />
+      {/* Zone aria-live polite — annonce les mises à jour temps réel aux lecteurs d'écran */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {activeEvent
+          ? `Marché VAR ouvert : ${activeEvent.type}. Vote en cours.`
+          : ""}
+      </div>
       {!realtimeConnected && (
-        <div className="sticky top-0 z-[55] flex justify-center py-1.5">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="sticky top-0 z-[55] flex justify-center py-1.5"
+        >
           <div className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/80 px-3 py-1.5 text-[10px] font-black text-red-400 shadow-lg backdrop-blur-sm">
             <WifiOff className="h-3 w-3" />
             Reconnexion…

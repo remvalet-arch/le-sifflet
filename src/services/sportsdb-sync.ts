@@ -4,6 +4,7 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { mapPosition } from "@/lib/map-tsdb-position";
 import {
   SYNC_LIVE_MAX_MATCHES_PER_RUN,
@@ -422,10 +423,14 @@ export async function fetchAndUpsertLigue1(): Promise<Ligue1SyncResult> {
   let teamsUpserted = 0;
 
   for (const t of teams) {
-    console.log("Team Data check:", t.strTeam, {
-      badge: (t as TsdbTeam).strTeamBadge,
-      c1: (t as TsdbTeam).strTeamColour1,
-    });
+    log.info(
+      "sportsdb-sync",
+      `Team: ${t.strTeam}`,
+      JSON.stringify({
+        badge: (t as TsdbTeam).strTeamBadge,
+        c1: (t as TsdbTeam).strTeamColour1,
+      }),
+    );
     const row = mapTeamUpsert(t, competitionId);
     const { error } = await admin.from("teams").upsert(row, {
       onConflict: "thesportsdb_team_id",
@@ -866,8 +871,9 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
     if (!r.skippedReason) {
       matchesUpdatedFromLivescore += 1;
     } else {
-      console.log(
-        `[sync live API-Football] match ${m.id} (${m.team_home} — ${m.team_away}) skip: ${r.skippedReason}`,
+      log.info(
+        "sync-live",
+        `match ${m.id} (${m.team_home} — ${m.team_away}) skip: ${r.skippedReason}`,
       );
     }
     timelineRowsUpserted += r.timelineUpserted;
