@@ -47,6 +47,27 @@ const CRONS = [
     emoji: "🏟️",
     emailTemplate: "squad-activation" as const,
   },
+  {
+    id: "twitter-live",
+    label: "Twitter Live",
+    description: "Tweete les events VAR des matchs en cours",
+    emoji: "🐦",
+    emailTemplate: null,
+  },
+  {
+    id: "community-listener",
+    label: "Community Listener",
+    description: "Veille Twitter + email briefing mentions",
+    emoji: "📡",
+    emailTemplate: null,
+  },
+  {
+    id: "personal-branding",
+    label: "Personal Branding",
+    description: "3 propositions de tweets founder par email",
+    emoji: "✍️",
+    emailTemplate: null,
+  },
 ] as const;
 
 type CronId = (typeof CRONS)[number]["id"];

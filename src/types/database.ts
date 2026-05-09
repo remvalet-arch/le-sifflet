@@ -1439,6 +1439,57 @@ export interface Database {
         };
         Relationships: [];
       };
+      tweet_log: {
+        Row: {
+          id: string;
+          market_event_id: string | null;
+          match_id: string | null;
+          tweet_id: string;
+          tweet_type: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          market_event_id?: string | null;
+          match_id?: string | null;
+          tweet_id: string;
+          tweet_type: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          market_event_id?: string | null;
+          match_id?: string | null;
+          tweet_id?: string;
+          tweet_type?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      twitter_tokens: {
+        Row: {
+          id: number;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          access_token?: string;
+          refresh_token?: string;
+          expires_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_match_pronos_stats: {
