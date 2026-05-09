@@ -39,12 +39,28 @@ function buildRoundDateMap(rows: MatchRow[]): Map<string, string> {
   return map;
 }
 
-/** Rounds triés du plus récent au plus ancien (par date max des matchs de la journée). */
+/** Extrait le dernier nombre d'un nom de journée ("Regular Season - 29" → 29, "Final" → null). */
+function extractRoundNumber(round: string): number | null {
+  const m = round.match(/(\d+)\s*$/);
+  return m ? parseInt(m[1]!, 10) : null;
+}
+
+/**
+ * Rounds triés du plus récent au plus ancien.
+ * - Rounds numériques → tri par numéro (évite qu'un match reporté de J29 joué après J33
+ *   fasse remonter J29 au-dessus de J33 à cause du MAX(start_time)).
+ * - Rounds sans numéro (coupes euro : "Quarter-finals", "Final"…) → tri par date max.
+ */
 function sortRoundsByDateDesc(rows: MatchRow[]): string[] {
   const dateMap = buildRoundDateMap(rows);
-  return [...dateMap.keys()].sort((a, b) =>
-    dateMap.get(b)!.localeCompare(dateMap.get(a)!),
-  );
+  return [...dateMap.keys()].sort((a, b) => {
+    const numA = extractRoundNumber(a);
+    const numB = extractRoundNumber(b);
+    if (numA !== null && numB !== null) return numB - numA;
+    if (numA === null && numB === null)
+      return dateMap.get(b)!.localeCompare(dateMap.get(a)!);
+    return dateMap.get(b)!.localeCompare(dateMap.get(a)!);
+  });
 }
 
 /** Date(s) d'une journée au format DD/MM (heure Paris). Plage si multi-jours. */
