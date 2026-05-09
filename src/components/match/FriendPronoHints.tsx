@@ -22,22 +22,32 @@ function friendLabel(count: number) {
   return count === 1 ? "1 ami a mis" : `${count} amis ont mis`;
 }
 
-function formatScorerName(name: string): string {
-  if (name === "CSC") return "un CSC";
-  return name;
+function fmtScorerEntry(
+  s: { name: string; goals: number },
+  teamName?: string,
+): string {
+  const label =
+    s.name === "CSC"
+      ? teamName
+        ? `CSC de ${teamName}`
+        : "CSC (c.s.c.)"
+      : s.name;
+  return s.goals > 1 ? `${label} (×${s.goals})` : label;
 }
 
-function formatScorerAllocation(value: string): string {
+function formatScorerAllocation(
+  value: string,
+  teamHome?: string,
+  teamAway?: string,
+): string {
   try {
     const parsed = JSON.parse(value) as {
       home?: { name: string; goals: number }[];
       away?: { name: string; goals: number }[];
     };
     const parts: string[] = [];
-    for (const s of [...(parsed.home ?? []), ...(parsed.away ?? [])]) {
-      const label = formatScorerName(s.name);
-      parts.push(s.goals > 1 ? `${label} (×${s.goals})` : label);
-    }
+    for (const s of parsed.home ?? []) parts.push(fmtScorerEntry(s, teamHome));
+    for (const s of parsed.away ?? []) parts.push(fmtScorerEntry(s, teamAway));
     if (parts.length === 0) return "aucun buteur (Bunker)";
     return `buteurs : ${parts.join(", ")}`;
   } catch {
@@ -45,10 +55,17 @@ function formatScorerAllocation(value: string): string {
   }
 }
 
-function valueLabel(type: string, value: string) {
+function valueLabel(
+  type: string,
+  value: string,
+  teamHome?: string,
+  teamAway?: string,
+) {
   if (type === "exact_score") return `score exact ${value}`;
-  if (type === "scorer") return `buteur ${value}`;
-  if (type === "scorer_allocation") return formatScorerAllocation(value);
+  if (type === "scorer")
+    return `buteur ${value === "CSC" ? "CSC (c.s.c.)" : value}`;
+  if (type === "scorer_allocation")
+    return formatScorerAllocation(value, teamHome, teamAway);
   const known = PRONO_LABEL[value];
   return known ? known : value;
 }
@@ -56,9 +73,13 @@ function valueLabel(type: string, value: string) {
 export function FriendPronoHints({
   matchId,
   userId,
+  teamHome,
+  teamAway,
 }: {
   matchId: string;
   userId: string;
+  teamHome?: string;
+  teamAway?: string;
 }) {
   const [hints, setHints] = useState<Hint[]>([]);
 
@@ -87,7 +108,7 @@ export function FriendPronoHints({
             <span className="font-black text-amber-400">
               {friendLabel(h.friend_count)}
             </span>{" "}
-            {valueLabel(h.prono_type, h.prono_value)}.
+            {valueLabel(h.prono_type, h.prono_value, teamHome, teamAway)}.
           </p>
         ))}
       </div>
