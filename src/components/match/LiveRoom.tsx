@@ -566,7 +566,12 @@ export function LiveRoom({
       )}
       {displayedTab === "vestiaire" && (
         <>
-          <FriendPronoHints matchId={liveMatch.id} userId={userId} />
+          <FriendPronoHints
+            matchId={liveMatch.id}
+            userId={userId}
+            teamHome={liveMatch.team_home}
+            teamAway={liveMatch.team_away}
+          />
           <LeaguePronosList
             matchStatus={liveMatch.status}
             startTime={liveMatch.start_time}
@@ -597,6 +602,7 @@ export function LiveRoom({
           key={activeEvent.id}
           event={activeEvent}
           siffletsBalance={localBalance}
+          userId={userId}
           squadId={squadId}
           squadName={squadName}
           audienceCount={audienceCount}

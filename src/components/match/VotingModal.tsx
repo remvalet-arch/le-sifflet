@@ -103,6 +103,7 @@ function collectFocusable(root: HTMLElement): HTMLElement[] {
 type Props = {
   event: MarketEventRow;
   siffletsBalance: number;
+  userId: string;
   onClose: () => void;
   onBetSuccess: (amountStaked: number) => void;
   squadId?: string | null;
@@ -113,6 +114,7 @@ type Props = {
 export function VotingModal({
   event,
   siffletsBalance,
+  userId,
   onClose,
   onBetSuccess,
   squadId,
@@ -248,6 +250,33 @@ export function VotingModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Check if user already placed a bet on this event
+  useEffect(() => {
+    void supabase
+      .from("bets")
+      .select("chosen_option, amount_staked, potential_reward")
+      .eq("event_id", event.id)
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        const label = isStoppage
+          ? `${data.chosen_option} min`
+          : data.chosen_option;
+        const impliedMultiplier =
+          data.amount_staked > 0
+            ? data.potential_reward / data.amount_staked
+            : DEFAULT_ODD;
+        setBetConfirmed({
+          option: data.chosen_option,
+          label,
+          multiplier: impliedMultiplier,
+          staked: data.amount_staked,
+        });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id, userId]);
+
   async function handleVote(v: string) {
     if (voteLoading || expired || !canBet || oddsLoading) return;
     const staked = clamp(amount);
@@ -378,11 +407,13 @@ export function VotingModal({
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
             <span className="text-5xl">⚡</span>
             <p className="text-xl font-black uppercase tracking-tight text-white">
-              Pari enregistré !
+              Pari enregistré
             </p>
-            <p className="text-sm text-zinc-400">
-              {betConfirmed.staked} Sifflets · Cote ×
-              {betConfirmed.multiplier.toFixed(2)}
+            <p className="text-sm font-black text-zinc-300">
+              {betConfirmed.staked} 🪙 sur{" "}
+              <span className="text-green-400 uppercase">
+                {betConfirmed.label}
+              </span>
             </p>
             {betConfirmed.boosterName && (
               <p className="text-[11px] font-black text-amber-400">
@@ -394,6 +425,9 @@ export function VotingModal({
               <span className="text-green-400">
                 {Math.floor(betConfirmed.staked * betConfirmed.multiplier)} 🪙
               </span>
+            </p>
+            <p className="text-[10px] text-zinc-600">
+              Le verdict arrive quand la VAR tranche.
             </p>
           </div>
         )}
