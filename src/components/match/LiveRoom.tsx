@@ -147,9 +147,15 @@ export function LiveRoom({
   useEffect(() => {
     if (localBalance < 10) {
       void fetch("/api/claim-rsa", { method: "POST" })
-        .then((res) => res.json())
-        .then((json: { ok: boolean; data?: { new_balance: number } }) => {
-          if (json.ok && json.data) {
+        .then((res) => {
+          if (res.status === 429) return null;
+          return res.json() as Promise<{
+            ok: boolean;
+            data?: { new_balance: number };
+          }>;
+        })
+        .then((json) => {
+          if (json?.ok && json.data) {
             setLocalBalance(json.data.new_balance);
             toast.success(
               "L'arbitre te fait une fleur, revoilà 50 Sifflets 💸",

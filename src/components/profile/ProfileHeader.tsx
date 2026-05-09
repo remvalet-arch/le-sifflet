@@ -138,6 +138,10 @@ export function ProfileHeader({
         data?: { bonus: number };
         error?: string;
       };
+      if (res.status === 429) {
+        toast.error("Doucement l'arbitre, tu siffles trop vite !");
+        return;
+      }
       if (!json.ok) {
         toast.error(json.error ?? "Déjà réclamé !");
         setStreakClaimed(true);

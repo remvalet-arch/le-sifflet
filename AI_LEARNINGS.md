@@ -53,6 +53,11 @@
 
 - **PROJECT_STATE.md (et les descriptions de migration) ne sont pas la source de vérité pour les noms de colonnes.** La migration 0084 est documentée avec `notif_nudge`, `notif_match_start`, `notif_var_result` (singulier) mais les colonnes réellement en base sont `notif_pre_match_5min`, `notif_pre_match_2h`, `notif_var_results` (pluriel). **Toujours vérifier dans `src/types/database.ts`** avant d'utiliser une colonne `notif_*` — c'est la seule source de vérité fiable.
 
+## 🤖 Anthropic API — Réponses JSON avec fences markdown
+
+- **Claude enveloppe parfois sa réponse JSON dans des backticks markdown** (` ```json ... ``` `), même quand le system prompt dit "Réponds en JSON uniquement". `JSON.parse()` échoue silencieusement. Toujours stripper les fences avant de parser : `raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim()`.
+- **L'`ANTHROPIC_API_KEY` est distincte de l'abonnement Claude.ai/Claude Code** — c'est une clé API pay-per-use à créer sur console.anthropic.com. Les variables d'environnement Vercel ne prennent effet qu'après un redéploiement.
+
 ## 📦 skills.sh (npx skills add)
 
 - **Les noms de skills ne correspondent pas aux noms courts "évidents" :** La CLI `npx skills add vercel-labs/agent-skills@<nom>` exige le nom exact du fichier skill. Exemples de noms contre-intuitifs : `vercel-react-best-practices` (pas `react-best-practices`), `vercel-composition-patterns` (pas `composition-patterns`). Toujours vérifier avec `npx skills search <mot-clé>` ou consulter le README du repo avant d'essayer d'installer.

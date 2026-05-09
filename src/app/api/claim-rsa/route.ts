@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  errorResponse,
+  rateLimitResponse,
+} from "@/lib/api-response";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 export async function POST() {
   const supabase = await createClient();
@@ -9,6 +14,13 @@ export async function POST() {
   } = await supabase.auth.getUser();
 
   if (!user) return errorResponse("Non authentifié", 401);
+
+  const { limited, retryAfter } = await checkRateLimit(
+    supabase,
+    user.id,
+    "claim-rsa",
+  );
+  if (limited) return rateLimitResponse(retryAfter);
 
   const { data: profile } = await supabase
     .from("profiles")

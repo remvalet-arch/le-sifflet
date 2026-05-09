@@ -201,6 +201,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      rate_limit_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          route: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          route: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          route?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       seasons: {
         Row: {
           id: string;
@@ -1764,3 +1785,7 @@ export type DirectMessageThreadRow =
   Database["public"]["Tables"]["direct_message_threads"]["Row"];
 export type DirectMessageRow =
   Database["public"]["Tables"]["direct_messages"]["Row"];
+export type RateLimitLogRow =
+  Database["public"]["Tables"]["rate_limit_log"]["Row"];
+export type RateLimitLogInsert =
+  Database["public"]["Tables"]["rate_limit_log"]["Insert"];

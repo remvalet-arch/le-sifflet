@@ -1,8 +1,15 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  errorResponse,
+  rateLimitResponse,
+} from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { log } from "@/lib/logger";
+
+const QUICK_BET_RATE_LIMIT = 15;
+const QUICK_BET_WINDOW_SECS = 60;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -11,6 +18,17 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) return errorResponse("Non authentifié", 401);
+
+  const since = new Date(
+    Date.now() - QUICK_BET_WINDOW_SECS * 1000,
+  ).toISOString();
+  const { count } = await supabase
+    .from("bets")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("created_at", since);
+  if ((count ?? 0) >= QUICK_BET_RATE_LIMIT)
+    return rateLimitResponse(QUICK_BET_WINDOW_SECS);
 
   const body = (await request.json()) as {
     marketEventId?: string;
