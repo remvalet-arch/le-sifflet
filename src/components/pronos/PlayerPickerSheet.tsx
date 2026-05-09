@@ -141,6 +141,7 @@ export function PlayerPickerSheet({
           <Search className="h-4 w-4 shrink-0 text-zinc-500" />
           <input
             type="text"
+            aria-label="Rechercher un joueur"
             placeholder="Rechercher un joueur..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

@@ -11,6 +11,7 @@ import type {
   BoosterCatalogRow,
 } from "@/types/database";
 import { getMinBetForBalance } from "@/lib/economy/min-bet";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 const EVENT_CONFIG: Record<
   MarketEventType,
@@ -125,6 +126,7 @@ export function VotingModal({
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleId = `vote-title-${event.id}`;
   const descId = `vote-desc-${event.id}`;
+  useScrollLock(true);
   const isStoppage = isStoppageType(event.type);
 
   const [poolOdds, setPoolOdds] = useState<Record<string, number>>({});

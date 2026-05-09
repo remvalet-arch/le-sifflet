@@ -210,6 +210,7 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
           <Search className="h-4 w-4 shrink-0 text-zinc-500" />
           <input
             type="text"
+            aria-label="Rechercher un joueur par pseudo"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Chercher un joueur par pseudo…"
