@@ -1,6 +1,6 @@
 export default function PronosLoading() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-4 pb-24">
+    <main className="mx-auto w-full max-w-2xl px-4 py-4 pb-6">
       {/* Progress bar skeleton */}
       <div className="mb-4 h-2 w-full animate-pulse rounded-full bg-zinc-800" />
 

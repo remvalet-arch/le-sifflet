@@ -268,7 +268,7 @@ export const MatchStats = memo(function MatchStats({
 
   if (!hasStats) {
     return (
-      <div className="mt-6 flex flex-col items-center gap-3 px-4 pb-16 text-center">
+      <div className="mt-6 flex flex-col items-center gap-3 px-4 pb-8 text-center">
         <BarChart2 className="h-10 w-10 text-zinc-700" strokeWidth={1.5} />
         <p className="text-sm font-bold text-zinc-500">
           {isUpcoming
