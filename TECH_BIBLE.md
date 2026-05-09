@@ -325,7 +325,7 @@ total_xp_earned = SUM de tous les xp_période des membres (≠ pot commun — sp
 
 ---
 
-### 3.9 Messagerie Privée (DMs — migration 0098)
+### 3.9 Messagerie Privée (DMs — migration 0098)  
 
 - Tables : `direct_message_threads` (threads), `direct_messages` (messages)
 - Rate limit : 1 message / 2s par user (query count sur `direct_messages`)
