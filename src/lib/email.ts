@@ -92,6 +92,161 @@ export function emailJ3Inactive(username: string): string {
 </html>`;
 }
 
+export type DailyDigestStats = {
+  pronos_total: number;
+  pronos_correct: number;
+  var_bets_total: number;
+  var_bets_won: number;
+  points_earned: number;
+};
+
+export function emailDailyDigest(
+  username: string,
+  stats: DailyDigestStats,
+  date: string,
+): string {
+  const winRate =
+    stats.pronos_total > 0
+      ? Math.round((stats.pronos_correct / stats.pronos_total) * 100)
+      : 0;
+
+  const varRate =
+    stats.var_bets_total > 0
+      ? Math.round((stats.var_bets_won / stats.var_bets_total) * 100)
+      : 0;
+
+  const mood =
+    stats.points_earned >= 200
+      ? "🔥 Grosse journée hier !"
+      : stats.points_earned >= 50
+        ? "👍 Bonne journée hier !"
+        : "⚽ Bilan de ta journée";
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0f0a;font-family:Inter,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f0a;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:8px;text-align:center;">
+          <span style="font-size:24px;font-weight:900;color:#f0f0e8;letter-spacing:-1px;">⚽ VAR TIME</span>
+        </td></tr>
+        <tr><td style="padding-bottom:20px;text-align:center;">
+          <span style="font-size:11px;color:#404040;letter-spacing:1px;text-transform:uppercase;">${date}</span>
+        </td></tr>
+        <tr><td style="background:#141a14;border-radius:16px;padding:28px;">
+          <p style="margin:0 0 4px;font-size:20px;font-weight:900;color:#f0f0e8;">${mood}</p>
+          <p style="margin:0 0 24px;font-size:14px;color:#606060;">${username}, voilà ce que tu as fait hier :</p>
+
+          <!-- Stats grid -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <tr>
+              <td style="background:#0f1a0f;border-radius:12px;padding:16px;text-align:center;width:33%;">
+                <p style="margin:0;font-size:26px;font-weight:900;color:#d4a017;">+${stats.points_earned}</p>
+                <p style="margin:4px 0 0;font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;">Points</p>
+              </td>
+              <td style="width:8px;"></td>
+              <td style="background:#0f1a0f;border-radius:12px;padding:16px;text-align:center;width:33%;">
+                <p style="margin:0;font-size:26px;font-weight:900;color:#f0f0e8;">${stats.pronos_correct}/${stats.pronos_total}</p>
+                <p style="margin:4px 0 0;font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;">Pronos (${winRate}%)</p>
+              </td>
+              <td style="width:8px;"></td>
+              <td style="background:#0f1a0f;border-radius:12px;padding:16px;text-align:center;width:33%;">
+                <p style="margin:0;font-size:26px;font-weight:900;color:#f0f0e8;">${stats.var_bets_won}/${stats.var_bets_total}</p>
+                <p style="margin:4px 0 0;font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;">Paris VAR (${varRate}%)</p>
+              </td>
+            </tr>
+          </table>
+
+          <a href="https://vartime.app/profile" style="display:block;background:#d4a017;color:#0a0f0a;text-align:center;padding:13px 20px;border-radius:12px;font-weight:900;font-size:14px;text-decoration:none;">Voir mon classement →</a>
+        </td></tr>
+        <tr><td style="padding-top:16px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#303030;">VAR TIME · <a href="https://vartime.app/settings/notifications" style="color:#404040;">Se désabonner</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export type WeeklyRecapStats = {
+  points_earned: number;
+  pronos_total: number;
+  pronos_correct: number;
+  var_bets_total: number;
+  var_bets_won: number;
+  active_days: number;
+};
+
+export function emailWeeklyRecap(
+  username: string,
+  stats: WeeklyRecapStats,
+  weekLabel: string,
+): string {
+  const winRate =
+    stats.pronos_total > 0
+      ? Math.round((stats.pronos_correct / stats.pronos_total) * 100)
+      : 0;
+
+  const headline =
+    stats.points_earned >= 500
+      ? `Semaine de feu ! 🔥`
+      : stats.points_earned >= 100
+        ? `Belle semaine ${username} 👏`
+        : `Ta semaine en un coup d'œil`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0f0a;font-family:Inter,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f0a;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:8px;text-align:center;">
+          <span style="font-size:24px;font-weight:900;color:#f0f0e8;letter-spacing:-1px;">⚽ VAR TIME</span>
+        </td></tr>
+        <tr><td style="padding-bottom:20px;text-align:center;">
+          <span style="font-size:11px;color:#404040;letter-spacing:1px;text-transform:uppercase;">Récap de la semaine · ${weekLabel}</span>
+        </td></tr>
+        <tr><td style="background:#141a14;border-radius:16px;padding:28px;">
+          <p style="margin:0 0 4px;font-size:22px;font-weight:900;color:#f0f0e8;">${headline}</p>
+          <p style="margin:0 0 24px;font-size:14px;color:#606060;">Tu as joué <strong style="color:#f0f0e8;">${stats.active_days} jour${stats.active_days > 1 ? "s" : ""}</strong> cette semaine.</p>
+
+          <!-- Hero stat -->
+          <div style="background:#0f1a0f;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">
+            <p style="margin:0;font-size:40px;font-weight:900;color:#d4a017;">+${stats.points_earned}</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#606060;text-transform:uppercase;letter-spacing:2px;">Points gagnés</p>
+          </div>
+
+          <!-- Stats row -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <tr>
+              <td style="background:#0f1a0f;border-radius:12px;padding:14px;text-align:center;">
+                <p style="margin:0;font-size:20px;font-weight:900;color:#f0f0e8;">${stats.pronos_correct}/${stats.pronos_total}</p>
+                <p style="margin:4px 0 0;font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;">Pronos (${winRate}%)</p>
+              </td>
+              <td style="width:8px;"></td>
+              <td style="background:#0f1a0f;border-radius:12px;padding:14px;text-align:center;">
+                <p style="margin:0;font-size:20px;font-weight:900;color:#f0f0e8;">${stats.var_bets_won}/${stats.var_bets_total}</p>
+                <p style="margin:4px 0 0;font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;">Paris VAR</p>
+              </td>
+            </tr>
+          </table>
+
+          <a href="https://vartime.app/pronos" style="display:block;background:#d4a017;color:#0a0f0a;text-align:center;padding:13px 20px;border-radius:12px;font-weight:900;font-size:14px;text-decoration:none;">Voir les matchs de la semaine →</a>
+        </td></tr>
+        <tr><td style="padding-top:16px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#303030;">VAR TIME · <a href="https://vartime.app/settings/notifications" style="color:#404040;">Se désabonner</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function emailJ7Churn(username: string, tallyUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="fr">

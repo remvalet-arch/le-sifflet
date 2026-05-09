@@ -6,10 +6,5 @@
       "destination": "https://vartime.app/$1",
       "permanent": true
     }
-  ],
-  "crons": [
-    { "path": "/api/cron/j1-inactive", "schedule": "0 8 * * *" },
-    { "path": "/api/cron/j3-inactive", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/j7-churn", "schedule": "0 10 * * *" }
   ]
 }

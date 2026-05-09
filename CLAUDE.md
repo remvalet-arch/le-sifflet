@@ -11,17 +11,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Tone & design:** Immersive and tongue-in-cheek (think MPG — Mon Petit Gazon), tutoiement throughout, mobile-first UI with large tap targets.
 - **Current MVP state:** Étapes 1–6 complete — Google OAuth, middleware, auto-generated profiles, sorted match lobby, live room with community alerts (Waze mechanic), real-time sync via Supabase Realtime, VotingModal with **parimutuel** odds (`get_event_odds`), full bet resolution loop (auto + manual admin), Realtime win/loss notifications, and bet history profile page.
 
+## Git workflow — RÈGLE ABSOLUE
+
+```
+stage  →  (QA APPROVED)  →  main
+```
+
+- **Tout le travail se fait sur `stage`** (ou une branche feature). Ne jamais committer directement sur `main`.
+- `main` est la branche de production. On n'y push que via `npm run sprint:ship` **après QA APPROVED**.
+- `npm run sprint:ship` = merge stage→main + push + email recap automatique.
+- Si tu es sur `main` par erreur, `git checkout stage` immédiatement avant tout commit.
+
 ## Commands
 
 ```bash
-npm run dev          # dev server (localhost:3000)
-npm run build        # production build
-npm run lint         # ESLint (eslint src/)
-npm run typecheck    # tsc --noEmit
-npm run format       # prettier --write .
+npm run dev           # dev server (localhost:3000)
+npm run build         # production build
+npm run lint          # ESLint (eslint src/)
+npm run typecheck     # tsc --noEmit
+npm run format        # prettier --write .
+npm run ai:check      # format + lint + typecheck (obligatoire avant commit)
+npm run sprint:ship   # merge stage→main + push + recap email (QA APPROVED seulement)
+npm run sprint:recap  # envoie l'email recap seul (debug)
 ```
-
-No test framework is configured yet.
 
 ## Environment
 
