@@ -54,38 +54,69 @@ bonus_quotidien = 50 × min(login_streak, 7)
 
 ### 2.2 Cotes et Points — Score exact
 
-**Cote dynamique** (fichier `src/lib/odds.ts`) :
+**Calcul de la récompense base** depuis les cotes 1N2 du match (stockées à la pose du prono) :
 
 ```
-popularity_ratio = paris_sur_ce_score / total_paris
-cote_ajustée     = cote_base × (1 - 0.35 × popularity_ratio)
-cote_finale      = max(1.10, arrondi(cote_ajustée × 10) / 10)
+odd_1N2    = cote du résultat impliqué par le score pronostiqué (H/D/A)
+base_pts   = max(10, arrondi(220 × (1 - 1/odd_1N2)))
+fallback   = 50 pts si pas de cotes API
 ```
 
-- Plus un score est populaire, plus sa cote baisse (floor à ×1.10)
-- La cote de base est `10.0` (`EXACT_SCORE_DEFAULT_ODD`)
+**Résolution — 3 cas :**
 
-**Conversion cote → Points** (formule asymptotique) :
+| Cas                   | Points crédités               |
+| --------------------- | ----------------------------- |
+| 1N2 correct seulement | `base_pts`                    |
+| Score exact correct   | `base_pts × 2 + bonus_rareté` |
+| 1N2 incorrect         | 0 (perdu)                     |
+
+**Bonus rareté (score exact)** — calculé parmi les joueurs ayant le bon 1N2 :
+
+| % ayant trouvé l'exact score | Bonus        | Label      |
+| ---------------------------- | ------------ | ---------- |
+| > 30 %                       | **+20 pts**  | Évident    |
+| 20 – 30 %                    | **+30 pts**  | Rare       |
+| 5 – 20 %                     | **+50 pts**  | Très rare  |
+| 0.5 – 5 %                    | **+70 pts**  | Méga rare  |
+| < 0.5 %                      | **+100 pts** | Ultra rare |
+
+> Seuil minimum 5 joueurs avec le bon 1N2 pour activer le calcul de rareté. En-dessous : bonus par défaut **+20 pts**.
+
+### 2.3 Cotes Buteur
+
+Les cotes buteur sont récupérées depuis **API-Football** (`player_odds.odd_anytime`) via le cron `sync-player-odds` (quotidien, J-1 avant le match).
+
+**Formule** :
 
 ```
-points = max(10, arrondi(220 × (1 - 1/cote)))
+pts = max(10, arrondi(150 × (1 - 1/odd_anytime)))
 ```
 
-- Fallback : 50 pts si la cote est absente ou invalide
-- Plafond effectif : ~210 pts (cote = 10, cote de base par défaut)
+**Fallback si pas d'odds API** (par position dans les compositions) :
 
-### 2.3 Cotes Buteur par position
+| Position          | Cote fallback | Points ~    |
+| ----------------- | ------------- | ----------- |
+| **Attaquant (A)** | ×3.5          | ~107 pts    |
+| **Milieu (M)**    | ×7.0          | ~129 pts    |
+| **Défenseur (D)** | ×15.0         | ~140 pts    |
+| **Gardien (G)**   | ×25.0         | ~144 pts    |
+| **CSC**           | ×25.0 (fixe)  | **144 pts** |
 
-| Position          | Cote  | Points potentiels max |
-| ----------------- | ----- | --------------------- |
-| **Attaquant (A)** | ×3.5  | ~150 pts              |
-| **Milieu (M)**    | ×7.0  | ~150 pts              |
-| **Défenseur (D)** | ×15.0 | ~150 pts              |
+**CSC (Contre Son Camp)** : l'utilisateur peut pronostiquer un but contre son camp adverse au lieu d'un joueur nominatif. La cote fixe ×25.0 reflète la rareté de l'événement. À la résolution, le système compte les buts `is_own_goal = true` de l'équipe adverse dans la timeline.
 
-- Plafond points buteur : **150 pts** (`SCORER_MAX_POINTS`) — cumulable sur plusieurs buteurs
-- Plafond points prono 1N2 / score exact : **220 pts** (`maxPoints`)
+- Points buteur cumulables sur plusieurs buteurs et plusieurs buts
+- Plafond technique : ~144 pts par but (cote ×25.0)
 
 ### 2.4 Résolution des pronos
+
+**Deux chemins de résolution :**
+
+| Chemin                                          | Résout pronos DB | Push résultats | Badges | Messages sociaux |
+| ----------------------------------------------- | ---------------- | -------------- | ------ | ---------------- |
+| `POST /api/admin/finish-match`                  | ✅               | ✅             | ✅     | ✅               |
+| Cron `match-monitor` → FT auto via API-Football | ✅               | ❌             | ❌     | ❌               |
+
+> ⚠️ Quand la fin de match est détectée automatiquement par le cron (statut API-Football `FT`/`AET`/`PEN`), les pronos sont résolus en base mais les notifications push, badges et messages de squad **ne sont pas envoyés**. Il faut déclencher `finish-match` manuellement après le match pour le layer social.
 
 Déclenchée via `POST /api/admin/finish-match` (passage du match en `finished`) :
 
@@ -215,6 +246,18 @@ Des boosters consommables peuvent modifier les odds ou révéler les votes des a
 ---
 
 ## 6. Distribution des gains (parimutuel)
+
+### 6.0 Speed bonus VAR
+
+Le reward parimutuel est multiplié selon la rapidité du pari (temps entre l'ouverture du marché et le placement) :
+
+| Délai     | Multiplicateur | Label    |
+| --------- | -------------- | -------- |
+| 0 – 15 s  | **× 1.25**     | ⚡ Flash |
+| 16 – 45 s | **× 1.00**     | Normal   |
+| 46 s et + | **× 0.90**     | Tardif   |
+
+> Le speed bonus s'applique sur le reward parimutuel individuel, pas sur le braquage squad.
 
 ### 6.1 Modèle parimutuel
 
