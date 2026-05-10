@@ -22,21 +22,26 @@ import { useRouter } from "next/navigation";
 import type { ProfileRow } from "@/types/database";
 import type { Locale } from "@/lib/i18n/locale";
 
-const SECTION_LABELS: { pattern: RegExp; label: string }[] = [
-  { pattern: /^\/lobby/, label: "LE STADE" },
-  { pattern: /^\/pronos/, label: "MES PRONOS" },
-  { pattern: /^\/ligues/, label: "MES LIGUES" },
-  { pattern: /^\/profile/, label: "MON PROFIL" },
-  { pattern: /^\/match\//, label: "EN DIRECT" },
-  { pattern: /^\/messages/, label: "MESSAGES" },
-  { pattern: /^\/leaderboard/, label: "CLASSEMENT" },
-  { pattern: /^\/shop/, label: "BOUTIQUE" },
-];
+function getSectionLabels(t: ReturnType<typeof useTranslations<"TopBar">>) {
+  return [
+    { pattern: /^\/lobby/, label: t("sectionLobby") },
+    { pattern: /^\/pronos/, label: t("sectionPronos") },
+    { pattern: /^\/ligues/, label: t("sectionLigues") },
+    { pattern: /^\/profile/, label: t("sectionProfil") },
+    { pattern: /^\/match\//, label: t("sectionMatch") },
+    { pattern: /^\/messages/, label: t("sectionMessages") },
+    { pattern: /^\/leaderboard/, label: t("sectionClassement") },
+    { pattern: /^\/shop/, label: t("sectionBoutique") },
+  ];
+}
 
-function useSectionLabel(): string | null {
+function useSectionLabel(
+  t: ReturnType<typeof useTranslations<"TopBar">>,
+): string | null {
   const pathname = usePathname();
   return (
-    SECTION_LABELS.find(({ pattern }) => pattern.test(pathname))?.label ?? null
+    getSectionLabels(t).find(({ pattern }) => pattern.test(pathname))?.label ??
+    null
   );
 }
 
@@ -62,7 +67,7 @@ export function TopBar({
   const t = useTranslations("TopBar");
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const sectionLabel = useSectionLabel();
+  const sectionLabel = useSectionLabel(t);
 
   // Realtime : met à jour rang/XP dès qu'un pari est résolu
   useEffect(() => {

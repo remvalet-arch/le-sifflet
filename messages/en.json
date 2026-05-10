@@ -21,7 +21,15 @@
     "language": "Language",
     "logout": "Log out",
     "leaderboard": "Leaderboard",
-    "shop": "Shop"
+    "shop": "Shop",
+    "sectionLobby": "THE STADIUM",
+    "sectionPronos": "MY PREDICTIONS",
+    "sectionLigues": "MY LEAGUES",
+    "sectionProfil": "MY PROFILE",
+    "sectionMatch": "LIVE",
+    "sectionMessages": "MESSAGES",
+    "sectionClassement": "LEADERBOARD",
+    "sectionBoutique": "SHOP"
   },
   "Match": {
     "live": "Live",
@@ -187,7 +195,12 @@
     "tabHistorique": "History",
     "tabBadges": "Badges",
     "tabAmis": "Friends",
-    "tabStats": "Stats"
+    "tabStats": "Stats",
+    "overviewBets": "Bets",
+    "overviewMaxStreak": "Max streak",
+    "overviewMatches": "Matches",
+    "overviewPointsEarned": "POINTS EARNED",
+    "overviewWinRate": "WIN RATE"
   },
   "Shop": {
     "title": "Shop",
@@ -452,7 +465,18 @@
     "noMatchesFilterTitle": "No matches for your leagues that day",
     "noMatchesFilterDesc": "Try another date or broaden your leagues.",
     "showAllMatches": "Show all matches",
-    "competitionFallback": "Other"
+    "competitionFallback": "Other",
+    "filterAll": "All",
+    "pronoTooLate": "This match has already started, too late!",
+    "connectionLost": "Connection lost, try again!",
+    "noProno": "No prediction",
+    "firstToPredict": "⚡ First to predict",
+    "matchStartedLocked": "Match started, predictions closed 🔒",
+    "submitProno": "Submit prediction",
+    "editProno": "Edit",
+    "shareProno": "Share",
+    "enableNotif": "Enable",
+    "enableNotifDesc": "Enable notifications so you don't miss a thing."
   },
   "Stats": {
     "allTime": "All time",

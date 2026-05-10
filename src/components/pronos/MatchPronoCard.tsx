@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Bell, Check, Minus, Share2, Target, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
 import { convertOddToPoints } from "@/lib/odds";
@@ -11,6 +12,14 @@ import {
   ScorerAllocationEditor,
   aggregateSlots,
 } from "./ScorerAllocationEditor";
+
+const BCP47_LOCALE: Record<string, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  es: "es-ES",
+  de: "de-DE",
+  it: "it-IT",
+};
 
 export type MatchStub = {
   id: string;
@@ -206,6 +215,10 @@ export function MatchPronoCard({
   existingScorers: ScorersAlloc | null;
   onSubmittedChange: (submitted: boolean) => void;
 }) {
+  const t = useTranslations("Pronos");
+  const locale = useLocale();
+  const bcp47 = BCP47_LOCALE[locale] ?? "fr-FR";
+
   const [homeScore, setHomeScore] = useState(existingScore?.home ?? "");
   const [awayScore, setAwayScore] = useState(existingScore?.away ?? "");
   const [submitted, setSubmitted] = useState(existingScore != null);
@@ -259,7 +272,7 @@ export function MatchPronoCard({
       if (error) {
         toast.error(
           error.message.includes("plus disponible")
-            ? "Ce match a déjà commencé, trop tard !"
+            ? t("pronoTooLate")
             : `Prono refusé: ${error.message}`,
         );
         return;
@@ -278,9 +291,9 @@ export function MatchPronoCard({
         if (already) return;
         setTimeout(() => {
           toast("🔔 Reçois une alerte au coup d'envoi ?", {
-            description: "Active les notifications pour ne rien rater.",
+            description: t("enableNotifDesc"),
             action: {
-              label: "Activer",
+              label: t("enableNotif"),
               onClick: () => void trySubscribePush(),
             },
             duration: 10000,
@@ -288,7 +301,7 @@ export function MatchPronoCard({
         }, 1200);
       });
     } catch {
-      toast.error("Connexion perdue, réessaie !");
+      toast.error(t("connectionLost"));
     } finally {
       setLoading(false);
     }
@@ -300,6 +313,7 @@ export function MatchPronoCard({
     homeSlots,
     awaySlots,
     onSubmittedChange,
+    t,
   ]);
 
   const kickoff = new Date(match.start_time);
@@ -309,13 +323,13 @@ export function MatchPronoCard({
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const isTomorrow = kickoff.toDateString() === tomorrow.toDateString();
-    const timeStr = kickoff.toLocaleTimeString("fr-FR", {
+    const timeStr = kickoff.toLocaleTimeString(bcp47, {
       hour: "2-digit",
       minute: "2-digit",
     });
     if (isToday) return timeStr;
     const weekday = kickoff
-      .toLocaleDateString("fr-FR", { weekday: "short" })
+      .toLocaleDateString(bcp47, { weekday: "short" })
       .replace(/\.$/, "");
     const day = weekday.charAt(0).toUpperCase() + weekday.slice(1);
     if (isTomorrow) return `Dem. ${timeStr}`;
@@ -389,7 +403,7 @@ export function MatchPronoCard({
 
             {isWon && pointsEarned > 0 ? (
               <span className="rounded-full border border-green-500/30 bg-green-500/15 px-3 py-0.5 text-[11px] font-black text-green-400">
-                +{pointsEarned.toLocaleString("fr-FR")} Points
+                +{pointsEarned.toLocaleString(bcp47)} Points
               </span>
             ) : isLost ? (
               <span className="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-0.5 text-[11px] font-bold text-zinc-500">
@@ -397,7 +411,7 @@ export function MatchPronoCard({
               </span>
             ) : !hasProno ? (
               <span className="rounded-full border border-zinc-700/50 bg-zinc-800/60 px-3 py-0.5 text-[11px] font-bold text-zinc-600">
-                Pas de prono
+                {t("noProno")}
               </span>
             ) : null}
           </div>
@@ -457,7 +471,7 @@ export function MatchPronoCard({
               }}
               className="shrink-0 text-[11px] font-bold text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
             >
-              Modifier
+              {t("editProno")}
             </button>
           )}
         </div>
@@ -475,7 +489,7 @@ export function MatchPronoCard({
                 {(existingProno.points_earned! > 0
                   ? existingProno.points_earned!
                   : existingProno.reward_amount!
-                ).toLocaleString("fr-FR")}{" "}
+                ).toLocaleString(bcp47)}{" "}
                 Points
               </span>
             )}
@@ -496,7 +510,7 @@ export function MatchPronoCard({
               aria-label="Partager mon prono"
             >
               <Share2 className="h-3 w-3" />
-              Partager
+              {t("shareProno")}
             </button>
           </div>
         </div>
@@ -602,7 +616,7 @@ export function MatchPronoCard({
 
                   {isFirstProno ? (
                     <span className="mt-1.5 inline-flex items-center gap-0.5 rounded-full border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[8px] font-black text-whistle">
-                      ⚡ Premier à pronostiquer
+                      {t("firstToPredict")}
                     </span>
                   ) : (
                     <div className="mt-1 flex items-center justify-center gap-1 opacity-70">
@@ -669,7 +683,7 @@ export function MatchPronoCard({
           </a>
         ) : isLocked ? (
           <div className="mt-4 flex w-full items-center justify-center rounded-xl bg-zinc-800/50 py-3 text-sm font-black uppercase tracking-wide text-zinc-500">
-            Le match a commencé, pronos fermés 🔒
+            {t("matchStartedLocked")}
           </div>
         ) : scoresValid ? (
           <button
@@ -683,7 +697,7 @@ export function MatchPronoCard({
             ) : (
               <>
                 <Target className="h-4 w-4" />
-                Valider mon prono
+                {t("submitProno")}
               </>
             )}
           </button>
