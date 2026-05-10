@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 import { LIVE_BETTING_WINDOW_SECONDS } from "@/lib/constants/odds";
 import type { MarketEventRow, BoosterCatalogRow } from "@/types/database";
 import { getMinBetForBalance } from "@/lib/economy/min-bet";
-import { trackBetPlaced, type BoosterSlug } from "@/lib/analytics";
+import {
+  trackBetPlaced,
+  computeSpeedBracket,
+  type BoosterSlug,
+} from "@/lib/analytics";
 
 const DEFAULT_ODD = 2;
 
@@ -277,6 +281,8 @@ export function useVotingMarket({
         is_first_bet_of_session: betRankRef.current === 1,
         bet_rank_in_session: betRankRef.current,
         via_quick_bet: false,
+        speed_bracket: computeSpeedBracket(elapsed),
+        delay_seconds: elapsed,
       });
       onBetSuccess(staked);
       const label = isStoppage ? `${v} min` : v;
