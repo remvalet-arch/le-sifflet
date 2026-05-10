@@ -7,7 +7,7 @@ export function ToasterProvider() {
     <Toaster
       position="top-center"
       richColors
-      offset="env(safe-area-inset-top, 16px)"
+      offset="max(env(safe-area-inset-top, 0px), 50px)"
       toastOptions={{
         style: {
           background: "#1a3a23",
