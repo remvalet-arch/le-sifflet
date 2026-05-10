@@ -3,18 +3,12 @@
 import Image from "next/image";
 import { memo, useEffect, useState } from "react";
 import { User, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { LineupRow, PlayerRow } from "@/types/database";
 import { MatchLineupsPitch } from "./MatchLineupsPitch";
 
 const POS_ORDER: Record<string, number> = { G: 0, D: 1, M: 2, A: 3 };
-
-const POS_LABEL: Record<string, string> = {
-  G: "Gardien",
-  D: "Défenseur",
-  M: "Milieu",
-  A: "Attaquant",
-};
 
 const LOGO_HOSTS = new Set(["www.thesportsdb.com", "r2.thesportsdb.com"]);
 
@@ -170,19 +164,16 @@ function PlayerRosterAvatar({
 function PlayerLine({
   shirtNumber,
   name,
-  position,
+  posLabel,
   imageUrl,
   cutoutUrl,
 }: {
   shirtNumber: string | null;
   name: string;
-  position: string | null;
+  posLabel: string | null;
   imageUrl: string | null;
   cutoutUrl: string | null;
 }) {
-  const pos = (position ?? "").trim();
-  const posLabel =
-    pos && POS_LABEL[pos] ? POS_LABEL[pos] : pos.length > 0 ? pos : null;
   return (
     <li className="flex gap-2 border-b border-white/5 py-2 last:border-0">
       <PlayerRosterAvatar
@@ -239,6 +230,16 @@ export const MatchLineups = memo(function MatchLineups({
   awayTeamPrimaryColor,
   awayTeamSecondaryColor,
 }: Props) {
+  const tMatch = useTranslations("Match");
+
+  function getPosLabel(pos: string | null): string | null {
+    if (pos === "G") return tMatch("posGK");
+    if (pos === "D") return tMatch("posDEF");
+    if (pos === "M") return tMatch("posMID");
+    if (pos === "A") return tMatch("posFWD");
+    return pos && pos.length > 0 ? pos : null;
+  }
+
   const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [homeRoster, setHomeRoster] = useState<PlayerRow[]>([]);
   const [awayRoster, setAwayRoster] = useState<PlayerRow[]>([]);
@@ -377,7 +378,7 @@ export const MatchLineups = memo(function MatchLineups({
                   key={p.id}
                   shirtNumber={null}
                   name={p.player_name}
-                  position={p.position}
+                  posLabel={getPosLabel(p.position)}
                   imageUrl={p.image_url}
                   cutoutUrl={p.cutout_url}
                 />

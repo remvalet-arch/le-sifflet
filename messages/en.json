@@ -11,7 +11,8 @@
     "pronos": "Predictions",
     "ligues": "Leagues",
     "profil": "Profile",
-    "regles": "Rules"
+    "regles": "Rules",
+    "ariaCallVar": "Call the VAR"
   },
   "TopBar": {
     "connected": "Connected",
@@ -29,7 +30,10 @@
     "sectionMatch": "LIVE",
     "sectionMessages": "MESSAGES",
     "sectionClassement": "LEADERBOARD",
-    "sectionBoutique": "SHOP"
+    "sectionBoutique": "SHOP",
+    "ariaMessages": "Private messages",
+    "ariaOpenMenu": "Open menu",
+    "ariaCloseMenu": "Close menu"
   },
   "Match": {
     "live": "Live",
@@ -44,7 +48,14 @@
     "joinKop": "Join the kop →",
     "seeSummary": "See summary →",
     "seeFiche": "Match details →",
-    "lineups": "Lineups ✓"
+    "lineups": "Lineups ✓",
+    "lineupGlobalSquad": "Full squad — no match lineup available",
+    "lineupNoPlayers": "No players listed",
+    "lineupSubstitutes": "Substitutes",
+    "posGK": "Goalkeeper",
+    "posDEF": "Defender",
+    "posMID": "Midfielder",
+    "posFWD": "Forward"
   },
   "Lobby": {
     "title": "The Matches",
@@ -247,7 +258,16 @@
     "dailyDigestLabel": "Morning recap (9 AM)",
     "dailyDigestDesc": "Yesterday's winnings and your updated leaderboard spot.",
     "squadChatLabel": "Active league chat",
-    "squadChatDesc": "When your league chat lights up. Max 1 push / league / 30 min."
+    "squadChatDesc": "When your league chat lights up. Max 1 push / league / 30 min.",
+    "pushEnabled": "Push notifications enabled!",
+    "errorPermission": "Notifications blocked — allow them in Settings > Safari > Notifications.",
+    "errorPushNotSupported": "Web Push not supported. On iPhone, the app must be installed on the home screen.",
+    "errorNoVapidKey": "Server config missing (VAPID). Contact the admin.",
+    "errorSwNotReady": "Service Worker not ready. Close the app, reopen it and try again.",
+    "errorSubscribeFailed": "On iPhone, open the app from the home screen (not directly via Safari).",
+    "saveFailed": "Unable to save.",
+    "toggleOn": "Notification enabled!",
+    "toggleOff": "Notification disabled."
   },
   "Rules": {
     "title": "Game rules",
@@ -351,9 +371,15 @@
     "send": "Send",
     "next": "Next",
     "continue": "Continue",
-    "points": "Points"
+    "points": "Points",
+    "errorTitle": "Red Card",
+    "errorHeading": "Something went wrong",
+    "errorDesc": "The ref lost the plot. Try again or head back to the lobby.",
+    "retry": "Try again"
   },
   "Ligues": {
+    "pageTitle": "Leagues",
+    "pageSubtitle": "Locker Room — heists, shared pot, standings",
     "privateLabel": "Private league",
     "publicLabel": "Public",
     "cumulatedPoints": "Cumulated points:",
@@ -456,6 +482,17 @@
     "today": "Today",
     "todayAbbrev": "Today",
     "tomorrow": "Tomorrow",
+    "playerPickerTitle": "Choose a scorer",
+    "playerPickerSearch": "Search a player...",
+    "playerPickerNoResults": "No players found",
+    "playerSelectPlaceholder": "Select a scorer...",
+    "playerSelectSearch": "Search...",
+    "playerSelectNoResults": "No players found",
+    "posGK": "Goalkeepers",
+    "posDEF": "Defenders",
+    "posMID": "Midfielders",
+    "posFWD": "Forwards",
+    "posOther": "Others",
     "progressLabel": "{done}/{total} matches predicted",
     "progressComplete": "Complete ✓",
     "noMatchesWeekTitle": "No matches this week",
@@ -518,7 +555,56 @@
     "noMessages": "No messages",
     "noMessagesDesc": "Start by adding friends and send them a DM from their profile.",
     "unknownPlayer": "Unknown player",
-    "newConversation": "New conversation"
+    "newConversation": "New conversation",
+    "notFriends": "You need to be friends with this player to send messages.",
+    "friendStatus": "Friend"
+  },
+  "Verdict": {
+    "suspense": "Verdict incoming…",
+    "won": "You were right!",
+    "lost": "Unlucky…",
+    "nextTime": "Better luck next time!",
+    "topPredictors": "Top Predictors",
+    "shareVictory": "Share my win",
+    "tapToClose": "Tap to close"
+  },
+  "DailyRecap": {
+    "title": "Yesterday's recap",
+    "heading": "Time for the debrief!",
+    "pointsLabel": "Points earned yesterday",
+    "statPronos": "Correct predictions",
+    "statExact": "Exact scores",
+    "statVar": "VAR calls won",
+    "statWon": "Total predictions",
+    "viewRanking": "See my leaderboard →",
+    "close": "Close"
+  },
+  "Settings": {
+    "title": "Settings",
+    "subtitle": "Your account setup.",
+    "quickBetTitle": "Quick VAR bet",
+    "quickBetDesc": "When you get a VAR notif and tap YES or NO straight from the notification, this amount is automatically committed — without opening the app.",
+    "quickBetAriaLabel": "Quick bet amount",
+    "saving": "Saving…",
+    "save": "Save",
+    "streakFreezeTitle": "Streak Freeze",
+    "streakFreezeDesc": "If you forget to log in for a day, a Streak Freeze kicks in automatically to protect your streak. Max 3 in stock.",
+    "streakFreezeBalance": "Balance: {balance} 🪙",
+    "streakFreezeStock": "In stock: 🛡️ ×{count}",
+    "streakFreezeBuy": "Buy a Streak Freeze — 500 🪙",
+    "streakFreezeBuying": "Buying…",
+    "streakFreezeFullStock": "Full stock (3/3)",
+    "streakFreezeInsufficientBalance": "Not enough Sifflets (500 🪙 needed)",
+    "streakFreezeBought": "🛡️ Streak Freeze bought! You now have {count}.",
+    "saveBetSuccess": "Quick bet set to {amount} 🪙!",
+    "saveBetError": "Unable to save settings.",
+    "connectionLost": "Connection lost"
+  },
+  "PWA": {
+    "installTitle": "Install VAR Time 📺",
+    "installDesc": "For the best experience without lag at the stadium, add the app to your home screen!",
+    "installButton": "Install the app",
+    "installIosInstructions": "On iOS: tap Share then Add to Home Screen"
   },
   "Landing": {
     "metaTitle": "VAR Time — VAR, but make it a game",

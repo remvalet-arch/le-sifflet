@@ -4,6 +4,7 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Search, X } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import type { PlayerForSelect } from "./ScorerAllocationEditor";
 import {
   SCORER_DEFAULT_ODDS,
@@ -26,14 +27,6 @@ function useIsClient() {
     () => true,
     () => false,
   );
-}
-
-function getPosLabel(pos: string | null | undefined) {
-  if (pos === "G") return "Gardien";
-  if (pos === "D") return "Défenseur";
-  if (pos === "M") return "Milieu";
-  if (pos === "A") return "Attaquant";
-  return "";
 }
 
 function PlayerAvatar({ player }: { player: PlayerForSelect }) {
@@ -77,8 +70,18 @@ export function PlayerPickerSheet({
   playersList: PlayerForSelect[];
   title?: string;
 }) {
+  const t = useTranslations("Pronos");
+  const tMatch = useTranslations("Match");
   const isClient = useIsClient();
   const [search, setSearch] = useState("");
+
+  function getPosLabel(pos: string | null | undefined): string {
+    if (pos === "G") return tMatch("posGK");
+    if (pos === "D") return tMatch("posDEF");
+    if (pos === "M") return tMatch("posMID");
+    if (pos === "A") return tMatch("posFWD");
+    return "";
+  }
 
   // Lock body scroll while sheet is open (pure DOM side-effect — no setState)
   useEffect(() => {
@@ -104,10 +107,10 @@ export function PlayerPickerSheet({
 
   const sections = [
     { label: null, players: csc },
-    { label: "Attaquants", players: att },
-    { label: "Milieux", players: mil },
-    { label: "Défenseurs", players: def },
-    { label: "Gardiens", players: gk },
+    { label: t("posFWD"), players: att },
+    { label: t("posMID"), players: mil },
+    { label: t("posDEF"), players: def },
+    { label: t("posGK"), players: gk },
   ].filter((s) => s.players.length > 0);
 
   function handleClose() {
@@ -140,7 +143,7 @@ export function PlayerPickerSheet({
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between px-4 py-2">
           <span className="text-sm font-black text-chalk">
-            {title ?? "Choisir un buteur"}
+            {title ?? t("playerPickerTitle")}
           </span>
           <button
             type="button"
@@ -156,8 +159,8 @@ export function PlayerPickerSheet({
           <Search className="h-4 w-4 shrink-0 text-zinc-500" />
           <input
             type="text"
-            aria-label="Rechercher un joueur"
-            placeholder="Rechercher un joueur..."
+            aria-label={t("playerPickerSearch")}
+            placeholder={t("playerPickerSearch")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-transparent text-sm text-white placeholder-zinc-500 outline-none"
@@ -168,7 +171,7 @@ export function PlayerPickerSheet({
         <div className="flex-1 overflow-y-auto overscroll-contain pb-8">
           {filtered.length === 0 ? (
             <p className="pt-10 text-center text-sm text-zinc-500">
-              Aucun joueur trouvé
+              {t("playerPickerNoResults")}
             </p>
           ) : (
             sections.map((section, si) => (

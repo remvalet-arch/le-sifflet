@@ -19,7 +19,8 @@
     "pronos": "Pronósticos",
     "ligues": "Ligas",
     "profil": "Perfil",
-    "regles": "Reglas"
+    "regles": "Reglas",
+    "ariaCallVar": "Llamar al VAR"
   },
   "TopBar": {
     "connected": "Conectado",
@@ -37,7 +38,10 @@
     "sectionMatch": "EN VIVO",
     "sectionMessages": "MESSAGES",
     "sectionClassement": "CLASIFICACIÓN",
-    "sectionBoutique": "TIENDA"
+    "sectionBoutique": "TIENDA",
+    "ariaMessages": "Mensajes privados",
+    "ariaOpenMenu": "Abrir menú",
+    "ariaCloseMenu": "Cerrar menú"
   },
   "Match": {
     "live": "En Directo",
@@ -52,7 +56,14 @@
     "joinKop": "Unirse al fondo →",
     "seeSummary": "Ver el resumen →",
     "seeFiche": "Ver la ficha →",
-    "lineups": "Alineaciones ✓"
+    "lineups": "Alineaciones ✓",
+    "lineupGlobalSquad": "Plantilla completa — alineación de partido no disponible",
+    "lineupNoPlayers": "Ningún jugador registrado",
+    "lineupSubstitutes": "Suplentes",
+    "posGK": "Portero",
+    "posDEF": "Defensa",
+    "posMID": "Centrocampista",
+    "posFWD": "Delantero"
   },
   "Lobby": {
     "title": "Los Partidos",
@@ -255,7 +266,16 @@
     "dailyDigestLabel": "Resumen matinal (09:00)",
     "dailyDigestDesc": "Tus ganancias de ayer y tu posición actualizada.",
     "squadChatLabel": "Chat de liga activo",
-    "squadChatDesc": "Cuando se mueve tu chat de liga. Máx. 1 push / liga / 30 min."
+    "squadChatDesc": "Cuando se mueve tu chat de liga. Máx. 1 push / liga / 30 min.",
+    "pushEnabled": "¡Notificaciones push activadas!",
+    "errorPermission": "Notificaciones bloqueadas — actívalas en Ajustes > Safari > Notificaciones.",
+    "errorPushNotSupported": "Web Push no compatible. En iPhone, la app debe estar instalada en la pantalla de inicio.",
+    "errorNoVapidKey": "Configuración del servidor incompleta (VAPID). Contacta al admin.",
+    "errorSwNotReady": "Service Worker no listo. Cierra la app, ábrela de nuevo e inténtalo.",
+    "errorSubscribeFailed": "En iPhone, abre la app desde la pantalla de inicio (no directamente desde Safari).",
+    "saveFailed": "No se pudo guardar.",
+    "toggleOn": "¡Notificación activada!",
+    "toggleOff": "Notificación desactivada."
   },
   "Rules": {
     "title": "Reglas del juego",
@@ -359,9 +379,15 @@
     "send": "Enviar",
     "next": "Siguiente",
     "continue": "Continuar",
-    "points": "Puntos"
+    "points": "Puntos",
+    "errorTitle": "Tarjeta Roja",
+    "errorHeading": "Algo salió mal",
+    "errorDesc": "El árbitro se perdió. Inténtalo de nuevo o vuelve al lobby.",
+    "retry": "Reintentar"
   },
   "Ligues": {
+    "pageTitle": "Ligas",
+    "pageSubtitle": "Vestuario — atraco, bote común, clasificación",
     "privateLabel": "Liga privada",
     "publicLabel": "Pública",
     "cumulatedPoints": "Puntos acumulados:",
@@ -464,6 +490,17 @@
     "today": "Hoy",
     "todayAbbrev": "Hoy",
     "tomorrow": "Mañana",
+    "playerPickerTitle": "Elegir un goleador",
+    "playerPickerSearch": "Buscar un jugador...",
+    "playerPickerNoResults": "Ningún jugador encontrado",
+    "playerSelectPlaceholder": "Seleccionar un goleador...",
+    "playerSelectSearch": "Buscar...",
+    "playerSelectNoResults": "Ningún jugador encontrado",
+    "posGK": "Porteros",
+    "posDEF": "Defensas",
+    "posMID": "Centrocampistas",
+    "posFWD": "Delanteros",
+    "posOther": "Otros",
     "progressLabel": "{done}/{total} partidos pronosticados",
     "progressComplete": "Completo ✓",
     "noMatchesWeekTitle": "Ningún partido esta semana",
@@ -526,7 +563,56 @@
     "noMessages": "Sin mensajes",
     "noMessagesDesc": "Empieza añadiendo amigos y envíales un MP desde su perfil.",
     "unknownPlayer": "Jugador desconocido",
-    "newConversation": "Nueva conversación"
+    "newConversation": "Nueva conversación",
+    "notFriends": "Tienes que ser amigo de este jugador para enviarle mensajes.",
+    "friendStatus": "Amigo"
+  },
+  "Verdict": {
+    "suspense": "El veredicto llega…",
+    "won": "¡Tenías razón!",
+    "lost": "Qué mala suerte…",
+    "nextTime": "¡La próxima!",
+    "topPredictors": "Top Predictores",
+    "shareVictory": "Compartir mi victoria",
+    "tapToClose": "Toca para cerrar"
+  },
+  "DailyRecap": {
+    "title": "Balance de ayer",
+    "heading": "¡Hora del resumen!",
+    "pointsLabel": "Puntos ganados ayer",
+    "statPronos": "Pronos correctos",
+    "statExact": "Marcadores exactos",
+    "statVar": "Apuestas VAR ganadas",
+    "statWon": "Total pronos",
+    "viewRanking": "Ver mi clasificación →",
+    "close": "Cerrar"
+  },
+  "Settings": {
+    "title": "Ajustes",
+    "subtitle": "Configuración de tu cuenta.",
+    "quickBetTitle": "Apuesta rápida VAR",
+    "quickBetDesc": "Cuando recibes una notif VAR y tocas SÍ o NO directamente desde la notificación, esta cantidad se apuesta automáticamente — sin abrir la app.",
+    "quickBetAriaLabel": "Cantidad de apuesta rápida",
+    "saving": "Guardando…",
+    "save": "Guardar",
+    "streakFreezeTitle": "Streak Freeze",
+    "streakFreezeDesc": "Si olvidas conectarte un día, un Streak Freeze se activa automáticamente para proteger tu racha. Máx. 3 en stock.",
+    "streakFreezeBalance": "Saldo: {balance} 🪙",
+    "streakFreezeStock": "En stock: 🛡️ ×{count}",
+    "streakFreezeBuy": "Comprar un Streak Freeze — 500 🪙",
+    "streakFreezeBuying": "Comprando…",
+    "streakFreezeFullStock": "Stock completo (3/3)",
+    "streakFreezeInsufficientBalance": "Saldo insuficiente (se necesitan 500 🪙)",
+    "streakFreezeBought": "🛡️ ¡Streak Freeze comprado! Ahora tienes {count}.",
+    "saveBetSuccess": "¡Apuesta rápida fijada en {amount} 🪙!",
+    "saveBetError": "No se pudo guardar la configuración.",
+    "connectionLost": "Conexión perdida"
+  },
+  "PWA": {
+    "installTitle": "Instala VAR Time 📺",
+    "installDesc": "Para una mejor experiencia sin latencia en el estadio, ¡añade la app a tu pantalla de inicio!",
+    "installButton": "Instalar la aplicación",
+    "installIosInstructions": "En iOS: pulsa Compartir y luego En la pantalla de inicio"
   },
   "Landing": {
     "metaTitle": "VAR Time — El VAR, pero en juego",

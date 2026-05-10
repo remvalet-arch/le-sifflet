@@ -135,20 +135,16 @@ export default function NotificationsClient({
     setSubscribing(false);
     if (result.ok) {
       setSubStatus("subscribed");
-      toast.success("Notifications push activées !");
+      toast.success(t("pushEnabled"));
     } else {
       const msg: Record<string, string> = {
-        permission_denied:
-          "Notifications bloquées — autorise-les dans Réglages > Safari > Notifications.",
-        push_not_supported:
-          "Web Push non supporté. Sur iPhone, l'app doit être installée sur l'écran d'accueil.",
-        no_vapid_key:
-          "Configuration serveur manquante (VAPID). Contacte l'admin.",
-        sw_not_ready:
-          "Service Worker non prêt. Ferme l'app, réouvre-la et réessaie.",
+        permission_denied: t("errorPermission"),
+        push_not_supported: t("errorPushNotSupported"),
+        no_vapid_key: t("errorNoVapidKey"),
+        sw_not_ready: t("errorSwNotReady"),
       };
       const reason = result.reason.startsWith("subscribe_failed")
-        ? "Sur iPhone, ouvre l'app depuis l'écran d'accueil (pas via Safari directement)."
+        ? t("errorSubscribeFailed")
         : (msg[result.reason] ?? `Erreur : ${result.reason}`);
       toast.error(reason, { duration: 6000 });
     }
@@ -165,12 +161,10 @@ export default function NotificationsClient({
         .update(update)
         .eq("id", userId);
       if (error) {
-        toast.error("Impossible de sauvegarder.");
+        toast.error(t("saveFailed"));
       } else {
         setValues((prev) => ({ ...prev, [key]: value }));
-        toast.success(
-          value ? "Notification activée !" : "Notification désactivée.",
-        );
+        toast.success(value ? t("toggleOn") : t("toggleOff"));
       }
     });
   }

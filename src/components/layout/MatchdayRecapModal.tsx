@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { UserDailyRecapRow } from "@/types/database";
 
 type Props = {
@@ -55,6 +56,7 @@ const StatCard = ({
 };
 
 export function MatchdayRecapModal({ recap, onDismiss }: Props) {
+  const t = useTranslations("DailyRecap");
   const pts = useCountUp(recap.points_earned);
 
   async function handleClose() {
@@ -73,10 +75,10 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
         {/* Title */}
         <div className="text-center">
           <p className="text-[10px] font-black uppercase tracking-widest text-green-500/70">
-            📊 Bilan d&apos;hier
+            📊 {t("title")}
           </p>
           <h1 className="mt-1 text-2xl font-black uppercase tracking-tight text-white">
-            C&apos;est l&apos;heure du bilan !
+            {t("heading")}
           </h1>
         </div>
 
@@ -86,32 +88,32 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
             +{pts}
           </span>
           <span className="mt-1 text-sm font-black uppercase tracking-widest text-green-500/60">
-            Points gagnés hier
+            {t("pointsLabel")}
           </span>
         </div>
 
         {/* 4 stat cards */}
         <div className="grid w-full grid-cols-2 gap-3">
           <StatCard
-            label="Pronos corrects"
+            label={t("statPronos")}
             value={recap.pronos_correct}
             emoji="🎯"
             color="border-amber-500/20 bg-amber-500/8 text-amber-400"
           />
           <StatCard
-            label="Scores exacts"
+            label={t("statExact")}
             value={recap.pronos_exact}
             emoji="🔮"
             color="border-purple-500/20 bg-purple-500/8 text-purple-400"
           />
           <StatCard
-            label="Paris VAR gagnés"
+            label={t("statVar")}
             value={recap.var_bets_won}
             emoji="⚡"
             color="border-blue-500/20 bg-blue-500/8 text-blue-400"
           />
           <StatCard
-            label="Total pronos"
+            label={t("statWon")}
             value={recap.pronos_total}
             emoji="📋"
             color="border-white/10 bg-white/5 text-zinc-300"
@@ -124,14 +126,14 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
           onClick={() => void handleClose()}
           className="w-full rounded-2xl bg-green-500 py-4 text-sm font-black uppercase tracking-widest text-zinc-950 transition active:scale-[0.98] hover:bg-green-400"
         >
-          Voir mon classement →
+          {t("viewRanking")}
         </button>
         <button
           type="button"
           onClick={() => void handleClose()}
           className="text-xs text-zinc-600 hover:text-zinc-400"
         >
-          Fermer
+          {t("close")}
         </button>
       </div>
     </div>

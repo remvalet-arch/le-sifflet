@@ -122,7 +122,7 @@ export function TopBar({
             {/* Messages privés */}
             <Link
               href="/messages"
-              aria-label="Messages privés"
+              aria-label={t("ariaMessages")}
               className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
             >
               <MessageCircle className="h-5 w-5" />
@@ -134,7 +134,7 @@ export function TopBar({
             {/* Burger */}
             <button
               onClick={() => setOpen(true)}
-              aria-label="Ouvrir le menu"
+              aria-label={t("ariaOpenMenu")}
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
             >
               <Menu className="h-5 w-5" />
@@ -178,7 +178,7 @@ export function TopBar({
           </div>
           <button
             onClick={() => setOpen(false)}
-            aria-label="Fermer le menu"
+            aria-label={t("ariaCloseMenu")}
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:text-white active:scale-90"
           >
             <X className="h-4 w-4" />

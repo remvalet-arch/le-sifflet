@@ -139,7 +139,7 @@ export function BottomNav({ userId }: { userId?: string }) {
               type="button"
               disabled={!fabActive}
               onClick={() => fabActive && openDrawer()}
-              aria-label="Appeler la VAR"
+              aria-label={t("ariaCallVar")}
               className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
                 fabActive
                   ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400"

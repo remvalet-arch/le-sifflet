@@ -1,15 +1,10 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import type { PlayerForSelect } from "./ScorerAllocationEditor";
-
-function getPosLabel(pos: string | null | undefined) {
-  if (pos === "G") return "Gardien";
-  if (pos === "D") return "Défenseur";
-  if (pos === "M") return "Milieu";
-  if (pos === "A") return "Attaquant";
-  return "";
-}
 
 export function CustomPlayerSelect({
   value,
@@ -22,9 +17,19 @@ export function CustomPlayerSelect({
   playersList: PlayerForSelect[];
   disabled?: boolean;
 }) {
+  const t = useTranslations("Pronos");
+  const tMatch = useTranslations("Match");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+
+  function getPosLabel(pos: string | null | undefined): string {
+    if (pos === "G") return tMatch("posGK");
+    if (pos === "D") return tMatch("posDEF");
+    if (pos === "M") return tMatch("posMID");
+    if (pos === "A") return tMatch("posFWD");
+    return "";
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -79,7 +84,9 @@ export function CustomPlayerSelect({
               </div>
             </>
           ) : (
-            <span className="text-zinc-500">Sélectionner un buteur...</span>
+            <span className="text-zinc-500">
+              {t("playerSelectPlaceholder")}
+            </span>
           )}
         </div>
         <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" />
@@ -92,7 +99,7 @@ export function CustomPlayerSelect({
             <input
               type="text"
               autoFocus
-              placeholder="Rechercher..."
+              placeholder={t("playerSelectSearch")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-transparent text-sm text-white placeholder-zinc-500 outline-none"
@@ -101,13 +108,14 @@ export function CustomPlayerSelect({
           <div className="flex-1 overflow-y-auto p-1">
             {filtered.length === 0 && (
               <p className="p-3 text-center text-xs text-zinc-500">
-                Aucun joueur trouvé
+                {t("playerSelectNoResults")}
               </p>
             )}
 
             {csc.length > 0 && (
               <PlayerGroup
                 players={csc}
+                getPosLabel={getPosLabel}
                 onSelect={(v) => {
                   onChange(v);
                   setOpen(false);
@@ -116,8 +124,9 @@ export function CustomPlayerSelect({
             )}
             {att.length > 0 && (
               <PlayerGroup
-                label="Attaquants"
+                label={t("posFWD")}
                 players={att}
+                getPosLabel={getPosLabel}
                 onSelect={(v) => {
                   onChange(v);
                   setOpen(false);
@@ -126,8 +135,9 @@ export function CustomPlayerSelect({
             )}
             {mil.length > 0 && (
               <PlayerGroup
-                label="Milieux"
+                label={t("posMID")}
                 players={mil}
+                getPosLabel={getPosLabel}
                 onSelect={(v) => {
                   onChange(v);
                   setOpen(false);
@@ -136,8 +146,9 @@ export function CustomPlayerSelect({
             )}
             {def.length > 0 && (
               <PlayerGroup
-                label="Défenseurs"
+                label={t("posDEF")}
                 players={def}
+                getPosLabel={getPosLabel}
                 onSelect={(v) => {
                   onChange(v);
                   setOpen(false);
@@ -146,8 +157,9 @@ export function CustomPlayerSelect({
             )}
             {gk.length > 0 && (
               <PlayerGroup
-                label="Gardiens"
+                label={t("posGK")}
                 players={gk}
+                getPosLabel={getPosLabel}
                 onSelect={(v) => {
                   onChange(v);
                   setOpen(false);
@@ -156,8 +168,9 @@ export function CustomPlayerSelect({
             )}
             {others.length > 0 && (
               <PlayerGroup
-                label="Autres"
+                label={t("posOther")}
                 players={others}
+                getPosLabel={getPosLabel}
                 onSelect={(v) => {
                   onChange(v);
                   setOpen(false);
@@ -174,10 +187,12 @@ export function CustomPlayerSelect({
 function PlayerGroup({
   label,
   players,
+  getPosLabel,
   onSelect,
 }: {
   label?: string;
   players: PlayerForSelect[];
+  getPosLabel: (pos: string | null | undefined) => string;
   onSelect: (v: string) => void;
 }) {
   return (
