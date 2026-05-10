@@ -202,6 +202,7 @@ export async function POST(request: NextRequest) {
         extra_data: { marketEventId, matchId: match_id, type: "var_alert" },
       },
       distinctUsers,
+      { urgency: "high", ttl: 60 },
     ).catch((e: unknown) => log.error("alert", "push failed", e));
 
     // Fire-and-forget : push VAR aux joueurs en présence active (app fermée / écran verrouillé)
@@ -241,15 +242,19 @@ export async function POST(request: NextRequest) {
       const awayTeam = matchData?.team_away ?? "";
       const teamLabel = awayTeam ? `${homeTeam}–${awayTeam}` : homeTeam;
 
-      await sendPushToUsers(presenceUserIds, {
-        title: "⚡ VAR en cours !",
-        body: `${ACTION_LABELS[validType]} sur ${teamLabel} — parie maintenant !`,
-        url: `/match/${match_id}`,
-        tag: `var-${marketEventId}`,
-        requireInteraction: true,
-        vibrate: [200, 100, 200, 100, 400],
-        extra_data: { marketEventId, matchId: match_id, type: "var_open" },
-      });
+      await sendPushToUsers(
+        presenceUserIds,
+        {
+          title: "⚡ VAR en cours !",
+          body: `${ACTION_LABELS[validType]} sur ${teamLabel} — parie maintenant !`,
+          url: `/match/${match_id}`,
+          tag: `var-${marketEventId}`,
+          requireInteraction: true,
+          vibrate: [200, 100, 200, 100, 400],
+          extra_data: { marketEventId, matchId: match_id, type: "var_open" },
+        },
+        { urgency: "high", ttl: 60 },
+      );
 
       log.info(
         "alert",
