@@ -2,7 +2,8 @@ import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 import { log } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/db-rate-limiter";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
@@ -21,12 +22,12 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès réservé aux modérateurs", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   const { limited, retryAfter } = await checkRateLimit(
@@ -331,6 +332,18 @@ export async function POST(request: NextRequest) {
       getApiFootballSeasonYear(),
     );
   })();
+
+  void logAdminAction({
+    actorUserId: user.id,
+    actorRole: profile.role as "user" | "moderator" | "founder",
+    actionType: "force_finish_match",
+    targetResourceType: "match",
+    targetResourceId: match_id,
+    metadata: { score: `${match.home_score}-${match.away_score}` },
+    ipAddress:
+      request.headers.get("x-forwarded-for")?.split(",")[0] ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  });
 
   return successResponse({
     finished: true,

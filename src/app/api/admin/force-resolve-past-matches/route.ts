@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,11 @@ export async function POST() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès réservé aux modérateurs", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   const admin = createAdminClient();
@@ -87,6 +88,16 @@ export async function POST() {
       .in("status", ["open", "locked"]);
     summary.openVarEventsOnFinishedMatches = count ?? 0;
   }
+
+  void logAdminAction({
+    actorUserId: user.id,
+    actorRole: profile.role as "user" | "moderator" | "founder",
+    actionType: "force_resolve_past_matches",
+    metadata: {
+      pronoMatchesFound: summary.pronoMatchesFound,
+      pronoMatchesResolved: summary.pronoMatchesResolved,
+    },
+  });
 
   return successResponse(summary);
 }

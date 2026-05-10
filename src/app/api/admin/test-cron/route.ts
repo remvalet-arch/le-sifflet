@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,7 @@ type CronId = (typeof ALLOWED_CRONS)[number];
 
 /**
  * POST /api/admin/test-cron
- * Déclenche un cron manuellement en tant qu'admin (trust_score >= MODERATOR_THRESHOLD).
+ * Déclenche un cron manuellement en tant qu'admin (rôle moderator ou founder).
  * Body : { cron: CronId }
  */
 export async function POST(request: Request) {
@@ -32,12 +32,12 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès refusé", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   let body: { cron?: string };

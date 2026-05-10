@@ -71,6 +71,7 @@ export interface Database {
           equipped_avatar_id: string | null;
           equipped_border_id: string | null;
           equipped_effect_id: string | null;
+          role: "user" | "moderator" | "founder";
         };
         Insert: {
           id: string;
@@ -106,6 +107,7 @@ export interface Database {
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
+          role?: "user" | "moderator" | "founder";
         };
         Update: {
           id?: string;
@@ -141,6 +143,7 @@ export interface Database {
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
+          role?: "user" | "moderator" | "founder";
         };
         Relationships: [];
       };
@@ -218,6 +221,45 @@ export interface Database {
           id?: string;
           user_id?: string;
           route?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      audit_log: {
+        Row: {
+          id: string;
+          actor_user_id: string;
+          actor_role: "user" | "moderator" | "founder";
+          action_type: string;
+          target_resource_type: string | null;
+          target_resource_id: string | null;
+          metadata: Record<string, unknown>;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_user_id: string;
+          actor_role: "user" | "moderator" | "founder";
+          action_type: string;
+          target_resource_type?: string | null;
+          target_resource_id?: string | null;
+          metadata?: Record<string, unknown>;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          actor_user_id?: string;
+          actor_role?: "user" | "moderator" | "founder";
+          action_type?: string;
+          target_resource_type?: string | null;
+          target_resource_id?: string | null;
+          metadata?: Record<string, unknown>;
+          ip_address?: string | null;
+          user_agent?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -1516,6 +1558,14 @@ export interface Database {
       };
     };
     Functions: {
+      current_user_role: {
+        Args: Record<PropertyKey, never>;
+        Returns: "user" | "moderator" | "founder";
+      };
+      is_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       close_expired_market_events: {
         Args: Record<PropertyKey, never>;
         Returns: number;

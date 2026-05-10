@@ -144,12 +144,12 @@ L'effet "vision" (révéler les choix des amis) est une feature UI qui devrait f
 
 ## Synthèse
 
-| Booster | Achat | Application UI | Endpoint | Effet à la résolution | Statut | Action recommandée |
-|---|---|---|---|---|---|---|
-| `double_xp` | ✅ | ✅ `BoosterPicker` | ✅ `/api/bet` | ✅ `resolve_event_parimutuel` ×2 | ✅ FONCTIONNEL | Ajouter l'UI sur pronos si voulu |
-| `cote_plus` | ✅ | ✅ `BoosterPicker` | ✅ `/api/bet` | ✅ `resolve_event_parimutuel` ×1.2 | ✅ FONCTIONNEL | Ajouter l'UI sur pronos si voulu |
-| `safety_net` | ✅ | ✅ `BoosterPicker` | ✅ `/api/bet` | ✅ +50% remboursement sur perte | ✅ FONCTIONNEL | Ajouter l'UI sur pronos si voulu |
-| `vision` | ✅ | ✅ (UI présente) | ❌ Aucun effet | ❌ Absent | ❌ NON IMPLÉMENTÉ | Implémenter ou supprimer du shop |
+| Booster      | Achat | Application UI     | Endpoint       | Effet à la résolution              | Statut            | Action recommandée               |
+| ------------ | ----- | ------------------ | -------------- | ---------------------------------- | ----------------- | -------------------------------- |
+| `double_xp`  | ✅    | ✅ `BoosterPicker` | ✅ `/api/bet`  | ✅ `resolve_event_parimutuel` ×2   | ✅ FONCTIONNEL    | Ajouter l'UI sur pronos si voulu |
+| `cote_plus`  | ✅    | ✅ `BoosterPicker` | ✅ `/api/bet`  | ✅ `resolve_event_parimutuel` ×1.2 | ✅ FONCTIONNEL    | Ajouter l'UI sur pronos si voulu |
+| `safety_net` | ✅    | ✅ `BoosterPicker` | ✅ `/api/bet`  | ✅ +50% remboursement sur perte    | ✅ FONCTIONNEL    | Ajouter l'UI sur pronos si voulu |
+| `vision`     | ✅    | ✅ (UI présente)   | ❌ Aucun effet | ❌ Absent                          | ❌ NON IMPLÉMENTÉ | Implémenter ou supprimer du shop |
 
 ---
 
@@ -165,6 +165,7 @@ Le booster est vendable en boutique mais sans aucun effet. Deux options :
 ### 2. Boosters sur pronos avant-match : décision de scope
 
 `double_xp`, `cote_plus`, `safety_net` fonctionnent uniquement sur les paris VAR live. Si le founder veut les rendre disponibles aussi sur les pronos avant-match, il faut :
+
 - Ajouter un `BoosterPicker` dans `MatchPronoCard`
 - Passer le `booster_id` à `place_match_prono` au lieu de `null`
 - Effort estimé : ~2 sprints (UI + tests résolution pronos).
@@ -172,7 +173,9 @@ Le booster est vendable en boutique mais sans aucun effet. Deux options :
 ### 3. `scorer` type orphelin dans `pronos`
 
 Le type `'scorer'` est encore déclaré dans les types TypeScript (`database.ts` ligne 1238) mais l'action recommandée (supprimer du CHECK DB) attend confirmation founder via :
+
 ```sql
 SELECT COUNT(*) FROM pronos WHERE prono_type = 'scorer';
 ```
+
 Si 0 rows → décommenter section 4 de migration `0105`.
