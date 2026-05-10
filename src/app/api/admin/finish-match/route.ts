@@ -78,13 +78,7 @@ export async function POST(request: NextRequest) {
     details: "Fin du match",
   });
 
-  // ── 3. Résolution des paris long terme ────────────────────────────────────
-  const { error: rpcErr } = await admin.rpc("resolve_long_term_bets", {
-    p_match_id: match_id,
-  });
-
-  if (rpcErr) return errorResponse(`Résolution échouée : ${rpcErr.message}`);
-
+  // ── 3. Résolution des pronos avant-match ──────────────────────────────────
   const { error: pronoErr } = await admin.rpc("resolve_match_pronos", {
     p_match_id: match_id,
   });

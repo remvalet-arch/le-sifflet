@@ -8,12 +8,10 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/admin/force-resolve-past-matches
  *
- * Rattrapage de tous les matchs `finished` ayant encore des pronos ou
- * long_term_bets en statut `pending`. Idempotent (les RPCs filtrent
- * elles-mêmes sur `status = 'pending'`). Réservé aux modérateurs.
+ * Rattrapage de tous les matchs `finished` ayant encore des pronos
+ * en statut `pending`. Idempotent. Réservé aux modérateurs.
  *
  * Réponse : { pronoMatchesFound, pronoMatchesResolved,
- *             ltbMatchesFound, ltbMatchesResolved,
  *             openVarEventsOnFinishedMatches, errors }
  */
 export async function POST() {
@@ -37,8 +35,6 @@ export async function POST() {
   const summary = {
     pronoMatchesFound: 0,
     pronoMatchesResolved: 0,
-    ltbMatchesFound: 0,
-    ltbMatchesResolved: 0,
     openVarEventsOnFinishedMatches: 0,
     errors: [] as string[],
   };
@@ -75,37 +71,7 @@ export async function POST() {
     }
   }
 
-  // ── 2. Long-term bets pending sur matchs terminés ─────────────────────────
-  const { data: pendingLTBs } = await admin
-    .from("long_term_bets")
-    .select("match_id")
-    .eq("status", "pending");
-
-  const ltbMatchIds = [...new Set((pendingLTBs ?? []).map((b) => b.match_id))];
-
-  if (ltbMatchIds.length > 0) {
-    const { data: finishedMatches } = await admin
-      .from("matches")
-      .select("id")
-      .eq("status", "finished")
-      .in("id", ltbMatchIds);
-
-    const toResolve = (finishedMatches ?? []).map((m) => m.id);
-    summary.ltbMatchesFound = toResolve.length;
-
-    for (const matchId of toResolve) {
-      const { error } = await admin.rpc("resolve_long_term_bets", {
-        p_match_id: matchId,
-      });
-      if (error) {
-        summary.errors.push(`ltb[${matchId}]: ${error.message}`);
-      } else {
-        summary.ltbMatchesResolved++;
-      }
-    }
-  }
-
-  // ── 3. Market events VAR ouverts sur matchs terminés (info seule) ─────────
+  // ── 2. Market events VAR ouverts sur matchs terminés (info seule) ─────────
   // Ces events nécessitent une décision manuelle (OUI/NON) via l'admin resolve UI.
   const { data: finishedMatchList } = await admin
     .from("matches")
