@@ -67,7 +67,10 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
   return (
     <div
       className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-zinc-950/98 px-5 backdrop-blur-md"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      style={{
+        paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+      }}
     >
       {/* Header glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">

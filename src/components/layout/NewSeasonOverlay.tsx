@@ -61,7 +61,13 @@ export function NewSeasonOverlay() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-sm px-5">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-sm px-5"
+      style={{
+        paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+      }}
+    >
       <div className="w-full max-w-sm rounded-3xl border border-amber-500/25 bg-zinc-900 p-7 text-center shadow-[0_0_60px_rgba(251,191,36,0.2)]">
         <div className="mb-4 text-5xl">🏆</div>
         <h2 className="text-lg font-black uppercase tracking-wide text-white">

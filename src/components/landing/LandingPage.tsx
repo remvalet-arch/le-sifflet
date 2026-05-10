@@ -71,7 +71,10 @@ export async function LandingPage({
       />
       <LandingTracker locale={locale} />
       {oauthError && (
-        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-red-500/30 bg-red-900/80 px-4 py-2.5 text-sm font-bold text-red-300 shadow-xl backdrop-blur-sm">
+        <div
+          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-xl border border-red-500/30 bg-red-900/80 px-4 py-2.5 text-sm font-bold text-red-300 shadow-xl backdrop-blur-sm"
+          style={{ top: "max(1rem, env(safe-area-inset-top))" }}
+        >
           ⚠️ {oauthError}
         </div>
       )}
