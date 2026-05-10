@@ -195,7 +195,12 @@ export function OnboardingTour() {
             </p>
           </div>
 
-          <div className="p-6 pt-0 pb-10 sm:pb-6 flex flex-col gap-3">
+          <div
+            className="p-6 pt-0 sm:pb-6 flex flex-col gap-3"
+            style={{
+              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2.5rem)",
+            }}
+          >
             <button
               onClick={async () => {
                 await trySubscribePush();

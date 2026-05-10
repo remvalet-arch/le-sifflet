@@ -334,7 +334,10 @@ export function LiguesPageClient({ userId }: { userId: string }) {
           onClick={() => setJoinOpen(false)}
         >
           <div
-            className="relative w-full rounded-t-3xl border-t border-white/10 bg-zinc-900 px-5 pb-8 pt-6"
+            className="relative w-full rounded-t-3xl border-t border-white/10 bg-zinc-900 px-5 pt-6"
+            style={{
+              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">

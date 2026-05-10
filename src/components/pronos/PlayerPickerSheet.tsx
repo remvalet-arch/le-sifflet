@@ -168,7 +168,12 @@ export function PlayerPickerSheet({
         </div>
 
         {/* Player list */}
-        <div className="flex-1 overflow-y-auto overscroll-contain pb-8">
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{
+            paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+          }}
+        >
           {filtered.length === 0 ? (
             <p className="pt-10 text-center text-sm text-zinc-500">
               {t("playerPickerNoResults")}

@@ -47,7 +47,10 @@ export function LiveRoomTutorial() {
   const current = STEPS[step]!;
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/80 pb-8 px-4">
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/80 px-4"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)" }}
+    >
       <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl">
         <div className="flex items-start justify-between mb-4">
           <div className="flex gap-1.5">
