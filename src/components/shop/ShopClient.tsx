@@ -406,6 +406,23 @@ export function ShopClient({
                         {t("freeAtRank", { rank: item.unlock_rank })}
                       </p>
                     )}
+                    <p
+                      className={`mt-1.5 text-[11px] font-black tabular-nums ${
+                        owned
+                          ? "text-zinc-600"
+                          : rankUnlocked
+                            ? "text-green-400"
+                            : canAfford
+                              ? "text-amber-400"
+                              : "text-red-400/80"
+                      }`}
+                    >
+                      {owned
+                        ? t("owned")
+                        : rankUnlocked
+                          ? t("claimFree")
+                          : `${price.toLocaleString(bcp47)} 🪙`}
+                    </p>
                   </div>
 
                   {/* Price + action */}

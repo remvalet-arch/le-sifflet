@@ -575,92 +575,114 @@ export function MatchPronoCard({
           </div>
 
           <div className="mx-2 flex shrink-0 flex-col items-center">
-            <div className="mb-1.5 flex items-center gap-2">
-              <ScoreInput
-                value={homeScore}
-                onChange={(val) => {
-                  if (!isLocked) setHomeScore(val);
-                }}
-                onFilled={() => {
-                  if (!isLocked) awayRef.current?.focus();
-                }}
-                disabled={isLocked}
-                aria-label={`Buts ${match.team_home}`}
-              />
-              <ScoreInput
-                value={awayScore}
-                onChange={(val) => {
-                  if (!isLocked) setAwayScore(val);
-                }}
-                inputRef={awayRef}
-                disabled={isLocked}
-                aria-label={`Buts ${match.team_away}`}
-              />
-            </div>
+            {isLocked ? (
+              <div className="flex flex-col items-center gap-2 px-2 py-2 text-center">
+                {match.status === "first_half" ||
+                match.status === "second_half" ||
+                match.status === "half_time" ||
+                match.status === "paused" ||
+                match.status === "extra_time" ||
+                match.status === "penalties" ? (
+                  <>
+                    <span className="block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                    <p className="text-[11px] font-black uppercase tracking-widest text-red-400">
+                      En direct
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">🔒</span>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">
+                      Pronos fermés
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <ScoreInput
+                    value={homeScore}
+                    onChange={setHomeScore}
+                    onFilled={() => awayRef.current?.focus()}
+                    aria-label={`Buts ${match.team_home}`}
+                  />
+                  <ScoreInput
+                    value={awayScore}
+                    onChange={setAwayScore}
+                    inputRef={awayRef}
+                    aria-label={`Buts ${match.team_away}`}
+                  />
+                </div>
 
-            {(() => {
-              const pts1 = match.odds_home
-                ? convertOddToPoints(match.odds_home, 220)
-                : 50;
-              const ptsN = match.odds_draw
-                ? convertOddToPoints(match.odds_draw, 220)
-                : 50;
-              const pts2 = match.odds_away
-                ? convertOddToPoints(match.odds_away, 220)
-                : 50;
+                {(() => {
+                  const pts1 = match.odds_home
+                    ? convertOddToPoints(match.odds_home, 220)
+                    : 50;
+                  const ptsN = match.odds_draw
+                    ? convertOddToPoints(match.odds_draw, 220)
+                    : 50;
+                  const pts2 = match.odds_away
+                    ? convertOddToPoints(match.odds_away, 220)
+                    : 50;
 
-              const is1 = scoresValid && homeInt > awayInt;
-              const isN = scoresValid && homeInt === awayInt;
-              const is2 = scoresValid && homeInt < awayInt;
-              const isFirstProno =
-                (match.community_stats?.total_pronos ?? 0) < 10;
+                  const is1 = scoresValid && homeInt > awayInt;
+                  const isN = scoresValid && homeInt === awayInt;
+                  const is2 = scoresValid && homeInt < awayInt;
+                  const isFirstProno =
+                    (match.community_stats?.total_pronos ?? 0) < 10;
 
-              return (
-                <>
-                  <p className="mb-1 text-[9px] uppercase tracking-widest text-zinc-600">
-                    Gain potentiel
-                  </p>
-                  <div className="flex items-center justify-center gap-1">
-                    {[
-                      { pts: pts1, active: is1 },
-                      { pts: ptsN, active: isN },
-                      { pts: pts2, active: is2 },
-                    ].map(({ pts, active }, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex min-w-[1.8rem] items-center justify-center rounded-[5px] px-1.5 py-0.5 transition-all ${active ? "border border-amber-500/50 bg-zinc-900 shadow-[0_0_6px_rgba(245,158,11,0.1)]" : "border border-white/5 bg-zinc-800/80"}`}
-                      >
-                        <span
-                          className={`text-[10px] font-black tabular-nums ${active ? "text-amber-400" : "text-zinc-500"}`}
-                        >
-                          {pts}
-                        </span>
+                  return (
+                    <>
+                      <p className="mb-1 text-[9px] uppercase tracking-widest text-zinc-600">
+                        Gain potentiel
+                      </p>
+                      <div className="flex items-center justify-center gap-1">
+                        {[
+                          { pts: pts1, active: is1 },
+                          { pts: ptsN, active: isN },
+                          { pts: pts2, active: is2 },
+                        ].map(({ pts, active }, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex min-w-[1.8rem] items-center justify-center rounded-[5px] px-1.5 py-0.5 transition-all ${active ? "border border-amber-500/50 bg-zinc-900 shadow-[0_0_6px_rgba(245,158,11,0.1)]" : "border border-white/5 bg-zinc-800/80"}`}
+                          >
+                            <span
+                              className={`text-[10px] font-black tabular-nums ${active ? "text-amber-400" : "text-zinc-500"}`}
+                            >
+                              {pts}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  {isFirstProno ? (
-                    <span className="mt-1.5 inline-flex items-center gap-0.5 rounded-full border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[8px] font-black text-whistle">
-                      {t("firstToPredict")}
-                    </span>
-                  ) : (
-                    <div className="mt-1 flex items-center justify-center gap-1 opacity-70">
-                      {[
-                        match.community_stats?.community_1_pct ?? 0,
-                        match.community_stats?.community_N_pct ?? 0,
-                        match.community_stats?.community_2_pct ?? 0,
-                      ].map((pct, idx) => (
-                        <div key={idx} className="min-w-[1.8rem] text-center">
-                          <span className="text-[9px] font-medium text-zinc-500">
-                            {pct}%
-                          </span>
+                      {isFirstProno ? (
+                        <span className="mt-1.5 inline-flex items-center gap-0.5 rounded-full border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[8px] font-black text-whistle">
+                          {t("firstToPredict")}
+                        </span>
+                      ) : (
+                        <div className="mt-1 flex items-center justify-center gap-1 opacity-70">
+                          {[
+                            match.community_stats?.community_1_pct ?? 0,
+                            match.community_stats?.community_N_pct ?? 0,
+                            match.community_stats?.community_2_pct ?? 0,
+                          ].map((pct, idx) => (
+                            <div
+                              key={idx}
+                              className="min-w-[1.8rem] text-center"
+                            >
+                              <span className="text-[9px] font-medium text-zinc-500">
+                                {pct}%
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+                      )}
+                    </>
+                  );
+                })()}
+              </>
+            )}
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col items-center overflow-hidden text-center">
@@ -707,8 +729,8 @@ export function MatchPronoCard({
             REJOINDRE LE STADE
           </a>
         ) : isLocked ? (
-          <div className="mt-4 flex w-full items-center justify-center rounded-xl bg-zinc-800/50 py-3 text-sm font-black uppercase tracking-wide text-zinc-500">
-            {t("matchStartedLocked")}
+          <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800/50 py-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
+            🔒 Pronos fermés — départ dans moins d&apos;une heure
           </div>
         ) : scoresValid ? (
           <>

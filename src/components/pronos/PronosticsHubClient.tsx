@@ -216,7 +216,12 @@ export function PronosticsHubClient({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-[11px]">
           <span className="font-bold text-zinc-400">
-            {t("progressLabel", { done: submittedCount, total })}
+            {submittedCount} pronostiqué{submittedCount !== 1 ? "s" : ""}
+            <span className="mx-1.5 text-zinc-600">·</span>
+            <span className="text-zinc-500">
+              {total - submittedCount} restant
+              {total - submittedCount !== 1 ? "s" : ""}
+            </span>
           </span>
           {submittedCount === total && (
             <span className="font-black text-green-400">

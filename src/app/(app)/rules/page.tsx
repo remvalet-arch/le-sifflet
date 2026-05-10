@@ -77,8 +77,38 @@ export default async function RulesPage() {
         </div>
       </div>
 
+      {/* Table of contents */}
+      <nav className="mb-6 rounded-2xl border border-white/8 bg-zinc-900/60 p-4">
+        <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          {t("tocTitle")}
+        </p>
+        <ul className="flex flex-col gap-1.5">
+          {[
+            { href: "#pronos", emoji: "🎯", label: t("sectionPronos") },
+            { href: "#live", emoji: "🚨", label: t("sectionLiveRoom") },
+            { href: "#saisons", emoji: "🗓️", label: t("sectionSeasons") },
+            { href: "#champ", emoji: "⚔️", label: t("sectionChampionship") },
+            { href: "#boosters", emoji: "⚡", label: t("sectionBoosters") },
+            { href: "#mises", emoji: "🎚️", label: t("sectionMinBets") },
+            { href: "#shop", emoji: "🛒", label: t("sectionShop") },
+          ].map(({ href, emoji, label }) => (
+            <li key={href}>
+              <a
+                href={href}
+                className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm font-bold text-zinc-400 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
+              >
+                <span className="text-base" aria-hidden>
+                  {emoji}
+                </span>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       {/* Section Pronos */}
-      <section className="mb-6">
+      <section id="pronos" className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <span>🎯</span> {t("sectionPronos")}
         </h2>
@@ -105,7 +135,7 @@ export default async function RulesPage() {
       </section>
 
       {/* Section LiveRoom */}
-      <section className="mb-6">
+      <section id="live" className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <span>🚨</span> {t("sectionLiveRoom")}
         </h2>
@@ -132,7 +162,7 @@ export default async function RulesPage() {
       </section>
 
       {/* Section Saisons */}
-      <section className="mb-6">
+      <section id="saisons" className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <span>🗓️</span> {t("sectionSeasons")}
         </h2>
@@ -182,7 +212,7 @@ export default async function RulesPage() {
       </section>
 
       {/* Section Championnat 1v1 */}
-      <section>
+      <section id="champ">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <span>⚔️</span> {t("sectionChampionship")}
         </h2>
@@ -208,7 +238,7 @@ export default async function RulesPage() {
         </div>
       </section>
 
-      <section className="mb-6">
+      <section id="boosters" className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-base font-black text-white">
           <span>⚡</span>
           <span>{t("sectionBoosters")}</span>
@@ -261,7 +291,7 @@ export default async function RulesPage() {
         </div>
       </section>
 
-      <section className="mb-6">
+      <section id="mises" className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <span>🎚️</span> {t("sectionMinBets")}
         </h2>
@@ -302,7 +332,7 @@ export default async function RulesPage() {
         </div>
       </section>
 
-      <section className="mb-6">
+      <section id="shop" className="mb-6">
         <h2 className="mb-3 flex items-center gap-2 text-base font-black text-white">
           <span>🛒</span>
           <span>{t("sectionShop")}</span>

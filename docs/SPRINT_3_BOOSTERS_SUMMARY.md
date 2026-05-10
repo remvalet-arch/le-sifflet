@@ -17,11 +17,11 @@
 
 ## Périmètre
 
-| Booster      | Avant Sprint 3         | Après Sprint 3                          |
-| ------------ | ---------------------- | --------------------------------------- |
-| `vision`     | ❌ Aucun effet          | ✅ Live VAR uniquement (reveal friends)  |
-| `double_xp`  | ✅ Live VAR uniquement  | ✅ Live VAR + pronos avant-match         |
-| `cote_plus`  | ✅ Live VAR uniquement  | ✅ Live VAR + pronos avant-match         |
+| Booster      | Avant Sprint 3                     | Après Sprint 3                                   |
+| ------------ | ---------------------------------- | ------------------------------------------------ |
+| `vision`     | ❌ Aucun effet                     | ✅ Live VAR uniquement (reveal friends)          |
+| `double_xp`  | ✅ Live VAR uniquement             | ✅ Live VAR + pronos avant-match                 |
+| `cote_plus`  | ✅ Live VAR uniquement             | ✅ Live VAR + pronos avant-match                 |
 | `safety_net` | ✅ Live VAR + partiellement pronos | ✅ Live VAR + pronos (scorer_allocation couvert) |
 
 ## Stats

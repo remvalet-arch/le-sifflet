@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Copy,
@@ -16,6 +15,7 @@ import {
   MoreVertical,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
@@ -41,7 +41,6 @@ type ApiResponse<T> = { ok: boolean; data?: T; error?: string };
 export function LiguesPageClient({ userId }: { userId: string }) {
   const t = useTranslations("Ligues");
   const bcp47 = useBcp47();
-  const router = useRouter();
   const { squadId: activeId, setActiveSquad } = useActiveSquad();
   const [squads, setSquads] = useState<SquadWithMembers[] | null>(null);
   const [code, setCode] = useState("");
@@ -197,17 +196,14 @@ export function LiguesPageClient({ userId }: { userId: string }) {
         <ul className="flex flex-col gap-3">
           {squads.map((s) => (
             <li key={s.id}>
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => router.push(`/ligues/${s.id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") router.push(`/ligues/${s.id}`);
-                }}
-                className="cursor-pointer rounded-2xl border border-white/10 bg-zinc-900/70 px-5 py-4 transition hover:border-white/20 hover:bg-zinc-900 active:scale-[0.99]"
-              >
+              <div className="relative cursor-pointer rounded-2xl border border-white/10 bg-zinc-900/70 px-5 py-4 transition hover:border-white/20 hover:bg-zinc-900 active:scale-[0.99]">
+                <Link
+                  href={`/ligues/${s.id}`}
+                  className="absolute inset-0 z-0 rounded-2xl"
+                  aria-label={`Voir la ligue ${s.name}`}
+                />
                 {/* Main info row */}
-                <div className="flex items-center gap-3">
+                <div className="relative z-10 flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-amber-500/80">
                       {s.is_private ? t("privateLabel") : t("publicLabel")}
@@ -229,12 +225,8 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                   <ChevronRight className="h-5 w-5 shrink-0 text-zinc-600" />
                 </div>
 
-                {/* Sub-actions row — stopPropagation to avoid card navigation */}
-                <div
-                  className="mt-3 flex items-center gap-2 border-t border-white/5 pt-3"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                >
+                {/* Sub-actions row */}
+                <div className="relative z-10 mt-3 flex items-center gap-2 border-t border-white/5 pt-3">
                   {s.is_private && s.invite_code && (
                     <button
                       type="button"

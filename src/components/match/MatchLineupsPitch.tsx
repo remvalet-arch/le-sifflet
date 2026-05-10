@@ -66,7 +66,7 @@ function TeamLogoSmall({
 function playerLabel(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
   const last = parts[parts.length - 1] ?? fullName;
-  if (last.length <= 11) return last;
+  if (last.length <= 10) return last;
   const first = parts[0];
   if (first && parts.length > 1) return `${first[0]}. ${last}`;
   return last.slice(0, 10) + "…";

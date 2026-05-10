@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronRight, Shield, Zap } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Shield, Zap } from "lucide-react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/app/actions/auth";
 
 const BCP47: Record<string, string> = {
   fr: "fr-FR",
@@ -214,6 +215,23 @@ export default function SettingsClient({
           </div>
           <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
         </Link>
+      </section>
+
+      {/* Section Compte */}
+      <section className="mt-6 mb-8">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          <LogOut className="h-3 w-3" />
+          Compte
+        </h2>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-transparent py-3 text-sm font-black text-red-400 transition hover:bg-red-500/10 active:scale-[0.98]"
+          >
+            <LogOut className="h-4 w-4" />
+            Se déconnecter
+          </button>
+        </form>
       </section>
     </main>
   );

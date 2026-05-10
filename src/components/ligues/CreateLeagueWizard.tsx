@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Target, Shuffle, Users } from "lucide-react";
+import { ArrowLeft, Target, Shuffle, Users, Copy, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/analytics";
@@ -23,10 +23,37 @@ export function CreateLeagueWizard({
   const [logo, setLogo] = useState("🏆");
   const [mode, setMode] = useState<Mode>("classic");
   const [submitting, setSubmitting] = useState(false);
+  const [createdSquad, setCreatedSquad] = useState<{
+    id: string;
+    name: string;
+    invite_code: string;
+  } | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
 
   const supabase = createClient();
 
-  const LOGOS = ["🏆", "⚽", "🔥", "👑", "🍺", "🍕", "🤡", "💰"];
+  const LOGOS = [
+    "🏆",
+    "⚽",
+    "🔥",
+    "👑",
+    "🍺",
+    "🍕",
+    "🤡",
+    "💰",
+    "⚡",
+    "🦁",
+    "🐉",
+    "💀",
+    "🎯",
+    "🌟",
+    "🦅",
+    "🐺",
+    "🎭",
+    "🧨",
+    "🦊",
+    "🧠",
+  ];
 
   async function handleCreate() {
     if (!name.trim() || submitting) return;
@@ -71,7 +98,8 @@ export function CreateLeagueWizard({
         game_mode: mode,
         is_private: true,
       });
-      onCreated(squad.id, squad.name);
+      setCreatedSquad({ id: squad.id, name: squad.name, invite_code });
+      setStep(4);
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message || t("wizardCreateError"));
@@ -89,7 +117,7 @@ export function CreateLeagueWizard({
         <div className="h-1.5 w-full bg-zinc-800">
           <div
             className="h-full bg-amber-500 transition-all duration-300"
-            style={{ width: `${(step / 3) * 100}%` }}
+            style={{ width: step >= 4 ? "100%" : `${(step / 3) * 100}%` }}
           />
         </div>
 
@@ -98,14 +126,18 @@ export function CreateLeagueWizard({
           className="flex items-center p-4"
           style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)" }}
         >
-          <button
-            onClick={step === 1 ? onClose : () => setStep(step - 1)}
-            className="p-2 text-zinc-400 hover:text-white transition"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
+          {step < 4 ? (
+            <button
+              onClick={step === 1 ? onClose : () => setStep(step - 1)}
+              className="p-2 text-zinc-400 hover:text-white transition"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+          ) : (
+            <div className="w-10" />
+          )}
           <span className="flex-1 text-center font-black uppercase tracking-widest text-zinc-500 text-[10px] mr-10">
-            {t("wizardStep", { step })}
+            {step < 4 ? t("wizardStep", { step }) : "🎉"}
           </span>
         </div>
 
@@ -154,7 +186,7 @@ export function CreateLeagueWizard({
                   {logo}
                 </div>
 
-                <div className="grid grid-cols-4 gap-3 w-full">
+                <div className="grid grid-cols-5 gap-2 w-full">
                   {LOGOS.map((l) => (
                     <button
                       key={l}
@@ -172,6 +204,59 @@ export function CreateLeagueWizard({
                 className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black transition active:scale-95 mt-auto"
               >
                 {tCommon("continue")}
+              </button>
+            </div>
+          )}
+
+          {step === 4 && createdSquad && (
+            <div className="flex flex-col flex-1 items-center space-y-6 animate-in fade-in">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="text-6xl">🎉</div>
+                <h2 className="text-2xl font-black text-white">
+                  {t("wizardCelebTitle")}
+                </h2>
+                <p className="text-sm text-zinc-400">
+                  {t("wizardCelebSubtitle", { name: createdSquad.name })}
+                </p>
+              </div>
+
+              <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/70 mb-3">
+                  {t("wizardCelebInviteHint")}
+                </p>
+                <p className="font-mono text-4xl font-black tracking-[0.3em] text-amber-400">
+                  {createdSquad.invite_code}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(createdSquad.invite_code);
+                  setCopiedInvite(true);
+                  setTimeout(() => setCopiedInvite(false), 2000);
+                }}
+                className="flex w-full items-center justify-center gap-2 h-12 rounded-2xl border border-white/10 bg-zinc-800 font-bold text-zinc-300 text-sm transition hover:bg-zinc-700 active:scale-95"
+              >
+                {copiedInvite ? (
+                  <>
+                    <Check className="h-4 w-4 text-green-400" />
+                    {t("wizardCelebCopied")}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    {t("wizardCelebCopyBtn")}
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onCreated(createdSquad.id, createdSquad.name)}
+                className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black transition active:scale-95"
+              >
+                {t("wizardGoToLeague")} →
               </button>
             </div>
           )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lock, User, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
 import type { SquadProno } from "./LiveRoom";
 import type { MatchStatus } from "@/types/database";
 
@@ -9,6 +10,7 @@ type Props = {
   matchStatus: MatchStatus;
   startTime: string;
   squadPronos: SquadProno[];
+  hasSquad?: boolean;
 };
 
 type ScorerEntry = { name: string; goals: number };
@@ -18,6 +20,7 @@ export function LeaguePronosList({
   matchStatus,
   startTime,
   squadPronos,
+  hasSquad = true,
 }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -81,6 +84,27 @@ export function LeaguePronosList({
   const userPronosList = Array.from(pronosByUser.values());
 
   if (userPronosList.length === 0) {
+    if (!hasSquad) {
+      return (
+        <div className="mx-4 mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-700 p-8 text-center gap-3">
+          <span className="text-3xl">🏟️</span>
+          <div>
+            <p className="text-sm font-black text-white">
+              Tes amis pronostiquent ici
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Rejoins ou crée une ligue pour comparer tes pronos avec tes amis.
+            </p>
+          </div>
+          <Link
+            href="/ligues"
+            className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
+          >
+            Rejoindre une ligue →
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="mx-4 mt-6 flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-zinc-900/50 p-8 text-center">
         <p className="text-sm font-bold text-zinc-500">
