@@ -1,5 +1,7 @@
 "use client";
 
+import { log } from "@/lib/logger";
+
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -37,7 +39,7 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
 
   const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   if (!vapidKey) {
-    console.error("[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY manquant");
+    log.error("Push", "NEXT_PUBLIC_VAPID_PUBLIC_KEY manquant");
     return { ok: false, reason: "no_vapid_key" };
   }
 
@@ -45,7 +47,7 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
   try {
     reg = await navigator.serviceWorker.ready;
   } catch (err) {
-    console.error("[Push] Service worker non prêt:", err);
+    log.error("Push", "Service worker non prêt", { error: String(err) });
     return { ok: false, reason: "sw_not_ready" };
   }
 
@@ -59,7 +61,7 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       }));
   } catch (err) {
-    console.error("[Push] pushManager.subscribe() échoué:", err);
+    log.error("Push", "pushManager.subscribe() échoué", { error: String(err) });
     return {
       ok: false,
       reason: `subscribe_failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -82,11 +84,13 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
-      console.error("[Push] /api/push/subscribe échoué:", data);
+      log.error("Push", "/api/push/subscribe échoué", { data });
       return { ok: false, reason: `db_error: ${data.error ?? res.status}` };
     }
   } catch (err) {
-    console.error("[Push] fetch /api/push/subscribe échoué:", err);
+    log.error("Push", "fetch /api/push/subscribe échoué", {
+      error: String(err),
+    });
     return {
       ok: false,
       reason: `network_error: ${err instanceof Error ? err.message : String(err)}`,

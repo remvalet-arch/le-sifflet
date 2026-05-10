@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { TimelineEventType } from "@/types/database";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 
 const VALID_TYPES = ["goal", "yellow_card", "red_card", "substitution"];
 
@@ -13,27 +14,32 @@ async function getModerator() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user)
-    return { user: null, error: errorResponse("Non authentifié", 401) };
+    return {
+      user: null,
+      profile: null,
+      error: errorResponse("Non authentifié", 401),
+    };
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
+  if (!profile || !isAdminRole(profile.role)) {
     return {
       user: null,
-      error: errorResponse("Accès réservé aux modérateurs (score ≥ 150)", 403),
+      profile: null,
+      error: errorResponse("Accès réservé aux administrateurs", 403),
     };
   }
-  return { user, error: null };
+  return { user, profile, error: null };
 }
 
 // ── POST : créer un événement ─────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const { error } = await getModerator();
+  const { user, profile, error } = await getModerator();
   if (error) return error;
 
   const body = (await request.json()) as {
@@ -99,6 +105,18 @@ export async function POST(request: NextRequest) {
       p_away_delta: scoringTeamIsHome ? 0 : 1,
     });
   }
+
+  void logAdminAction({
+    actorUserId: user!.id,
+    actorRole: profile!.role as "user" | "moderator" | "founder",
+    actionType: "admin_timeline_event",
+    targetResourceType: "match_timeline_events",
+    targetResourceId: data.id,
+    metadata: { event_type, match_id, minute, team_side, player_name },
+    ipAddress:
+      request.headers.get("x-forwarded-for")?.split(",")[0] ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  });
 
   return successResponse(data);
 }

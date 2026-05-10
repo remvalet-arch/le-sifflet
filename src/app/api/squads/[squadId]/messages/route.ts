@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 const CHAT_PUSH_COOLDOWN_MS = 30 * 60 * 1000;
 const MAX_CHARS = 200;
@@ -18,6 +19,17 @@ export async function POST(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
+
+  const { limited, retryAfter } = await checkRateLimit(
+    supabase,
+    user.id,
+    "squad-message",
+  );
+  if (limited)
+    return errorResponse(
+      `Trop de requêtes — réessaie dans ${retryAfter}s`,
+      429,
+    );
 
   const body = (await request.json()) as { content?: string };
   const content = body.content?.trim();

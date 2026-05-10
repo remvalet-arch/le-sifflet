@@ -1,19 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/admin/force-resolve-past-matches
  *
- * Rattrapage de tous les matchs `finished` ayant encore des pronos ou
- * long_term_bets en statut `pending`. Idempotent (les RPCs filtrent
- * elles-mêmes sur `status = 'pending'`). Réservé aux modérateurs.
+ * Rattrapage de tous les matchs `finished` ayant encore des pronos
+ * en statut `pending`. Idempotent. Réservé aux modérateurs.
  *
  * Réponse : { pronoMatchesFound, pronoMatchesResolved,
- *             ltbMatchesFound, ltbMatchesResolved,
  *             openVarEventsOnFinishedMatches, errors }
  */
 export async function POST() {
@@ -25,11 +24,11 @@ export async function POST() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès réservé aux modérateurs", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   const admin = createAdminClient();
@@ -37,8 +36,6 @@ export async function POST() {
   const summary = {
     pronoMatchesFound: 0,
     pronoMatchesResolved: 0,
-    ltbMatchesFound: 0,
-    ltbMatchesResolved: 0,
     openVarEventsOnFinishedMatches: 0,
     errors: [] as string[],
   };
@@ -75,37 +72,7 @@ export async function POST() {
     }
   }
 
-  // ── 2. Long-term bets pending sur matchs terminés ─────────────────────────
-  const { data: pendingLTBs } = await admin
-    .from("long_term_bets")
-    .select("match_id")
-    .eq("status", "pending");
-
-  const ltbMatchIds = [...new Set((pendingLTBs ?? []).map((b) => b.match_id))];
-
-  if (ltbMatchIds.length > 0) {
-    const { data: finishedMatches } = await admin
-      .from("matches")
-      .select("id")
-      .eq("status", "finished")
-      .in("id", ltbMatchIds);
-
-    const toResolve = (finishedMatches ?? []).map((m) => m.id);
-    summary.ltbMatchesFound = toResolve.length;
-
-    for (const matchId of toResolve) {
-      const { error } = await admin.rpc("resolve_long_term_bets", {
-        p_match_id: matchId,
-      });
-      if (error) {
-        summary.errors.push(`ltb[${matchId}]: ${error.message}`);
-      } else {
-        summary.ltbMatchesResolved++;
-      }
-    }
-  }
-
-  // ── 3. Market events VAR ouverts sur matchs terminés (info seule) ─────────
+  // ── 2. Market events VAR ouverts sur matchs terminés (info seule) ─────────
   // Ces events nécessitent une décision manuelle (OUI/NON) via l'admin resolve UI.
   const { data: finishedMatchList } = await admin
     .from("matches")
@@ -121,6 +88,16 @@ export async function POST() {
       .in("status", ["open", "locked"]);
     summary.openVarEventsOnFinishedMatches = count ?? 0;
   }
+
+  void logAdminAction({
+    actorUserId: user.id,
+    actorRole: profile.role as "user" | "moderator" | "founder",
+    actionType: "force_resolve_past_matches",
+    metadata: {
+      pronoMatchesFound: summary.pronoMatchesFound,
+      pronoMatchesResolved: summary.pronoMatchesResolved,
+    },
+  });
 
   return successResponse(summary);
 }

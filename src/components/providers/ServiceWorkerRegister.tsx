@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { log } from "@/lib/logger";
 
 /**
  * Enregistre `/sw.js` pour critères PWA (installable) + mises à jour shell.
@@ -20,7 +21,7 @@ export function ServiceWorkerRegister() {
     void navigator.serviceWorker
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
       .catch((err) => {
-        console.warn("[SW] enregistrement impossible:", err);
+        log.warn("SW", "enregistrement impossible", { error: String(err) });
       });
   }, []);
 

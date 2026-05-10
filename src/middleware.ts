@@ -67,6 +67,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
+  // Routes /admin/* : auth + vérification du rôle admin
+  if (path.startsWith("/admin")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    const { data: adminProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const role = adminProfile?.role;
+    if (role !== "moderator" && role !== "founder") {
+      return NextResponse.redirect(new URL("/lobby", request.url));
+    }
+  }
+
   return supabaseResponse;
 }
 

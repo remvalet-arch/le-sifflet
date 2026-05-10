@@ -10,7 +10,7 @@ import {
   emailWeeklyRecap,
   emailSquadActivation,
 } from "@/lib/email";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,12 +39,12 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score, username")
+    .select("role, username")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès refusé", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   let body: { template?: string };

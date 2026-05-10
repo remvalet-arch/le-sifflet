@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { MatchRow } from "@/types/database";
 import { AdminEventCard } from "./AdminEventCard";
 import { ForceResolvePastMatchesButton } from "./ForceResolvePastMatchesButton";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 
 export const metadata = { title: "Admin — Résolution" };
 
@@ -17,11 +17,11 @@ export default async function AdminResolvePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) redirect("/lobby");
+  if (!profile || !isAdminRole(profile.role)) redirect("/lobby");
 
   const { data: events } = await supabase
     .from("market_events")
