@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { MarketEventRow } from "@/types/database";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { useVotingMarket } from "@/hooks/useVotingMarket";
+import { useVotingMarket, type BetPlacedInfo } from "@/hooks/useVotingMarket";
 import {
   getEventConfig,
   collectFocusable,
@@ -26,6 +27,7 @@ type Props = {
   userId: string;
   onClose: () => void;
   onBetSuccess: (amountStaked: number) => void;
+  onBetPlaced?: (info: BetPlacedInfo) => void;
   squadId?: string | null;
   squadName?: string | null;
   audienceCount?: number;
@@ -37,6 +39,7 @@ export function VotingModal({
   userId,
   onClose,
   onBetSuccess,
+  onBetPlaced,
   squadId,
   squadName,
   audienceCount,
@@ -48,6 +51,7 @@ export function VotingModal({
     string,
     number
   > | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const titleId = `vote-title-${event.id}`;
   const descId = `vote-desc-${event.id}`;
   useScrollLock(true);
@@ -57,6 +61,7 @@ export function VotingModal({
     siffletsBalance,
     userId,
     onBetSuccess,
+    onBetPlaced,
     squadId,
     onClose,
   });
@@ -257,6 +262,52 @@ export function VotingModal({
           <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
             {tVoting("oddsDistribution")}
           </p>
+
+          <button
+            type="button"
+            onClick={() => setRulesOpen(true)}
+            className="mt-3 w-full text-center text-[11px] font-bold text-zinc-600 transition hover:text-zinc-400"
+          >
+            ❓ {tVoting("howOddsWork")}
+          </button>
+
+          {rulesOpen && (
+            <div
+              className="fixed inset-0 z-[70] flex items-end"
+              onClick={() => setRulesOpen(false)}
+            >
+              <div
+                className="w-full rounded-t-3xl border-t border-white/10 bg-zinc-900 px-6 pb-8 pt-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-sm font-black text-white">
+                    {tVoting("howOddsWork")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setRulesOpen(false)}
+                    aria-label={tVoting("closeWindow")}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-500 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-3 text-sm text-zinc-300">
+                  <p>⚖️ {tVoting("rulesLine1")}</p>
+                  <p>🪙 {tVoting("rulesLine2")}</p>
+                  <p>⏱ {tVoting("rulesLine3")}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRulesOpen(false)}
+                  className="mt-5 w-full rounded-2xl bg-zinc-800 py-3 text-sm font-black text-zinc-300 transition hover:bg-zinc-700"
+                >
+                  {tVoting("gotIt")}
+                </button>
+              </div>
+            </div>
+          )}
 
           {!canBet && !expired && (
             <p className="mt-3 text-center text-xs font-bold text-red-400">
