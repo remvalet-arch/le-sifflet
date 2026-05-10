@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Siren, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLiveRoom } from "@/contexts/LiveRoomContext";
+import { track } from "@/lib/analytics";
+import { classifyMatchTier } from "@/lib/matchTier";
 import type {
   AlertActionType,
   BetRow,
@@ -69,6 +71,13 @@ export function LiveRoom({
   const [activeTab, setActiveTab] = useState<Tab>("kop");
 
   const displayedTab: Tab = activeTab;
+
+  const sessionRef = useRef({
+    joinedAt: 0,
+    betsCount: 0,
+    pronosChangesCount: 0,
+  });
+  const liveMinuteRef = useRef(match.match_minute ?? 0);
 
   // Audience temps réel (Sprint Q)
   const [audienceCount, setAudienceCount] = useState(0);
@@ -195,6 +204,32 @@ export function LiveRoom({
     return () => clearInterval(id);
   }, [cooldownUntil]);
 
+  // Analytics: match_joined / match_left
+  useEffect(() => {
+    sessionRef.current.joinedAt = Date.now();
+    track("match_joined", {
+      match_id: match.id,
+      match_tier: classifyMatchTier({
+        team_home: match.team_home,
+        team_away: match.team_away,
+        competition_id: match.competition_id ?? "",
+      }),
+      minute_at_join: match.match_minute ?? 0,
+      league: match.competition_id ?? "unknown",
+      competition_id: match.competition_id ?? "unknown",
+    });
+    const session = sessionRef.current;
+    return () => {
+      track("match_left", {
+        match_id: match.id,
+        duration_seconds: Math.round((Date.now() - session.joinedAt) / 1000),
+        bets_placed_in_session: session.betsCount,
+        pronos_changes_in_session: session.pronosChangesCount,
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Late-joiner: pick up any already-open event
   useEffect(() => {
     const supabase = createClient();
@@ -266,6 +301,8 @@ export function LiveRoom({
         },
         (payload) => {
           const updated = payload.new as MatchRow;
+          if (updated.match_minute != null)
+            liveMinuteRef.current = updated.match_minute;
           setLiveMatch((prev) => ({
             ...prev,
             ...updated,
@@ -287,7 +324,17 @@ export function LiveRoom({
         },
         (payload) => {
           const event = payload.new as MarketEventRow;
-          if (event?.status === "open") setActiveEvent(event);
+          if (event?.status === "open") {
+            setActiveEvent(event);
+            track("market_opened", {
+              match_id: match.id,
+              market_id: event.id,
+              market_type: event.type,
+              opening_source: "community",
+              minute: liveMinuteRef.current,
+              initiators_count: 0,
+            });
+          }
         },
       )
       .on(
@@ -325,7 +372,16 @@ export function LiveRoom({
           if (bet.status === "won") {
             const reward = Math.round(Number(bet.potential_reward));
             setLocalBalance((b) => b + reward);
+            sessionRef.current.betsCount++;
             const meta = lastResolvedMeta.current;
+            track("bet_resolved", {
+              match_id: match.id,
+              market_id: bet.event_id,
+              status: "won",
+              reward_received: reward,
+              braquage_bonus: 0,
+              booster_applied: null,
+            });
             if (meta && bet.event_id === meta.eventId) {
               setVerdictOverlay({
                 eventType: meta.eventType,
@@ -339,6 +395,14 @@ export function LiveRoom({
               );
             }
           } else if (bet.status === "lost") {
+            track("bet_resolved", {
+              match_id: match.id,
+              market_id: bet.event_id,
+              status: "lost",
+              reward_received: 0,
+              braquage_bonus: 0,
+              booster_applied: null,
+            });
             const meta = lastResolvedMeta.current;
             if (meta && bet.event_id === meta.eventId) {
               setVerdictOverlay({
@@ -414,6 +478,17 @@ export function LiveRoom({
         return;
       }
       markAsSignaled(type);
+      track("alert_signal_submitted", {
+        match_id: match.id,
+        match_tier: classifyMatchTier({
+          team_home: match.team_home,
+          team_away: match.team_away,
+          competition_id: match.competition_id ?? "",
+        }),
+        event_type: type as MarketEventType,
+        minute: liveMatch.match_minute ?? 0,
+        user_trust_score: 1,
+      });
       const cur = json.data?.current_signals ?? 1;
       const req = json.data?.required_signals ?? 2;
       if (json.data?.market_opened) {

@@ -5,6 +5,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { DirectMessageRow } from "@/types/database";
+import { track } from "@/lib/analytics";
 
 const MAX_CHARS = 500;
 const RATE_LIMIT_MS = 2000;
@@ -99,6 +100,8 @@ export function MessagesConversation({
         const data = (await res.json()) as { error?: string };
         toast.error(data.error ?? "Message non envoyé");
         setText(trimmed); // Restaure le texte
+      } else {
+        track("dm_sent", { is_first_message_in_thread: false });
       }
     } catch {
       toast.error("Connexion perdue, réessaie.");

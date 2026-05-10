@@ -1,6 +1,7 @@
 "use client";
 
 import { log } from "@/lib/logger";
+import { track } from "@/lib/analytics";
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -97,6 +98,7 @@ export async function trySubscribePush(): Promise<PushSubscribeResult> {
     };
   }
 
+  track("push_opted_in", { permission_status: "granted" });
   return { ok: true };
 }
 

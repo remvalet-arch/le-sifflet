@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { LIVE_BETTING_WINDOW_SECONDS } from "@/lib/constants/odds";
 import type { MarketEventRow, BoosterCatalogRow } from "@/types/database";
 import { getMinBetForBalance } from "@/lib/economy/min-bet";
+import { trackBetPlaced, type BoosterSlug } from "@/lib/analytics";
 
 const DEFAULT_ODD = 2;
 
@@ -80,6 +81,7 @@ export function useVotingMarket({
 }: Props): VotingMarketState {
   const supabase = createClient();
   const isStoppage = isStoppageType(event.type);
+  const betRankRef = useRef(0);
 
   const [poolOdds, setPoolOdds] = useState<Record<string, number>>({});
   const [poolStaked, setPoolStaked] = useState<Record<string, number>>({});
@@ -254,6 +256,18 @@ export function useVotingMarket({
         toast.error(json.error ?? "Erreur inattendue");
         return;
       }
+      betRankRef.current++;
+      trackBetPlaced({
+        match_id: event.match_id,
+        market_id: event.id,
+        market_type: event.type,
+        chosen_option: v,
+        amount_staked: staked,
+        booster_applied: (selectedBooster?.effect_type as BoosterSlug) ?? null,
+        is_first_bet_of_session: betRankRef.current === 1,
+        bet_rank_in_session: betRankRef.current,
+        via_quick_bet: false,
+      });
       onBetSuccess(staked);
       const label = isStoppage ? `${v} min` : v;
       setBetConfirmed({
