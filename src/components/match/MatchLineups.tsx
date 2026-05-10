@@ -6,6 +6,7 @@ import { User, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { LineupRow, PlayerRow } from "@/types/database";
+import { log } from "@/lib/logger";
 import { MatchLineupsPitch } from "./MatchLineupsPitch";
 
 const POS_ORDER: Record<string, number> = { G: 0, D: 1, M: 2, A: 3 };
@@ -258,7 +259,9 @@ export const MatchLineups = memo(function MatchLineups({
       if (cancelled) return;
 
       if (errLu) {
-        console.error("[MatchLineups] lineups", errLu.message);
+        log.error("MatchLineups", "lineups fetch error", {
+          error: errLu.message,
+        });
       }
 
       const lineupRows = lu ?? [];
@@ -288,7 +291,9 @@ export const MatchLineups = memo(function MatchLineups({
       if (cancelled) return;
 
       if (errPl) {
-        console.error("[MatchLineups] players", errPl.message);
+        log.error("MatchLineups", "players fetch error", {
+          error: errPl.message,
+        });
         setHomeRoster([]);
         setAwayRoster([]);
         setLoading(false);
