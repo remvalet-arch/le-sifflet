@@ -144,12 +144,14 @@ L'effet "vision" (révéler les choix des amis) est une feature UI qui devrait f
 
 ## Synthèse
 
-| Booster      | Achat | Application UI     | Endpoint       | Effet à la résolution              | Statut            | Action recommandée               |
-| ------------ | ----- | ------------------ | -------------- | ---------------------------------- | ----------------- | -------------------------------- |
-| `double_xp`  | ✅    | ✅ `BoosterPicker` | ✅ `/api/bet`  | ✅ `resolve_event_parimutuel` ×2   | ✅ FONCTIONNEL    | Ajouter l'UI sur pronos si voulu |
-| `cote_plus`  | ✅    | ✅ `BoosterPicker` | ✅ `/api/bet`  | ✅ `resolve_event_parimutuel` ×1.2 | ✅ FONCTIONNEL    | Ajouter l'UI sur pronos si voulu |
-| `safety_net` | ✅    | ✅ `BoosterPicker` | ✅ `/api/bet`  | ✅ +50% remboursement sur perte    | ✅ FONCTIONNEL    | Ajouter l'UI sur pronos si voulu |
-| `vision`     | ✅    | ✅ (UI présente)   | ❌ Aucun effet | ❌ Absent                          | ❌ NON IMPLÉMENTÉ | Implémenter ou supprimer du shop |
+| Booster      | Achat | Application UI                                   | Endpoint                                      | Effet à la résolution                                        | Statut         |
+| ------------ | ----- | ------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------ | -------------- |
+| `double_xp`  | ✅    | ✅ `BoosterPicker` (VAR) + `BoosterPickerForPronos` | ✅ `/api/bet` + `place_match_prono`          | ✅ `resolve_event_parimutuel` ×2 + `resolve_match_pronos` ×2 | ✅ FONCTIONNEL |
+| `cote_plus`  | ✅    | ✅ `BoosterPicker` (VAR) + `BoosterPickerForPronos` | ✅ `/api/bet` + `place_match_prono`          | ✅ ×1.2 sur les deux résolveurs                              | ✅ FONCTIONNEL |
+| `safety_net` | ✅    | ✅ `BoosterPicker` (VAR) + `BoosterPickerForPronos` | ✅ `/api/bet` + `place_match_prono`          | ✅ +50% remboursement sur perte (VAR + pronos)               | ✅ FONCTIONNEL |
+| `vision`     | ✅    | ✅ `VisionBoosterButton` dans `VotingModal`       | ✅ `POST /api/boosters/activate-vision` (RPC) | N/A — effet avant le vote (reveal friend counts)             | ✅ FONCTIONNEL |
+
+> Mis à jour Sprint 3 — 2026-05-10
 
 ---
 
