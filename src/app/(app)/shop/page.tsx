@@ -30,7 +30,11 @@ const getCatalog = unstable_cache(
   { revalidate: 3600 },
 );
 
-export const metadata = { title: "Boutique — Le Sifflet" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("shop") };
+}
 
 export default async function ShopPage() {
   const supabase = await createClient();

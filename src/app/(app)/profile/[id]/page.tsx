@@ -2,6 +2,8 @@ import { Target, TrendingUp, Trophy, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
+import { getLocale } from "next-intl/server";
+import { BCP47_MAP } from "@/lib/use-bcp47";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import type {
   ShortBetEntry,
@@ -76,7 +78,11 @@ function rankDisplayFromDb(rankLabel: string) {
   return { emoji: "🪑", label: rankLabel };
 }
 
-export const metadata = { title: "Profil joueur" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("publicProfile") };
+}
 
 export default async function PublicProfilePage({
   params,
@@ -84,7 +90,8 @@ export default async function PublicProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const [supabase, locale] = await Promise.all([createClient(), getLocale()]);
+  const bcp47 = BCP47_MAP[locale] ?? "fr-FR";
 
   const {
     data: { user },
@@ -341,7 +348,7 @@ export default async function PublicProfilePage({
                 {rank.emoji} {rank.label}
               </p>
               <p className="mt-0.5 text-[11px] font-bold tabular-nums text-zinc-600">
-                {xpTotal.toLocaleString("fr-FR")} XP
+                {xpTotal.toLocaleString(bcp47)} XP
               </p>
               {favoriteTeam && (
                 <div className="mt-1.5 flex items-center gap-1.5">
@@ -364,7 +371,7 @@ export default async function PublicProfilePage({
             </div>
             <div className="flex items-center gap-2 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-2 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
               <span className="text-2xl font-black tabular-nums text-green-400">
-                {balance.toLocaleString("fr-FR")}
+                {balance.toLocaleString(bcp47)}
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
                 Sifflets
@@ -398,7 +405,7 @@ export default async function PublicProfilePage({
         <StatCard
           Icon={TrendingUp}
           label="Gagnés"
-          value={totalEarned.toLocaleString("fr-FR")}
+          value={totalEarned.toLocaleString(bcp47)}
         />
         <StatCard Icon={Trophy} label="Résultats" value={String(totalBets)} />
       </div>

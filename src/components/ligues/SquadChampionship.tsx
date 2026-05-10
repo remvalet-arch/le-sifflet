@@ -2,6 +2,7 @@
 
 import { Swords, CalendarDays } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 
 type ChampionshipStanding = {
   user_id: string;
@@ -45,6 +46,7 @@ type Props = {
 export function SquadChampionship({ championship, currentUserId }: Props) {
   const t = useTranslations("Ligues");
   const tCommon = useTranslations("Common");
+  const bcp47 = useBcp47();
   return (
     <div className="space-y-6">
       {/* Podium de fin de saison */}
@@ -171,7 +173,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                       </p>
                       <p className="text-[10px] text-zinc-500">
                         {t("championshipCumulatedPoints", {
-                          count: s.pronos_pts.toLocaleString("fr-FR"),
+                          count: s.pronos_pts.toLocaleString(bcp47),
                         })}
                       </p>
                     </td>

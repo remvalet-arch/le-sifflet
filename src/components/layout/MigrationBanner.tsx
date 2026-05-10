@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const STORAGE_KEY = "vartime:migration-banner-dismissed";
 const SHOW_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -29,6 +30,8 @@ export function MigrationBanner() {
     }
   }, []);
 
+  const t = useTranslations("Banner");
+
   if (!visible) return null;
 
   function dismiss() {
@@ -40,14 +43,14 @@ export function MigrationBanner() {
     <div className="relative z-50 w-full bg-whistle/15 border-b border-whistle/30 px-4 py-2.5">
       <div className="mx-auto flex max-w-2xl items-start gap-3">
         <p className="flex-1 text-xs leading-snug text-whistle/90">
-          <span className="font-black">VAR TIME a son vrai domaine :</span>{" "}
-          vartime.app ! Pour les notifs et la PWA complètes, réinstalle depuis{" "}
-          <span className="font-bold">vartime.app</span>.
+          <span className="font-black">{t("migrationBold")}</span>{" "}
+          {t("migrationText")}{" "}
+          <span className="font-bold">{t("migrationDomain")}</span>.
         </p>
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Fermer"
+          aria-label={t("migrationClose")}
           className="mt-0.5 shrink-0 text-whistle/60 hover:text-whistle transition"
         >
           <X className="h-3.5 w-3.5" />

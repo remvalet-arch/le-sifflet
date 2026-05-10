@@ -16,8 +16,12 @@ import type {
   PronoRow,
   SeasonArchiveRow,
 } from "@/types/database";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = { title: "Mon Profil" };
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return { title: t("profile") };
+}
 
 function getTrustGrade(score: number) {
   if (score >= 200)

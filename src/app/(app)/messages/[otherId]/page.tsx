@@ -7,7 +7,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata = { title: "Conversation" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("conversation") };
+}
 
 export default async function ConversationPage({
   params,

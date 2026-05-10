@@ -8,7 +8,11 @@ import { fr } from "date-fns/locale";
 import { MessageCircle } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-export const metadata = { title: "Messages privés" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("messages") };
+}
 
 export default async function MessagesPage() {
   const t = await getTranslations("Messages");

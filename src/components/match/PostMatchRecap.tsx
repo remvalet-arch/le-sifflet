@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { SquadProno } from "./LiveRoom";
+import { useBcp47 } from "@/lib/use-bcp47";
 
 type Props = {
   homeTeam: string;
@@ -20,6 +21,7 @@ export function PostMatchRecap({
   squadPronos,
   currentUserId,
 }: Props) {
+  const bcp47 = useBcp47();
   // Group by user_id: score prono + scorers
   const byUser = new Map<
     string,
@@ -73,7 +75,7 @@ export function PostMatchRecap({
             className={`mt-1 text-sm font-black ${myEntry.points > 0 ? "text-green-400" : "text-zinc-500"}`}
           >
             {myEntry.points > 0
-              ? `Tu as gagné +${myEntry.points.toLocaleString("fr-FR")} Pts`
+              ? `Tu as gagné +${myEntry.points.toLocaleString(bcp47)} Pts`
               : "Pas de points cette fois"}
           </p>
         )}
@@ -117,7 +119,7 @@ export function PostMatchRecap({
               className={`text-sm font-black tabular-nums ${entry.points > 0 ? "text-green-400" : "text-zinc-600"}`}
             >
               {entry.points > 0
-                ? `+${entry.points.toLocaleString("fr-FR")}`
+                ? `+${entry.points.toLocaleString(bcp47)}`
                 : "—"}
             </span>
           </div>

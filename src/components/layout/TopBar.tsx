@@ -65,6 +65,10 @@ export function TopBar({
   const [liveXp, setLiveXp] = useState(initialXp);
   const locale = useLocale() as Locale;
   const t = useTranslations("TopBar");
+  const bcp47 =
+    { fr: "fr-FR", en: "en-GB", es: "es-ES", de: "de-DE", it: "it-IT" }[
+      locale
+    ] ?? "fr-FR";
   const router = useRouter();
   const [, startTransition] = useTransition();
   const sectionLabel = useSectionLabel(t);
@@ -173,7 +177,7 @@ export function TopBar({
               {liveRank}
             </p>
             <p className="mt-0.5 text-[10px] font-bold tabular-nums text-zinc-600">
-              {liveXp.toLocaleString("fr-FR")} XP
+              {liveXp.toLocaleString(bcp47)} XP
             </p>
           </div>
           <button

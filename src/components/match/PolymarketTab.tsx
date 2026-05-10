@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { Check, ChevronDown, ChevronUp, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -145,6 +146,7 @@ export function PolymarketTab({
   oddsDraw,
   oddsAway,
 }: Props) {
+  const bcp47 = useBcp47();
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loadingLineups, setLoadingLineups] = useState(true);
   const [existingPronos, setExistingPronos] = useState<
@@ -253,7 +255,7 @@ export function PolymarketTab({
     ]);
     setScoreSuccess(true);
     toast.success(
-      `Prono enregistré ! +${scoreReward.toLocaleString("fr-FR")} Points si tu as raison 🎯`,
+      `Prono enregistré ! +${scoreReward.toLocaleString(bcp47)} Points si tu as raison 🎯`,
     );
     setTimeout(() => {
       setScoreSuccess(false);
@@ -292,7 +294,7 @@ export function PolymarketTab({
     ]);
     setScorerSuccess(true);
     toast.success(
-      `Prono enregistré ! +${reward.toLocaleString("fr-FR")} Points si ${name} marque 🎯`,
+      `Prono enregistré ! +${reward.toLocaleString(bcp47)} Points si ${name} marque 🎯`,
     );
     setTimeout(() => {
       setScorerSuccess(false);
@@ -363,7 +365,7 @@ export function PolymarketTab({
                   role="status"
                 >
                   <p className="text-balance text-xl font-black tracking-tight text-amber-50 sm:text-2xl">
-                    🛡️ AUCUN BUTEUR (+{BUNKER_REWARD.toLocaleString("fr-FR")}{" "}
+                    🛡️ AUCUN BUTEUR (+{BUNKER_REWARD.toLocaleString(bcp47)}{" "}
                     Points)
                   </p>
                 </div>
@@ -383,7 +385,7 @@ export function PolymarketTab({
                         Gain de base
                       </p>
                       <p className="text-xl font-black text-white">
-                        +{scoreReward.toLocaleString("fr-FR")} Points
+                        +{scoreReward.toLocaleString(bcp47)} Points
                       </p>
                     </div>
                   </div>
@@ -494,7 +496,7 @@ export function PolymarketTab({
                               {label}
                             </p>
                             <p className="text-[9px] font-black text-green-500">
-                              +{reward.toLocaleString("fr-FR")} Points
+                              +{reward.toLocaleString(bcp47)} Points
                             </p>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
@@ -559,7 +561,7 @@ export function PolymarketTab({
                                   >
                                     {already
                                       ? "✓ Prono"
-                                      : `+${reward.toLocaleString("fr-FR")}`}
+                                      : `+${reward.toLocaleString(bcp47)}`}
                                   </span>
                                 </button>
                               );

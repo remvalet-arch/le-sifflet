@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { ShoppingBag, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
@@ -44,6 +45,7 @@ export function ShopClient({
   boosterCounts: initialBoosterCounts = {},
 }: Props) {
   const t = useTranslations("Shop");
+  const bcp47 = useBcp47();
   const [activeTab, setActiveTab] = useState<Tab>("avatar");
   const [balance, setBalance] = useState(initialBalance);
   const [ownedIds, setOwnedIds] = useState(new Set(initialOwnedIds));
@@ -221,7 +223,7 @@ export function ShopClient({
           </div>
           <div className="flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5">
             <span className="text-sm font-black tabular-nums text-green-400">
-              {balance.toLocaleString("fr-FR")}
+              {balance.toLocaleString(bcp47)}
             </span>
             <span className="text-[9px] font-black uppercase tracking-widest text-green-500/60">
               🪙
@@ -412,8 +414,8 @@ export function ShopClient({
                         : rankUnlocked
                           ? t("claimFree")
                           : canAfford
-                            ? t("buy", { price: price.toLocaleString("fr-FR") })
-                            : `${price.toLocaleString("fr-FR")} 🪙`}
+                            ? t("buy", { price: price.toLocaleString(bcp47) })
+                            : `${price.toLocaleString(bcp47)} 🪙`}
                     </button>
                   ) : (
                     <button

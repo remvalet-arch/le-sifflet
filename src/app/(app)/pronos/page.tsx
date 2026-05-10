@@ -1,8 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { PronosticsHubClient } from "@/components/pronos/PronosticsHubClient";
 import { LOBBY_TRACKED_LEAGUE_API_IDS } from "@/lib/constants/top-leagues";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = { title: "Pronos" };
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return { title: t("pronos") };
+}
+
 export const revalidate = 60;
 
 export default async function PronosPage() {
@@ -76,14 +81,16 @@ export default async function PronosPage() {
     community_stats: statsByMatchId.get(m.id) ?? null,
   }));
 
+  const t = await getTranslations("Pronos");
+
   return (
     <main className="flex flex-col gap-4 px-4 py-4">
       <div className="flex items-baseline gap-2">
         <h1 className="text-lg font-black uppercase tracking-wide text-chalk">
-          Pronos
+          {t("pageTitle")}
         </h1>
         <span className="text-xs font-medium text-zinc-500">
-          7 prochains jours
+          {t("pageSubtitle")}
         </span>
       </div>
       <PronosticsHubClient
