@@ -1620,6 +1620,14 @@ export interface Database {
         Args: Record<string, never>;
         Returns: Array<{ squad_id: string; user_id: string }>;
       };
+      create_squad_atomic: {
+        Args: {
+          p_name: string;
+          p_is_private: boolean;
+          p_owner_id: string;
+        };
+        Returns: Array<Database["public"]["Tables"]["squads"]["Row"]>;
+      };
       squad_by_invite_code: {
         Args: { p_invite: string };
         Returns: Array<{
