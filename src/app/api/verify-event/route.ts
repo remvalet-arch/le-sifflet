@@ -1,8 +1,10 @@
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { verifyMarketEventWithApiFootball } from "@/lib/sports/sportsProvider";
 import { resolveEvent } from "@/lib/resolve-event";
+import { notifyVarBetResults } from "@/lib/var-notifications";
 
 const MIN_AGE_SECONDS = 6 * 60;
 
@@ -65,6 +67,16 @@ export async function POST(request: NextRequest) {
     const msg = err instanceof Error ? err.message : "Erreur inconnue";
     return errorResponse(msg);
   }
+
+  // Fire-and-forget: push notifications to bettors
+  const adminClient = createAdminClient();
+  void notifyVarBetResults(
+    adminClient,
+    body.event_id,
+    event.type,
+    event.match_id,
+    result,
+  );
 
   return successResponse({ status: "resolved", result });
 }
