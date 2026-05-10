@@ -70,6 +70,8 @@ VAR TIME — PWA mobile-first de paris VAR communautaires. Stack Next.js 16 / Re
 
 L'URL host est fixe : `https://eu.i.posthog.com`.
 
+**✅ Clé reçue le 2026-05-10, ajoutée dans `.env.local` + Vercel.**
+
 **Documenter dans le brief le retour founder** : "Clé reçue le [date], ajoutée dans `.env.local`".
 
 ---
