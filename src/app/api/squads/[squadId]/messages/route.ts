@@ -104,7 +104,7 @@ export async function POST(
       sendPushToUsers(eligibleIds, {
         title: `💬 ${pseudo} dans ${squad.name}`,
         body: preview,
-        url: `/ligues`,
+        url: `/ligues/${squadId}`,
       }),
       admin
         .from("squads")

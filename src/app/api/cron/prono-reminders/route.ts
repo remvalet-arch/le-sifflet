@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     await sendPushToUsers(usersWithoutProno, {
       title: `⏰ ${match.team_home} – ${match.team_away} dans 1h`,
       body: "Tu n'as pas encore pronostiqué — fonce !",
-      url: "/pronos",
+      url: `/match/${match.id}`,
     });
     totalNotified += usersWithoutProno.length;
   }
