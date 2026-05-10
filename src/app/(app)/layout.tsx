@@ -6,6 +6,7 @@ import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { LiveRoomProvider } from "@/contexts/LiveRoomContext";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { DailyRecapChecker } from "@/components/layout/DailyRecapChecker";
+import { BodyScrollLock } from "@/components/layout/BodyScrollLock";
 
 async function trackLoginStreak(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -103,6 +104,7 @@ export default async function AppLayout({
           are normal flex-col siblings (no position:fixed), main scrolls internally.
           This avoids all iOS Safari position:fixed / overflow container traps. */}
       <div className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-zinc-950 shadow-2xl">
+        <BodyScrollLock />
         <DailyRecapChecker />
         <TopBar
           username={profile.username}
