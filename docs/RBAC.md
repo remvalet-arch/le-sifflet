@@ -2,11 +2,11 @@
 
 ## Les 3 rôles
 
-| Rôle | Valeur DB | Accès |
-|---|---|---|
-| `user` | défaut | App standard — aucun accès admin |
-| `moderator` | manuel | Routes `/admin/*`, toutes les actions admin |
-| `founder` | manuel | Même que moderator — rôle de référence |
+| Rôle        | Valeur DB | Accès                                       |
+| ----------- | --------- | ------------------------------------------- |
+| `user`      | défaut    | App standard — aucun accès admin            |
+| `moderator` | manuel    | Routes `/admin/*`, toutes les actions admin |
+| `founder`   | manuel    | Même que moderator — rôle de référence      |
 
 **Important** : le `trust_score` reste inchangé pour l'usage communautaire Waze (badge 🛡️, karma, ActionDrawer modérateur). Il ne contrôle plus l'accès admin.
 
@@ -14,11 +14,11 @@
 
 ## Migrations
 
-| Migration | Contenu |
-|---|---|
+| Migration                  | Contenu                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------- |
 | `0106_add_role_column.sql` | Enum `user_role`, colonne `role` sur `profiles` (DEFAULT `'user'`), index partiel |
-| `0107_role_helpers.sql` | Fonctions SQL `current_user_role()` et `is_admin()` (SECURITY DEFINER) |
-| `0108_audit_log.sql` | Table `audit_log` avec RLS (lecture admins uniquement, INSERT via service_role) |
+| `0107_role_helpers.sql`    | Fonctions SQL `current_user_role()` et `is_admin()` (SECURITY DEFINER)            |
+| `0108_audit_log.sql`       | Table `audit_log` avec RLS (lecture admins uniquement, INSERT via service_role)   |
 
 ---
 
@@ -45,6 +45,7 @@ SELECT id, username, role FROM public.profiles WHERE role != 'user';
 ## Middleware (`src/middleware.ts`)
 
 Les routes `/admin/*` sont protégées au niveau middleware :
+
 1. Si non authentifié → redirect `/`
 2. Si `role` n'est pas `moderator` ou `founder` → redirect `/lobby`
 
@@ -77,44 +78,44 @@ if (!profile || !isAdminRole(profile.role)) {
 
 ### Schéma
 
-| Colonne | Type | Description |
-|---|---|---|
-| `id` | uuid | PK |
-| `actor_user_id` | uuid | User qui a agi |
-| `actor_role` | user_role | Rôle au moment de l'action |
-| `action_type` | text | Type d'action (voir liste ci-dessous) |
-| `target_resource_type` | text | Ex: `'market_event'`, `'match'` |
-| `target_resource_id` | uuid | ID de la ressource cible |
-| `metadata` | jsonb | Données libres (résultat, raison, etc.) |
-| `ip_address` | text | IP du demandeur |
-| `user_agent` | text | Browser/client |
-| `created_at` | timestamptz | Horodatage |
+| Colonne                | Type        | Description                             |
+| ---------------------- | ----------- | --------------------------------------- |
+| `id`                   | uuid        | PK                                      |
+| `actor_user_id`        | uuid        | User qui a agi                          |
+| `actor_role`           | user_role   | Rôle au moment de l'action              |
+| `action_type`          | text        | Type d'action (voir liste ci-dessous)   |
+| `target_resource_type` | text        | Ex: `'market_event'`, `'match'`         |
+| `target_resource_id`   | uuid        | ID de la ressource cible                |
+| `metadata`             | jsonb       | Données libres (résultat, raison, etc.) |
+| `ip_address`           | text        | IP du demandeur                         |
+| `user_agent`           | text        | Browser/client                          |
+| `created_at`           | timestamptz | Horodatage                              |
 
 ### `action_type` connus
 
-| Valeur | Route source |
-|---|---|
-| `resolve_event` | `POST /api/admin/resolve-event` |
-| `force_finish_match` | `POST /api/admin/finish-match` |
-| `sync_matches` | `POST /api/admin/sync-matches` |
-| `admin_match_state_update` | `POST /api/match-state` |
-| `admin_timeline_event` | `POST /api/timeline-event` |
-| `import_assets` | `POST /api/admin/import-assets` |
-| `resolve_league_round` | `POST /api/admin/resolve-league-round` |
-| `generate_outreach` | `POST /api/admin/generate-outreach` |
-| `sync_live` | `POST /api/admin/sync-live` |
-| `sync_apifootball_round` | `POST /api/admin/sync-apifootball-round` |
-| `sync_apifootball_fixtures` | `POST /api/admin/sync-apifootball-fixtures` |
-| `sync_past_lineups` | `POST /api/admin/sync-past-lineups` |
+| Valeur                       | Route source                                 |
+| ---------------------------- | -------------------------------------------- |
+| `resolve_event`              | `POST /api/admin/resolve-event`              |
+| `force_finish_match`         | `POST /api/admin/finish-match`               |
+| `sync_matches`               | `POST /api/admin/sync-matches`               |
+| `admin_match_state_update`   | `POST /api/match-state`                      |
+| `admin_timeline_event`       | `POST /api/timeline-event`                   |
+| `import_assets`              | `POST /api/admin/import-assets`              |
+| `resolve_league_round`       | `POST /api/admin/resolve-league-round`       |
+| `generate_outreach`          | `POST /api/admin/generate-outreach`          |
+| `sync_live`                  | `POST /api/admin/sync-live`                  |
+| `sync_apifootball_round`     | `POST /api/admin/sync-apifootball-round`     |
+| `sync_apifootball_fixtures`  | `POST /api/admin/sync-apifootball-fixtures`  |
+| `sync_past_lineups`          | `POST /api/admin/sync-past-lineups`          |
 | `force_resolve_past_matches` | `POST /api/admin/force-resolve-past-matches` |
-| `map_apifootball_teams` | `POST /api/admin/map-apifootball-teams` |
-| `sync_player_odds` | `POST /api/admin/sync-player-odds` |
-| `trigger_initial_sync` | `POST /api/admin/trigger-initial-sync` |
-| `sync_data` | server action `syncData.ts` |
-| `ban_user` | (futur) |
-| `unban_user` | (futur) |
-| `reset_balance` | (futur) |
-| `edit_profile_admin` | (futur) |
+| `map_apifootball_teams`      | `POST /api/admin/map-apifootball-teams`      |
+| `sync_player_odds`           | `POST /api/admin/sync-player-odds`           |
+| `trigger_initial_sync`       | `POST /api/admin/trigger-initial-sync`       |
+| `sync_data`                  | server action `syncData.ts`                  |
+| `ban_user`                   | (futur)                                      |
+| `unban_user`                 | (futur)                                      |
+| `reset_balance`              | (futur)                                      |
+| `edit_profile_admin`         | (futur)                                      |
 
 ### Requêtes utiles
 
@@ -136,11 +137,11 @@ SELECT * FROM audit_log WHERE target_resource_id = '<MATCH_ID>';
 
 ## Différence trust_score vs role
 
-| Concept | trust_score | role |
-|---|---|---|
-| Usage | Karma communautaire Waze | Accès admin |
-| Source | Algorithme (votes, qualité signaux) | Attribution manuelle par le founder |
-| Seuil admin | ~~>= 150~~ (supprimé) | `moderator` ou `founder` |
-| Badge 🛡️ | Oui (trust_score >= 150) | Non |
-| Accès `/admin/*` | Non | Oui |
-| Modifiable par l'user | Indirectement | Non |
+| Concept               | trust_score                         | role                                |
+| --------------------- | ----------------------------------- | ----------------------------------- |
+| Usage                 | Karma communautaire Waze            | Accès admin                         |
+| Source                | Algorithme (votes, qualité signaux) | Attribution manuelle par le founder |
+| Seuil admin           | ~~>= 150~~ (supprimé)               | `moderator` ou `founder`            |
+| Badge 🛡️              | Oui (trust_score >= 150)            | Non                                 |
+| Accès `/admin/*`      | Non                                 | Oui                                 |
+| Modifiable par l'user | Indirectement                       | Non                                 |

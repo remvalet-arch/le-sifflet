@@ -23,15 +23,18 @@
 ## ✅ Phase 3 — Système de rôles RBAC + audit log
 
 **Migrations créées** :
+
 - `0106_add_role_column.sql` — enum `user_role`, colonne `role` sur `profiles`
 - `0107_role_helpers.sql` — fonctions `current_user_role()` et `is_admin()`
 - `0108_audit_log.sql` — table `audit_log` avec RLS
 
 **Code créé** :
+
 - `src/lib/audit.ts` — helper `logAdminAction()`
 - `src/lib/constants/permissions.ts` — ajout `ADMIN_ROLES`, `isAdminRole()`
 
 **24 fichiers refactorisés** :
+
 - 20 routes API : remplacement `trust_score/MODERATOR_THRESHOLD` → `role/isAdminRole`
 - 4 pages admin : même remplacement
 - Audit log ajouté sur 6 routes d'action destructive
@@ -65,14 +68,14 @@ Voir `docs/CLEANUP_BACKLOG.md` — 8 items identifiés, aucun bloquant.
 
 ## 📊 Stats du sprint
 
-| Métrique | Valeur |
-|---|---|
-| Fichiers modifiés (code) | 29 |
-| Fichiers supprimés | 1 (`PolymarketTab.tsx`) |
-| Migrations créées | 4 (`0105` à `0108`) |
-| Scripts créés | 1 (`seed_founder.sql`) |
-| Docs créées/mises à jour | 6 |
-| Lignes supprimées (code) | ~750 |
-| Lignes ajoutées (code) | ~200 |
-| Erreurs TypeScript | 0 |
-| Erreurs ESLint | 0 |
+| Métrique                 | Valeur                  |
+| ------------------------ | ----------------------- |
+| Fichiers modifiés (code) | 29                      |
+| Fichiers supprimés       | 1 (`PolymarketTab.tsx`) |
+| Migrations créées        | 4 (`0105` à `0108`)     |
+| Scripts créés            | 1 (`seed_founder.sql`)  |
+| Docs créées/mises à jour | 6                       |
+| Lignes supprimées (code) | ~750                    |
+| Lignes ajoutées (code)   | ~200                    |
+| Erreurs TypeScript       | 0                       |
+| Erreurs ESLint           | 0                       |

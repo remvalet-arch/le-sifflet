@@ -15,11 +15,11 @@
 
 ## Test 1 : Accès /admin
 
-| Scénario | Attendu |
-|---|---|
-| Founder accède à `/admin/resolve` | ✅ Page affichée |
-| Moderator accède à `/admin/resolve` | ✅ Page affichée |
-| User normal accède à `/admin/resolve` | ↩ Redirect `/lobby` |
+| Scénario                                         | Attendu                     |
+| ------------------------------------------------ | --------------------------- |
+| Founder accède à `/admin/resolve`                | ✅ Page affichée            |
+| Moderator accède à `/admin/resolve`              | ✅ Page affichée            |
+| User normal accède à `/admin/resolve`            | ↩ Redirect `/lobby`         |
 | Anonyme (non connecté) accède à `/admin/resolve` | ↩ Redirect `/` (page login) |
 
 ---
@@ -30,9 +30,11 @@
 
 1. Founder résout un event via `/admin/resolve`
 2. Vérifier dans Supabase SQL Editor :
+
 ```sql
 SELECT * FROM audit_log WHERE action_type = 'resolve_event' ORDER BY created_at DESC LIMIT 1;
 ```
+
 - [ ] La row existe avec `actor_user_id` = founder, `actor_role = 'founder'`
 - [ ] `target_resource_type = 'market_event'`, `target_resource_id` = UUID de l'event
 
@@ -40,9 +42,11 @@ SELECT * FROM audit_log WHERE action_type = 'resolve_event' ORDER BY created_at 
 
 1. Founder POST `/api/admin/finish-match` avec un `match_id`
 2. Vérifier :
+
 ```sql
 SELECT * FROM audit_log WHERE action_type = 'force_finish_match' ORDER BY created_at DESC LIMIT 1;
 ```
+
 - [ ] `target_resource_type = 'match'`, `target_resource_id` = UUID du match
 
 ### 2c — Accès refusé (403)
@@ -75,9 +79,11 @@ Vérifier qu'un user avec `trust_score >= 150` mais `role = 'user'` n'a plus acc
 1. Trouver en DB un user avec `trust_score >= 150` et `role = 'user'`
 2. Se connecter avec ce compte (ou simuler en modifiant temporairement)
 3. Accéder à `/admin/resolve`
+
 - [ ] Redirect `/lobby` (accès refusé)
 
 4. POST `/api/admin/resolve-event`
+
 - [ ] 403 Accès réservé aux administrateurs
 
 ---
