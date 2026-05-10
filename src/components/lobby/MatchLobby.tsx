@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   EUROPEAN_CUPS,
   TOP_LEAGUES,
@@ -328,6 +329,7 @@ export function MatchLobby({
   /** Preferred league API IDs — reorders tabs (preferred first after Direct). */
   preferredLeagueApiIds?: number[];
 }) {
+  const t = useTranslations("Lobby");
   const [tab, setTab] = useState<LobbyTabKey>(() =>
     defaultTabForProps(viewMode, roundContext),
   );
@@ -394,8 +396,11 @@ export function MatchLobby({
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12 text-center text-sm text-zinc-400">
-        Aucun match {roundView ? "pour cette sélection" : "pour cette journée"}{" "}
-        (championnats + coupes UEFA).
+        {t("noMatchesForDay", {
+          context: roundView
+            ? t("noMatchesForSelectionContext")
+            : t("noMatchesForDayContext"),
+        })}
       </div>
     );
   }
@@ -405,7 +410,7 @@ export function MatchLobby({
       {roundView && roundContext != null && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/90 px-3 py-2.5 text-xs text-zinc-400">
           <span>
-            Journée{" "}
+            {t("matchday")}{" "}
             <span className="font-mono font-bold text-chalk">
               {roundContext.roundShort}
             </span>
@@ -414,7 +419,7 @@ export function MatchLobby({
             href="/lobby"
             className="font-bold uppercase tracking-wide text-whistle hover:underline"
           >
-            ← Jour Paris
+            {t("backToMatchDay")}
           </Link>
         </div>
       )}
@@ -422,10 +427,10 @@ export function MatchLobby({
       {!roundView && dayFallbackBanner != null && (
         <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-xs leading-snug text-amber-100/95">
           <p className="font-black uppercase tracking-wide text-amber-400/95">
-            Aujourd&apos;hui : repos
+            {t("todayRest")}
           </p>
           <p className="mt-1 font-medium text-amber-50/90">
-            Prochains matchs le{" "}
+            {t("nextMatchesOn")}{" "}
             <span className="font-bold capitalize text-white">
               {dayFallbackBanner.shownDayLabelFr}
             </span>
@@ -465,29 +470,29 @@ export function MatchLobby({
             <span className="text-4xl mb-3" aria-hidden="true">
               😴
             </span>
-            <p className="text-base font-black text-white">La VAR dort...</p>
-            <p className="mt-2 text-sm text-zinc-400">
-              Aucun match en direct. C&apos;est le moment de poser tes pronos.
+            <p className="text-base font-black text-white">
+              {t("varSleeping")}
             </p>
+            <p className="mt-2 text-sm text-zinc-400">{t("noDirectMatches")}</p>
             <Link
               href="/pronos"
               className="mt-6 flex h-12 items-center gap-2 rounded-xl bg-whistle px-6 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:bg-whistle/90 active:scale-95"
             >
               <Target className="h-4 w-4" />
-              Faire mes pronos
+              {t("makeMyPronos")}
             </Link>
             <div className="mt-2 flex w-full gap-2">
               <Link
                 href="/leaderboard"
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
               >
-                🏆 Classement
+                🏆 {t("leaderboard")}
               </Link>
               <Link
                 href="/ligues"
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
               >
-                🛡️ Mes ligues
+                🛡️ {t("myLeagues")}
               </Link>
             </div>
           </div>

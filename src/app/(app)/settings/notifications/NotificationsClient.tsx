@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   Bell,
   ChevronLeft,
@@ -26,69 +27,6 @@ type ToggleKey =
   | "notif_daily_digest"
   | "notif_squad_chat";
 
-const NOTIFICATION_GROUPS = [
-  {
-    title: "Paris VAR",
-    icon: Zap,
-    items: [
-      {
-        key: "notif_var_results" as ToggleKey,
-        label: "Résultats VAR",
-        desc: "Reçois le verdict de chaque pari VAR avec ton gain ou ta perte explicite.",
-      },
-    ],
-  },
-  {
-    title: "Pronos",
-    icon: Trophy,
-    items: [
-      {
-        key: "notif_prono_results" as ToggleKey,
-        label: "Résultats de match",
-        desc: "Push personnalisé à la fin du match avec tes points de pronos gagnés.",
-      },
-    ],
-  },
-  {
-    title: "Rappels pré-match",
-    icon: Clock,
-    items: [
-      {
-        key: "notif_pre_match_2h" as ToggleKey,
-        label: "2h avant le coup d'envoi",
-        desc: "Rappel pour faire tes pronos avant la fermeture des paris.",
-      },
-      {
-        key: "notif_pre_match_5min" as ToggleKey,
-        label: "5 min avant le coup d'envoi",
-        desc: "Push imminent pour rejoindre la LiveRoom et activer le mode Stade.",
-      },
-    ],
-  },
-  {
-    title: "Bilan quotidien",
-    icon: BookOpen,
-    items: [
-      {
-        key: "notif_daily_digest" as ToggleKey,
-        label: "Bilan du matin (09h00)",
-        desc: "Récap de tes gains de la veille avec ton classement mis à jour.",
-      },
-    ],
-  },
-  {
-    title: "Ligues",
-    icon: Users,
-    items: [
-      {
-        key: "notif_squad_chat" as ToggleKey,
-        label: "Chat de ligue actif",
-        desc: "Reçois un push quand quelqu'un écrit dans ton chat de ligue. Max 1 push / ligue / 30 min.",
-      },
-    ],
-  },
-];
-
 export default function NotificationsClient({
   userId,
   initialPreMatch5,
@@ -106,6 +44,71 @@ export default function NotificationsClient({
   initialDailyDigest: boolean;
   initialSquadChat: boolean;
 }) {
+  const t = useTranslations("Notifications");
+
+  const NOTIFICATION_GROUPS = [
+    {
+      title: t("groupVarTitle"),
+      icon: Zap,
+      items: [
+        {
+          key: "notif_var_results" as ToggleKey,
+          label: t("varResultsLabel"),
+          desc: t("varResultsDesc"),
+        },
+      ],
+    },
+    {
+      title: t("groupPronosTitle"),
+      icon: Trophy,
+      items: [
+        {
+          key: "notif_prono_results" as ToggleKey,
+          label: t("pronoResultsLabel"),
+          desc: t("pronoResultsDesc"),
+        },
+      ],
+    },
+    {
+      title: t("groupPreMatchTitle"),
+      icon: Clock,
+      items: [
+        {
+          key: "notif_pre_match_2h" as ToggleKey,
+          label: t("preMatch2hLabel"),
+          desc: t("preMatch2hDesc"),
+        },
+        {
+          key: "notif_pre_match_5min" as ToggleKey,
+          label: t("preMatch5minLabel"),
+          desc: t("preMatch5minDesc"),
+        },
+      ],
+    },
+    {
+      title: t("groupDailyTitle"),
+      icon: BookOpen,
+      items: [
+        {
+          key: "notif_daily_digest" as ToggleKey,
+          label: t("dailyDigestLabel"),
+          desc: t("dailyDigestDesc"),
+        },
+      ],
+    },
+    {
+      title: t("groupLeaguesTitle"),
+      icon: Users,
+      items: [
+        {
+          key: "notif_squad_chat" as ToggleKey,
+          label: t("squadChatLabel"),
+          desc: t("squadChatDesc"),
+        },
+      ],
+    },
+  ];
+
   const [values, setValues] = useState<Record<ToggleKey, boolean>>({
     notif_pre_match_5min: initialPreMatch5,
     notif_pre_match_2h: initialPreMatch2h,
@@ -183,9 +186,9 @@ export default function NotificationsClient({
         </Link>
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-            Notifications
+            {t("title")}
           </h1>
-          <p className="text-sm text-zinc-400">Choisis ce qui te réveille.</p>
+          <p className="text-sm text-zinc-400">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -194,7 +197,7 @@ export default function NotificationsClient({
         <div className="mb-4 flex items-center gap-3 rounded-2xl border border-green-500/20 bg-green-500/8 px-4 py-3">
           <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
           <p className="text-sm font-semibold text-green-300">
-            Cet appareil est bien enregistré pour recevoir les notifications.
+            {t("deviceRegistered")}
           </p>
         </div>
       ) : subStatus === "not_subscribed" ? (
@@ -203,12 +206,10 @@ export default function NotificationsClient({
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
             <div className="flex-1">
               <p className="text-sm font-bold text-red-300">
-                Cet appareil n&apos;est pas encore enregistré
+                {t("deviceNotRegistered")}
               </p>
               <p className="mt-0.5 text-xs text-zinc-400">
-                Les préférences ci-dessous sont sauvegardées, mais aucune
-                notification ne sera reçue tant que tu n&apos;as pas activé le
-                canal push sur cet appareil.
+                {t("deviceNotRegisteredDesc")}
               </p>
             </div>
           </div>
@@ -223,7 +224,7 @@ export default function NotificationsClient({
             ) : (
               <Bell className="h-4 w-4" />
             )}
-            {subscribing ? "Activation…" : "Activer les notifications push"}
+            {subscribing ? t("activating") : t("activatePush")}
           </button>
         </div>
       ) : null}
@@ -232,10 +233,10 @@ export default function NotificationsClient({
       <div className="mb-6 flex items-start gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/8 p-4">
         <Bell className="mt-0.5 h-4 w-4 shrink-0 text-yellow-400" />
         <p className="text-xs leading-relaxed text-zinc-300">
-          <span className="font-bold text-yellow-400">Alertes VAR</span> — les
-          notifs d&apos;ouverture de marché sont toujours actives. C&apos;est la
-          mécanique principale de l&apos;app et elles ne peuvent pas être
-          désactivées ici.
+          <span className="font-bold text-yellow-400">
+            {t("alwaysOnTitle")}
+          </span>{" "}
+          — {t("alwaysOnNote")}
         </p>
       </div>
 
@@ -290,8 +291,7 @@ export default function NotificationsClient({
       </div>
 
       <p className="mt-8 text-center text-[10px] text-zinc-600">
-        Les notifs sont envoyées via Web Push — vérifie aussi les autorisations
-        de ton navigateur si tu ne reçois rien.
+        {t("browserNote")}
       </p>
     </main>
   );

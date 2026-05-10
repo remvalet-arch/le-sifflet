@@ -1,54 +1,49 @@
+import { getTranslations } from "next-intl/server";
+
 export const revalidate = 86400;
 
 export const metadata = { title: "Lois du Jeu — VAR Time" };
 
-const VAR_SITUATIONS = [
-  {
-    number: "01",
-    title: "But valide ou non",
-    subtitle: "Faute · Hors-jeu · Main",
-    body: "La VAR intervient pour vérifier si un but doit être accordé ou refusé. Cela inclut les fautes dans l'action menant au but, les positions de hors-jeu, et les touches de main involontaires ou délibérées dans la phase d'attaque.",
-    color: "green" as const,
-  },
-  {
-    number: "02",
-    title: "Penalty accordé ou refusé",
-    subtitle: "Faute · Main · Position",
-    body: "Toute décision d'accorder ou de refuser un penalty dans la surface de réparation peut faire l'objet d'une révision. La VAR contrôle également si les joueurs respectaient les limites de la surface au moment du tir.",
-    color: "yellow" as const,
-  },
-  {
-    number: "03",
-    title: "Carton rouge direct",
-    subtitle: "Hors faute grossière ou comportement violent",
-    body: "Les cartons rouges directs (non les deuxièmes jaunes) peuvent être revus : tacles dangereux, brutalité, crachats, morsures. Un jaune attribué à tort peut être upgradé, mais la VAR ne revoit pas les doubles avertissements.",
-    color: "red" as const,
-  },
-  {
-    number: "04",
-    title: "Erreur d'identité",
-    subtitle: "Mauvais joueur sanctionné",
-    body: "Si l'arbitre sanctionne le mauvais joueur — carton ou expulsion — la VAR corrige l'identité. Ce cas reste rare mais est couvert par le protocole officiel IFAB depuis 2018.",
-    color: "blue" as const,
-  },
-];
+export default async function LawsPage() {
+  const t = await getTranslations("Laws");
 
-const PRINCIPLES = [
-  {
-    label: "Erreur claire et évidente",
-    body: "La VAR n'intervient que pour les erreurs manifestes. Un arbitre ne peut pas être contredit pour des jugements subjectifs.",
-  },
-  {
-    label: "Décision finale à l'arbitre",
-    body: "La VAR recommande, l'arbitre tranche. Il peut aller consulter l'écran bord-terrain (OFR — On Field Review) pour décider lui-même.",
-  },
-  {
-    label: "Célébration suspendue",
-    body: "Par protocole, les joueurs doivent attendre la validation de la VAR avant de célébrer un but. L'arbitre lève la main pour signaler la vérification.",
-  },
-];
+  const VAR_SITUATIONS = [
+    {
+      number: t("sit01Number"),
+      title: t("sit01Title"),
+      subtitle: t("sit01Subtitle"),
+      body: t("sit01Body"),
+      color: "green" as const,
+    },
+    {
+      number: t("sit02Number"),
+      title: t("sit02Title"),
+      subtitle: t("sit02Subtitle"),
+      body: t("sit02Body"),
+      color: "yellow" as const,
+    },
+    {
+      number: t("sit03Number"),
+      title: t("sit03Title"),
+      subtitle: t("sit03Subtitle"),
+      body: t("sit03Body"),
+      color: "red" as const,
+    },
+    {
+      number: t("sit04Number"),
+      title: t("sit04Title"),
+      subtitle: t("sit04Subtitle"),
+      body: t("sit04Body"),
+      color: "blue" as const,
+    },
+  ];
 
-export default function LawsPage() {
+  const PRINCIPLES = [
+    { label: t("principle01Label"), body: t("principle01Body") },
+    { label: t("principle02Label"), body: t("principle02Body") },
+    { label: t("principle03Label"), body: t("principle03Body") },
+  ];
+
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       {/* Header */}
@@ -56,16 +51,13 @@ export default function LawsPage() {
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1">
           <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
           <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-            Protocole IFAB / FIFA
+            {t("protocol")}
           </span>
         </div>
         <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-          Lois du Jeu VAR
+          {t("title")}
         </h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Les 4 situations officielles où l&rsquo;assistance vidéo peut
-          intervenir.
-        </p>
+        <p className="mt-1 text-sm text-zinc-400">{t("subtitle")}</p>
       </div>
 
       {/* 4 situations */}
@@ -134,7 +126,7 @@ export default function LawsPage() {
       {/* Principes clés */}
       <div className="mt-8">
         <h2 className="mb-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          Principes clés du protocole
+          {t("keyPrinciples")}
         </h2>
         <div className="flex flex-col gap-3">
           {PRINCIPLES.map((p) => (
@@ -151,7 +143,7 @@ export default function LawsPage() {
 
       {/* Source */}
       <p className="mt-8 text-center text-[10px] text-zinc-700">
-        Source : Lois du Jeu IFAB édition 2024/25 — Protocole VAR FIFA
+        {t("source")}
       </p>
     </main>
   );

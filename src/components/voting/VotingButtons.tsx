@@ -1,63 +1,72 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { LoaderCircle, Swords, X } from "lucide-react";
 import { LIVE_BETTING_WINDOW_SECONDS } from "@/lib/constants/odds";
 import type { BetConfirmed } from "@/hooks/useVotingMarket";
 import type { BoosterCatalogRow, MarketEventType } from "@/types/database";
 
-export const EVENT_CONFIG: Record<
-  MarketEventType,
-  { question: string; emoji: string; yes: string; no: string }
-> = {
-  penalty_check: {
-    question: "Y'a pénalty là ?!",
-    emoji: "📢",
-    yes: "OUI",
-    no: "NON",
-  },
-  penalty_outcome: {
-    question: "Péno accordé — il met au fond ?",
-    emoji: "🥅",
-    yes: "AU FOND",
-    no: "RATÉ",
-  },
-  var_goal: {
-    question: "But confirmé par la VAR ?",
-    emoji: "🚩",
-    yes: "BUT",
-    no: "ANNULÉ",
-  },
-  red_card: {
-    question: "Vilaine semelle — c'est rouge ?",
-    emoji: "🟥",
-    yes: "ROUGE",
-    no: "JAUNE",
-  },
-  free_kick: {
-    question: "Coup franc à 20m — but dans 3 min ?",
-    emoji: "🎯",
-    yes: "OUI",
-    no: "NON",
-  },
-  corner: {
-    question: "Corner tendu — but dans 3 min ?",
-    emoji: "🏁",
-    yes: "OUI",
-    no: "NON",
-  },
-  stoppage_ht: {
-    question: "Combien de minutes d'arrêt à la mi-temps ?",
-    emoji: "⏱️",
-    yes: "",
-    no: "",
-  },
-  stoppage_ft: {
-    question: "Combien de minutes d'arrêt en fin de match ?",
-    emoji: "⏱️",
-    yes: "",
-    no: "",
-  },
+type EventConfigEntry = {
+  question: string;
+  emoji: string;
+  yes: string;
+  no: string;
 };
+
+export function getEventConfig(
+  t: ReturnType<typeof useTranslations<"EventConfig">>,
+): Record<MarketEventType, EventConfigEntry> {
+  return {
+    penalty_check: {
+      question: t("penaltyCheckQuestion"),
+      emoji: "📢",
+      yes: t("yes"),
+      no: t("no"),
+    },
+    penalty_outcome: {
+      question: t("penaltyOutcomeQuestion"),
+      emoji: "🥅",
+      yes: t("penaltyOutcomeYes"),
+      no: t("penaltyOutcomeNo"),
+    },
+    var_goal: {
+      question: t("varGoalQuestion"),
+      emoji: "🚩",
+      yes: t("varGoalYes"),
+      no: t("varGoalNo"),
+    },
+    red_card: {
+      question: t("redCardQuestion"),
+      emoji: "🟥",
+      yes: t("redCardYes"),
+      no: t("redCardNo"),
+    },
+    free_kick: {
+      question: t("freeKickQuestion"),
+      emoji: "🎯",
+      yes: t("yes"),
+      no: t("no"),
+    },
+    corner: {
+      question: t("cornerQuestion"),
+      emoji: "🏁",
+      yes: t("yes"),
+      no: t("no"),
+    },
+    stoppage_ht: {
+      question: t("stoppageHtQuestion"),
+      emoji: "⏱️",
+      yes: "",
+      no: "",
+    },
+    stoppage_ft: {
+      question: t("stoppageFtQuestion"),
+      emoji: "⏱️",
+      yes: "",
+      no: "",
+    },
+  };
+}
 
 export function collectFocusable(root: HTMLElement): HTMLElement[] {
   const sel = [
@@ -103,11 +112,12 @@ export const OPTION_COLORS = [
 
 // ── BetConfirmedView ────────────────────────────────────────────────────────
 export function BetConfirmedView({ bet }: { bet: BetConfirmed }) {
+  const t = useTranslations("Voting");
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
       <span className="text-5xl">⚡</span>
       <p className="text-xl font-black uppercase tracking-tight text-white">
-        Pari enregistré
+        {t("betRegistered")}
       </p>
       <p className="text-sm font-black text-zinc-300">
         {bet.staked} 🪙 sur{" "}
@@ -115,18 +125,16 @@ export function BetConfirmedView({ bet }: { bet: BetConfirmed }) {
       </p>
       {bet.boosterName && (
         <p className="text-[11px] font-black text-amber-400">
-          ⚡ Booster actif : {bet.boosterName}
+          {t("boosterActive", { name: bet.boosterName })}
         </p>
       )}
       <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-        Gain potentiel :{" "}
+        {t("potentialGain")}{" "}
         <span className="text-green-400">
           {Math.floor(bet.staked * bet.multiplier)} 🪙
         </span>
       </p>
-      <p className="text-[10px] text-zinc-600">
-        Le verdict arrive quand la VAR tranche.
-      </p>
+      <p className="text-[10px] text-zinc-600">{t("verdictComing")}</p>
     </div>
   );
 }
@@ -147,12 +155,11 @@ export function ModalHeader({
   descId: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("Voting");
   return (
     <div className="mb-4 flex items-start justify-between gap-2">
       <p id={descId} className="sr-only">
-        Parie des Sifflets contre toute la communauté. Les points des joueurs
-        qui se trompent financent les gains de ceux qui ont le bon flair. Cotes
-        en temps réel selon les mises. Ferme avec Échap ou le bouton Passer.
+        {t("betDescription")}
       </p>
       <div className="flex items-center gap-3">
         <span className="text-2xl" aria-hidden>
@@ -160,7 +167,7 @@ export function ModalHeader({
         </span>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            Décision en cours
+            {t("decision")}
           </p>
           {squadId && squadName && (
             <p className="mt-1.5 flex items-start gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[10px] leading-snug text-amber-100/90">
@@ -169,7 +176,7 @@ export function ModalHeader({
                 aria-hidden
               />
               <span className="line-clamp-2 min-w-0 font-medium">
-                Braquage actif avec{" "}
+                {t("activeRaid")}{" "}
                 <span className="font-black text-amber-50">{squadName}</span>
               </span>
             </p>
@@ -182,7 +189,7 @@ export function ModalHeader({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Fermer la fenêtre de pari"
+        aria-label={t("closeWindow")}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-500 transition hover:bg-zinc-700 hover:text-white active:scale-90"
       >
         <X className="h-4 w-4" aria-hidden />
@@ -207,6 +214,7 @@ export function VotingTimer({
   timerColor: string;
   audienceCount?: number;
 }) {
+  const t = useTranslations("Voting");
   return (
     <div className="mb-5 flex flex-col items-center gap-2">
       <div
@@ -221,18 +229,18 @@ export function VotingTimer({
         }`}
         role="timer"
         aria-label={
-          expired ? "Votes clos" : `${secondsLeft} secondes restantes`
+          expired ? t("closed") : t("secondsLeft", { count: secondsLeft })
         }
       >
         {expired ? "0:00" : `0:${String(secondsLeft).padStart(2, "0")}`}
       </div>
       {audienceCount && audienceCount > 0 ? (
         <span className="text-xs font-bold text-zinc-500">
-          👁️ {audienceCount} dans le stade
+          👁️ {t("inStadium", { count: audienceCount })}
         </span>
       ) : (
         <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
-          {expired ? "Votes clos" : "Temps restant"}
+          {expired ? t("closed") : t("timeLeft")}
         </span>
       )}
       <div
@@ -271,6 +279,7 @@ export function AmountPicker({
   canBet: boolean;
   expired: boolean;
 }) {
+  const t = useTranslations("Voting");
   const sliderPct =
     Math.max(minBet, siffletsBalance) - minBet > 0
       ? ((amount - minBet) / (Math.max(minBet, siffletsBalance) - minBet)) * 100
@@ -278,13 +287,13 @@ export function AmountPicker({
 
   return (
     <div className="mb-5">
-      <p className="mb-2 text-sm font-bold text-zinc-400">Engagement</p>
+      <p className="mb-2 text-sm font-bold text-zinc-400">{t("stake")}</p>
       <div className="mb-3 grid grid-cols-3 gap-2">
         {(
           [
-            ["MIN", minBet],
-            ["MOITIÉ", half],
-            ["ALL IN", siffletsBalance],
+            [t("min"), minBet],
+            [t("half"), half],
+            [t("allIn"), siffletsBalance],
           ] as const
         ).map(([label, val]) => (
           <button
@@ -319,13 +328,13 @@ export function AmountPicker({
           value={amount}
           onChange={(e) => setAmount(clamp(parseInt(e.target.value, 10)))}
           disabled={!canBet || expired}
-          aria-label="Montant du pari en points"
+          aria-label={t("betAmount")}
           className="w-full accent-green-500 disabled:opacity-40"
         />
       </div>
       {minBet > 5 && (
         <p className="mt-1 text-[10px] text-zinc-600">
-          🎚️ Mise min sur ton solde :{" "}
+          {t("minStakeInfo")}{" "}
           <span className="font-black text-zinc-500">
             {minBet.toLocaleString("fr-FR")} 🪙
           </span>
@@ -347,12 +356,13 @@ export function BoosterPicker({
   setSelectedBoosterId: (id: string | null) => void;
   expired: boolean;
 }) {
+  const t = useTranslations("Voting");
   if (availableBoosters.length === 0 || expired) return null;
 
   return (
     <div className="mb-4">
       <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-        ⚡ Utiliser un booster ?
+        {t("useBooster")}
       </p>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {[
@@ -411,6 +421,7 @@ export function BinaryButtons({
   voteLoading: string | null;
   onVote: (v: string) => void;
 }) {
+  const t = useTranslations("Voting");
   const pct = computePct(poolOdds, ["oui", "non"]);
   const ouiPct = pct["oui"] ?? 50;
   const nonPct = pct["non"] ?? 50;
@@ -422,7 +433,7 @@ export function BinaryButtons({
         <div
           className="flex h-3 overflow-hidden rounded-full"
           role="img"
-          aria-label={`${ouiPct}% OUI, ${nonPct}% NON`}
+          aria-label={`${ouiPct}% ${cfg.yes}, ${nonPct}% ${cfg.no}`}
         >
           <div
             className="bg-green-500 transition-[width] duration-700 ease-out"
@@ -435,14 +446,16 @@ export function BinaryButtons({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-green-400">
-            {ouiPct}% OUI
+            {ouiPct}% {cfg.yes}
           </span>
           <span className="text-[10px] font-semibold text-zinc-500">
             {totalInJeu > 0
-              ? `${totalInJeu.toLocaleString("fr-FR")} 🪙 en jeu`
-              : "Aucune mise"}
+              ? t("inPlay", { amount: totalInJeu.toLocaleString("fr-FR") })
+              : t("noStake")}
           </span>
-          <span className="text-xs font-black text-red-400">{nonPct}% NON</span>
+          <span className="text-xs font-black text-red-400">
+            {nonPct}% {cfg.no}
+          </span>
         </div>
       </div>
 
@@ -483,7 +496,9 @@ export function BinaryButtons({
                   >
                     {votePct}%
                   </span>
-                  <span className="sr-only">cote ×{odd.toFixed(2)}</span>
+                  <span className="sr-only">
+                    {t("oddMultiplier", { odd: odd.toFixed(2) })}
+                  </span>
                 </>
               )}
             </button>

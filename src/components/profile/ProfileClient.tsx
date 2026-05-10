@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ProfileHeader } from "./ProfileHeader";
 import type { BadgeRow, SeasonArchiveRow } from "@/types/database";
 import { StatsSection } from "./StatsSection";
@@ -46,14 +47,7 @@ type Props = {
   currentSeason?: { label: string; endsAt: string } | null;
 };
 
-const TABS = [
-  { value: "profil", icon: "⚽", label: "Profil" },
-  { value: "historique", icon: "📊", label: "Historique" },
-  { value: "badges", icon: "🏅", label: "Badges" },
-  { value: "amis", icon: "👥", label: "Amis" },
-  { value: "stats", icon: "📈", label: "Stats" },
-] as const;
-type TabValue = (typeof TABS)[number]["value"];
+type TabValue = "profil" | "historique" | "badges" | "amis" | "stats";
 
 export function ProfileClient({
   shortBets,
@@ -86,6 +80,18 @@ export function ProfileClient({
   seasonArchives = [],
   currentSeason,
 }: Props) {
+  const tProfile = useTranslations("Profile");
+  const TABS = [
+    { value: "profil" as TabValue, icon: "⚽", label: tProfile("tabProfil") },
+    {
+      value: "historique" as TabValue,
+      icon: "📊",
+      label: tProfile("tabHistorique"),
+    },
+    { value: "badges" as TabValue, icon: "🏅", label: tProfile("tabBadges") },
+    { value: "amis" as TabValue, icon: "👥", label: tProfile("tabAmis") },
+    { value: "stats" as TabValue, icon: "📈", label: tProfile("tabStats") },
+  ];
   const [activeTab, setActiveTab] = useState<TabValue>("profil");
   const tabBadge = (value: TabValue): number | null => {
     if (value === "historique") {

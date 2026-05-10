@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { LoaderCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -18,14 +19,18 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 
 // ── Alertes communautaires ────────────────────────────────────────────────────
 
-const ALERTS: { type: AlertActionType; emoji: string; label: string }[] = [
-  { type: "penalty_check", emoji: "📢", label: "VAR PÉNO ?" },
-  { type: "var_goal", emoji: "🚩", label: "VAR BUT ?" },
-  { type: "red_card", emoji: "🟥", label: "VILAINE SEMELLE ?" },
-  { type: "free_kick", emoji: "🎯", label: "COUP FRANC !" },
-  { type: "corner", emoji: "🏁", label: "CORNER CHAUD !" },
-  { type: "penalty_outcome", emoji: "🥅", label: "PÉNO : AU FOND ?" },
-];
+function getAlerts(
+  t: ReturnType<typeof useTranslations<"ActionDrawer">>,
+): { type: AlertActionType; emoji: string; label: string }[] {
+  return [
+    { type: "penalty_check", emoji: "📢", label: t("alertVarPeno") },
+    { type: "var_goal", emoji: "🚩", label: t("alertVarBut") },
+    { type: "red_card", emoji: "🟥", label: t("alertRedCard") },
+    { type: "free_kick", emoji: "🎯", label: t("alertFreekick") },
+    { type: "corner", emoji: "🏁", label: t("alertCorner") },
+    { type: "penalty_outcome", emoji: "🥅", label: t("alertPenaltyOutcome") },
+  ];
+}
 
 // ── Panneau de contrôle des états ─────────────────────────────────────────────
 
@@ -136,6 +141,7 @@ export function ActionDrawer({
   teamHome,
   teamAway,
 }: Props) {
+  const t = useTranslations("ActionDrawer");
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"alert" | "match" | "control">(
     "alert",
@@ -383,7 +389,7 @@ export function ActionDrawer({
         {/* Drag handle */}
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-zinc-700" />
         <h2 id={titleId} className="sr-only">
-          {isModerator ? "Panneau modérateur" : "Signaler une action"}
+          {isModerator ? t("moderatorPanel") : t("reportAction")}
         </h2>
 
         {isModerator ? (
@@ -401,10 +407,10 @@ export function ActionDrawer({
                   }`}
                 >
                   {tab === "alert"
-                    ? "📢 Alertes"
+                    ? t("tabAlerts")
                     : tab === "match"
-                      ? "📋 Feuille"
-                      : "🎮 Contrôle"}
+                      ? t("tabMatch")
+                      : t("tabControl")}
                 </button>
               ))}
             </div>
@@ -432,7 +438,7 @@ export function ActionDrawer({
                 >
                   <div>
                     <label className="mb-1.5 block text-xs font-bold text-zinc-400">
-                      Type d&apos;événement
+                      {t("eventType")}
                     </label>
                     <select
                       value={eventType}
@@ -458,7 +464,7 @@ export function ActionDrawer({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="mb-1.5 block text-xs font-bold text-zinc-400">
-                        Minute
+                        {t("minute")}
                       </label>
                       <input
                         type="number"
@@ -473,7 +479,7 @@ export function ActionDrawer({
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-bold text-zinc-400">
-                        Équipe
+                        {t("team")}
                       </label>
                       <select
                         value={teamSide}
@@ -496,7 +502,7 @@ export function ActionDrawer({
                           <span className="text-base leading-none text-red-400">
                             ↓
                           </span>
-                          Joueur sortant
+                          {t("playerOut")}
                         </label>
                         <select
                           value={playerOut}
@@ -506,8 +512,8 @@ export function ActionDrawer({
                         >
                           <option value="">
                             {starters.length === 0
-                              ? "Aucun joueur disponible"
-                              : "Sélectionner…"}
+                              ? t("noPlayerAvailable")
+                              : t("selectPlayer")}
                           </option>
                           {starters.map((p) => (
                             <option key={p.id} value={p.player_name}>
@@ -521,7 +527,7 @@ export function ActionDrawer({
                           <span className="text-base leading-none text-green-400">
                             ↑
                           </span>
-                          Joueur entrant
+                          {t("playerIn")}
                         </label>
                         <select
                           value={playerIn}
@@ -531,8 +537,8 @@ export function ActionDrawer({
                         >
                           <option value="">
                             {bench.length === 0
-                              ? "Aucun joueur disponible"
-                              : "Sélectionner…"}
+                              ? t("noPlayerAvailable")
+                              : t("selectPlayer")}
                           </option>
                           {bench.map((p) => (
                             <option key={p.id} value={p.player_name}>
@@ -545,7 +551,7 @@ export function ActionDrawer({
                   ) : (
                     <div>
                       <label className="mb-1.5 block text-xs font-bold text-zinc-400">
-                        Joueur
+                        {t("player")}
                       </label>
                       <select
                         value={playerName}
@@ -555,8 +561,8 @@ export function ActionDrawer({
                       >
                         <option value="">
                           {starters.length === 0
-                            ? "Aucun joueur disponible"
-                            : "Sélectionner…"}
+                            ? t("noPlayerAvailable")
+                            : t("selectPlayer")}
                         </option>
                         {starters.map((p) => (
                           <option key={p.id} value={p.player_name}>
@@ -575,9 +581,7 @@ export function ActionDrawer({
                         onChange={(e) => setIsOwnGoal(e.target.checked)}
                         className="h-4 w-4 rounded accent-orange-500"
                       />
-                      <span className="font-semibold">
-                        Contre son camp (CSC)
-                      </span>
+                      <span className="font-semibold">{t("ownGoal")}</span>
                     </label>
                   )}
 
@@ -589,9 +593,9 @@ export function ActionDrawer({
                     {submitting ? (
                       <LoaderCircle className="h-5 w-5 animate-spin" />
                     ) : isSub ? (
-                      "Valider le changement"
+                      t("validateSubstitution")
                     ) : (
-                      "Valider l'événement"
+                      t("validateEvent")
                     )}
                   </button>
                 </form>
@@ -602,7 +606,7 @@ export function ActionDrawer({
                   {/* État actuel */}
                   <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-zinc-800/40 px-4 py-3">
                     <span className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                      État actuel
+                      {t("currentStatus")}
                     </span>
                     <span className="rounded-lg bg-zinc-700 px-3 py-1 text-xs font-black text-white">
                       {STATUS_LABELS[matchStatus]}
@@ -637,7 +641,7 @@ export function ActionDrawer({
                       className="flex w-full items-center justify-between px-4 py-3"
                     >
                       <span className="text-xs font-black uppercase tracking-wide text-zinc-400">
-                        📡 Base de données (TheSportsDB)
+                        {t("syncDatabase")}
                       </span>
                       {syncDbOpen ? (
                         <ChevronUp className="h-4 w-4 text-zinc-500" />
@@ -651,12 +655,12 @@ export function ActionDrawer({
                         {/* A. Import d'un match */}
                         <div>
                           <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-zinc-500">
-                            A. Import d&apos;un match
+                            {t("importMatch")}
                           </p>
                           <input
                             type="text"
                             inputMode="numeric"
-                            placeholder="ID de l'événement (ex: 1234567)"
+                            placeholder={t("eventIdPlaceholder")}
                             value={syncEventId}
                             onChange={(e) => setSyncEventId(e.target.value)}
                             className="mb-2 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-green-500/50 focus:outline-none"
@@ -669,10 +673,10 @@ export function ActionDrawer({
                             {isSyncingMatch ? (
                               <>
                                 <LoaderCircle className="h-4 w-4 animate-spin" />{" "}
-                                Synchronisation…
+                                {t("syncingMatch")}
                               </>
                             ) : (
-                              "📥 Synchroniser le Match"
+                              t("syncMatch")
                             )}
                           </button>
                         </div>
@@ -682,16 +686,16 @@ export function ActionDrawer({
                         {/* B. Import rapide effectifs MVP */}
                         <div>
                           <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-zinc-500">
-                            B. Effectif rapide MVP
+                            {t("mvpRoster")}
                           </p>
                           <select
                             value={selectedTeamId}
                             onChange={(e) => setSelectedTeamId(e.target.value)}
                             className="mb-2 w-full rounded-xl border border-white/10 bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-white focus:border-green-500/50 focus:outline-none"
                           >
-                            {MVP_TEAMS.map((t) => (
-                              <option key={t.id} value={t.id}>
-                                {t.label}
+                            {MVP_TEAMS.map((team) => (
+                              <option key={team.id} value={team.id}>
+                                {team.label}
                               </option>
                             ))}
                           </select>
@@ -703,10 +707,10 @@ export function ActionDrawer({
                             {isSyncingRoster ? (
                               <>
                                 <LoaderCircle className="h-4 w-4 animate-spin" />{" "}
-                                Synchronisation…
+                                {t("syncingRoster")}
                               </>
                             ) : (
-                              "🔄 Mettre à jour l'effectif complet"
+                              t("syncRoster")
                             )}
                           </button>
                         </div>
@@ -720,7 +724,7 @@ export function ActionDrawer({
         ) : (
           <>
             <p className="mb-4 text-center text-xs font-black uppercase tracking-widest text-zinc-500">
-              Signaler une action
+              {t("reportAction")}
             </p>
             <AlertGrid
               isOnCooldown={isOnCooldown}
@@ -757,15 +761,18 @@ function AlertGrid({
   signaledTypes: Set<AlertActionType>;
   onAlert: (type: AlertActionType) => void;
 }) {
+  const t = useTranslations("ActionDrawer");
+  const ALERTS = getAlerts(t);
+
   if (isOnCooldown) {
     return (
       <div className="mx-4 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-6 py-8 text-center">
         <LoaderCircle className="h-8 w-8 animate-spin text-yellow-400" />
         <p className="font-black uppercase tracking-wide text-white">
-          L&apos;arbitre consulte la VAR…
+          {t("varConsulting")}
         </p>
         <p className="text-sm text-zinc-400">
-          Retour dans{" "}
+          {t("backIn")}{" "}
           <span className="font-bold text-yellow-400">
             {cooldownMins}:{cooldownSecs}
           </span>
@@ -803,7 +810,7 @@ function AlertGrid({
                   isSignaled ? "text-yellow-400" : "text-zinc-300"
                 }`}
               >
-                {isSignaled ? "En attente…" : label}
+                {isSignaled ? t("waiting") : label}
               </span>
             )}
           </button>
