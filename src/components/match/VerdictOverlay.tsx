@@ -94,6 +94,7 @@ export function VerdictOverlay({
   return (
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       onClick={phase === "result" ? onClose : undefined}
     >
       {phase === "suspense" && (
