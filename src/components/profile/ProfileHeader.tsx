@@ -277,10 +277,10 @@ export function ProfileHeader({
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
+          className="absolute top-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white active:scale-90"
           aria-label={tp("editProfileAriaLabel")}
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Pencil className="h-4 w-4" />
         </button>
 
         <div className="relative px-5 pt-5 pb-4">

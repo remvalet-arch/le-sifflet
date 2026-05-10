@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata() {
@@ -44,6 +44,28 @@ export default async function MessagesPage() {
 
   const profileMap = new Map(profiles.map((p) => [p.id, p]));
 
+  // Fetch accepted friends not already in a thread
+  const threadPartnerIds = new Set(otherIds);
+  const { data: friendRequests } = await supabase
+    .from("friend_requests")
+    .select("sender_id, receiver_id")
+    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+    .eq("status", "accepted");
+
+  const friendIds = (friendRequests ?? [])
+    .map((fr) => (fr.sender_id === user.id ? fr.receiver_id : fr.sender_id))
+    .filter((id) => !threadPartnerIds.has(id));
+
+  let friendsWithoutThread: { id: string; username: string }[] = [];
+  if (friendIds.length > 0) {
+    const { data: friendProfiles } = await supabase
+      .from("profiles")
+      .select("id, username")
+      .in("id", friendIds)
+      .limit(10);
+    friendsWithoutThread = friendProfiles ?? [];
+  }
+
   const enriched = (threads ?? []).map((t) => {
     const otherId = t.user_a_id === user.id ? t.user_b_id : t.user_a_id;
     const myReadAt =
@@ -56,7 +78,30 @@ export default async function MessagesPage() {
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 py-5">
-      <h1 className="mb-4 text-xl font-black text-white">{t("title")}</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-black text-white">{t("title")}</h1>
+        {friendsWithoutThread.length > 0 && (
+          <details className="relative">
+            <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white active:scale-95">
+              <Plus className="h-4 w-4" />
+            </summary>
+            <div className="absolute right-0 top-10 z-10 min-w-[180px] rounded-2xl border border-white/10 bg-zinc-900 py-1 shadow-xl">
+              <p className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                {t("newConversationLabel")}
+              </p>
+              {friendsWithoutThread.map((f) => (
+                <Link
+                  key={f.id}
+                  href={`/messages/${f.id}`}
+                  className="block px-3 py-2.5 text-sm font-semibold text-zinc-300 transition hover:bg-white/5 hover:text-white"
+                >
+                  {f.username}
+                </Link>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
 
       {enriched.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">

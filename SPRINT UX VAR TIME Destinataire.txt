@@ -1,0 +1,731 @@
+# 🏃 SPRINT UX — VAR TIME
+**Destinataire :** Claude Code
+**Source :** Audit UX/UI complet (mai 2026)
+**Priorités :** P0 = bloquant / P1 = haute / P2 = moyenne / P3 = faible
+
+---
+
+## 📋 CONTEXTE TECHNIQUE
+
+L'app est une PWA mobile-first (viewport 390×844px). Stack apparente : SvelteKit ou Next.js App Router, Tailwind CSS, auth Google OAuth2. Les interactions UI utilisent des événements JavaScript natifs. Les composants de navigation sont une bottom-bar fixe (4 entrées) et un menu hamburger latéral.
+
+---
+
+## 🔴 P0 — CORRECTIONS CRITIQUES
+
+---
+
+### TICKET-001 ✅ — Confirmation de pari VAR après clic OUI/NON
+
+**Contexte :** Quand l'utilisateur clique sur OUI ou NON dans le marché VAR, le modal se ferme immédiatement sans aucun feedback de confirmation. L'utilisateur ne sait pas si son pari a été enregistré.
+
+**Action demandée :**
+Après le clic sur OUI ou NON et la confirmation serveur, afficher un toast de succès pendant 3 secondes :
+
+```
+✅ Pari enregistré — OUI · 1 062 🪙
+```
+
+Le bouton cliqué (OUI ou NON) doit également changer d'état visuellement (fond plein, icône checkmark, texte "Misé ✓") avant la fermeture du modal pour confirmer la sélection même si le toast est manqué.
+
+**Critère d'acceptation :** L'utilisateur sait toujours quel camp il a choisi et combien il a misé, sans avoir à naviguer vers l'historique.
+
+---
+
+### TICKET-002 ✅ — Champs de prono désactivés sans explication
+
+**Contexte :** Quand un match est trop proche du coup d'envoi, les inputs de score passent en `disabled` mais aucun message n'explique pourquoi. L'utilisateur voit des champs grisés et peut croire à un bug.
+
+**Action demandée :**
+Quand `input.disabled === true` sur une carte de prono, afficher à la place des inputs un label contextuel :
+
+```
+🔒 Pronos fermés — match dans moins de 60 min
+```
+
+Ou, si le match est déjà démarré :
+```
+● En direct — pronos fermés
+```
+
+Supprimer les inputs désactivés et les remplacer par ce composant statique. Le score affiché (si déjà commencé) remplace les "?".
+
+**Critère d'acceptation :** Zéro input disabled visible. L'état du match est toujours compréhensible sans action de l'utilisateur.
+
+---
+
+### TICKET-003 ✅ — Navigation des cartes de ligues sans lien href
+
+**Contexte :** Les cartes de ligues dans `/ligues` utilisent des `<button>` sans `href`. Cela empêche l'ouverture dans un nouvel onglet, la navigation clavier, les lecteurs d'écran, et l'indexation.
+
+**Action demandée :**
+Remplacer le `<button>` wrappant chaque carte de ligue par un `<a href="/ligues/[id]">` tout en conservant le style visuel identique. Les boutons enfants (code d'invitation, "Plus d'options") doivent stopper la propagation du clic avec `e.stopPropagation()` pour ne pas déclencher la navigation.
+
+```html
+<!-- Avant -->
+<button onClick={openLeague}>...</button>
+
+<!-- Après -->
+<a href="/ligues/{league.id}">
+  ...
+  <button onClick={(e) => { e.stopPropagation(); copyCode(); }}>
+    {league.code}
+  </button>
+</a>
+```
+
+**Critère d'acceptation :** Clic droit sur une carte → "Ouvrir dans un nouvel onglet" fonctionne. Navigation clavier possible (Tab + Entrée).
+
+---
+
+## 🟠 P1 — AMÉLIORATIONS HAUTE PRIORITÉ
+
+---
+
+### TICKET-004 ✅ — Écran de célébration post-création de ligue
+
+**Contexte :** Après la création d'une ligue (étape 3/3 → "CRÉER MA LIGUE"), l'utilisateur atterrit directement sur la liste des ligues sans aucun message de succès ni mise en avant du code d'invitation.
+
+**Action demandée :**
+Insérer un écran intermédiaire de célébration avant le retour sur `/ligues` :
+
+```
+🔥 Les Audit Masters est née !
+
+Ton code d'invitation :
+[ TCM42U ]  📋 Copier
+
+Partage ce code à tes potes pour qu'ils rejoignent ta ligue.
+
+[ Partager ]   [ Aller dans ma ligue → ]
+```
+
+- Le code doit être copiable en un tap (clipboard API + toast "Code copié !")
+- Le bouton "Partager" ouvre la Web Share API native (sur mobile) avec un message pré-rempli : *"Rejoins ma ligue VAR TIME — Les Audit Masters ! Code : TCM42U → vartime.app"*
+- Le bouton "Aller dans ma ligue" navigue vers la page de la ligue créée
+
+**Critère d'acceptation :** L'utilisateur connaît son code immédiatement après création et peut le partager en 1 tap.
+
+---
+
+### TICKET-005 ✅ (partiel — /ligues fait ; /leaderboard et /lobby restent) — Skeleton screens sur tous les états de chargement
+
+**Contexte :** Plusieurs pages affichent du texte brut pendant le chargement ("Chargement du classement...") ou des cartes blanches vides. C'est peu professionnel et augmente la perception du temps d'attente.
+
+**Pages concernées :**
+- `/leaderboard` → onglet Classement dans la vue journée
+- `/ligues` → lors du chargement des ligues
+- `/lobby?league=X&round=Y` → cartes de matchs pendant le fetch
+
+**Action demandée :**
+Créer un composant `<SkeletonCard>` réutilisable qui reproduit la forme des cartes avec des blocs gris animés (shimmer effect) :
+
+```css
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #2D2D2D 25%, #3D3D3D 50%, #2D2D2D 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+```
+
+Afficher 3 skeleton cards pendant le chargement, puis remplacer par les vraies données.
+
+**Critère d'acceptation :** Aucun texte "Chargement..." visible. Les skeleton cards respectent les dimensions des vraies cartes.
+
+---
+
+### TICKET-006 ✅ — Indicateur de scroll horizontal sur les filtres de compétitions
+
+**Contexte :** Les pills de filtres (Direct / Ligue 1 / Premier League / La Liga / Serie A / Bundesliga / Europe) sont scrollables horizontalement mais rien n'indique visuellement qu'il y a d'autres options hors-écran. Même constat sur les onglets Journées/Classement/Buteurs/Passeurs.
+
+**Action demandée :**
+Ajouter un gradient de fondu sur le bord droit du conteneur de pills quand du contenu est disponible hors-écran :
+
+```css
+.pills-container {
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pills-container::after {
+  content: '';
+  position: sticky;
+  right: 0;
+  width: 40px;
+  background: linear-gradient(to right, transparent, #0D0D0D);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+```
+
+Le fade disparaît quand l'utilisateur a scrollé jusqu'au bout.
+
+**Critère d'acceptation :** Sur un écran de 390px, le fade est visible à droite des pills. Il disparaît quand toutes les options sont visibles.
+
+---
+
+### TICKET-007 ✅ — Résultat de marché VAR dans le KOP après fermeture
+
+**Contexte :** Après la fermeture d'un marché VAR (fin du timer 90s), aucune carte n'apparaît dans le KOP pour rappeler à l'utilisateur son pari en attente.
+
+**Action demandée :**
+Insérer une carte dans la timeline du KOP dès qu'un pari est enregistré, avec le statut "EN ATTENTE" :
+
+```
+⏳ 14' — Ton pari VAR
+📢 Péno ?
+Tu as misé : OUI · 1 062 🪙
+Cote : ×2.00 — Gain potentiel : +1 062 🪙
+[ EN ATTENTE DU VERDICT ]
+```
+
+Quand le verdict tombe, la carte se met à jour :
+- Gagné : fond vert, afficher "✅ +1 062 🪙 — Tu avais raison !"
+- Perdu : fond rouge, afficher "❌ -1 062 🪙"
+
+**Critère d'acceptation :** L'utilisateur voit son pari dans la timeline dès qu'il est validé, et voit le résultat sans avoir à quitter la page.
+
+---
+
+### TICKET-008 ✅ — Countdown de recharge de la Sirène VAR
+
+**Contexte :** Après utilisation, le bouton affiche "Sirène VAR (recharge 15 min)" mais sans indiquer quand exactement elle sera disponible.
+
+**Action demandée :**
+Afficher un countdown dynamique dans le bouton :
+
+```
+🔕 Sirène VAR — disponible dans 14:32
+```
+
+Le countdown se décrémente en temps réel (JS `setInterval`). Quand il atteint 0, le bouton redevient actif avec son style normal et un micro-toast "Ta sirène est rechargée 🚨".
+
+**Critère d'acceptation :** Le countdown est visible et se décrémente en temps réel. Le bouton se réactive automatiquement sans rechargement de page.
+
+---
+
+### TICKET-009 ✅ — Bouton de déconnexion dans les Paramètres
+
+**Contexte :** La déconnexion n'est accessible que depuis le menu hamburger (sidebar). Ce n'est pas la convention standard — les utilisateurs cherchent naturellement à se déconnecter depuis les Paramètres ou le Profil.
+
+**Action demandée :**
+Ajouter en bas de la page `/settings` une section "Compte" avec :
+
+```
+COMPTE
+
+[ Se déconnecter ]   ← bouton secondaire (outline rouge)
+```
+
+Le bouton doit déclencher la même action que le bouton de déconnexion existant dans le menu hamburger. Conserver également le bouton existant dans la sidebar.
+
+**Critère d'acceptation :** La déconnexion est accessible depuis `/settings` sans ouvrir le menu hamburger.
+
+---
+
+## 🟡 P2 — AMÉLIORATIONS MOYENNES
+
+---
+
+### TICKET-010 ✅ — Overflow des noms trop longs dans la Compo
+
+**Contexte :** Dans l'onglet Compo (composition graphique sur terrain vert), certains noms longs débordent de leur bulle (ex : "Ugochukwu", "Nottingham Forest").
+
+**Action demandée :**
+Sur les bulles de joueur, limiter le nom à 2 lignes max avec `overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2;`. Réduire la taille de police de 11px à 9px si le nom dépasse 10 caractères (calcul JS simple sur `name.length`).
+
+**Critère d'acceptation :** Aucun nom ne déborde de sa bulle sur le terrain. Le layout du terrain reste stable quel que soit le nom.
+
+---
+
+### TICKET-011 ✅ — Score "X/24" sur la page Pronos sans légende
+
+**Contexte :** L'indicateur "13/24" sous "AUJOURD'HUI" n'est pas auto-explicatif. 13 pronos sur 24 matchs ? 13 matchs gagnés ?
+
+**Action demandée :**
+Remplacer le compteur brut par un libellé contextuel :
+
+```
+AUJOURD'HUI  13 pronos / 24 matchs
+```
+
+Ou afficher une progression en deux parties :
+```
+13 pronostiqués · 11 restants
+```
+
+**Critère d'acceptation :** Un nouvel utilisateur comprend immédiatement ce que signifie ce nombre sans lire les règles.
+
+---
+
+### TICKET-012 ✅ — Filtre "Ma ligue" dans le classement global
+
+**Contexte :** Le classement global (`/leaderboard`) mélange tous les joueurs. Il n'est pas possible de voir uniquement les membres de sa ligue.
+
+**Action demandée :**
+Ajouter un deuxième onglet à côté de "Saison" et "Hall of Fame" :
+
+```
+[ Saison ] [ Ma ligue ] [ Hall of Fame ]
+```
+
+L'onglet "Ma ligue" affiche le classement filtré sur les membres de la/les ligue(s) de l'utilisateur. Si l'utilisateur a plusieurs ligues, ajouter un sélecteur dropdown pour choisir laquelle.
+
+**Critère d'acceptation :** Un utilisateur avec des amis dans une ligue peut voir son classement relatif en 2 taps depuis le leaderboard.
+
+**Action demandée :**
+Ajouter un troisièrme à côté de "Saison", "Ma ligue"  et "Hall of Fame"  :
+
+```
+[ Saison ] [ Ma ligue ] [ Hall of Fame ] [Club Préféré] > selon les choix de l'utilisateur
+```
+
+L'onglet "*Mon Club*" affiche le classement filtré sur les membres ayant le même club de coeur (dans le profils). Si l'utilisateur a plusieurs ligues, ajouter un sélecteur dropdown pour choisir laquelle.
+
+**Critère d'acceptation :** Un utilisateur avec un même club de coeur peut voir son classement relatif en 2 taps depuis le leaderboard.
+
+
+---
+
+### TICKET-013 ✅ — Table des matières dans les Règles du jeu
+
+**Contexte :** La page `/rules` est longue (environ 1500 mots) sans navigation interne. L'utilisateur doit tout scroller pour trouver une règle spécifique.
+
+**Action demandée :**
+Ajouter en haut de la page un bloc de navigation avec ancres :
+
+```
+↓ Les Pronos    ↓ Paris VAR    ↓ Saisons    ↓ Mode 1vs1    ↓ Boosters    ↓ Mises
+```
+
+Chaque section de la page doit avoir un `id` correspondant. Les liens scrollent en douceur (`scroll-behavior: smooth`).
+
+**Critère d'acceptation :** Un clic sur "↓ Paris VAR" scrolle directement à la section correspondante sans animation saccadée.
+
+---
+
+### TICKET-014 ✅ — Affichage des prix dans la Boutique (possiblement déjà en place)
+
+**Contexte :** Dans `/shop`, les cards d'items affichent un bouton "Équiper ✓" mais il n'est pas clair si c'est gratuit ou payant. Le prix en Sifflets n'est visible qu'en cliquant sur chaque item.
+
+**Action demandée :**
+Sur chaque card de la boutique, afficher directement le prix ou le mode d'accès :
+
+```
+Item gratuit      →   badge "GRATUIT" vert
+Item payant       →   prix "3 000 🪙" en jaune/or
+Item de rang      →   badge "RANG BRONZE 🦁"
+Item équipé       →   badge "ÉQUIPÉ ✓" + bouton "Déséquiper"
+```
+
+**Critère d'acceptation :** L'utilisateur comprend le coût de chaque item sans avoir à cliquer dessus.
+
+---
+
+### TICKET-015 ✅ — Amélioration de la messagerie
+
+**Contexte :** L'interface de messagerie directe (`/messages/:id`) est très minimaliste : pas d'horodatage, pas d'accusé de lecture, avatar gris par défaut.
+
+**Action demandée :**
+- Afficher l'avatar réel du contact (même logique que dans le Vestiaire ou le Classement)
+- Ajouter un horodatage en petit texte sous chaque message (ex : "14:32")
+- Ajouter un bouton "+" ou une icône pour initier une nouvelle conversation (recherche d'utilisateur par pseudo)
+
+**Critère d'acceptation :** Les messages ont un horodatage visible. Il est possible de démarrer une conversation sans que l'autre ait écrit en premier.
+
+---
+
+### TICKET-016 ✅ — Remonter le bloc CDM 2026 sur la landing page
+
+**Contexte :** Le bloc "⚽ LA CDM 2026 COMMENCE BIENTÔT — J-32" est enterré en bas de la landing page alors que c'est le meilleur argument de conversion du moment.
+
+**Action demandée :**
+Déplacer ce bloc juste après la section hero (après le premier CTA "ENTRER EN JEU"), avant les sections "Ton expertise au Kop" et "Affiche ton style". Il doit être le 2ème bloc visible après le hero.
+
+**Critère d'acceptation :** Un utilisateur qui arrive sur la landing voit le compte à rebours CDM 2026 sans scroller.
+
+---
+
+### TICKET-017 ✅ — Ajouter aria-labels sur les boutons icônes
+
+**Contexte :** Plusieurs boutons de l'app n'ont pas de texte visible ni d'`aria-label`, ce qui les rend inaccessibles aux lecteurs d'écran (bouton notifications en cloche, bouton "Plus d'options", FAB "Appeler la VAR").
+
+**Action demandée :**
+Ajouter des `aria-label` sur tous les boutons sans texte visible :
+
+```html
+<button aria-label="Notifications de ce match">🔔</button>
+<button aria-label="Plus d'options pour cette ligue">⋮</button>
+<button aria-label="Appeler la VAR">📺</button>
+<button aria-label="Fermer">✕</button>
+```
+
+Audit complet de tous les `<button>` sans `textContent` ni `aria-label`.
+
+**Critère d'acceptation :** Zéro bouton sans label accessible. Test avec axe DevTools ou Lighthouse Accessibility ≥ 90.
+
+---
+
+## 🟢 P3 — AMÉLIORATIONS FAIBLES
+
+---
+
+### TICKET-018 ✅ — Plus d'emojis pour les emblèmes de ligue
+
+**Action :** Passer de 8 à 20 emojis dans le sélecteur d'emblème (étape 2/3 création ligue). Suggestions : 🎯 🏅 💪 🧠 🃏 👀 ⚡ 🦊 🐻 🐯 🦁 🚀
+
+---
+
+### TICKET-019 ✅ — Encourager la personnalisation du pseudo dans le Classement
+
+**Action :** Les usernames auto-générés (ex : "Jean_Baptiste_Berthe_00b913ab") dégradent l'expérience visuelle du classement. Afficher un badge "✏️ Personnalise ton pseudo" sur la ligne de l'utilisateur connecté si son pseudo est toujours auto-généré.
+
+---
+
+### TICKET-020 ✅ — Ajouter un visuel de la mécanique VAR live sur la landing
+
+**Action :** Créer un GIF ou court loop vidéo (3-5s) montrant : sirène → marché OUI/NON → timer → résultat. L'insérer dans la section hero ou juste après le premier CTA. C'est la mécanique core et elle n'est actuellement visible nulle part sur la landing.
+
+---
+
+### TICKET-021 ✅ — Comparaison à la moyenne dans les stats de profil
+
+**Action :** Dans l'onglet Stats du profil, ajouter en dessous de chaque stat personnelle une comparaison : "Mieux que 73% des joueurs" ou "Moyenne : 38% · Toi : 45%". Données calculables depuis le classement global.
+
+---
+
+## 📊 RÉCAPITULATIF DU SPRINT
+
+| # | Titre | Priorité | Complexité estimée |
+|---|---|---|---|
+| 001 ✅ | Confirmation pari VAR | P0 | S |
+| 002 ✅ | Champs prono désactivés | P0 | S |
+| 003 ✅ | Liens href sur cartes ligues | P0 | S |
+| 004 ✅ | Écran célébration post-ligue | P1 | M |
+| 005 ✅~ | Skeleton screens (/ligues fait ; /leaderboard + /lobby restent) | P1 | M |
+| 006 ✅ | Fade scroll filtres | P1 | S |
+| 007 | Résultat VAR dans KOP | P1 | L |
+| 008 ✅ | Countdown sirène VAR | P1 | S |
+| 009 ✅ | Déconnexion dans Settings | P1 | XS |
+| 010 ✅ | Overflow noms Compo | P2 | XS |
+| 011 | Légende score pronos | P2 | XS |
+| 012 ✅~ | Filtre Ma ligue Classement ("Club Préféré" reste) | P2 | M |
+| 013 ✅ | Table des matières Règles | P2 | S |
+| 014 ✅ | Prix visibles Boutique | P2 | S |
+| 015 ✅~ | Amélioration messagerie (timestamps + vu ; avatar + nouvelle conv. restent) | P2 | M |
+| 016 ✅ | CDM 2026 remonté landing | P2 | XS |
+| 017 ✅ | aria-labels boutons | P2 | S |
+| 018 ✅ | Plus d'emojis ligue | P3 | XS |
+| 019 | Badge perso pseudo | P3 | S |
+| 020 | GIF VAR sur landing | P3 | L |
+| 021 | Comparaison stats profil | P3 | M |
+
+**Légende taille :** XS < 2h · S = demi-journée · M = 1 jour · L = 2-3 jours
+
+**Total estimé sprint :** ~8-10 jours de développement front-end pour les P0+P1. Les P2 constituent un sprint suivant naturel.
+
+---
+
+*Ce backlog est prêt à être copié-collé dans Claude Code. Chaque ticket est autonome et peut être traité indépendamment.*
+
+
+Bien sûr ! Je continue le sprint UX avec les sections complémentaires que j'aurais pu approfondir davantage — notamment tout ce qui touche à l'onboarding, la navigation, et les micro-interactions.
+
+---
+
+### TICKET-023 ✅ — État "vide" du Vestiaire pour un match sans ligue
+
+**Contexte :** L'onglet Vestiaire d'un match est quasi-vide pour un utilisateur sans ligue, ou avec une ligue où personne n'a pronostiqué. Le message affiché est "Les pronos de tes ligues" suivi de rien.
+
+**Action demandée :**
+Différencier deux états vides :
+
+**Cas 1 — Pas de ligue :**
+```
+👥 Tu n'es dans aucune ligue
+
+Crée une ligue avec tes potes pour voir
+leurs pronos ici pendant le match.
+
+[ + Créer une ligue ]
+```
+
+**Cas 2 — Dans une ligue mais personne n'a pronostiqué :**
+```
+🤫 Personne n'a encore pronostiqué
+dans Les Audit Masters
+
+Envoie la Sirène VAR pour les réveiller 🚨
+```
+
+**Critère d'acceptation :** L'onglet Vestiaire n'est jamais vide sans explication. Chaque état vide a un CTA actionnable.
+
+---
+
+### TICKET-024 ✅ — Tooltip first-use sur le bouton "Appeler la VAR"
+
+**Contexte :** Le FAB vert "Appeler la VAR" est le bouton le plus important de l'app mais son fonctionnement n'est pas évident. Un nouvel utilisateur ne sait pas ce qui va se passer s'il clique dessus.
+
+**Action demandée :**
+À la première visite d'un match en direct (flag `var_btn_tooltip_shown` absent), afficher une bulle d'aide pendant 4 secondes au-dessus du FAB :
+
+```
+        ↓
+⚡ Appuie ici quand tu repères
+   une action VAR en direct !
+```
+
+La bulle disparaît au premier tap ou après 4s. Le flag est posé en localStorage pour ne jamais réafficher.
+
+**Critère d'acceptation :** Le tooltip s'affiche une seule fois, à la première visite d'un match live. Il ne réapparaît jamais.
+
+---
+
+## 🔵 SECTION COMPLÉMENTAIRE — NAVIGATION & ARCHITECTURE
+
+---
+
+### TICKET-025 ✅ — Accès direct aux Messages depuis la bottom-bar
+
+**Contexte :** L'icône Messages (bulle) est dans le header mais n'est pas dans la bottom-bar. Pourtant un badge rouge (notification) y est visible. La bottom-bar est la navigation principale sur mobile — les Messages devraient y être accessibles.
+
+**Action demandée :**
+**Option A (recommandée) :** Remplacer l'une des 4 entrées de la bottom-bar. Le Profil et le Stade sont indispensables. Ligues et Pronos également. Envisager un pattern "More" (5ème onglet "···") qui regroupe Messages + Classement + Boutique.
+
+```
+[ 🏟 Stade ] [ 🎯 Pronos ] [ 👥 Ligues ] [ 💬 Messages ] [ 👤 Profil ]
+```
+
+**Option B :** Garder 4 onglets mais ajouter le badge de notification non lus directement sur l'icône bulle du header avec une couleur plus visible et un tap-target plus grand (min 44×44px).
+
+**Critère d'acceptation :** L'accès aux messages ne nécessite pas l'ouverture du menu hamburger. Le badge est visible en permanence si messages non lus.
+
+---
+
+### TICKET-026 ✅ — Bouton retour cohérent sur toutes les pages secondaires
+
+**Contexte :** Les pages secondaires utilisent des patterns de retour inconsistants :
+- Page match → "← Matchs" (texte avec flèche)
+- Page boutique → "←" (flèche seule)
+- Pages du menu (rules, laws, settings) → pas de bouton retour, uniquement le menu hamburger pour naviguer
+
+**Action demandée :**
+Standardiser un composant `<BackButton>` unique utilisé sur toutes les pages secondaires :
+
+```
+← [Nom de la page parente]
+```
+
+Exemples :
+- Depuis un match → "← Stade"
+- Depuis la boutique → "← Menu"
+- Depuis les règles → "← Menu"
+- Depuis les paramètres → "← Menu"
+- Depuis une conversation → "← Messages"
+
+Ce bouton utilise `history.back()` ou une route hardcodée selon le cas.
+
+**Critère d'acceptation :** Chaque page secondaire a un bouton retour visible, cliquable, avec le nom de la page parente. Aucune page ne nécessite le menu hamburger pour naviguer en arrière.
+
+---
+
+### TICKET-027 ✅ — Clarifier le titre de page dans le header pendant un match
+
+**Contexte :** Dans la page d'un match, le header affiche "EN DIRECT" au centre (à la place du titre de section habituel). Cela peut induire en erreur un utilisateur qui ne se souvient plus dans quelle section de l'app il se trouve.
+
+**Action demandée :**
+Modifier le header de la page match pour afficher :
+```
+[← Matchs]    [Burnley · Arsenal]    [🔔] [≡]
+```
+
+Le titre central affiche les équipes (court : initiales ou noms courts si > 15 chars). "EN DIRECT" devient un badge dans le score (déjà présent) plutôt que dans le header.
+
+**Critère d'acceptation :** Le header du match affiche les deux équipes. Le badge "EN DIRECT" reste sur la carte de score, pas dans le header global.
+
+---
+
+### TICKET-028 ✅ — Lien "Voir les règles" contextuel dans le marché VAR
+
+**Contexte :** Quand le marché VAR s'ouvre, un nouvel utilisateur peut ne pas comprendre les mécaniques (cotes, pot commun, 90 secondes). Il n'y a aucun lien d'aide contextuel.
+
+**Action demandée :**
+Ajouter en bas du modal VAR un lien discret :
+
+```
+❓ Comment fonctionnent les cotes ?
+```
+
+Ce lien ouvre un bottom-sheet (drawer) léger avec un résumé en 3 points (non une redirection vers /rules qui ferait quitter le match) :
+
+```
+⚖️ Pas de système de côtes 2 choix OUI / NON selon l'action
+🪙 Les Sifflets des perdants vont aux gagnants
+⏱ 90 secondes chrono — pas de retour en arrière
+```
+
+Avec un bouton "J'ai compris, fermer" en bas.
+
+**Critère d'acceptation :** L'aide contextuelle est accessible sans quitter le marché. Elle s'affiche dans un drawer par-dessus le modal VAR.
+
+---
+
+## 🔵 SECTION COMPLÉMENTAIRE — PROFIL & GAMIFICATION
+
+---
+
+### TICKET-029 ✅ — Icône d'édition de profil plus visible
+
+**Contexte :** Le bouton d'édition du profil (✏️) est un petit carré en haut à droite de la card profil, difficile à trouver et dont la tap-target est inférieure à 44px.
+
+**Action demandée :**
+Remplacer par un bouton texte "Modifier mon profil" en bas de la card profil, ou agrandir l'icône avec un tap-target minimum de 44×44px et un label `aria-label="Modifier mon profil"`. Ajouter une légère animation hover/active pour indiquer l'interactivité.
+
+**Critère d'acceptation :** Tap-target ≥ 44px. Un utilisateur lambda trouve le bouton d'édition en moins de 3 secondes.
+
+---
+
+### TICKET-030 ✅ — Explication du Karma/Score de confiance dans l'interface
+
+**Contexte :** Le Score de confiance (Karma) impacte la visibilité des signalements VAR de l'utilisateur mais cette mécanique n'est documentée que dans les Règles du jeu. Un utilisateur peut dégrader son karma sans comprendre pourquoi ses signalements sont ignorés.
+
+**Action demandée :**
+Ajouter dans le profil (onglet Stats ou nouvelle section "Mon Arbitrage") un indicateur de Karma visible :
+
+```
+🎖 Score de confiance
+████████░░  78/100
+
+Tes signalements VAR sont pris en compte.
+Signalements justes : +2 pts · Faux signalements : −5 pts
+```
+
+Si le karma passe sous un seuil critique, afficher une alerte dans le profil :
+```
+⚠️ Ton score de confiance est bas.
+Tes alertes VAR ont moins de poids.
+Sois plus précis dans tes signalements.
+```
+
+**Critère d'acceptation :** Le karma est visible depuis le profil. Un utilisateur avec un karma bas reçoit un feedback explicatif avant que ses signalements soient ignorés.
+
+---
+
+### TICKET-031 ✅ — Badge "Nouvelle saison" en début de mois
+
+**Contexte :** Chaque 1er du mois, la saison est réinitialisée et les Sifflets remis à 10%. C'est un événement important mais aucune notification ni célébration n'est prévue dans l'interface.
+
+**Action demandée :**
+Le 1er de chaque mois, à la première ouverture de l'app, afficher un overlay de transition de saison :
+
+```
+🏆 Saison de mai terminée !
+
+Tu as terminé :  #1 · Champion 🥇
+
+Tes Sifflets :  119 842 🪙 → 11 984 🪙 (10%)
+Tes Points :   remis à zéro pour juin
+
+La nouvelle saison de juin démarre maintenant.
+[ C'est reparti ! ]
+```
+
+**Critère d'acceptation :** L'overlay s'affiche une seule fois au démarrage du 1er du mois. Le rang de fin de saison est affiché avec une couleur de médaille.
+
+---
+
+## 🔵 SECTION COMPLÉMENTAIRE — LANDING PAGE
+
+---
+
+### TICKET-032 ✅ — Rendre le bouton "Comment ça marche ?" plus cliquable
+
+**Contexte :** Sur la landing, le CTA secondaire "Comment ça marche ?" sous le bouton principal est peu visible (fond gris foncé, texte blanc sans contraste suffisant). Les utilisateurs hésitants vont chercher à comprendre avant de s'inscrire.
+
+**Action demandée :**
+Transformer ce bouton en CTA secondaire distinct avec une flèche animée :
+
+```
+↓ Comment ça marche ?
+```
+
+Ajouter un scroll ancré vers la section "TROIS ÉTAPES. JUSQU'AU BRAQUAGE." sur la même page. Le bouton doit avoir un style outline (bordure visible) plutôt que fond sombre.
+
+**Critère d'acceptation :** Le bouton est visible sans effort. Un clic scrolle en douceur vers la section explicative.
+
+---
+
+### TICKET-033 ✅ — Social proof sur la landing
+
+**Contexte :** La landing ne contient aucun indicateur de popularité ou de témoignage. Pour un concept aussi novateur, l'absence de social proof peut freiner l'inscription.
+
+**Action demandée :**
+Ajouter un bloc simple entre le hero et la section CDM 2026 :
+
+```
+⚽ Rejoins [X] arbitres déjà en jeu
+
+"[Citation courte d'un bêta testeur]"
+— [Pseudo], Arbitre Élite
+
+"[Citation courte d'un bêta testeur 2]"
+— [Pseudo], Boss de la VAR
+```
+
+Le nombre de joueurs peut être récupéré dynamiquement depuis l'API ou hardcodé si trop faible (dans ce cas, ne l'afficher que si > 100).
+
+**Critère d'acceptation :** Le bloc social proof est visible sans scroller sur un écran de 844px de hauteur. Les citations sont réelles (issues des bêta testeurs).
+
+---
+
+### TICKET-034 ✅ — FAQ interactive avec vraies réponses visibles
+
+**Contexte :** La FAQ en bas de la landing utilise des accordéons mais les réponses ne sont pas visibles sans interaction. Sur mobile, les utilisateurs ne scrollent pas toujours jusqu'à la FAQ.
+
+**Action demandée :**
+Ouvrir par défaut la première question/réponse ("C'est quoi VAR TIME ?") pour signaler que la FAQ est interactive. Les autres restent fermées. Ajouter des données de schema `FAQPage` en JSON-LD pour le référencement Google :
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "C'est quoi VAR TIME ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "..."
+      }
+    }
+  ]
+}
+```
+
+**Critère d'acceptation :** La première réponse FAQ est visible sans interaction. Le schema JSON-LD est valide (test avec Rich Results Test de Google).
+
+---
+
+## 📦 BACKLOG COMPLET — SYNTHÈSE FINALE
+
+### Résumé par catégorie
+
+| Catégorie | Tickets | Effort total estimé |
+|---|---|---|
+| 🔴 Corrections critiques (P0) | 003, 001, 002 | 1 jour |
+| 🟠 Améliorations hautes (P1) | 004 à 009 | 4-5 jours |
+| 🟡 Améliorations moyennes (P2) | 010 à 017 | 3-4 jours |
+| 🟢 Améliorations faibles (P3) | 018 à 021 | 2-3 jours |
+| 🔵 Onboarding | 022 à 024 | 2 jours |
+| 🔵 Navigation | 025 à 028 | 2-3 jours |
+| 🔵 Profil & Gamification | 029 à 031 | 2 jours |
+| 🔵 Landing page | 032 à 034 | 1 jour |
+| **TOTAL** | **34 tickets** | **~18-21 jours** |
+
+---
+

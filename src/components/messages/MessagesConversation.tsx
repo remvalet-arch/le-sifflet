@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send } from "lucide-react";
+import { Send, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { DirectMessageRow } from "@/types/database";
 import { track } from "@/lib/analytics";
@@ -15,12 +16,14 @@ export function MessagesConversation({
   currentUserId,
   otherId,
   otherUsername,
+  otherAvatarUrl,
   initialMessages,
 }: {
   threadId: string;
   currentUserId: string;
   otherId: string;
   otherUsername: string;
+  otherAvatarUrl?: string | null;
   initialMessages: DirectMessageRow[];
 }) {
   const [messages, setMessages] = useState<DirectMessageRow[]>(initialMessages);
@@ -133,22 +136,67 @@ export function MessagesConversation({
             </p>
           </div>
         )}
-        {messages.map((msg) => {
+        {messages.map((msg, i) => {
           const isMe = msg.sender_id === currentUserId;
+          const prev = messages[i - 1];
+          const next = messages[i + 1];
+          const isFirst = !prev || prev.sender_id !== msg.sender_id;
+          const isLast = !next || next.sender_id !== msg.sender_id;
+          const time = new Date(msg.sent_at).toLocaleTimeString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const isLastOverall = i === messages.length - 1;
+
           return (
             <div
               key={msg.id}
-              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${isFirst && i > 0 ? "mt-2" : "mt-0.5"}`}
             >
               <div
-                className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${
-                  isMe
-                    ? "rounded-br-sm bg-whistle/20 text-white"
-                    : "rounded-bl-sm bg-zinc-800 text-zinc-100"
-                }`}
+                className={`flex items-end gap-1.5 max-w-[78%] ${isMe ? "flex-row-reverse" : "flex-row"}`}
               >
-                {msg.content}
+                {!isMe && (
+                  <div className="mb-0.5 shrink-0">
+                    {isLast ? (
+                      <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[9px] font-black text-zinc-300">
+                        {otherAvatarUrl ? (
+                          <Image
+                            src={otherAvatarUrl}
+                            alt={otherUsername}
+                            width={24}
+                            height={24}
+                            className="h-6 w-6 object-cover"
+                          />
+                        ) : (
+                          (otherUsername[0] ?? "?").toUpperCase()
+                        )}
+                      </div>
+                    ) : (
+                      <div className="h-6 w-6" />
+                    )}
+                  </div>
+                )}
+                <div
+                  className={`px-3.5 py-2 text-sm leading-snug ${
+                    isMe
+                      ? `bg-whistle/20 text-white ${isFirst ? "rounded-t-2xl" : "rounded-t-lg"} ${isLast ? "rounded-bl-2xl rounded-br-sm" : "rounded-b-lg"}`
+                      : `bg-zinc-800 text-zinc-100 ${isFirst ? "rounded-t-2xl" : "rounded-t-lg"} ${isLast ? "rounded-br-2xl rounded-bl-sm" : "rounded-b-lg"}`
+                  }`}
+                >
+                  {msg.content}
+                </div>
               </div>
+              {isLast && (
+                <div
+                  className={`mt-0.5 flex items-center gap-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  <span className="text-[9px] text-zinc-600">{time}</span>
+                  {isMe && isLastOverall && (
+                    <CheckCheck className="h-3 w-3 text-whistle/60" />
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

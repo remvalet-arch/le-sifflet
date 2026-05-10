@@ -14,6 +14,8 @@ type LiveRoomContextValue = {
   setDrawerAvailable: (v: boolean) => void;
   openDrawer: () => void;
   registerOpenDrawer: (fn: () => void) => void;
+  matchTitle: string | null;
+  setMatchTitle: (title: string | null) => void;
 };
 
 const LiveRoomContext = createContext<LiveRoomContextValue>({
@@ -21,10 +23,13 @@ const LiveRoomContext = createContext<LiveRoomContextValue>({
   setDrawerAvailable: () => undefined,
   openDrawer: () => undefined,
   registerOpenDrawer: () => undefined,
+  matchTitle: null,
+  setMatchTitle: () => undefined,
 });
 
 export function LiveRoomProvider({ children }: { children: ReactNode }) {
   const [drawerAvailable, setDrawerAvailable] = useState(false);
+  const [matchTitle, setMatchTitle] = useState<string | null>(null);
   const openFnRef = useRef<() => void>(() => undefined);
 
   const registerOpenDrawer = useCallback((fn: () => void) => {
@@ -42,6 +47,8 @@ export function LiveRoomProvider({ children }: { children: ReactNode }) {
         setDrawerAvailable,
         openDrawer,
         registerOpenDrawer,
+        matchTitle,
+        setMatchTitle,
       }}
     >
       {children}

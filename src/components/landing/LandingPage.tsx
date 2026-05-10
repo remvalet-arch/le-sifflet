@@ -12,13 +12,16 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/lib/i18n/locale";
 import { LandingLocaleSwitcher } from "./LandingLocaleSwitcher";
 import { LandingTracker } from "./LandingTracker";
+import { VarMechanicLoop } from "./VarMechanicLoop";
 
 export async function LandingPage({
   locale,
   oauthError,
+  playerCount = 0,
 }: {
   locale: Locale;
   oauthError?: string | null;
+  playerCount?: number;
 }) {
   const t = await getTranslations({ locale, namespace: "Landing" });
 
@@ -50,8 +53,22 @@ export async function LandingPage({
     },
   ];
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_rgba(22,163,74,0.07)_0%,_transparent_55%)] text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <LandingTracker locale={locale} />
       {oauthError && (
         <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-red-500/30 bg-red-900/80 px-4 py-2.5 text-sm font-bold text-red-300 shadow-xl backdrop-blur-sm">
@@ -150,8 +167,9 @@ export async function LandingPage({
             </Link>
             <a
               href="#comment"
-              className="flex h-14 flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-bold text-zinc-300 backdrop-blur-sm transition hover:border-white/20 hover:text-white active:scale-95"
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent text-sm font-black text-white transition hover:border-white/40 hover:bg-white/5 active:scale-95"
             >
+              <span aria-hidden>↓</span>
               {t("howItWorks")}
             </a>
           </div>
@@ -196,6 +214,45 @@ export async function LandingPage({
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════
+          CDM 2026 COUNTDOWN
+      ═══════════════════════════════════════════ */}
+      <CdmCountdown t={t} />
+
+      {/* ═══════════════════════════════════════════
+          SOCIAL PROOF
+      ═══════════════════════════════════════════ */}
+      {playerCount > 100 && (
+        <section className="border-t border-white/8 py-10">
+          <div className="mx-auto max-w-6xl px-5 sm:px-8 text-center">
+            <p className="text-2xl font-black text-white">
+              ⚽{" "}
+              {t("socialProofCount", {
+                count: playerCount.toLocaleString("fr-FR"),
+              })}
+            </p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
+              <blockquote className="rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4 text-left">
+                <p className="text-sm italic text-zinc-300">
+                  {t("testimonial1Text")}
+                </p>
+                <footer className="mt-2 text-[11px] font-black text-zinc-500">
+                  {t("testimonial1Author")}
+                </footer>
+              </blockquote>
+              <blockquote className="rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4 text-left">
+                <p className="text-sm italic text-zinc-300">
+                  {t("testimonial2Text")}
+                </p>
+                <footer className="mt-2 text-[11px] font-black text-zinc-500">
+                  {t("testimonial2Author")}
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════
           GRADES KOP
@@ -373,6 +430,21 @@ export async function LandingPage({
             />
           </div>
 
+          {/* VAR mechanic visual loop */}
+          <div className="mt-14 flex flex-col items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="h-px w-12 bg-white/8" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                {t("varMechanicLabel")}
+              </span>
+              <div className="h-px w-12 bg-white/8" />
+            </div>
+            <VarMechanicLoop />
+            <p className="max-w-[260px] text-center text-xs leading-relaxed text-zinc-500">
+              {t("varMechanicDesc")}
+            </p>
+          </div>
+
           {/* Pronos avant match */}
           <div className="mt-14 overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-zinc-900/90 via-zinc-950/95 to-zinc-900/90 p-6 shadow-[0_0_50px_rgba(16,185,129,0.12)] backdrop-blur-sm sm:p-8 md:p-10">
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-10">
@@ -508,11 +580,6 @@ export async function LandingPage({
       </section>
 
       {/* ═══════════════════════════════════════════
-          CDM 2026 COUNTDOWN
-      ═══════════════════════════════════════════ */}
-      <CdmCountdown t={t} />
-
-      {/* ═══════════════════════════════════════════
           FAQ
       ═══════════════════════════════════════════ */}
       <section className="border-t border-white/8 py-14">
@@ -521,9 +588,10 @@ export async function LandingPage({
             {t("faqTitle")}
           </h2>
           <div className="flex flex-col gap-3">
-            {FAQ_ITEMS.map(({ q, a }) => (
+            {FAQ_ITEMS.map(({ q, a }, i) => (
               <details
                 key={q}
+                open={i === 0}
                 className="group rounded-2xl border border-white/8 bg-zinc-900"
               >
                 <summary className="flex cursor-pointer items-start justify-between gap-3 px-5 py-4 text-sm font-black text-white [&::-webkit-details-marker]:hidden">

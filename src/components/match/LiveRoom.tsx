@@ -17,6 +17,7 @@ import type {
   MarketEventType,
 } from "@/types/database";
 import { VotingModal } from "./VotingModal";
+import type { BetPlacedInfo } from "@/hooks/useVotingMarket";
 import { VerdictOverlay } from "./VerdictOverlay";
 import { Scoreboard } from "./Scoreboard";
 import { MatchTimeline } from "./MatchTimeline";
@@ -93,6 +94,11 @@ export function LiveRoom({
   const [sirenCooldownUntil, setSirenCooldownUntil] = useState<Date | null>(
     null,
   );
+  const [sirenCooldownSecs, setSirenCooldownSecs] = useState(0);
+
+  // VAR pending bet card (TICKET-007)
+  type VarBetState = BetPlacedInfo & { status: "pending" | "won" | "lost" };
+  const [currentVarBet, setCurrentVarBet] = useState<VarBetState | null>(null);
 
   async function handleVarAlert() {
     if (sirenLoading || (sirenCooldownUntil && sirenCooldownUntil > new Date()))
@@ -179,7 +185,8 @@ export function LiveRoom({
   const t = useTranslations("LiveRoom");
   const bcp47 = useBcp47();
   const { squadId, squadName } = useActiveSquad();
-  const { setDrawerAvailable, registerOpenDrawer } = useLiveRoom();
+  const { setDrawerAvailable, registerOpenDrawer, setMatchTitle } =
+    useLiveRoom();
 
   // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -203,6 +210,24 @@ export function LiveRoom({
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [cooldownUntil]);
+
+  // Siren cooldown countdown (TICKET-008)
+  useEffect(() => {
+    const tick = () => {
+      if (!sirenCooldownUntil) {
+        setSirenCooldownSecs(0);
+        return;
+      }
+      const s = Math.max(
+        0,
+        Math.ceil((sirenCooldownUntil.getTime() - Date.now()) / 1000),
+      );
+      setSirenCooldownSecs(s);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [sirenCooldownUntil]);
 
   // Analytics: match_joined / match_left
   useEffect(() => {
@@ -382,6 +407,11 @@ export function LiveRoom({
               braquage_bonus: 0,
               booster_applied: null,
             });
+            setCurrentVarBet((prev) =>
+              prev?.eventId === bet.event_id
+                ? { ...prev, status: "won" }
+                : prev,
+            );
             if (meta && bet.event_id === meta.eventId) {
               setVerdictOverlay({
                 eventType: meta.eventType,
@@ -403,6 +433,11 @@ export function LiveRoom({
               braquage_bonus: 0,
               booster_applied: null,
             });
+            setCurrentVarBet((prev) =>
+              prev?.eventId === bet.event_id
+                ? { ...prev, status: "lost" }
+                : prev,
+            );
             const meta = lastResolvedMeta.current;
             if (meta && bet.event_id === meta.eventId) {
               setVerdictOverlay({
@@ -437,6 +472,13 @@ export function LiveRoom({
     setDrawerAvailable(isLive);
     return () => setDrawerAvailable(false);
   }, [isLive, setDrawerAvailable]);
+
+  useEffect(() => {
+    const shorten = (name: string) =>
+      name.length > 12 ? name.slice(0, 3).toUpperCase() : name;
+    setMatchTitle(`${shorten(match.team_home)} · ${shorten(match.team_away)}`);
+    return () => setMatchTitle(null);
+  }, [match.team_home, match.team_away, setMatchTitle]);
 
   useEffect(() => {
     registerOpenDrawer(() => setDrawerOpen(true));
@@ -507,6 +549,8 @@ export function LiveRoom({
 
   const cooldownMins = Math.floor(cooldownSecs / 60);
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
+  const sirenMins = Math.floor(sirenCooldownSecs / 60);
+  const sirenSecsStr = String(sirenCooldownSecs % 60).padStart(2, "0");
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "kop", label: t("tabKop") },
@@ -585,6 +629,54 @@ export function LiveRoom({
       {/* Contenu de l'onglet */}
       {displayedTab === "kop" && (
         <>
+          {currentVarBet && (
+            <div
+              className={`mx-1 mt-3 rounded-2xl border px-4 py-3 transition-colors ${
+                currentVarBet.status === "won"
+                  ? "border-green-500/40 bg-green-500/10"
+                  : currentVarBet.status === "lost"
+                    ? "border-red-500/30 bg-red-500/5"
+                    : "border-amber-500/30 bg-amber-500/5"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg" aria-hidden>
+                  {currentVarBet.status === "won"
+                    ? "✅"
+                    : currentVarBet.status === "lost"
+                      ? "❌"
+                      : "⏳"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black uppercase tracking-wide text-white">
+                    Pari VAR ·{" "}
+                    <span
+                      className={
+                        currentVarBet.status === "won"
+                          ? "text-green-400"
+                          : currentVarBet.status === "lost"
+                            ? "text-red-400"
+                            : "text-amber-400"
+                      }
+                    >
+                      {currentVarBet.label.toUpperCase()}
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-zinc-500">
+                    {currentVarBet.staked.toLocaleString(bcp47)} 🪙 ·{" "}
+                    {currentVarBet.status === "won"
+                      ? "GAGNÉ 🎉"
+                      : currentVarBet.status === "lost"
+                        ? "PERDU"
+                        : "EN ATTENTE"}
+                  </p>
+                </div>
+                {currentVarBet.status === "pending" && (
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500" />
+                )}
+              </div>
+            </div>
+          )}
           <MatchTimeline
             matchId={liveMatch.id}
             isModerator={isModerator}
@@ -608,8 +700,8 @@ export function LiveRoom({
                 <Siren className="h-4 w-4" />
                 {sirenLoading
                   ? t("sirenSending")
-                  : sirenCooldownUntil && sirenCooldownUntil > new Date()
-                    ? t("sirenCooldown")
+                  : sirenCooldownSecs > 0
+                    ? `🔕 Sirène — disponible dans ${sirenMins}:${sirenSecsStr}`
                     : t("sirenRally")}
               </button>
             </div>
@@ -663,6 +755,7 @@ export function LiveRoom({
             matchStatus={liveMatch.status}
             startTime={liveMatch.start_time}
             squadPronos={squadPronos}
+            hasSquad={!!squadId}
           />
         </>
       )}
@@ -695,6 +788,9 @@ export function LiveRoom({
           audienceCount={audienceCount}
           onClose={() => setActiveEvent(null)}
           onBetSuccess={(amount) => setLocalBalance((b) => b - amount)}
+          onBetPlaced={(info) =>
+            setCurrentVarBet({ ...info, status: "pending" })
+          }
         />
       )}
 

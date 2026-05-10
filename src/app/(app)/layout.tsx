@@ -6,6 +6,7 @@ import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { LiveRoomProvider } from "@/contexts/LiveRoomContext";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { DailyRecapChecker } from "@/components/layout/DailyRecapChecker";
+import { NewSeasonOverlay } from "@/components/layout/NewSeasonOverlay";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PostHogIdentify } from "@/components/consent/PostHogIdentify";
 
@@ -108,6 +109,7 @@ export default async function AppLayout({
           and any window.scrollTo() calls never shift the BottomNav in PWA mode.
           max-w-md + mx-auto (left:0 right:0) centers on wide screens. */}
       <div className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-zinc-950 shadow-2xl">
+        <NewSeasonOverlay />
         <DailyRecapChecker />
         <TopBar
           username={profile.username}
@@ -122,7 +124,7 @@ export default async function AppLayout({
           {children}
         </main>
 
-        <BottomNav userId={user.id} />
+        <BottomNav userId={user.id} hasUnreadDm={hasUnreadDm} />
       </div>
     </LiveRoomProvider>
   );

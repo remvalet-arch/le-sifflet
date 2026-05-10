@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
+import {
+  Landmark,
+  User,
+  Users,
+  Target,
+  MonitorPlay,
+  MessageCircle,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLiveRoom } from "@/contexts/LiveRoomContext";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +22,13 @@ function useLikelyLiveHour(): boolean {
   return isWeekend ? h >= 13 && h < 23 : h >= 18 && h < 23;
 }
 
-export function BottomNav({ userId }: { userId?: string }) {
+export function BottomNav({
+  userId,
+  hasUnreadDm = false,
+}: {
+  userId?: string;
+  hasUnreadDm?: boolean;
+}) {
   const pathname = usePathname();
   const t = useTranslations("Navigation");
   const { drawerAvailable, openDrawer } = useLiveRoom();
@@ -25,7 +38,10 @@ export function BottomNav({ userId }: { userId?: string }) {
   const fabActive = isMatchPage && drawerAvailable;
   const isOnLigues = pathname === "/ligues" || pathname.startsWith("/ligues/");
 
+  const isOnMessages =
+    pathname === "/messages" || pathname.startsWith("/messages/");
   const [hasUnread, setHasUnread] = useState(false);
+  const [showVarTooltip, setShowVarTooltip] = useState(false);
   const squadIdsRef = useRef<string[]>([]);
   const isOnLiguesRef = useRef(isOnLigues);
   // Once the user visits /ligues, stop re-checking the DB (trust SquadChat to
@@ -111,13 +127,25 @@ export function BottomNav({ userId }: { userId?: string }) {
     };
   }, [userId]);
 
+  useEffect(() => {
+    if (!fabActive) return;
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem("var_btn_tooltip_shown")) return;
+    setTimeout(() => setShowVarTooltip(true), 800);
+    const hide = setTimeout(() => {
+      setShowVarTooltip(false);
+      localStorage.setItem("var_btn_tooltip_shown", "1");
+    }, 4800);
+    return () => clearTimeout(hide);
+  }, [fabActive]);
+
   return (
     <nav
       className="relative z-10 w-full shrink-0 border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div
-        className={`relative grid h-16 ${isMatchPage ? "grid-cols-5" : "grid-cols-4"}`}
+        className={`relative grid h-16 ${isMatchPage ? "grid-cols-6" : "grid-cols-5"}`}
       >
         <TabLink
           href="/lobby"
@@ -134,11 +162,32 @@ export function BottomNav({ userId }: { userId?: string }) {
         />
 
         {isMatchPage && (
-          <div className="flex -mt-5 items-start justify-center">
+          <div className="relative flex -mt-5 items-start justify-center">
+            {showVarTooltip && (
+              <div
+                className="pointer-events-none absolute bottom-full mb-2 z-20 animate-in fade-in slide-in-from-bottom-1 duration-200"
+                aria-hidden
+              >
+                <div className="rounded-xl border border-green-500/30 bg-zinc-900 px-3 py-2 text-center shadow-xl">
+                  <p className="text-[11px] font-black text-green-400">
+                    ⚡ Appuie ici quand tu
+                  </p>
+                  <p className="text-[11px] font-black text-green-400">
+                    repères une action VAR !
+                  </p>
+                </div>
+                <div className="mx-auto mt-[-4px] h-2 w-2 rotate-45 border-b border-r border-green-500/30 bg-zinc-900" />
+              </div>
+            )}
             <button
               type="button"
               disabled={!fabActive}
-              onClick={() => fabActive && openDrawer()}
+              onClick={() => {
+                if (!fabActive) return;
+                setShowVarTooltip(false);
+                localStorage.setItem("var_btn_tooltip_shown", "1");
+                openDrawer();
+              }}
               aria-label={t("ariaCallVar")}
               className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
                 fabActive
@@ -160,6 +209,13 @@ export function BottomNav({ userId }: { userId?: string }) {
           label={t("ligues")}
           pathname={pathname}
           badge={hasUnread}
+        />
+        <TabLink
+          href="/messages"
+          Icon={MessageCircle}
+          label={t("messages")}
+          pathname={pathname}
+          badge={hasUnreadDm && !isOnMessages}
         />
         <TabLink
           href="/profile"
