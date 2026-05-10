@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 const BADGE_EMOJI: Record<string, string> = {
@@ -16,6 +17,8 @@ const BADGE_EMOJI: Record<string, string> = {
 type Props = { userId: string };
 
 export function BadgeUnlockListener({ userId }: Props) {
+  const t = useTranslations("Profile");
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -38,9 +41,12 @@ export function BadgeUnlockListener({ userId }: Props) {
             .single();
           if (data) {
             const emoji = BADGE_EMOJI[data.slug] ?? "🏅";
-            toast.success(`${emoji} Nouveau badge débloqué : ${data.label} !`, {
-              duration: 6000,
-            });
+            toast.success(
+              `${emoji} ${t("badgeUnlockedToast", { label: data.label })}`,
+              {
+                duration: 6000,
+              },
+            );
           }
         },
       )
@@ -49,7 +55,7 @@ export function BadgeUnlockListener({ userId }: Props) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, t]);
 
   return null;
 }

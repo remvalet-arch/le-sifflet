@@ -144,12 +144,7 @@ export function ProfileOverview({
 
       {refillContent}
 
-      {currentSeason && (
-        <SeasonBadge
-          label={currentSeason.label}
-          endsAt={currentSeason.endsAt}
-        />
-      )}
+      {currentSeason && <SeasonBadge endsAt={currentSeason.endsAt} />}
 
       {seasonArchives.length > 0 && (
         <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">

@@ -265,7 +265,18 @@
     "amisRefused": "Request declined",
     "amisLoading": "Loading friends...",
     "amisAcceptAriaLabel": "Accept",
-    "amisRefuseAriaLabel": "Decline"
+    "amisRefuseAriaLabel": "Decline",
+    "myTrophies": "My Trophies",
+    "badgeUnlocked": "✓ Badge unlocked!",
+    "badgeUnlockedToast": "🏅 New badge unlocked: {label}!",
+    "friendLoading": "Loading...",
+    "friendAccepted": "Friends",
+    "friendRemove": "Remove",
+    "friendPending": "Request pending",
+    "friendAdd": "Add friend",
+    "friendRequestSent": "Friend request sent!",
+    "friendRequestError": "Error sending request.",
+    "friendRemoveError": "Error."
   },
   "Historique": {
     "eventPenaltyCheck": "Penalty?",
@@ -298,9 +309,30 @@
     "pendingChip": "⏳ {count} pending"
   },
   "Season": {
+    "seasonTitle": "Season of {period}",
     "lastChance": "Last chance!",
     "daysLeft": "{n}d left",
     "endingWarning": "⏰ The season ends in {count, plural, one {# day} other {# days}} — give everything for your final ranking!"
+  },
+  "Edit": {
+    "title": "Edit my profile",
+    "closeAriaLabel": "Close",
+    "fieldUsername": "Username",
+    "fieldUsernameHint": "3-25 characters · letters, numbers and _",
+    "fieldUsernameInvalid": "Invalid username (3-25 chars, letters/numbers/_)",
+    "fieldAvatar": "Avatar",
+    "fieldAvatarLocked": "Unlocked at {xp} XP",
+    "fieldAvatarHint": "🔒 Earn XP to unlock new avatars",
+    "fieldLeagues": "My leagues",
+    "fieldLeaguesHint": "Filter predictions and notifications",
+    "fieldTeam": "Favourite club",
+    "fieldTeamSearch": "Search for a club…",
+    "fieldTeamRemove": "Remove",
+    "saveBtnLabel": "Save",
+    "saveError": "Error saving",
+    "saveSuccess": "Profile updated!",
+    "connLost": "Connection lost",
+    "seasonTitle": "{period} Season"
   },
   "Shop": {
     "title": "Shop",

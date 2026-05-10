@@ -67,10 +67,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
       {/* Season badge */}
       {currentSeason && !isHallOfFame && (
         <div className="mb-4">
-          <SeasonBadge
-            label={currentSeason.label}
-            endsAt={currentSeason.ends_at}
-          />
+          <SeasonBadge endsAt={currentSeason.ends_at} />
         </div>
       )}
 

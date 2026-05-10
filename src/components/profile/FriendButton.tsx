@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { UserPlus, UserCheck, Clock, UserMinus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
@@ -12,6 +13,7 @@ export function FriendButton({
   profileId: string;
   currentUserId: string;
 }) {
+  const t = useTranslations("Profile");
   const [status, setStatus] = useState<"none" | "pending" | "accepted">("none");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,9 +50,9 @@ export function FriendButton({
       .single();
 
     if (error) {
-      toast.error("Erreur lors de l'envoi de la demande.");
+      toast.error(t("friendRequestError"));
     } else {
-      toast.success("Demande d'ami envoyée !");
+      toast.success(t("friendRequestSent"));
       setStatus("pending");
       setRequestId(data.id);
     }
@@ -67,7 +69,7 @@ export function FriendButton({
       .eq("id", requestId);
 
     if (error) {
-      toast.error("Erreur.");
+      toast.error(t("friendRemoveError"));
     } else {
       setStatus("none");
       setRequestId(null);
@@ -81,7 +83,7 @@ export function FriendButton({
         disabled
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 py-3 text-sm font-bold text-zinc-500"
       >
-        Chargement...
+        {t("friendLoading")}
       </button>
     );
   }
@@ -93,10 +95,10 @@ export function FriendButton({
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-green-500/20 py-3 text-sm font-bold text-green-400 transition hover:bg-red-500/20 hover:text-red-400 group"
       >
         <span className="group-hover:hidden flex items-center gap-2">
-          <UserCheck className="h-4 w-4" /> Amis
+          <UserCheck className="h-4 w-4" /> {t("friendAccepted")}
         </span>
         <span className="hidden group-hover:flex items-center gap-2">
-          <UserMinus className="h-4 w-4" /> Retirer
+          <UserMinus className="h-4 w-4" /> {t("friendRemove")}
         </span>
       </button>
     );
@@ -108,7 +110,7 @@ export function FriendButton({
         disabled
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-zinc-900 py-3 text-sm font-bold text-zinc-400"
       >
-        <Clock className="h-4 w-4" /> Demande en attente
+        <Clock className="h-4 w-4" /> {t("friendPending")}
       </button>
     );
   }
@@ -119,7 +121,7 @@ export function FriendButton({
       className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-whistle py-3 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:brightness-110 active:scale-[0.98]"
     >
       <UserPlus className="h-4 w-4" />
-      Ajouter en ami
+      {t("friendAdd")}
     </button>
   );
 }

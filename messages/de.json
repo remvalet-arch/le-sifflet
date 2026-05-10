@@ -275,7 +275,18 @@
     "amisRefused": "Anfrage abgelehnt",
     "amisLoading": "Freunde laden...",
     "amisAcceptAriaLabel": "Annehmen",
-    "amisRefuseAriaLabel": "Ablehnen"
+    "amisRefuseAriaLabel": "Ablehnen",
+    "myTrophies": "Meine Trophäen",
+    "badgeUnlocked": "✓ Abzeichen freigeschaltet!",
+    "badgeUnlockedToast": "🏅 Neues Abzeichen freigeschaltet: {label}!",
+    "friendLoading": "Laden...",
+    "friendAccepted": "Freunde",
+    "friendRemove": "Entfernen",
+    "friendPending": "Anfrage ausstehend",
+    "friendAdd": "Freund hinzufügen",
+    "friendRequestSent": "Freundschaftsanfrage gesendet!",
+    "friendRequestError": "Fehler beim Senden der Anfrage.",
+    "friendRemoveError": "Fehler."
   },
   "Historique": {
     "eventPenaltyCheck": "Elfmeter?",
@@ -308,9 +319,30 @@
     "pendingChip": "⏳ {count} ausstehend"
   },
   "Season": {
+    "seasonTitle": "Saison {period}",
     "lastChance": "Letzte Chance!",
     "daysLeft": "N-{n}",
     "endingWarning": "⏰ Die Saison endet in {count, plural, one {# Tag} other {# Tagen}} — alles geben für die Endwertung!"
+  },
+  "Edit": {
+    "title": "Profil bearbeiten",
+    "closeAriaLabel": "Schließen",
+    "fieldUsername": "Nutzername",
+    "fieldUsernameHint": "3-25 Zeichen · Buchstaben, Zahlen und _",
+    "fieldUsernameInvalid": "Ungültiger Nutzername (3-25 Zeichen, Buchstaben/Zahlen/_)",
+    "fieldAvatar": "Avatar",
+    "fieldAvatarLocked": "Freigeschaltet bei {xp} XP",
+    "fieldAvatarHint": "🔒 Verdiene XP, um neue Avatare freizuschalten",
+    "fieldLeagues": "Meine Ligen",
+    "fieldLeaguesHint": "Prognosen und Benachrichtigungen filtern",
+    "fieldTeam": "Lieblingsclub",
+    "fieldTeamSearch": "Club suchen…",
+    "fieldTeamRemove": "Entfernen",
+    "saveBtnLabel": "Speichern",
+    "saveError": "Fehler beim Speichern",
+    "saveSuccess": "Profil aktualisiert!",
+    "connLost": "Verbindung verloren",
+    "seasonTitle": "Saison {period}"
   },
   "Shop": {
     "title": "Shop",

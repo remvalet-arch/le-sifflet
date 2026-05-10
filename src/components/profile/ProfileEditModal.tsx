@@ -7,6 +7,7 @@ import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { X, Search, LoaderCircle, Check, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useBcp47 } from "@/lib/use-bcp47";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -96,6 +97,7 @@ export function ProfileEditModal({
   }) => void;
 }) {
   const isClient = useIsClient();
+  const te = useTranslations("Edit");
 
   // State initialized from props — component remounts on each open so no reset needed
   const bcp47 = useBcp47();
@@ -169,7 +171,7 @@ export function ProfileEditModal({
 
   async function handleSave() {
     if (!/^[a-zA-Z0-9_]{3,25}$/.test(username)) {
-      toast.error("Pseudo invalide (3-25 caractères, lettres/chiffres/_)");
+      toast.error(te("fieldUsernameInvalid"));
       return;
     }
     setSaving(true);
@@ -186,10 +188,10 @@ export function ProfileEditModal({
       });
       const json = (await res.json()) as { ok: boolean; error?: string };
       if (!json.ok) {
-        toast.error(json.error ?? "Erreur lors de la sauvegarde");
+        toast.error(json.error ?? te("saveError"));
         return;
       }
-      toast.success("Profil mis à jour !");
+      toast.success(te("saveSuccess"));
       onSaved({
         username,
         avatar_url: avatar,
@@ -200,7 +202,7 @@ export function ProfileEditModal({
       });
       onClose();
     } catch {
-      toast.error("Connexion perdue");
+      toast.error(te("connLost"));
     } finally {
       setSaving(false);
     }
@@ -234,13 +236,13 @@ export function ProfileEditModal({
             id="profile-edit-title"
             className="text-base font-black text-white"
           >
-            Modifier mon profil
+            {te("title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white"
-            aria-label="Fermer"
+            aria-label={te("closeAriaLabel")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -254,7 +256,7 @@ export function ProfileEditModal({
           {/* ── Pseudo ──────────────────────────────────────────────────── */}
           <section className="mb-6">
             <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">
-              Pseudo
+              {te("fieldUsername")}
             </label>
             <input
               type="text"
@@ -265,14 +267,14 @@ export function ProfileEditModal({
               className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm font-bold text-white placeholder-zinc-600 outline-none focus:border-whistle"
             />
             <p className="mt-1.5 text-[10px] text-zinc-600">
-              3-25 caractères · lettres, chiffres et _
+              {te("fieldUsernameHint")}
             </p>
           </section>
 
           {/* ── Avatar emoji ─────────────────────────────────────────────── */}
           <section className="mb-6">
             <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
-              Avatar
+              {te("fieldAvatar")}
             </p>
             <div className="grid grid-cols-5 gap-2">
               {AVATAR_TIERS.map(({ emoji, minXp }) => {
@@ -285,7 +287,9 @@ export function ProfileEditModal({
                     onClick={() => !locked && setAvatar(emoji)}
                     title={
                       locked
-                        ? `Débloqué à ${minXp.toLocaleString(bcp47)} XP`
+                        ? te("fieldAvatarLocked", {
+                            minXp: minXp.toLocaleString(bcp47),
+                          })
                         : undefined
                     }
                     className={`relative flex h-12 w-full items-center justify-center rounded-xl text-2xl transition ${
@@ -310,7 +314,7 @@ export function ProfileEditModal({
             </div>
             {xp < 5000 && (
               <p className="mt-2 text-[10px] text-zinc-600">
-                🔒 Gagne de l&apos;XP pour débloquer de nouveaux avatars
+                {te("fieldAvatarHint")}
               </p>
             )}
           </section>
@@ -319,7 +323,7 @@ export function ProfileEditModal({
           {competitions.length > 0 && (
             <section className="mb-6">
               <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
-                Mes ligues
+                {te("fieldLeagues")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {competitions.map((comp) => {
@@ -350,7 +354,7 @@ export function ProfileEditModal({
                 })}
               </div>
               <p className="mt-2 text-[10px] text-zinc-600">
-                Filtrage des pronos et notifications
+                {te("fieldLeaguesHint")}
               </p>
             </section>
           )}
@@ -358,7 +362,7 @@ export function ProfileEditModal({
           {/* ── Équipe favorite ──────────────────────────────────────────── */}
           <section>
             <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
-              Club de cœur
+              {te("fieldTeam")}
             </p>
 
             {/* Club sélectionné */}
@@ -389,7 +393,7 @@ export function ProfileEditModal({
                   }}
                   className="text-xs font-bold text-zinc-500 hover:text-white"
                 >
-                  Retirer
+                  {te("fieldTeamRemove")}
                 </button>
               </div>
             )}
@@ -401,7 +405,7 @@ export function ProfileEditModal({
                 type="text"
                 value={teamSearch}
                 onChange={handleTeamSearchChange}
-                placeholder="Recherche un club…"
+                placeholder={te("fieldTeamSearch")}
                 className="w-full rounded-xl border border-white/10 bg-zinc-900 py-3 pl-9 pr-4 text-sm text-white placeholder-zinc-600 outline-none focus:border-whistle"
               />
               {searchLoading && (
@@ -462,7 +466,7 @@ export function ProfileEditModal({
             {saving ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
             ) : (
-              "Sauvegarder"
+              te("saveBtnLabel")
             )}
           </button>
         </div>

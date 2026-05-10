@@ -2,20 +2,29 @@
 
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 
 type Props = {
-  label: string;
   endsAt: string;
 };
 
-export function SeasonBadge({ label, endsAt }: Props) {
+export function SeasonBadge({ endsAt }: Props) {
   const t = useTranslations("Season");
+  const bcp47 = useBcp47();
 
   const daysLeft = useMemo(() => {
     // eslint-disable-next-line react-hooks/purity
     const diff = new Date(endsAt).getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }, [endsAt]);
+
+  const seasonLabel = useMemo(() => {
+    const period = new Date(endsAt).toLocaleDateString(bcp47, {
+      month: "long",
+      year: "numeric",
+    });
+    return t("seasonTitle", { period });
+  }, [endsAt, bcp47, t]);
 
   const isEnding = daysLeft <= 3;
 
@@ -29,7 +38,7 @@ export function SeasonBadge({ label, endsAt }: Props) {
         }`}
       >
         <span className="text-base">🏆</span>
-        <span className="font-black text-white">{label}</span>
+        <span className="font-black text-white">{seasonLabel}</span>
         <span
           className={`ml-auto text-xs font-bold ${
             isEnding ? "text-red-400" : "text-zinc-500"
