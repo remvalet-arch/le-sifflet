@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LiveRoom } from "@/components/match/LiveRoom";
-import { PostMatchRecap } from "@/components/match/PostMatchRecap";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 type Props = { params: Promise<{ id: string }> };
@@ -113,16 +112,6 @@ export default async function MatchPage({ params }: Props) {
         ← Matchs
       </Link>
 
-      {match.status === "finished" && squadPronos.length > 0 && (
-        <PostMatchRecap
-          homeTeam={match.team_home}
-          awayTeam={match.team_away}
-          homeScore={match.home_score ?? 0}
-          awayScore={match.away_score ?? 0}
-          squadPronos={squadPronos}
-          currentUserId={user.id}
-        />
-      )}
       <LiveRoom
         match={match}
         siffletsBalance={siffletsBalance}
