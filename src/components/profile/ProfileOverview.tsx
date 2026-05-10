@@ -102,7 +102,7 @@ export function ProfileOverview({
         <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
           <div className="border-b border-white/5 px-5 py-3">
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              Mon arbitrage
+              {t("myJudging")}
             </p>
           </div>
           <div className="flex divide-x divide-white/5">
@@ -112,14 +112,14 @@ export function ProfileOverview({
                 {scoreAccuracy}%
               </p>
               <p className="text-center text-[10px] font-semibold text-zinc-500">
-                Scores exacts
+                {t("exactScores")}
               </p>
             </div>
             <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
               <TrendingUp className="h-4 w-4 text-zinc-500" />
               <p className="text-base font-black text-white">{bestStreak}</p>
               <p className="text-center text-[10px] font-semibold text-zinc-500">
-                Meilleure série
+                {t("bestStreak2")}
               </p>
             </div>
           </div>
@@ -130,7 +130,7 @@ export function ProfileOverview({
         <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              Mise minimum
+              {t("minBet")}
             </p>
             <p className="mt-1 text-base font-black text-amber-400">
               {getMinBetForBalance(headerBalance).toLocaleString()} 🪙
@@ -155,7 +155,7 @@ export function ProfileOverview({
         <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
           <div className="border-b border-white/5 px-5 py-3">
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              🏅 Mes saisons
+              {t("mySeasons")}
             </p>
           </div>
           <div className="flex flex-col divide-y divide-white/5">
@@ -180,7 +180,7 @@ export function ProfileOverview({
                     </p>
                     <p className="text-[10px] text-zinc-500">
                       #{sa.final_rank} · {sa.final_points.toLocaleString()}{" "}
-                      Points
+                      {t("points")}
                     </p>
                   </div>
                   <p className="text-[10px] text-zinc-600">
@@ -200,7 +200,7 @@ export function ProfileOverview({
         <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
           <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
           <p className="text-xs font-bold text-yellow-400">
-            Accès Modérateur activé — tu peux forcer les résultats VAR
+            {t("moderatorAccess")}
           </p>
         </div>
       )}

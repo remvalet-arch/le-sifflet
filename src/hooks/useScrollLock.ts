@@ -8,14 +8,23 @@ export function useScrollLock(isLocked: boolean) {
 
     const scrollY = window.scrollY;
     const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // When scrollY === 0 (always the case in our h-[100dvh] shell layout),
+    // applying position:fixed triggers iOS Safari to recalculate safe-area
+    // insets and causes layout jumps in fixed modals. Skip it when not needed.
+    if (scrollY === 0) {
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+
     const originalPosition = document.body.style.position;
     const originalTop = document.body.style.top;
     const originalWidth = document.body.style.width;
     const scrollbarWidth =
       window.innerWidth - document.documentElement.clientWidth;
 
-    // iOS Safari requires position:fixed to actually prevent body scroll
-    document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = "100%";

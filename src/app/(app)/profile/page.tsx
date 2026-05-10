@@ -23,65 +23,39 @@ export async function generateMetadata() {
   return { title: t("profile") };
 }
 
-function getTrustGrade(score: number) {
-  if (score >= 200)
-    return {
-      label: "Arbitre Élite",
-      icon: "🏅",
-      color: "text-yellow-400",
-      bar: "bg-yellow-400",
-    };
-  if (score >= 100)
-    return {
-      label: "Arbitre Officiel",
-      icon: "✅",
-      color: "text-green-400",
-      bar: "bg-green-500",
-    };
-  if (score >= 50)
-    return {
-      label: "Lanceur d'Alerte",
-      icon: "⚡",
-      color: "text-blue-400",
-      bar: "bg-blue-400",
-    };
-  return {
-    label: "Carton Jaune",
-    icon: "⚠️",
-    color: "text-orange-400",
-    bar: "bg-orange-400",
-  };
-}
-
-function getKarmaBadge(score: number) {
+function getKarmaBadge(
+  score: number,
+  t: Awaited<ReturnType<typeof getTranslations<"Profile">>>,
+) {
   if (score >= MODERATOR_THRESHOLD)
     return {
       emoji: "🛡️",
-      label: "Modérateur",
+      label: t("karmaModerator"),
       cls: "border border-yellow-500/50 text-yellow-400 bg-yellow-500/10",
     };
   if (score >= 50)
     return {
       emoji: "📢",
-      label: "Supporteur",
+      label: t("karmaSupporteur"),
       cls: "border border-white/10 text-zinc-400 bg-zinc-800",
     };
   return {
     emoji: "🟨",
-    label: "Carton Jaune",
+    label: t("karmaYellow"),
     cls: "border border-orange-500/30 text-orange-400 bg-orange-500/10",
   };
 }
 
-function rankDisplayFromDb(rankLabel: string): {
-  emoji: string;
-  label: string;
-} {
-  const t = rankLabel.toLowerCase();
-  if (t.includes("boss")) return { emoji: "👑", label: rankLabel };
-  if (t.includes("argent")) return { emoji: "🥈", label: rankLabel };
-  if (t.includes("bronze")) return { emoji: "🥉", label: rankLabel };
-  return { emoji: "🪑", label: rankLabel };
+function rankDisplayFromDb(
+  rankLabel: string,
+  t: Awaited<ReturnType<typeof getTranslations<"Profile">>>,
+): { emoji: string; label: string } {
+  const l = rankLabel.toLowerCase();
+  if (l.includes("boss")) return { emoji: "👑", label: t("rankBoss") };
+  if (l.includes("argent") || l.includes("silver"))
+    return { emoji: "🥈", label: t("rankArgent") };
+  if (l.includes("bronze")) return { emoji: "🥉", label: t("rankBronze") };
+  return { emoji: "🪑", label: t("rankDistrict") };
 }
 
 export default async function ProfilePage() {
@@ -345,9 +319,9 @@ export default async function ProfilePage() {
         ).toISOString()
       : null;
 
-  void getTrustGrade(trustScore);
-  const karma = getKarmaBadge(trustScore);
-  const rank = rankDisplayFromDb(profile?.rank ?? "Arbitre de District");
+  const tp = await getTranslations("Profile");
+  const karma = getKarmaBadge(trustScore, tp);
+  const rank = rankDisplayFromDb(profile?.rank ?? "", tp);
   const xpTotal = profile?.xp ?? 0;
   const unlockedBadgeIds = (userBadgesData ?? []).map((ub) => ub.badge_id);
 

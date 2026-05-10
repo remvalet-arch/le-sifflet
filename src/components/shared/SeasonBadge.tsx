@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   label: string;
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export function SeasonBadge({ label, endsAt }: Props) {
+  const t = useTranslations("Season");
+
   const daysLeft = useMemo(() => {
     // eslint-disable-next-line react-hooks/purity
     const diff = new Date(endsAt).getTime() - Date.now();
@@ -32,13 +35,12 @@ export function SeasonBadge({ label, endsAt }: Props) {
             isEnding ? "text-red-400" : "text-zinc-500"
           }`}
         >
-          {daysLeft === 0 ? "Dernière chance !" : `J-${daysLeft}`}
+          {daysLeft === 0 ? t("lastChance") : t("daysLeft", { n: daysLeft })}
         </span>
       </div>
       {isEnding && daysLeft > 0 && (
         <p className="px-1 text-[10px] font-black text-red-400">
-          ⏰ La saison se termine dans {daysLeft} jour{daysLeft > 1 ? "s" : ""}{" "}
-          — donne tout pour ton classement final !
+          {t("endingWarning", { count: daysLeft })}
         </p>
       )}
     </div>

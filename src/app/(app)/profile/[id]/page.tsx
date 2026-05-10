@@ -2,7 +2,7 @@ import { Target, TrendingUp, Trophy, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { BCP47_MAP } from "@/lib/use-bcp47";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import type {
@@ -20,62 +20,68 @@ import type {
 import { FriendButton } from "@/components/profile/FriendButton";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
-function getTrustGrade(score: number) {
+type Tp = Awaited<ReturnType<typeof getTranslations<"Profile">>>;
+
+function getTrustGrade(score: number, t: Tp) {
   if (score >= 200)
     return {
-      label: "Arbitre Élite",
+      label: t("trustGradeElite"),
       icon: "🏅",
       color: "text-yellow-400",
       bar: "bg-yellow-400",
     };
   if (score >= 100)
     return {
-      label: "Arbitre Officiel",
+      label: t("trustGradeOfficial"),
       icon: "✅",
       color: "text-green-400",
       bar: "bg-green-500",
     };
   if (score >= 50)
     return {
-      label: "Lanceur d'Alerte",
+      label: t("trustGradeAlert"),
       icon: "⚡",
       color: "text-blue-400",
       bar: "bg-blue-400",
     };
   return {
-    label: "Carton Jaune",
+    label: t("trustGradeYellow"),
     icon: "⚠️",
     color: "text-orange-400",
     bar: "bg-orange-400",
   };
 }
 
-function getKarmaBadge(score: number) {
+function getKarmaBadge(score: number, t: Tp) {
   if (score >= MODERATOR_THRESHOLD)
     return {
       emoji: "🛡️",
-      label: "Modérateur",
+      label: t("karmaModerator"),
       cls: "border border-yellow-500/50 text-yellow-400 bg-yellow-500/10",
     };
   if (score >= 50)
     return {
       emoji: "📢",
-      label: "Supporteur",
+      label: t("karmaSupporteur"),
       cls: "border border-white/10 text-zinc-400 bg-zinc-800",
     };
   return {
     emoji: "🟨",
-    label: "Carton Jaune",
+    label: t("karmaYellow"),
     cls: "border border-orange-500/30 text-orange-400 bg-orange-500/10",
   };
 }
 
-function rankDisplayFromDb(rankLabel: string) {
-  const t = rankLabel.toLowerCase();
-  if (t.includes("boss")) return { emoji: "👑", label: rankLabel };
-  if (t.includes("argent")) return { emoji: "🥈", label: rankLabel };
-  if (t.includes("bronze")) return { emoji: "🥉", label: rankLabel };
-  return { emoji: "🪑", label: rankLabel };
+function rankDisplayFromDb(
+  rankLabel: string,
+  t: Tp,
+): { emoji: string; label: string } {
+  const l = rankLabel.toLowerCase();
+  if (l.includes("boss")) return { emoji: "👑", label: t("rankBoss") };
+  if (l.includes("argent") || l.includes("silver"))
+    return { emoji: "🥈", label: t("rankArgent") };
+  if (l.includes("bronze")) return { emoji: "🥉", label: t("rankBronze") };
+  return { emoji: "🪑", label: t("rankDistrict") };
 }
 
 export async function generateMetadata() {
@@ -300,9 +306,10 @@ export default async function PublicProfilePage({
   ).size;
 
   const trustScore = profile.trust_score ?? 100;
-  const grade = getTrustGrade(trustScore);
-  const karma = getKarmaBadge(trustScore);
-  const rank = rankDisplayFromDb(profile.rank ?? "Arbitre de District");
+  const tp = await getTranslations("Profile");
+  const grade = getTrustGrade(trustScore, tp);
+  const karma = getKarmaBadge(trustScore, tp);
+  const rank = rankDisplayFromDb(profile.rank ?? "", tp);
   const xpTotal = profile.xp ?? 0;
   const balance = profile.sifflets_balance ?? 0;
   const avatar = profile.avatar_url ?? "🎽";

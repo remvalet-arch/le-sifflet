@@ -12,6 +12,7 @@ import {
   Search,
   UserPlus,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/types/database";
@@ -70,6 +71,7 @@ function AvatarCircle({
 }
 
 export function AmisContent({ currentUserId }: { currentUserId: string }) {
+  const t = useTranslations("Profile");
   const [friends, setFriends] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -153,7 +155,7 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
         (f.sender_id === targetId && f.receiver_id === currentUserId),
     );
     if (existing) {
-      toast.error("Demande déjà envoyée ou déjà ami !");
+      toast.error(t("amisAlreadySent"));
       setAddingId(null);
       return;
     }
@@ -164,9 +166,9 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
     });
     setAddingId(null);
     if (error) {
-      toast.error("Erreur lors de l'envoi de la demande");
+      toast.error(t("amisError"));
     } else {
-      toast.success("Demande d'ami envoyée !");
+      toast.success(t("amisSent"));
       setSearchQuery("");
       setSearchResults([]);
     }
@@ -186,15 +188,13 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
         ? prev.filter((f) => f.id !== id)
         : prev.map((f) => (f.id === id ? { ...f, status: action } : f)),
     );
-    toast.success(
-      action === "accepted" ? "Demande acceptée" : "Demande refusée",
-    );
+    toast.success(action === "accepted" ? t("amisAccepted") : t("amisRefused"));
   }
 
   if (loading) {
     return (
       <div className="text-center text-sm text-zinc-500 py-10">
-        Chargement des amis...
+        {t("amisLoading")}
       </div>
     );
   }
@@ -212,10 +212,10 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
           <Search className="h-4 w-4 shrink-0 text-zinc-500" />
           <input
             type="text"
-            aria-label="Rechercher un joueur par pseudo"
+            aria-label={t("amisSearchAriaLabel")}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Chercher un joueur par pseudo…"
+            placeholder={t("amisSearchPlaceholder")}
             className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-600 outline-none"
             style={{ fontSize: "16px" }}
           />
@@ -223,7 +223,9 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
         {(searchResults.length > 0 || searchLoading) && (
           <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-xl">
             {searchLoading ? (
-              <p className="px-4 py-3 text-xs text-zinc-500">Recherche…</p>
+              <p className="px-4 py-3 text-xs text-zinc-500">
+                {t("amisSearching")}
+              </p>
             ) : (
               searchResults.map((p) => (
                 <div
@@ -245,7 +247,7 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
                     className="flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/15 px-3 py-1 text-[11px] font-black text-green-400 transition hover:bg-green-500/25 disabled:opacity-50"
                   >
                     <UserPlus className="h-3 w-3" />
-                    Ajouter
+                    {t("amisAdd")}
                   </button>
                 </div>
               ))
@@ -261,10 +263,10 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
         <Trophy className="h-5 w-5 shrink-0 text-emerald-400" />
         <div className="flex-1">
           <p className="text-sm font-black text-white">
-            Retrouve tes amis dans les ligues
+            {t("amisFindFriendsTitle")}
           </p>
           <p className="text-[11px] text-zinc-500">
-            Rejoins une ligue pour défier tes potes 🏆
+            {t("amisFindFriendsDesc")}
           </p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
@@ -274,7 +276,7 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
         <div>
           <div className="mb-2 flex items-center gap-2">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              Demandes reçues
+              {t("amisRequestsReceived")}
             </h3>
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white">
               {pendingReceived.length}
@@ -299,14 +301,14 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
                   <button
                     onClick={() => handleAction(req.id, "accepted")}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-green-500/30 bg-green-500/20 text-green-400 transition hover:bg-green-500/30"
-                    aria-label="Accepter"
+                    aria-label={t("amisAcceptAriaLabel")}
                   >
                     <Check className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleAction(req.id, "rejected")}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-red-500/30 bg-red-500/20 text-red-400 transition hover:bg-red-500/30"
-                    aria-label="Refuser"
+                    aria-label={t("amisRefuseAriaLabel")}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -319,17 +321,17 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
 
       <div>
         <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          Amis ({accepted.length})
+          {t("amisFriendsCount", { count: accepted.length })}
         </h3>
         {accepted.length === 0 ? (
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/50 px-6 py-10 text-center">
             <Users className="h-10 w-10 text-zinc-600" />
             <div>
               <p className="text-sm font-bold text-zinc-400">
-                Aucun ami pour l&apos;instant
+                {t("amisNoFriendsTitle")}
               </p>
               <p className="mt-1 text-xs text-zinc-600">
-                Explore les ligues pour en trouver !
+                {t("amisNoFriendsDesc")}
               </p>
             </div>
             <Link
@@ -337,7 +339,7 @@ export function AmisContent({ currentUserId }: { currentUserId: string }) {
               className="flex items-center gap-1.5 rounded-full border border-white/15 bg-zinc-800 px-4 py-2 text-xs font-black text-white transition hover:bg-zinc-700"
             >
               <Trophy className="h-3.5 w-3.5" />
-              Explorer les ligues
+              {t("amisExploreLigues")}
             </Link>
           </div>
         ) : (
