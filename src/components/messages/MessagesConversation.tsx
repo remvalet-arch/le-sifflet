@@ -32,6 +32,12 @@ export function MessagesConversation({
   const [lastSentAt, setLastSentAt] = useState(0);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  // Marquer le thread comme lu au mount — NOW() côté serveur (drift-safe)
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.rpc("mark_dm_thread_read", { p_thread_id: threadId });
+  }, [threadId]);
+
   // Realtime subscription
   useEffect(() => {
     const supabase = createClient();

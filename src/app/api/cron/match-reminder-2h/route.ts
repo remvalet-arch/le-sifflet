@@ -107,7 +107,7 @@ export async function GET(request: Request) {
     const sent = await sendPushToUsers(eligibleUserIds, {
       title: `⚽ ${match.team_home} – ${match.team_away} dans 2h !`,
       body: "Fais ton prono maintenant avant le coup d'envoi →",
-      url: `/pronos`,
+      url: `/match/${match.id}`,
     });
 
     if (sent > 0) {

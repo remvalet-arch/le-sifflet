@@ -107,10 +107,11 @@ export async function POST(request: NextRequest) {
   ).toISOString();
   const { data: recentSignals, error: signalsError } = await supabase
     .from("alert_signals")
-    .select("user_id")
+    .select("user_id, created_at")
     .eq("match_id", match_id)
     .eq("action_type", validType)
-    .gte("created_at", since);
+    .gte("created_at", since)
+    .order("created_at", { ascending: true });
 
   if (signalsError) {
     log.error("alert", "Échec fetch alert_signals", signalsError.message);
@@ -121,6 +122,8 @@ export async function POST(request: NextRequest) {
     ...new Set((recentSignals ?? []).map((s) => s.user_id)),
   ];
   const distinctCount = distinctUsers.length;
+  const firstSignalAt =
+    (recentSignals ?? [])[0]?.created_at ?? new Date().toISOString();
 
   // Seuil dynamique basé sur l'audience active (Sprint Q)
   const { data: audienceData } = await supabase.rpc(
@@ -284,5 +287,7 @@ export async function POST(request: NextRequest) {
     current_signals: distinctCount,
     required_signals: requiredSignals,
     market_opened: distinctCount >= requiredSignals,
+    active_audience: audienceCount,
+    first_signal_at: firstSignalAt,
   });
 }

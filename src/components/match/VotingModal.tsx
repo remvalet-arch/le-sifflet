@@ -132,7 +132,7 @@ export function VotingModal({
 
   return (
     <div
-      className="animate-modal-backdrop fixed inset-0 z-[60] flex items-end justify-center bg-black/75 px-4 pb-24 backdrop-blur-sm sm:items-center sm:pb-4"
+      className="animate-modal-backdrop fixed inset-0 z-[60] flex items-end justify-center overflow-hidden bg-black/75 px-4 pb-24 backdrop-blur-sm sm:items-center sm:pb-4"
       style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)" }}
       role="presentation"
       onMouseDown={(e) => {
@@ -277,7 +277,10 @@ export function VotingModal({
               onClick={() => setRulesOpen(false)}
             >
               <div
-                className="w-full rounded-t-3xl border-t border-white/10 bg-zinc-900 px-6 pb-8 pt-6"
+                className="w-full rounded-t-3xl border-t border-white/10 bg-zinc-900 px-6 pt-6"
+                style={{
+                  paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mb-4 flex items-center justify-between">

@@ -512,6 +512,8 @@ export function LiveRoom({
           current_signals: number;
           required_signals: number;
           market_opened: boolean;
+          active_audience: number;
+          first_signal_at: string;
         };
         error?: string;
       };
@@ -520,13 +522,14 @@ export function LiveRoom({
         return;
       }
       markAsSignaled(type);
+      const matchTier = classifyMatchTier({
+        team_home: match.team_home,
+        team_away: match.team_away,
+        competition_id: match.competition_id ?? "",
+      });
       track("alert_signal_submitted", {
         match_id: match.id,
-        match_tier: classifyMatchTier({
-          team_home: match.team_home,
-          team_away: match.team_away,
-          competition_id: match.competition_id ?? "",
-        }),
+        match_tier: matchTier,
         event_type: type as MarketEventType,
         minute: liveMatch.match_minute ?? 0,
         user_trust_score: 1,
@@ -535,6 +538,24 @@ export function LiveRoom({
       const req = json.data?.required_signals ?? 2;
       if (json.data?.market_opened) {
         toast.success("Le marché VAR vient d'ouvrir ! Parie maintenant 🔥");
+        const firstSignalAt = json.data.first_signal_at;
+        const timeToThreshold = firstSignalAt
+          ? Math.max(
+              0,
+              Math.floor(
+                (Date.now() - new Date(firstSignalAt).getTime()) / 1000,
+              ),
+            )
+          : 0;
+        track("alert_threshold_reached", {
+          match_id: match.id,
+          match_tier: matchTier,
+          event_type: type as MarketEventType,
+          signals_count: cur,
+          active_audience: json.data.active_audience ?? 0,
+          threshold_required: req,
+          time_to_threshold_seconds: timeToThreshold,
+        });
       } else {
         toast.success(`Signal envoyé — ${cur}/${req} pour ouvrir le pari ⚡`);
       }

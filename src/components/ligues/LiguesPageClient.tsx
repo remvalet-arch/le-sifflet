@@ -202,8 +202,8 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                   className="absolute inset-0 z-0 rounded-2xl"
                   aria-label={`Voir la ligue ${s.name}`}
                 />
-                {/* Main info row */}
-                <div className="relative z-10 flex items-center gap-3">
+                {/* Main info row — pointer-events-none so the Link below captures clicks */}
+                <div className="pointer-events-none relative flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-amber-500/80">
                       {s.is_private ? t("privateLabel") : t("publicLabel")}
@@ -225,15 +225,15 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                   <ChevronRight className="h-5 w-5 shrink-0 text-zinc-600" />
                 </div>
 
-                {/* Sub-actions row */}
-                <div className="relative z-10 mt-3 flex items-center gap-2 border-t border-white/5 pt-3">
+                {/* Sub-actions row — wrapper is pointer-events-none, buttons re-enable */}
+                <div className="pointer-events-none relative mt-3 flex items-center gap-2 border-t border-white/5 pt-3">
                   {s.is_private && s.invite_code && (
                     <button
                       type="button"
                       onClick={() =>
                         copyInvite(s.id, s.invite_code!, s.name, s.members)
                       }
-                      className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-2.5 py-1.5 text-[11px] font-bold text-zinc-400 hover:bg-zinc-700"
+                      className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800 px-2.5 py-1.5 text-[11px] font-bold text-zinc-400 hover:bg-zinc-700"
                     >
                       <Copy className="h-3 w-3 shrink-0" />
                       <span className="font-mono tracking-wider">
@@ -243,7 +243,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                       </span>
                     </button>
                   )}
-                  <div className="relative ml-auto">
+                  <div className="pointer-events-auto relative ml-auto">
                     <button
                       type="button"
                       onClick={() =>

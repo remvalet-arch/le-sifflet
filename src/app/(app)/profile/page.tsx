@@ -2,6 +2,7 @@ import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
 import { RefillButton } from "@/components/profile/RefillButton";
 import { BadgeUnlockListener } from "@/components/profile/BadgeUnlockListener";
+import { PronoResolutionListener } from "@/components/profile/PronoResolutionListener";
 import { ProfileClient } from "@/components/profile/ProfileClient";
 import type {
   ShortBetEntry,
@@ -325,6 +326,7 @@ export default async function ProfilePage() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
       <BadgeUnlockListener userId={user.id} />
+      <PronoResolutionListener userId={user.id} />
 
       <ProfileClient
         shortBets={shortEntries}

@@ -17,6 +17,7 @@ import {
 } from "@/services/api-football-sync";
 import { syncLeagueHubData } from "@/services/api-football-hub-sync";
 import { resolveEvent } from "@/lib/resolve-event";
+import { notifyVarBetResults } from "@/lib/var-notifications";
 import { log } from "@/lib/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MatchStatus, Database } from "@/types/database";
@@ -108,6 +109,7 @@ async function resolveStoppageMarket(
   if (!data?.id) return false;
   try {
     await resolveEvent(data.id, result);
+    void notifyVarBetResults(admin, data.id, type, matchId, result);
     return true;
   } catch {
     return false;

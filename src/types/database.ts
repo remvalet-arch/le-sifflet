@@ -1652,6 +1652,14 @@ export interface Database {
         Args: { p_match_id: string };
         Returns: Record<string, unknown>;
       };
+      mark_squad_read: {
+        Args: { p_squad_id: string };
+        Returns: undefined;
+      };
+      mark_dm_thread_read: {
+        Args: { p_thread_id: string };
+        Returns: undefined;
+      };
       place_match_prono: {
         Args: {
           p_match_id: string;

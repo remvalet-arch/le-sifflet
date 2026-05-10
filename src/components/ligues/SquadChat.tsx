@@ -37,15 +37,11 @@ export function SquadChat({
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const supabase = createClient();
 
-  // Marquer comme lu à chaque visite
+  // Marquer comme lu à chaque visite — NOW() côté serveur pour éviter le drift horloge client
   useEffect(() => {
-    void supabase
-      .from("squad_members")
-      .update({ last_read_at: new Date().toISOString() })
-      .eq("squad_id", squadId)
-      .eq("user_id", currentUserId);
+    void supabase.rpc("mark_squad_read", { p_squad_id: squadId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [squadId, currentUserId]);
+  }, [squadId]);
 
   useEffect(() => {
     // Initial fetch
