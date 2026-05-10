@@ -10,6 +10,7 @@ import {
   Trophy,
   Lock,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { BadgeRow } from "@/types/database";
 
 const BADGE_ICONS: Record<string, React.ElementType> = {
@@ -51,6 +52,7 @@ type Props = {
 };
 
 export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
+  const t = useTranslations("Profile");
   const [tooltip, setTooltip] = useState<string | null>(null);
   const unlocked = new Set(unlockedBadgeIds);
 
@@ -63,7 +65,7 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
       <div className="mb-3">
         <div className="mb-1.5 flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-            Mes Trophées
+            {t("myTrophies")}
           </h2>
           <span className="text-[10px] font-black text-zinc-400">
             {unlocked.size}/{badges.length}
@@ -123,7 +125,7 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
                   </p>
                   {isUnlocked && (
                     <p className="mt-1 text-[10px] font-bold text-green-400">
-                      ✓ Badge débloqué !
+                      {t("badgeUnlocked")}
                     </p>
                   )}
                 </div>

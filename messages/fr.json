@@ -264,7 +264,18 @@
     "amisRefused": "Demande refusée",
     "amisLoading": "Chargement des amis...",
     "amisAcceptAriaLabel": "Accepter",
-    "amisRefuseAriaLabel": "Refuser"
+    "amisRefuseAriaLabel": "Refuser",
+    "myTrophies": "Mes Trophées",
+    "badgeUnlocked": "✓ Badge débloqué !",
+    "badgeUnlockedToast": "🏅 Nouveau badge débloqué : {label} !",
+    "friendLoading": "Chargement...",
+    "friendAccepted": "Amis",
+    "friendRemove": "Retirer",
+    "friendPending": "Demande en attente",
+    "friendAdd": "Ajouter en ami",
+    "friendRequestSent": "Demande d'ami envoyée !",
+    "friendRequestError": "Erreur lors de l'envoi de la demande.",
+    "friendRemoveError": "Erreur."
   },
   "Historique": {
     "eventPenaltyCheck": "Péno ?",
@@ -297,9 +308,30 @@
     "pendingChip": "⏳ {count} en attente"
   },
   "Season": {
+    "seasonTitle": "Saison de {period}",
     "lastChance": "Dernière chance !",
     "daysLeft": "J-{n}",
     "endingWarning": "⏰ La saison se termine dans {count, plural, one {# jour} other {# jours}} — donne tout pour ton classement final !"
+  },
+  "Edit": {
+    "title": "Modifier mon profil",
+    "closeAriaLabel": "Fermer",
+    "fieldUsername": "Pseudo",
+    "fieldUsernameHint": "3-25 caractères · lettres, chiffres et _",
+    "fieldUsernameInvalid": "Pseudo invalide (3-25 caractères, lettres/chiffres/_)",
+    "fieldAvatar": "Avatar",
+    "fieldAvatarLocked": "Débloqué à {xp} XP",
+    "fieldAvatarHint": "🔒 Gagne de l'XP pour débloquer de nouveaux avatars",
+    "fieldLeagues": "Mes ligues",
+    "fieldLeaguesHint": "Filtrage des pronos et notifications",
+    "fieldTeam": "Club de cœur",
+    "fieldTeamSearch": "Recherche un club…",
+    "fieldTeamRemove": "Retirer",
+    "saveBtnLabel": "Sauvegarder",
+    "saveError": "Erreur lors de la sauvegarde",
+    "saveSuccess": "Profil mis à jour !",
+    "connLost": "Connexion perdue",
+    "seasonTitle": "Saison {period}"
   },
   "Shop": {
     "title": "Boutique",

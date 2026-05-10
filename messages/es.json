@@ -273,7 +273,18 @@
     "amisRefused": "Solicitud rechazada",
     "amisLoading": "Cargando amigos...",
     "amisAcceptAriaLabel": "Aceptar",
-    "amisRefuseAriaLabel": "Rechazar"
+    "amisRefuseAriaLabel": "Rechazar",
+    "myTrophies": "Mis Trofeos",
+    "badgeUnlocked": "✓ ¡Insignia desbloqueada!",
+    "badgeUnlockedToast": "🏅 ¡Nueva insignia desbloqueada: {label}!",
+    "friendLoading": "Cargando...",
+    "friendAccepted": "Amigos",
+    "friendRemove": "Eliminar",
+    "friendPending": "Solicitud pendiente",
+    "friendAdd": "Añadir amigo",
+    "friendRequestSent": "¡Solicitud de amistad enviada!",
+    "friendRequestError": "Error al enviar la solicitud.",
+    "friendRemoveError": "Error."
   },
   "Historique": {
     "eventPenaltyCheck": "¿Penalti?",
@@ -306,9 +317,30 @@
     "pendingChip": "⏳ {count} pendiente{count, plural, one {} other {s}}"
   },
   "Season": {
+    "seasonTitle": "Temporada de {period}",
     "lastChance": "¡Última oportunidad!",
     "daysLeft": "Q-{n}",
     "endingWarning": "⏰ La temporada termina en {count, plural, one {# día} other {# días}} — ¡dalo todo por tu clasificación final!"
+  },
+  "Edit": {
+    "title": "Editar mi perfil",
+    "closeAriaLabel": "Cerrar",
+    "fieldUsername": "Apodo",
+    "fieldUsernameHint": "3-25 caracteres · letras, números y _",
+    "fieldUsernameInvalid": "Apodo inválido (3-25 caracteres, letras/números/_)",
+    "fieldAvatar": "Avatar",
+    "fieldAvatarLocked": "Se desbloquea a {xp} XP",
+    "fieldAvatarHint": "🔒 Gana XP para desbloquear nuevos avatares",
+    "fieldLeagues": "Mis ligas",
+    "fieldLeaguesHint": "Filtrar pronósticos y notificaciones",
+    "fieldTeam": "Club favorito",
+    "fieldTeamSearch": "Buscar un club…",
+    "fieldTeamRemove": "Eliminar",
+    "saveBtnLabel": "Guardar",
+    "saveError": "Error al guardar",
+    "saveSuccess": "¡Perfil actualizado!",
+    "connLost": "Conexión perdida",
+    "seasonTitle": "Temporada {period}"
   },
   "Shop": {
     "title": "Tienda",
