@@ -122,6 +122,8 @@ export default async function AppLayout({
         <main className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden text-white">
           <MigrationBanner />
           {children}
+          {/* Réserve l'espace de la BottomNav pour que le contenu ne passe pas dessous */}
+          <div className="h-20 shrink-0" aria-hidden="true" />
         </main>
 
         <BottomNav userId={user.id} />
