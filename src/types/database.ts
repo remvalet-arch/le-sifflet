@@ -1628,6 +1628,15 @@ export interface Database {
         };
         Returns: Array<Database["public"]["Tables"]["squads"]["Row"]>;
       };
+      activate_vision_booster: {
+        Args: { p_event_id: string };
+        Returns: {
+          event_id: string;
+          match_id: string;
+          friend_choices: Record<string, number>;
+          booster_consumed_at: string;
+        };
+      };
       squad_by_invite_code: {
         Args: { p_invite: string };
         Returns: Array<{

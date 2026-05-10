@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { MarketEventRow } from "@/types/database";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -16,6 +16,7 @@ import {
   BinaryButtons,
   StoppageButtons,
 } from "@/components/voting/VotingButtons";
+import { VisionBoosterButton } from "@/components/voting/VisionBoosterButton";
 
 const STOPPAGE_OPTIONS = ["1", "2", "3", "4", "5", "6+"] as const;
 
@@ -43,6 +44,10 @@ export function VotingModal({
   const tEventConfig = useTranslations("EventConfig");
   const tVoting = useTranslations("Voting");
   const sheetRef = useRef<HTMLDivElement>(null);
+  const [revealedHints, setRevealedHints] = useState<Record<
+    string,
+    number
+  > | null>(null);
   const titleId = `vote-title-${event.id}`;
   const descId = `vote-desc-${event.id}`;
   useScrollLock(true);
@@ -170,11 +175,55 @@ export function VotingModal({
           />
 
           <BoosterPicker
-            availableBoosters={availableBoosters}
+            availableBoosters={availableBoosters.filter(
+              (b) => b.booster.effect_type !== "vision",
+            )}
             selectedBoosterId={selectedBoosterId}
             setSelectedBoosterId={setSelectedBoosterId}
             expired={expired}
           />
+
+          <VisionBoosterButton
+            eventId={event.id}
+            hasVisionBooster={
+              !expired &&
+              availableBoosters.some((b) => b.booster.effect_type === "vision")
+            }
+            onActivated={(hints) => setRevealedHints(hints)}
+          />
+
+          {revealedHints && (
+            <div
+              className="mb-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4"
+              role="status"
+              aria-live="polite"
+            >
+              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-indigo-400">
+                👁 Vision — choix de tes amis
+              </p>
+              {Object.keys(revealedHints).length === 0 ? (
+                <p className="text-sm text-zinc-400">
+                  Aucun ami n&apos;a encore voté sur ce market.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(revealedHints).map(([option, count]) => (
+                    <div
+                      key={option}
+                      className="flex flex-col items-center rounded-xl bg-zinc-800 px-4 py-2"
+                    >
+                      <span className="text-xl font-black text-white">
+                        {count}
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-wide text-zinc-500">
+                        {option}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {optimisticVote ? (
             <div className="flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-green-500/50 bg-green-500/10 text-green-400">
