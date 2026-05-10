@@ -26,11 +26,27 @@ export type PushPayload = {
   extra_data?: Record<string, unknown>;
 };
 
+export type PushOptions = {
+  /**
+   * Urgency hint to FCM/APNs.
+   * 'high'   → réveille le device immédiatement (quota limité sur iOS)
+   * 'normal' → livraison best-effort (défaut)
+   */
+  urgency?: "very-low" | "low" | "normal" | "high";
+  /**
+   * Durée de vie en secondes avant que FCM/APNs drop la notif si non livrée.
+   * Mettre 60 pour les VAR alerts (fenêtre de pari = 90s).
+   * Laisser undefined pour les notifs non-urgentes (FCM défaut = 4 semaines).
+   */
+  ttl?: number;
+};
+
 /** Envoie un push à tous les abonnés d'un match (filtre smart_mute + preferred_competitions). */
 export async function sendPushToMatchSubscribers(
   matchId: string,
   payload: PushPayload,
   excludeUserIds?: string[],
+  options?: PushOptions,
 ): Promise<number> {
   ensureVapid();
   if (!vapidConfigured) return 0;
@@ -81,13 +97,14 @@ export async function sendPushToMatchSubscribers(
   }
 
   if (userIds.length === 0) return 0;
-  return sendPushToUsers(userIds, payload);
+  return sendPushToUsers(userIds, payload, options);
 }
 
 /** Envoie un push à une liste d'user_ids (dédupliqué, nettoie les 410). */
 export async function sendPushToUsers(
   userIds: string[],
   payload: PushPayload,
+  options?: PushOptions,
 ): Promise<number> {
   ensureVapid();
   if (!vapidConfigured || userIds.length === 0) return 0;
@@ -102,6 +119,9 @@ export async function sendPushToUsers(
 
   const message = JSON.stringify(payload);
   const expiredEndpoints: string[] = [];
+  const webpushOptions: Parameters<typeof webpush.sendNotification>[2] = {};
+  if (options?.urgency) webpushOptions.urgency = options.urgency;
+  if (options?.ttl !== undefined) webpushOptions.TTL = options.ttl;
 
   await Promise.allSettled(
     subs.map(async (sub) => {
@@ -110,6 +130,7 @@ export async function sendPushToUsers(
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys },
           message,
+          webpushOptions,
         );
       } catch (err: unknown) {
         if ((err as { statusCode?: number }).statusCode === 410)
