@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { MatchListSkeleton } from "@/components/lobby/MatchCardSkeleton";
 import { MatchLobby } from "@/components/lobby/MatchLobby";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { parseLobbyRoundParams } from "@/lib/lobby-queries";
 import {
-  fetchLobbyMatchesByRound,
-  fetchLobbyMatchesForParisDayWithFallback,
-  parseLobbyRoundParams,
-} from "@/lib/lobby-queries";
+  getCachedLobbyDayMatches,
+  getCachedLobbyRoundMatches,
+} from "@/lib/cached-queries";
 import { formatParisYmdLongFr } from "@/lib/paris-day";
 import { getTranslations } from "next-intl/server";
 // OnboardingTour gère son propre état via localStorage — pas besoin de requête DB ici.
@@ -29,15 +29,11 @@ async function MatchListFetcher({
   roundContext: { leagueApiId: number; roundShort: string } | null;
   preferredLeagueApiIds: number[];
 }) {
-  const [supabase, t] = await Promise.all([
-    createClient(),
-    getTranslations("Lobby"),
-  ]);
+  const t = await getTranslations("Lobby");
 
   const roundFetch =
     viewMode === "round" && roundContext != null
-      ? await fetchLobbyMatchesByRound(
-          supabase,
+      ? await getCachedLobbyRoundMatches(
           roundContext.leagueApiId,
           roundContext.roundShort,
         )
@@ -45,7 +41,7 @@ async function MatchListFetcher({
   const dayFetch =
     viewMode === "round" && roundContext != null
       ? null
-      : await fetchLobbyMatchesForParisDayWithFallback(supabase);
+      : await getCachedLobbyDayMatches();
 
   const data = roundFetch?.data ?? dayFetch?.data ?? [];
   const error = roundFetch?.error ?? dayFetch?.error ?? null;
