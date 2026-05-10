@@ -12,6 +12,7 @@ import {
   ScorerAllocationEditor,
   aggregateSlots,
 } from "./ScorerAllocationEditor";
+import { BoosterPickerForPronos } from "./BoosterPickerForPronos";
 
 const BCP47_LOCALE: Record<string, string> = {
   fr: "fr-FR",
@@ -231,6 +232,9 @@ export function MatchPronoCard({
 
   const [homeSlots, setHomeSlots] = useState<string[]>([]);
   const [awaySlots, setAwaySlots] = useState<string[]>([]);
+  const [selectedBoosterId, setSelectedBoosterId] = useState<string | null>(
+    null,
+  );
 
   const [nowMs] = useState(() => Date.now());
   const LOCK_BEFORE_MS = 45 * 60 * 1000;
@@ -266,7 +270,7 @@ export function MatchPronoCard({
         p_home_score: homeInt,
         p_away_score: awayInt,
         p_scorers_json: scorersObj,
-        p_booster_id: null,
+        p_booster_id: selectedBoosterId,
       });
 
       if (error) {
@@ -312,6 +316,7 @@ export function MatchPronoCard({
     awayInt,
     homeSlots,
     awaySlots,
+    selectedBoosterId,
     onSubmittedChange,
     t,
   ]);
@@ -686,21 +691,28 @@ export function MatchPronoCard({
             {t("matchStartedLocked")}
           </div>
         ) : scoresValid ? (
-          <button
-            type="button"
-            disabled={!canSubmit || loading}
-            onClick={handleSubmit}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-whistle py-3 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
-          >
-            {loading ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-pitch-900/40 border-t-pitch-900" />
-            ) : (
-              <>
-                <Target className="h-4 w-4" />
-                {t("submitProno")}
-              </>
-            )}
-          </button>
+          <>
+            <BoosterPickerForPronos
+              selectedBoosterId={selectedBoosterId}
+              onSelect={setSelectedBoosterId}
+              disabled={loading}
+            />
+            <button
+              type="button"
+              disabled={!canSubmit || loading}
+              onClick={handleSubmit}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-whistle py-3 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
+            >
+              {loading ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-pitch-900/40 border-t-pitch-900" />
+              ) : (
+                <>
+                  <Target className="h-4 w-4" />
+                  {t("submitProno")}
+                </>
+              )}
+            </button>
+          </>
         ) : null}
       </div>
     </>
