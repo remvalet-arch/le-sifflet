@@ -20,7 +20,15 @@
     "language": "Langue",
     "logout": "Déconnexion",
     "leaderboard": "Classement",
-    "shop": "Boutique"
+    "shop": "Boutique",
+    "sectionLobby": "LE STADE",
+    "sectionPronos": "MES PRONOS",
+    "sectionLigues": "MES LIGUES",
+    "sectionProfil": "MON PROFIL",
+    "sectionMatch": "EN DIRECT",
+    "sectionMessages": "MESSAGES",
+    "sectionClassement": "CLASSEMENT",
+    "sectionBoutique": "BOUTIQUE"
   },
   "Match": {
     "live": "En Direct",
@@ -186,7 +194,12 @@
     "tabHistorique": "Historique",
     "tabBadges": "Badges",
     "tabAmis": "Amis",
-    "tabStats": "Stats"
+    "tabStats": "Stats",
+    "overviewBets": "Paris",
+    "overviewMaxStreak": "Série max",
+    "overviewMatches": "Matchs",
+    "overviewPointsEarned": "POINTS GAGNÉS",
+    "overviewWinRate": "WIN RATE"
   },
   "Shop": {
     "title": "Boutique",
@@ -451,7 +464,18 @@
     "noMatchesFilterTitle": "Aucun match pour tes ligues ce jour-là",
     "noMatchesFilterDesc": "Essaie une autre date ou élargis tes ligues.",
     "showAllMatches": "Voir tous les matchs",
-    "competitionFallback": "Autre"
+    "competitionFallback": "Autre",
+    "filterAll": "Toutes",
+    "pronoTooLate": "Ce match a déjà commencé, trop tard !",
+    "connectionLost": "Connexion perdue, réessaie !",
+    "noProno": "Pas de prono",
+    "firstToPredict": "⚡ Premier à pronostiquer",
+    "matchStartedLocked": "Le match a commencé, pronos fermés 🔒",
+    "submitProno": "Valider mon prono",
+    "editProno": "Modifier",
+    "shareProno": "Partager",
+    "enableNotif": "Activer",
+    "enableNotifDesc": "Active les notifications pour ne rien rater."
   },
   "Stats": {
     "allTime": "Tout temps",

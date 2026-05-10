@@ -29,7 +29,15 @@
     "language": "Idioma",
     "logout": "Cerrar sesión",
     "leaderboard": "Clasificación",
-    "shop": "Tienda"
+    "shop": "Tienda",
+    "sectionLobby": "EL ESTADIO",
+    "sectionPronos": "MIS PRONOS",
+    "sectionLigues": "MIS LIGAS",
+    "sectionProfil": "MI PERFIL",
+    "sectionMatch": "EN VIVO",
+    "sectionMessages": "MESSAGES",
+    "sectionClassement": "CLASIFICACIÓN",
+    "sectionBoutique": "TIENDA"
   },
   "Match": {
     "live": "En Directo",
@@ -195,7 +203,12 @@
     "tabHistorique": "Historial",
     "tabBadges": "Insignias",
     "tabAmis": "Amigos",
-    "tabStats": "Estadísticas"
+    "tabStats": "Estadísticas",
+    "overviewBets": "Apuestas",
+    "overviewMaxStreak": "Racha máx.",
+    "overviewMatches": "Partidos",
+    "overviewPointsEarned": "PUNTOS GANADOS",
+    "overviewWinRate": "WIN RATE"
   },
   "Shop": {
     "title": "Tienda",
@@ -460,7 +473,18 @@
     "noMatchesFilterTitle": "Ningún partido de tus ligas ese día",
     "noMatchesFilterDesc": "Prueba otra fecha o amplía tus ligas.",
     "showAllMatches": "Ver todos los partidos",
-    "competitionFallback": "Otro"
+    "competitionFallback": "Otro",
+    "filterAll": "Todas",
+    "pronoTooLate": "¡Este partido ya ha empezado, demasiado tarde!",
+    "connectionLost": "¡Conexión perdida, inténtalo de nuevo!",
+    "noProno": "Sin pronóstico",
+    "firstToPredict": "⚡ Primero en pronosticar",
+    "matchStartedLocked": "El partido ha comenzado, pronósticos cerrados 🔒",
+    "submitProno": "Validar mi pronóstico",
+    "editProno": "Editar",
+    "shareProno": "Compartir",
+    "enableNotif": "Activar",
+    "enableNotifDesc": "Activa las notificaciones para no perderte nada."
   },
   "Stats": {
     "allTime": "Todo el tiempo",

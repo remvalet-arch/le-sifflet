@@ -1,8 +1,17 @@
 "use client";
 
 import { format, isToday, isTomorrow } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useTranslations } from "next-intl";
+import { fr, enUS, es, de, it } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale as DateFnsLocale } from "date-fns";
+
+const DATE_FNS_LOCALE: Record<string, DateFnsLocale> = {
+  fr,
+  en: enUS,
+  es,
+  de,
+  it,
+};
 
 type MatchStub = { id: string };
 
@@ -16,6 +25,7 @@ function getDayPill(
   dayKey: string,
   todayLabel: string,
   tomorrowLabel: string,
+  dateFnsLocale: DateFnsLocale,
 ): {
   abbrev: string;
   num: string;
@@ -25,12 +35,12 @@ function getDayPill(
   const date = new Date(y!, mo! - 1, d!);
   if (isToday(date))
     return {
-      abbrev: format(date, "EEE", { locale: fr }),
-      num: format(date, "d", { locale: fr }),
+      abbrev: format(date, "EEE", { locale: dateFnsLocale }),
+      num: format(date, "d", { locale: dateFnsLocale }),
       sub: todayLabel,
     };
-  const abbrev = format(date, "EEE", { locale: fr });
-  const num = format(date, "d", { locale: fr });
+  const abbrev = format(date, "EEE", { locale: dateFnsLocale });
+  const num = format(date, "d", { locale: dateFnsLocale });
   if (isTomorrow(date)) return { abbrev, num, sub: tomorrowLabel };
   return { abbrev, num };
 }
@@ -39,12 +49,13 @@ function getDayFullLabel(
   dayKey: string,
   todayFull: string,
   tomorrowLabel: string,
+  dateFnsLocale: DateFnsLocale,
 ): string {
   const [y, mo, d] = dayKey.split("-").map(Number);
   const date = new Date(y!, mo! - 1, d!);
   if (isToday(date)) return todayFull;
   if (isTomorrow(date)) return tomorrowLabel;
-  return format(date, "EEEE d MMMM", { locale: fr });
+  return format(date, "EEEE d MMMM", { locale: dateFnsLocale });
 }
 
 type Props = {
@@ -63,6 +74,8 @@ export function MatchFilterBar({
   isMatchDone,
 }: Props) {
   const t = useTranslations("Pronos");
+  const locale = useLocale();
+  const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? fr;
   const todayAbbrev = t("todayAbbrev");
   const tomorrowLabel = t("tomorrow");
   const todayFull = t("today");
@@ -86,7 +99,12 @@ export function MatchFilterBar({
           );
           const allDone = dayDone === dayTotal;
           const isSelected = dk === selectedDay;
-          const pill = getDayPill(dk, todayAbbrev, tomorrowLabel);
+          const pill = getDayPill(
+            dk,
+            todayAbbrev,
+            tomorrowLabel,
+            dateFnsLocale,
+          );
 
           return (
             <span key={dk} className="flex shrink-0 items-center gap-2">
@@ -147,7 +165,12 @@ export function MatchFilterBar({
       {selectedDay && (
         <div className="flex items-center gap-2">
           <span className="text-xs font-black uppercase tracking-widest text-chalk capitalize">
-            {getDayFullLabel(selectedDay, todayFull, tomorrowLabel)}
+            {getDayFullLabel(
+              selectedDay,
+              todayFull,
+              tomorrowLabel,
+              dateFnsLocale,
+            )}
           </span>
           {selectedCompMap && (
             <>

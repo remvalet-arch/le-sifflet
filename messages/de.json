@@ -31,7 +31,15 @@
     "language": "Sprache",
     "logout": "Abmelden",
     "leaderboard": "Rangliste",
-    "shop": "Shop"
+    "shop": "Shop",
+    "sectionLobby": "DAS STADION",
+    "sectionPronos": "MEINE TIPPS",
+    "sectionLigues": "MEINE LIGEN",
+    "sectionProfil": "MEIN PROFIL",
+    "sectionMatch": "LIVE",
+    "sectionMessages": "MESSAGES",
+    "sectionClassement": "RANGLISTE",
+    "sectionBoutique": "SHOP"
   },
   "Match": {
     "live": "Live",
@@ -197,7 +205,12 @@
     "tabHistorique": "Verlauf",
     "tabBadges": "Abzeichen",
     "tabAmis": "Freunde",
-    "tabStats": "Stats"
+    "tabStats": "Stats",
+    "overviewBets": "Tipps",
+    "overviewMaxStreak": "Max. Serie",
+    "overviewMatches": "Spiele",
+    "overviewPointsEarned": "PUNKTE GEWONNEN",
+    "overviewWinRate": "WIN RATE"
   },
   "Shop": {
     "title": "Shop",
@@ -462,7 +475,18 @@
     "noMatchesFilterTitle": "Keine Spiele deiner Ligen an diesem Tag",
     "noMatchesFilterDesc": "Probiere ein anderes Datum oder erweitere deine Ligen.",
     "showAllMatches": "Alle Spiele anzeigen",
-    "competitionFallback": "Andere"
+    "competitionFallback": "Andere",
+    "filterAll": "Alle",
+    "pronoTooLate": "Dieses Spiel hat schon begonnen, zu spät!",
+    "connectionLost": "Verbindung unterbrochen, nochmal versuchen!",
+    "noProno": "Kein Tipp",
+    "firstToPredict": "⚡ Erster Tipper",
+    "matchStartedLocked": "Spiel begonnen, Tipps geschlossen 🔒",
+    "submitProno": "Tipp bestätigen",
+    "editProno": "Bearbeiten",
+    "shareProno": "Teilen",
+    "enableNotif": "Aktivieren",
+    "enableNotifDesc": "Aktiviere Benachrichtigungen, um nichts zu verpassen."
   },
   "Stats": {
     "allTime": "Alle Zeit",

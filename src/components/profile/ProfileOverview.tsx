@@ -1,4 +1,7 @@
+"use client";
+
 import { Shield, Target, TrendingUp, Trophy, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getMinBetForBalance } from "@/lib/economy/min-bet";
 import { SeasonBadge } from "@/components/shared/SeasonBadge";
 import type { SeasonArchiveRow } from "@/types/database";
@@ -30,6 +33,7 @@ export function ProfileOverview({
   currentSeason,
   seasonArchives,
 }: Props) {
+  const t = useTranslations("Profile");
   const winRateColor =
     winRate >= 60
       ? "text-green-400"
@@ -53,15 +57,15 @@ export function ProfileOverview({
             {winRate}%
           </p>
           <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-green-500/60">
-            Win Rate
+            {t("overviewWinRate")}
           </p>
         </div>
         <div className="flex-1 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/15 to-amber-500/5 p-4">
           <p className="text-4xl font-black tabular-nums text-amber-400">
-            {totalEarned.toLocaleString("fr-FR")}
+            {totalEarned.toLocaleString()}
           </p>
           <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-amber-500/60">
-            Points Gagnés
+            {t("overviewPointsEarned")}
           </p>
         </div>
       </div>
@@ -72,14 +76,14 @@ export function ProfileOverview({
             <Trophy className="h-4 w-4 text-zinc-500" />
             <p className="text-base font-black text-white">{totalBets}</p>
             <p className="text-center text-[10px] font-semibold text-zinc-500">
-              Paris
+              {t("overviewBets")}
             </p>
           </div>
           <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
             <Zap className="h-4 w-4 text-zinc-500" />
             <p className="text-base font-black text-white">{bestStreak}</p>
             <p className="text-center text-[10px] font-semibold text-zinc-500">
-              Série max
+              {t("overviewMaxStreak")}
             </p>
           </div>
           <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
@@ -88,7 +92,7 @@ export function ProfileOverview({
               {totalMatchesPronoed}
             </p>
             <p className="text-center text-[10px] font-semibold text-zinc-500">
-              Matchs
+              {t("overviewMatches")}
             </p>
           </div>
         </div>
@@ -129,7 +133,7 @@ export function ProfileOverview({
               Mise minimum
             </p>
             <p className="mt-1 text-base font-black text-amber-400">
-              {getMinBetForBalance(headerBalance).toLocaleString("fr-FR")} 🪙
+              {getMinBetForBalance(headerBalance).toLocaleString()} 🪙
             </p>
           </div>
           <span className="text-2xl" aria-hidden>
@@ -175,12 +179,12 @@ export function ProfileOverview({
                       {sa.final_rank_label}
                     </p>
                     <p className="text-[10px] text-zinc-500">
-                      #{sa.final_rank} ·{" "}
-                      {sa.final_points.toLocaleString("fr-FR")} Points
+                      #{sa.final_rank} · {sa.final_points.toLocaleString()}{" "}
+                      Points
                     </p>
                   </div>
                   <p className="text-[10px] text-zinc-600">
-                    {new Date(sa.archived_at).toLocaleDateString("fr-FR", {
+                    {new Date(sa.archived_at).toLocaleDateString(undefined, {
                       month: "short",
                       year: "numeric",
                     })}

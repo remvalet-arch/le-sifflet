@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 type CompetitionItem = {
   id: string;
   name: string;
@@ -38,6 +40,7 @@ export function CompetitionFilter({
   onChange: (ids: string[]) => void;
   showCounts?: Record<string, number>;
 }) {
+  const t = useTranslations("Pronos");
   const allSelected = selectedIds.length === 0;
 
   function toggleAll() {
@@ -74,7 +77,7 @@ export function CompetitionFilter({
               : "border-white/10 bg-zinc-800/90 text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          Toutes
+          {t("filterAll")}
         </button>
 
         {competitions.map((comp) => {
