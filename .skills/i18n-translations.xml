@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skill name="i18n-translations" version="1.0">
+  <intent>
+    Toute chaîne de caractères visible par l'utilisateur doit passer par next-intl.
+    Ce skill s'applique dès qu'on crée ou modifie un composant qui affiche du texte UI.
+  </intent>
+
+  <stack>
+    <lib>next-intl</lib>
+    <messages_dir>messages/</messages_dir>
+    <locales>fr en es de it</locales>
+    <canonical_locale>fr</canonical_locale>
+  </stack>
+
+  <rules>
+
+    <rule id="1" title="Jamais de string hardcodée dans le JSX">
+      <forbidden>
+        <example>&lt;p&gt;Connexion en cours…&lt;/p&gt;</example>
+        <example>toast.success("Sifflet enregistré !")</example>
+      </forbidden>
+      <required>
+        Utiliser t("clé") issu de useTranslations (client) ou getTranslations (serveur).
+        Les toasts peuvent rester en français hardcodé UNIQUEMENT s'ils sont dans une
+        Route Handler (côté serveur, jamais vu par le navigateur de l'utilisateur final).
+      </required>
+    </rule>
+
+    <rule id="2" title="Ajout de clés dans les 5 fichiers messages/">
+      <required>
+        Chaque nouvelle clé doit être ajoutée dans :
+          messages/fr.json  ← source of truth (rédiger en français d'abord)
+          messages/en.json
+          messages/es.json
+          messages/de.json
+          messages/it.json
+        Ne jamais laisser une clé manquante dans une langue — next-intl émet un warning
+        à la compilation et peut afficher la clé brute en production.
+      </required>
+    </rule>
+
+    <rule id="3" title="Namespace par feature, pas par composant">
+      <namespaces>
+        <ns name="Navigation">BottomNav, TopBar, liens globaux</ns>
+        <ns name="Landing">LandingPage et ses sous-sections (public)</ns>
+        <ns name="Lobby">MatchLobby, MatchCard, LiveBadge</ns>
+        <ns name="Match">LiveRoom, Scoreboard, VotingModal, ActionDrawer, MatchTimeline</ns>
+        <ns name="Pronos">PronosticsHubClient, MatchFilterBar, FriendPronoHints</ns>
+        <ns name="Profile">ProfileClient, StatsSection, RefillButton</ns>
+        <ns name="Shop">ShopClient</ns>
+        <ns name="Ligues">LiguesPageClient, SquadChat</ns>
+        <ns name="Settings">NotificationsClient et autres pages settings</ns>
+        <ns name="Common">Éléments partagés (boutons génériques, statuts, erreurs)</ns>
+      </namespaces>
+      <guidance>
+        Si un nouveau feature-set dépasse 5 clés, créer un namespace dédié.
+        Ne pas ajouter des clés disparates dans Common — préférer un namespace feature.
+      </guidance>
+    </rule>
+
+    <rule id="4" title="Convention de nommage des clés">
+      <format>camelCase, hiérarchie par point si nécessaire</format>
+      <examples>
+        <good>heroTitle, ctaSignIn, errorNotFound, faq01Q, faq01A</good>
+        <bad>hero_title, CTA_SIGN_IN, error-not-found</bad>
+      </examples>
+      <guidance>
+        Pour les séries (FAQ, étapes, items shop) : utiliser un index 2 chiffres
+        ex: faq01Q / faq01A, step01Title / step01Body, item01Name / item01Price.
+      </guidance>
+    </rule>
+
+    <rule id="5" title="Validation de la traduction avant commit">
+      <checklist>
+        1. Lancer npm run ai:check — les warnings next-intl de clés manquantes
+           apparaissent au build (typecheck).
+        2. Vérifier visuellement au moins FR + EN dans le navigateur.
+        3. Pour les langues ES / DE / IT : utiliser Claude pour traduire en contexte
+           (lui fournir la clé FR + le contexte de la phrase dans l'UI).
+        4. Attention aux typographies : guillemets alemands „…" peuvent casser le JSON
+           → toujours utiliser des guillemets simples '…' ou des entités HTML.
+        5. Attention aux pluriels : utiliser la syntaxe ICU de next-intl si besoin
+           ex: "{count, plural, one {# match} other {# matchs}}"
+      </checklist>
+    </rule>
+
+    <rule id="6" title="Composants serveur vs client">
+      <server>
+        Server Components et Route Handlers :
+          import { getTranslations } from "next-intl/server";
+          const t = await getTranslations({ locale, namespace: "NomNS" });
+        Passer le locale explicitement (ne pas utiliser getLocale() dans un composant
+        partagé — préférer recevoir locale en prop).
+      </server>
+      <client>
+        Client Components ("use client") :
+          import { useTranslations } from "next-intl";
+          const t = useTranslations("NomNS");
+        Le locale est injecté automatiquement par NextIntlClientProvider (root layout).
+      </client>
+    </rule>
+
+    <rule id="7" title="Landing page — spécificités multi-locale">
+      <guidance>
+        La LandingPage est un Server Component partagé qui reçoit locale en prop.
+        Chaque page /en /es /de /it doit :
+          - Exporter generateMetadata avec title/description traduits + alternates hreflang
+          - Importer HREFLANG_ALTERNATES depuis src/app/page.tsx et surcharger canonical
+          - Passer openGraph.locale au format IETF (ex: "en_US", "es_ES", "de_DE", "it_IT")
+        Le LandingLocaleSwitcher set le cookie NEXT_LOCALE + redirige vers l'URL locale.
+        Le middleware redirige / → /locale si NEXT_LOCALE cookie est en/es/de/it.
+      </guidance>
+    </rule>
+
+  </rules>
+
+  <checklist_on_new_component>
+    Avant de déclarer un nouveau composant terminé :
+    [ ] Toutes les strings visibles utilisent t("clé")
+    [ ] Les clés sont ajoutées dans les 5 fichiers messages/*.json
+    [ ] Le namespace est cohérent avec la liste ci-dessus (ou un nouveau est créé)
+    [ ] npm run ai:check passe sans warning next-intl
+    [ ] Traduction EN vérifiée visuellement
+  </checklist_on_new_component>
+
+</skill>

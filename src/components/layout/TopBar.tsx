@@ -230,26 +230,19 @@ export function TopBar({
           <div className="flex overflow-hidden rounded-lg border border-white/10">
             {(["fr", "en", "es", "de", "it"] as const).map((l) => {
               const isActive = locale === l;
-              const isAvailable = l === "fr";
               return (
                 <button
                   key={l}
                   onClick={() =>
-                    isAvailable
-                      ? startTransition(async () => {
-                          await switchLocale(l);
-                          router.refresh();
-                        })
-                      : undefined
+                    startTransition(async () => {
+                      await switchLocale(l);
+                      router.refresh();
+                    })
                   }
-                  disabled={!isAvailable && !isActive}
-                  title={!isAvailable ? "Bientôt disponible" : undefined}
                   className={`px-2.5 py-1.5 text-xs font-black uppercase tracking-wide transition ${
                     isActive
                       ? "bg-green-500 text-zinc-950"
-                      : isAvailable
-                        ? "text-zinc-500 hover:text-white"
-                        : "cursor-not-allowed text-zinc-700"
+                      : "text-zinc-500 hover:text-white"
                   }`}
                 >
                   {l}
