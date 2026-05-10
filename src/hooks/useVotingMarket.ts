@@ -27,12 +27,21 @@ function isStoppageType(type: MarketEventRow["type"]): boolean {
   return type === "stoppage_ht" || type === "stoppage_ft";
 }
 
+export type BetPlacedInfo = {
+  eventId: string;
+  eventType: MarketEventRow["type"];
+  option: string;
+  label: string;
+  staked: number;
+};
+
 type Props = {
   event: MarketEventRow;
   siffletsBalance: number;
   userId: string;
   onClose: () => void;
   onBetSuccess: (amountStaked: number) => void;
+  onBetPlaced?: (info: BetPlacedInfo) => void;
   squadId?: string | null;
 };
 
@@ -76,6 +85,7 @@ export function useVotingMarket({
   siffletsBalance,
   userId,
   onBetSuccess,
+  onBetPlaced,
   squadId,
   onClose,
 }: Props): VotingMarketState {
@@ -276,6 +286,16 @@ export function useVotingMarket({
         multiplier,
         staked,
         boosterName: selectedBooster?.name,
+      });
+      toast.success(
+        `✅ Pari enregistré — ${label.toUpperCase()} · ${staked.toLocaleString("fr-FR")} 🪙`,
+      );
+      onBetPlaced?.({
+        eventId: event.id,
+        eventType: event.type,
+        option: v,
+        label,
+        staked,
       });
       if (selectedBoosterId) {
         setTimeout(() => {
