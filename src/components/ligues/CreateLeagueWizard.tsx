@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Target, Shuffle, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "classic" | "braquage";
@@ -14,6 +15,8 @@ export function CreateLeagueWizard({
   onClose: () => void;
   onCreated: (id: string, name: string) => void;
 }) {
+  const t = useTranslations("Ligues");
+  const tCommon = useTranslations("Common");
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [logo, setLogo] = useState("🏆");
@@ -61,13 +64,13 @@ export function CreateLeagueWizard({
 
       if (memberErr) throw new Error(memberErr.message);
 
-      toast.success("Ligue créée avec succès !");
+      toast.success(t("wizardCreateSuccess"));
       onCreated(squad.id, squad.name);
     } catch (e: unknown) {
       if (e instanceof Error) {
-        toast.error(e.message || "Erreur serveur");
+        toast.error(e.message || t("wizardCreateError"));
       } else {
-        toast.error("Erreur serveur");
+        toast.error(t("wizardCreateError"));
       }
       setSubmitting(false);
     }
@@ -93,7 +96,7 @@ export function CreateLeagueWizard({
             <ArrowLeft className="h-6 w-6" />
           </button>
           <span className="flex-1 text-center font-black uppercase tracking-widest text-zinc-500 text-[10px] mr-10">
-            Étape {step} / 3
+            {t("wizardStep", { step })}
           </span>
         </div>
 
@@ -102,7 +105,7 @@ export function CreateLeagueWizard({
           {step === 1 && (
             <div className="flex flex-col items-center flex-1 justify-center space-y-8 animate-in fade-in">
               <h2 className="text-3xl font-black text-white text-center">
-                Trouve un nom qui claque.
+                {t("wizardStep1Title")}
               </h2>
               <input
                 type="text"
@@ -112,7 +115,7 @@ export function CreateLeagueWizard({
                 onKeyDown={(e) =>
                   e.key === "Enter" && name.trim() && setStep(2)
                 }
-                placeholder="Les Galactiques..."
+                placeholder={t("wizardStep1Placeholder")}
                 maxLength={30}
                 className="w-full text-center text-3xl font-black bg-transparent border-b-2 border-zinc-700 py-2 focus:outline-none focus:border-amber-500 text-amber-400 placeholder-zinc-700 transition"
               />
@@ -121,7 +124,7 @@ export function CreateLeagueWizard({
                 disabled={!name.trim()}
                 className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black disabled:opacity-40 transition active:scale-95"
               >
-                Suivant
+                {tCommon("next")}
               </button>
             </div>
           )}
@@ -130,10 +133,10 @@ export function CreateLeagueWizard({
             <div className="flex flex-col flex-1 space-y-6 animate-in fade-in slide-in-from-right-4">
               <div className="text-center">
                 <h2 className="text-2xl font-black text-white">
-                  L&apos;emblème du vestiaire
+                  {t("wizardStep2Title")}
                 </h2>
                 <p className="text-sm text-zinc-400 mt-2">
-                  Choisis un symbole pour ta ligue
+                  {t("wizardStep2Subtitle")}
                 </p>
               </div>
 
@@ -159,7 +162,7 @@ export function CreateLeagueWizard({
                 onClick={() => setStep(3)}
                 className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black transition active:scale-95 mt-auto"
               >
-                Continuer
+                {tCommon("continue")}
               </button>
             </div>
           )}
@@ -168,7 +171,7 @@ export function CreateLeagueWizard({
             <div className="flex flex-col flex-1 space-y-6 animate-in fade-in slide-in-from-right-4">
               <div className="text-center">
                 <h2 className="text-2xl font-black text-white">
-                  Le Mode de Jeu
+                  {t("wizardStep3Title")}
                 </h2>
               </div>
 
@@ -186,11 +189,10 @@ export function CreateLeagueWizard({
                     <h3
                       className={`font-black text-lg ${mode === "classic" ? "text-amber-400" : "text-white"}`}
                     >
-                      Classique
+                      {t("wizardModeClassicName")}
                     </h3>
                     <p className="text-sm text-zinc-400 mt-1">
-                      Pot commun & Classement général. L&apos;expérience VAR
-                      TIME authentique.
+                      {t("wizardModeClassicDesc")}
                     </p>
                   </div>
                 </button>
@@ -208,11 +210,10 @@ export function CreateLeagueWizard({
                     <h3
                       className={`font-black text-lg ${mode === "braquage" ? "text-purple-400" : "text-white"}`}
                     >
-                      1vs1
+                      {t("wizardMode1vs1Name")}
                     </h3>
                     <p className="text-sm text-zinc-400 mt-1">
-                      Saison en Championnat. Un adversaire par week-end, le
-                      meilleur pronostiqueur remporte le match.
+                      {t("wizardMode1vs1Desc")}
                     </p>
                   </div>
                 </button>
@@ -224,10 +225,10 @@ export function CreateLeagueWizard({
                 className="w-full h-14 rounded-2xl bg-white font-black uppercase tracking-wide text-black transition active:scale-95 disabled:opacity-50 mt-auto flex items-center justify-center gap-2"
               >
                 {submitting ? (
-                  "Création..."
+                  t("wizardCreatingText")
                 ) : (
                   <>
-                    Créer ma ligue <Users className="w-5 h-5 ml-1" />
+                    {t("wizardCreateButton")} <Users className="w-5 h-5 ml-1" />
                   </>
                 )}
               </button>

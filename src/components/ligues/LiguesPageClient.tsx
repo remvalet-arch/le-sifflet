@@ -16,6 +16,7 @@ import {
   MoreVertical,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 import { readActiveSquadFromStorage } from "@/lib/squads/active-squad-storage";
 import type { SquadRow } from "@/types/database";
@@ -36,6 +37,7 @@ type SquadWithMembers = SquadRow & {
 type ApiResponse<T> = { ok: boolean; data?: T; error?: string };
 
 export function LiguesPageClient({ userId }: { userId: string }) {
+  const t = useTranslations("Ligues");
   const router = useRouter();
   const { squadId: activeId, setActiveSquad } = useActiveSquad();
   const [squads, setSquads] = useState<SquadWithMembers[] | null>(null);
@@ -83,16 +85,16 @@ export function LiguesPageClient({ userId }: { userId: string }) {
       });
       const json = (await res.json()) as ApiResponse<{ squad: SquadRow }>;
       if (!json.ok) {
-        toast.error(json.error ?? "Code invalide");
+        toast.error(json.error ?? t("joinError"));
         return;
       }
-      toast.success("Ligue rejointe !");
+      toast.success(t("joinSuccess"));
       setActiveSquad({ id: json.data!.squad.id, name: json.data!.squad.name });
       setCode("");
       setJoinOpen(false);
-      setTick((t) => t + 1);
+      setTick((prev) => prev + 1);
     } catch {
-      toast.error("Connexion perdue, réessaie !");
+      toast.error(t("connectionLostRetry"));
     } finally {
       setSubmitting(false);
     }
@@ -100,9 +102,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
 
   async function handleLeave(squad: SquadWithMembers) {
     if (submitting) return;
-    const confirmed = window.confirm(
-      `Quitter "${squad.name}" ? Tu perdras ta position dans le classement.`,
-    );
+    const confirmed = window.confirm(t("leaveConfirm", { name: squad.name }));
     if (!confirmed) return;
     setSubmitting(true);
     try {
@@ -113,14 +113,14 @@ export function LiguesPageClient({ userId }: { userId: string }) {
       });
       const json = (await res.json()) as ApiResponse<Record<string, never>>;
       if (!json.ok) {
-        toast.error(json.error ?? "Erreur inattendue");
+        toast.error(json.error ?? t("leaveError"));
         return;
       }
-      toast.success("Tu as quitté la ligue");
+      toast.success(t("leaveSuccess"));
       if (activeId === squad.id) setActiveSquad(null);
-      setTick((t) => t + 1);
+      setTick((prev) => prev + 1);
     } catch {
-      toast.error("Connexion perdue, réessaie !");
+      toast.error(t("connectionLostRetry"));
     } finally {
       setSubmitting(false);
     }
@@ -133,13 +133,16 @@ export function LiguesPageClient({ userId }: { userId: string }) {
     members: SquadMember[],
   ) {
     const myUsername = members.find((m) => m.user_id === userId)?.username;
-    const from = myUsername ?? "Un pote";
+    const from = myUsername ?? t("shareTextFrom");
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const message = `Hey ! ⚽ ${from} t'invite à rejoindre sa ligue "${squadName}" sur VAR TIME.\n\nRentre ce code pour intégrer le vestiaire : ${inv}\n\nLien: ${origin}/ligues`;
+    const message = `${t("shareTextBody", { from, name: squadName })}\n\nRentre ce code pour intégrer le vestiaire : ${inv}\n\nLien: ${origin}/ligues`;
 
     if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
       navigator
-        .share({ title: `Rejoins ${squadName} sur VAR TIME`, text: message })
+        .share({
+          title: t("shareJoinTitle", { name: squadName }),
+          text: message,
+        })
         .catch(() => writeToClipboard(squadId, message));
     } else {
       writeToClipboard(squadId, message);
@@ -153,7 +156,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
       () => setCopiedSquadId((id) => (id === squadId ? null : id)),
       2000,
     );
-    toast.success("Message d'invitation copié !");
+    toast.success(t("copyInviteSuccess"));
   }
 
   return (
@@ -166,7 +169,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
           className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 py-3 text-sm font-black text-amber-300 transition active:scale-[0.98] hover:bg-amber-500/20"
         >
           <Plus className="h-4 w-4" />
-          Créer
+          {t("createButton")}
         </button>
         <button
           type="button"
@@ -174,7 +177,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
           className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-zinc-800/60 py-3 text-sm font-black text-zinc-300 transition active:scale-[0.98] hover:bg-zinc-800"
         >
           <Hash className="h-4 w-4" />
-          Rejoindre
+          {t("joinButton")}
         </button>
       </div>
 
@@ -200,7 +203,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-amber-500/80">
-                      {s.is_private ? "Ligue privée" : "Publique"}
+                      {s.is_private ? t("privateLabel") : t("publicLabel")}
                     </p>
                     <p className="text-xl font-black tracking-tight text-white">
                       {s.name}
@@ -208,8 +211,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <span className="flex items-center gap-1 text-[11px] font-medium text-zinc-500">
                         <Users className="h-3 w-3 shrink-0" />
-                        {s.members.length} membre
-                        {s.members.length > 1 ? "s" : ""}
+                        {t("membersCount", { count: s.members.length })}
                       </span>
                       <span className="flex items-center gap-1 text-[11px] font-bold text-green-400/90">
                         <Wallet className="h-3 w-3 shrink-0" aria-hidden />
@@ -236,7 +238,9 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                     >
                       <Copy className="h-3 w-3 shrink-0" />
                       <span className="font-mono tracking-wider">
-                        {copiedSquadId === s.id ? "Copié !" : s.invite_code}
+                        {copiedSquadId === s.id
+                          ? t("copiedLabel")
+                          : s.invite_code}
                       </span>
                     </button>
                   )}
@@ -249,7 +253,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                         )
                       }
                       className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-zinc-800/60 text-zinc-500 hover:text-zinc-300"
-                      aria-label="Plus d'options"
+                      aria-label={t("moreOptions")}
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
@@ -270,7 +274,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                             className="flex w-full items-center gap-2 px-4 py-3 text-left text-[12px] font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-40"
                           >
                             <LogOut className="h-3.5 w-3.5" />
-                            Quitter la ligue
+                            {t("leaveLeague")}
                           </button>
                         </div>
                       </>
@@ -287,13 +291,8 @@ export function LiguesPageClient({ userId }: { userId: string }) {
             ⚽
           </div>
           <div>
-            <p className="text-base font-black text-white">
-              Tu joues en solo pour l&apos;instant
-            </p>
-            <p className="mt-1.5 text-sm text-zinc-400">
-              Chambrage entre potes, classement de ligue, mode 1vs1… crée ta
-              ligue ou rejoins celle d&apos;un ami !
-            </p>
+            <p className="text-base font-black text-white">{t("emptyTitle")}</p>
+            <p className="mt-1.5 text-sm text-zinc-400">{t("emptyDesc")}</p>
           </div>
           <div className="flex flex-col gap-2 pt-1">
             <button
@@ -302,14 +301,14 @@ export function LiguesPageClient({ userId }: { userId: string }) {
               className="mx-auto flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-black text-black transition hover:bg-amber-400 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
-              Créer une ligue
+              {t("emptyCreateButton")}
             </button>
             <button
               type="button"
               onClick={() => setJoinOpen(true)}
               className="mx-auto text-sm font-bold text-amber-400 hover:underline"
             >
-              J&apos;ai un code d&apos;invitation
+              {t("emptyJoinButton")}
             </button>
           </div>
         </div>
@@ -320,14 +319,10 @@ export function LiguesPageClient({ userId }: { userId: string }) {
         <div className="mb-1 flex items-center gap-2">
           <Swords className="h-4 w-4 text-amber-500/70" aria-hidden />
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-            Braquage
+            {t("braquageTitle")}
           </p>
         </div>
-        <p className="text-sm text-zinc-400">
-          Tu joues contre toute la communauté. Les Sifflets des joueurs qui se
-          trompent financent les gagnants — ta ligue sert de classement et de
-          lieu de chambrage entre amis.
-        </p>
+        <p className="text-sm text-zinc-400">{t("braquageDesc")}</p>
       </div>
 
       {/* Join bottom sheet */}
@@ -342,7 +337,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
           >
             <div className="mb-4 flex items-center justify-between">
               <p className="text-base font-black text-white">
-                Rejoindre une ligue
+                {t("joinSheetTitle")}
               </p>
               <button
                 type="button"
@@ -353,11 +348,11 @@ export function LiguesPageClient({ userId }: { userId: string }) {
               </button>
             </div>
             <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              Code d&apos;invitation
+              {t("inviteCodeLabel")}
             </p>
             <input
               type="text"
-              aria-label="Code d'invitation"
+              aria-label={t("inviteCodeLabel")}
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               onKeyDown={(e) => {
@@ -379,7 +374,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
               ) : (
                 <Hash className="h-4 w-4" />
               )}
-              Rejoindre la ligue
+              {t("joinSheetButton")}
             </button>
           </div>
         </div>

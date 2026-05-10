@@ -6,10 +6,12 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { MessageCircle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export const metadata = { title: "Messages privés" };
 
 export default async function MessagesPage() {
+  const t = await getTranslations("Messages");
   const supabase = await createClient();
   const {
     data: { user },
@@ -50,15 +52,14 @@ export default async function MessagesPage() {
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 py-5">
-      <h1 className="mb-4 text-xl font-black text-white">Messages</h1>
+      <h1 className="mb-4 text-xl font-black text-white">{t("title")}</h1>
 
       {enriched.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <MessageCircle className="h-10 w-10 text-zinc-600" />
-          <p className="text-sm font-black text-zinc-400">Aucun message</p>
+          <p className="text-sm font-black text-zinc-400">{t("noMessages")}</p>
           <p className="max-w-[200px] text-xs text-zinc-600">
-            Commence par ajouter des amis et envoie-leur un MP depuis leur
-            profil.
+            {t("noMessagesDesc")}
           </p>
         </div>
       ) : (
@@ -89,7 +90,7 @@ export default async function MessagesPage() {
                   <p
                     className={`text-sm font-bold ${hasUnread ? "text-white" : "text-zinc-300"}`}
                   >
-                    {other?.username ?? "Joueur inconnu"}
+                    {other?.username ?? t("unknownPlayer")}
                   </p>
                   {thread.last_message_preview ? (
                     <p
@@ -99,7 +100,7 @@ export default async function MessagesPage() {
                     </p>
                   ) : (
                     <p className="text-xs italic text-zinc-700">
-                      Nouvelle conversation
+                      {t("newConversation")}
                     </p>
                   )}
                 </div>
