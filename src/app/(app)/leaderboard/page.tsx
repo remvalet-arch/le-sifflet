@@ -1,10 +1,16 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { SeasonBadge } from "@/components/shared/SeasonBadge";
+import { BCP47_MAP } from "@/lib/use-bcp47";
 
-export const metadata = { title: "Classement" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("leaderboard") };
+}
+
 export const revalidate = 86400;
 
 const MEDALS = ["🥇", "🥈", "🥉"];
@@ -14,7 +20,11 @@ type Props = { searchParams: Promise<{ mode?: string }> };
 export default async function LeaderboardPage({ searchParams }: Props) {
   const { mode } = await searchParams;
   const isHallOfFame = mode === "alltime";
-  const t = await getTranslations("Leaderboard");
+  const [t, locale] = await Promise.all([
+    getTranslations("Leaderboard"),
+    getLocale(),
+  ]);
+  const bcp47 = BCP47_MAP[locale] ?? "fr-FR";
 
   const supabase = await createClient();
   const {
@@ -121,7 +131,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                     {player.trust_score >= MODERATOR_THRESHOLD && " 🛡️"}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400">
-                    {player.score.toLocaleString("fr-FR")} Points
+                    {player.score.toLocaleString(bcp47)} Points
                   </p>
                 </div>
                 <span className="text-sm font-black text-zinc-500">
@@ -167,7 +177,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                   )}
                 </p>
                 <span className="shrink-0 text-sm font-black text-zinc-400">
-                  {player.score.toLocaleString("fr-FR")} Points
+                  {player.score.toLocaleString(bcp47)} Points
                 </span>
               </div>
             );
@@ -189,7 +199,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
               {me.username}
             </p>
             <span className="font-black text-green-400">
-              {me.score.toLocaleString("fr-FR")} Points
+              {me.score.toLocaleString(bcp47)} Points
             </span>
           </div>
         </div>

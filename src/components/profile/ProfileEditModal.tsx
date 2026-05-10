@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { X, Search, LoaderCircle, Check, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
 type AvatarTier = { emoji: string; minXp: number };
@@ -97,6 +98,7 @@ export function ProfileEditModal({
   const isClient = useIsClient();
 
   // State initialized from props — component remounts on each open so no reset needed
+  const bcp47 = useBcp47();
   const [username, setUsername] = useState(initialUsername);
   const [avatar, setAvatar] = useState<string | null>(initialAvatarUrl);
   const [teamId, setTeamId] = useState<string | null>(initialTeamId);
@@ -283,7 +285,7 @@ export function ProfileEditModal({
                     onClick={() => !locked && setAvatar(emoji)}
                     title={
                       locked
-                        ? `Débloqué à ${minXp.toLocaleString("fr-FR")} XP`
+                        ? `Débloqué à ${minXp.toLocaleString(bcp47)} XP`
                         : undefined
                     }
                     className={`relative flex h-12 w-full items-center justify-center rounded-xl text-2xl transition ${

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { createClient } from "@/lib/supabase/client";
 
 type Stats = {
@@ -37,6 +38,7 @@ function WinRateBar({ rate }: { rate: number }) {
 
 export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
   const t = useTranslations("Stats");
+  const bcp47 = useBcp47();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [seasons, setSeasons] = useState<SeasonItem[]>([]);
@@ -172,11 +174,11 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
               {t("pointsEarned")}
             </p>
             <p className="mt-1 text-4xl font-black tabular-nums text-green-400">
-              +{stats.points_total.toLocaleString("fr-FR")}
+              +{stats.points_total.toLocaleString(bcp47)}
             </p>
             {stats.best_win > 0 && (
               <p className="mt-1 text-xs text-zinc-500">
-                {t("bestWin", { pts: stats.best_win.toLocaleString("fr-FR") })}
+                {t("bestWin", { pts: stats.best_win.toLocaleString(bcp47) })}
               </p>
             )}
           </div>

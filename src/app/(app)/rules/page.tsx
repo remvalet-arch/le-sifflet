@@ -4,7 +4,11 @@ import { getTranslations } from "next-intl/server";
 
 export const revalidate = 86400;
 
-export const metadata = { title: "Règles du jeu — VAR Time" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("rules") };
+}
 
 export default async function RulesPage() {
   const t = await getTranslations("Rules");

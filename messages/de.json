@@ -69,6 +69,9 @@
   },
   "Lobby": {
     "title": "Die Spiele",
+    "errorLoadMatches": "Spiele konnten nicht geladen werden ({message}).",
+    "noMatchesForRound": "Keine Spiele für Spieltag {round} (Liga {leagueId}).",
+    "backToMatches": "← Spiele",
     "noMatches": "Heute nichts zu holen",
     "today": "Heute",
     "noDirectMatches": "Kein Live-Spiel. Nutze die Zeit, um deine Tipps zu setzen.",
@@ -212,6 +215,24 @@
     "postponed": "VERSCHOBEN"
   },
   "Profile": {
+    "xpLevelDistrict": "Bezirk",
+    "xpLevelBronze": "Bronze",
+    "xpLevelArgent": "Silber",
+    "xpLevelBoss": "Boss",
+    "trustGradeElite": "Elite-Schiedsrichter",
+    "trustGradeOfficial": "Offizieller Schiedsrichter",
+    "trustGradeAlert": "Hinweisgeber",
+    "trustGradeYellow": "Gelbe Karte",
+    "karmaModerator": "Moderator",
+    "karmaSupporteur": "Fan",
+    "karmaYellow": "Gelbe Karte",
+    "editProfileAriaLabel": "Profil bearbeiten",
+    "streakDaysSuffix": "T",
+    "siffletsLabel": "Sifflets",
+    "streakClaimRateLimit": "Ruhig mal, du pfeifst zu schnell!",
+    "streakClaimAlreadyDone": "Bereits beansprucht!",
+    "streakClaimSuccess": "+{bonus} 🪙 — {streak}-Tage-Serie!",
+    "streakClaimConnLost": "Verbindung unterbrochen, versuche es erneut!",
     "tabProfil": "Profil",
     "tabHistorique": "Verlauf",
     "tabBadges": "Abzeichen",
@@ -489,6 +510,8 @@
     "myLeaguesBackLink": "Meine Ligen"
   },
   "Pronos": {
+    "pageTitle": "Tipps",
+    "pageSubtitle": "Nächste 7 Tage",
     "today": "Heute",
     "todayAbbrev": "Heute",
     "tomorrow": "Morgen",
@@ -610,11 +633,33 @@
     "saveBetError": "Einstellungen konnten nicht gespeichert werden.",
     "connectionLost": "Verbindung unterbrochen"
   },
+  "Banner": {
+    "migrationBold": "VAR TIME hat seine echte Domain:",
+    "migrationText": "vartime.app! Für vollständige Benachrichtigungen und PWA, neu installieren von",
+    "migrationDomain": "vartime.app",
+    "migrationClose": "Schließen"
+  },
   "PWA": {
     "installTitle": "VAR Time installieren 📺",
     "installDesc": "Für ein besseres Erlebnis ohne Verzögerung im Stadion, füge die App zu deinem Startbildschirm hinzu!",
     "installButton": "App installieren",
     "installIosInstructions": "Auf iOS: Tippe auf Teilen, dann Zum Home-Bildschirm"
+  },
+  "Meta": {
+    "lobby": "Stadion",
+    "match": "Spiel",
+    "profile": "Mein Profil",
+    "publicProfile": "Spielerprofil",
+    "ligues": "Meine Ligen",
+    "pronos": "Meine Tipps",
+    "leaderboard": "Rangliste",
+    "messages": "Nachrichten",
+    "conversation": "Konversation",
+    "shop": "Shop",
+    "settings": "Einstellungen",
+    "notifications": "Benachrichtigungen",
+    "rules": "Spielregeln",
+    "laws": "Gesetze des Spiels"
   },
   "Landing": {
     "metaTitle": "VAR Time — Der VAR, aber als Spiel",

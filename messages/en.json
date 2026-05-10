@@ -59,6 +59,9 @@
   },
   "Lobby": {
     "title": "The Matches",
+    "errorLoadMatches": "Failed to load matches ({message}).",
+    "noMatchesForRound": "No matches for round {round} (league {leagueId}).",
+    "backToMatches": "← Matches",
     "noMatches": "Nothing on the menu",
     "today": "Today",
     "noDirectMatches": "No live match. Good time to lock in your predictions.",
@@ -202,6 +205,24 @@
     "postponed": "POSTPONED"
   },
   "Profile": {
+    "xpLevelDistrict": "District",
+    "xpLevelBronze": "Bronze",
+    "xpLevelArgent": "Silver",
+    "xpLevelBoss": "Boss",
+    "trustGradeElite": "Elite Referee",
+    "trustGradeOfficial": "Official Referee",
+    "trustGradeAlert": "Whistleblower",
+    "trustGradeYellow": "Yellow Card",
+    "karmaModerator": "Moderator",
+    "karmaSupporteur": "Supporter",
+    "karmaYellow": "Yellow Card",
+    "editProfileAriaLabel": "Edit profile",
+    "streakDaysSuffix": "d",
+    "siffletsLabel": "Sifflets",
+    "streakClaimRateLimit": "Easy there, you're blowing that whistle too fast!",
+    "streakClaimAlreadyDone": "Already claimed!",
+    "streakClaimSuccess": "+{bonus} 🪙 — {streak}-day streak!",
+    "streakClaimConnLost": "Connection lost, try again!",
     "tabProfil": "Profile",
     "tabHistorique": "History",
     "tabBadges": "Badges",
@@ -479,6 +500,8 @@
     "myLeaguesBackLink": "My leagues"
   },
   "Pronos": {
+    "pageTitle": "Predictions",
+    "pageSubtitle": "Next 7 days",
     "today": "Today",
     "todayAbbrev": "Today",
     "tomorrow": "Tomorrow",
@@ -600,11 +623,33 @@
     "saveBetError": "Unable to save settings.",
     "connectionLost": "Connection lost"
   },
+  "Banner": {
+    "migrationBold": "VAR TIME has its real domain:",
+    "migrationText": "vartime.app! For full notifications and PWA, reinstall from",
+    "migrationDomain": "vartime.app",
+    "migrationClose": "Close"
+  },
   "PWA": {
     "installTitle": "Install VAR Time 📺",
     "installDesc": "For the best experience without lag at the stadium, add the app to your home screen!",
     "installButton": "Install the app",
     "installIosInstructions": "On iOS: tap Share then Add to Home Screen"
+  },
+  "Meta": {
+    "lobby": "Stadium",
+    "match": "Match",
+    "profile": "My Profile",
+    "publicProfile": "Player Profile",
+    "ligues": "My Leagues",
+    "pronos": "My Predictions",
+    "leaderboard": "Leaderboard",
+    "messages": "Messages",
+    "conversation": "Conversation",
+    "shop": "Shop",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "rules": "Game Rules",
+    "laws": "Laws of the Game"
   },
   "Landing": {
     "metaTitle": "VAR Time — VAR, but make it a game",

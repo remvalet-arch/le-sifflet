@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import NotificationsClient from "./NotificationsClient";
 
-export const metadata = { title: "Notifications — VAR TIME" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("notifications") };
+}
 
 export default async function NotificationsPage() {
   const supabase = await createClient();

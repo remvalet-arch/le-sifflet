@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Trophy, Flame, LoaderCircle, PlayCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 
 type LeaderboardRow = {
   user_id: string;
@@ -65,6 +66,7 @@ export function SquadLeaderboard({
 }: Props) {
   const t = useTranslations("Ligues");
   const tCommon = useTranslations("Common");
+  const bcp47 = useBcp47();
   const [launchingChamp, setLaunchingChamp] = useState(false);
   const [confirmLaunch, setConfirmLaunch] = useState(false);
 
@@ -164,15 +166,15 @@ export function SquadLeaderboard({
                     {(period === "general"
                       ? row.season_points
                       : row.xp
-                    ).toLocaleString("fr-FR")}{" "}
+                    ).toLocaleString(bcp47)}{" "}
                     Points
                   </p>
                   <div className="flex gap-2 justify-end mt-0.5">
                     <span className="text-[10px] font-bold text-green-400">
-                      🎯 {row.pronos_xp.toLocaleString("fr-FR")}
+                      🎯 {row.pronos_xp.toLocaleString(bcp47)}
                     </span>
                     <span className="text-[10px] font-bold text-blue-400">
-                      ⚡ {row.var_xp.toLocaleString("fr-FR")}
+                      ⚡ {row.var_xp.toLocaleString(bcp47)}
                     </span>
                   </div>
                 </div>

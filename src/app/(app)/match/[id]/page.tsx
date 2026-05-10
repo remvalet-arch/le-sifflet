@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LiveRoom } from "@/components/match/LiveRoom";
+import { getTranslations } from "next-intl/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 
 type Props = { params: Promise<{ id: string }> };
@@ -10,18 +11,24 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("matches")
-    .select("team_home, team_away")
-    .eq("id", id)
-    .maybeSingle();
-  if (!data) return { title: "Match" };
+  const [{ data }, t] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("team_home, team_away")
+      .eq("id", id)
+      .maybeSingle(),
+    (await import("next-intl/server")).getTranslations("Meta"),
+  ]);
+  if (!data) return { title: t("match") };
   return { title: `${data.team_home} — ${data.team_away}` };
 }
 
 export default async function MatchPage({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
+  const [supabase, tLobby] = await Promise.all([
+    createClient(),
+    getTranslations("Lobby"),
+  ]);
 
   const [matchResponse, authResponse] = await Promise.all([
     supabase
@@ -109,7 +116,7 @@ export default async function MatchPage({ params }: Props) {
         href="/lobby"
         className="inline-flex items-center gap-1.5 text-sm font-bold text-whistle transition-opacity hover:opacity-70"
       >
-        ← Matchs
+        {tLobby("backToMatches")}
       </Link>
 
       <LiveRoom

@@ -10,9 +10,13 @@ import {
   parseLobbyRoundParams,
 } from "@/lib/lobby-queries";
 import { formatParisYmdLongFr } from "@/lib/paris-day";
+import { getTranslations } from "next-intl/server";
 // OnboardingTour gère son propre état via localStorage — pas besoin de requête DB ici.
 
-export const metadata = { title: "Stade" };
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return { title: t("lobby") };
+}
 
 type Search = Record<string, string | string[] | undefined>;
 
@@ -25,7 +29,10 @@ async function MatchListFetcher({
   roundContext: { leagueApiId: number; roundShort: string } | null;
   preferredLeagueApiIds: number[];
 }) {
-  const supabase = await createClient();
+  const [supabase, t] = await Promise.all([
+    createClient(),
+    getTranslations("Lobby"),
+  ]);
 
   const roundFetch =
     viewMode === "round" && roundContext != null
@@ -47,7 +54,7 @@ async function MatchListFetcher({
   if (error) {
     return (
       <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-6 text-center text-sm text-red-400">
-        Impossible de charger les matchs ({error.message}).
+        {t("errorLoadMatches", { message: error.message })}
       </div>
     );
   }
@@ -57,11 +64,10 @@ async function MatchListFetcher({
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
         <CalendarX className="h-10 w-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
-          Aucun match pour la journée{" "}
-          <span className="font-mono text-chalk">
-            {roundContext.roundShort}
-          </span>{" "}
-          (ligue {roundContext.leagueApiId}).
+          {t("noMatchesForRound", {
+            round: roundContext.roundShort,
+            leagueId: roundContext.leagueApiId,
+          })}
         </p>
       </div>
     );

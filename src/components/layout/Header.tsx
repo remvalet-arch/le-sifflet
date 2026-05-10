@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { signOut } from "@/app/actions/auth";
+import { getLocale } from "next-intl/server";
+import { BCP47_MAP } from "@/lib/use-bcp47";
 
 type AppHeaderProps = {
   username: string;
   siffletsBalance: number;
 };
 
-export function AppHeader({ username, siffletsBalance }: AppHeaderProps) {
+export async function AppHeader({ username, siffletsBalance }: AppHeaderProps) {
+  const locale = await getLocale();
+  const bcp47 = BCP47_MAP[locale] ?? "fr-FR";
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-pitch-900/95 px-4 py-3 backdrop-blur-md">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
@@ -22,7 +26,7 @@ export function AppHeader({ username, siffletsBalance }: AppHeaderProps) {
             <span className="font-semibold text-white">{username}</span>
           </div>
           <div className="rounded-full border border-whistle/40 bg-black/30 px-2.5 py-1 text-xs font-bold text-whistle sm:px-3 sm:text-sm">
-            {siffletsBalance.toLocaleString("fr-FR")}{" "}
+            {siffletsBalance.toLocaleString(bcp47)}{" "}
             <span className="font-normal text-whistle/80">🪙</span>
           </div>
           <form action={signOut}>

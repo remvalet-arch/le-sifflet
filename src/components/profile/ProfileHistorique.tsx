@@ -1,6 +1,7 @@
 "use client";
 
 import { Lock } from "lucide-react";
+import { useBcp47 } from "@/lib/use-bcp47";
 import type { BetStatus, MarketEventType } from "@/types/database";
 
 export type ShortBetEntry = {
@@ -223,6 +224,7 @@ export function EmptyState({ emoji, text }: { emoji: string; text: string }) {
 }
 
 function PronoRow({ prono: p }: { prono: PronoEntry }) {
+  const bcp47 = useBcp47();
   const chipCls = statusCls(p.status);
   const isScore = p.prono_type === "exact_score" && p.prono_value !== "🔒";
   const line = formatPronoValue(p.prono_type, p.prono_value);
@@ -260,7 +262,7 @@ function PronoRow({ prono: p }: { prono: PronoEntry }) {
         </span>
         {p.status === "won" && (
           <p className="mt-1 text-[11px] font-black text-green-400">
-            +{earned.toLocaleString("fr-FR")}
+            +{earned.toLocaleString(bcp47)}
           </p>
         )}
       </div>
@@ -269,6 +271,7 @@ function PronoRow({ prono: p }: { prono: PronoEntry }) {
 }
 
 function VarBetRow({ bet: b }: { bet: ShortBetEntry }) {
+  const bcp47 = useBcp47();
   const chipCls = statusCls(b.status);
   const eCfg = b.eventType
     ? (SHORT_LABELS[b.eventType] ?? { label: b.eventType, emoji: "⚡" })
@@ -306,7 +309,7 @@ function VarBetRow({ bet: b }: { bet: ShortBetEntry }) {
         </span>
         {b.status === "won" && (
           <p className="mt-1 text-[11px] font-black text-green-400">
-            +{reward.toLocaleString("fr-FR")}
+            +{reward.toLocaleString(bcp47)}
           </p>
         )}
       </div>
@@ -321,6 +324,7 @@ export function HistoriqueTab({
   pronos: PronoEntry[];
   shortBets: ShortBetEntry[];
 }) {
+  const bcp47 = useBcp47();
   const groups = buildMatchGroups(pronos, shortBets);
 
   // eslint-disable-next-line react-hooks/purity
@@ -358,7 +362,7 @@ export function HistoriqueTab({
             className={`text-sm font-black ${recentPts >= 0 ? "text-green-400" : "text-red-400"}`}
           >
             {recentPts > 0 ? "+" : ""}
-            {recentPts.toLocaleString("fr-FR")} Points
+            {recentPts.toLocaleString(bcp47)} Points
             {recentWon > 0 && (
               <span className="ml-2 font-semibold text-zinc-400">
                 · {recentWon} gagné{recentWon > 1 ? "s" : ""}

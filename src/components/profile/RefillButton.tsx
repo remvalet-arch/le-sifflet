@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 
 type Props = {
   isEligible: boolean;
@@ -40,6 +41,7 @@ function useCountdown(targetIso: string | null) {
 
 export function RefillButton({ isEligible, nextRefillAt }: Props) {
   const t = useTranslations("Refill");
+  const bcp47 = useBcp47();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const countdown = useCountdown(isEligible ? null : nextRefillAt);
@@ -60,7 +62,7 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
       }
       toast.success(
         t("successToast", {
-          balance: (json.data?.new_balance ?? 0).toLocaleString("fr-FR"),
+          balance: (json.data?.new_balance ?? 0).toLocaleString(bcp47),
         }),
       );
       router.refresh();

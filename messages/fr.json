@@ -58,6 +58,9 @@
   },
   "Lobby": {
     "title": "Les Matchs",
+    "errorLoadMatches": "Impossible de charger les matchs ({message}).",
+    "noMatchesForRound": "Aucun match pour la journée {round} (ligue {leagueId}).",
+    "backToMatches": "← Matchs",
     "noMatches": "Rien à se mettre sous la dent",
     "today": "Aujourd'hui",
     "noDirectMatches": "Pas de match en direct. Profites-en pour placer tes pronos.",
@@ -201,6 +204,24 @@
     "postponed": "REPORTÉ"
   },
   "Profile": {
+    "xpLevelDistrict": "District",
+    "xpLevelBronze": "Bronze",
+    "xpLevelArgent": "Argent",
+    "xpLevelBoss": "Boss",
+    "trustGradeElite": "Arbitre Élite",
+    "trustGradeOfficial": "Arbitre Officiel",
+    "trustGradeAlert": "Lanceur d'Alerte",
+    "trustGradeYellow": "Carton Jaune",
+    "karmaModerator": "Modérateur",
+    "karmaSupporteur": "Supporteur",
+    "karmaYellow": "Carton Jaune",
+    "editProfileAriaLabel": "Modifier le profil",
+    "streakDaysSuffix": "j",
+    "siffletsLabel": "Sifflets",
+    "streakClaimRateLimit": "Doucement l'arbitre, tu siffles trop vite !",
+    "streakClaimAlreadyDone": "Déjà réclamé !",
+    "streakClaimSuccess": "+{bonus} 🪙 — Série de {streak} jours !",
+    "streakClaimConnLost": "Connexion perdue, réessaie !",
     "tabProfil": "Profil",
     "tabHistorique": "Historique",
     "tabBadges": "Badges",
@@ -478,6 +499,8 @@
     "myLeaguesBackLink": "Mes ligues"
   },
   "Pronos": {
+    "pageTitle": "Pronos",
+    "pageSubtitle": "7 prochains jours",
     "today": "Aujourd'hui",
     "todayAbbrev": "Auj.",
     "tomorrow": "Demain",
@@ -599,11 +622,33 @@
     "saveBetError": "Impossible de sauvegarder les paramètres.",
     "connectionLost": "Connexion perdue"
   },
+  "Banner": {
+    "migrationBold": "VAR TIME a son vrai domaine :",
+    "migrationText": "vartime.app ! Pour les notifs et la PWA complètes, réinstalle depuis",
+    "migrationDomain": "vartime.app",
+    "migrationClose": "Fermer"
+  },
   "PWA": {
     "installTitle": "Installe VAR Time 📺",
     "installDesc": "Pour une meilleure expérience sans latence au stade, ajoute l'app sur ton écran d'accueil !",
     "installButton": "Installer l'application",
     "installIosInstructions": "Sur iOS : appuie sur Partager puis Sur l'écran d'accueil"
+  },
+  "Meta": {
+    "lobby": "Stade",
+    "match": "Match",
+    "profile": "Mon Profil",
+    "publicProfile": "Profil joueur",
+    "ligues": "Mes Ligues",
+    "pronos": "Mes Pronos",
+    "leaderboard": "Classement",
+    "messages": "Messages",
+    "conversation": "Conversation",
+    "shop": "Boutique",
+    "settings": "Paramètres",
+    "notifications": "Notifications",
+    "rules": "Règles du jeu",
+    "laws": "Lois du Jeu"
   },
   "Landing": {
     "metaTitle": "VAR Time — La VAR, mais en jeu",

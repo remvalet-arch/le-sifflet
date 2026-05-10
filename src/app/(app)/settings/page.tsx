@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsClient from "./SettingsClient";
 
-export const metadata = { title: "Paramètres — VAR TIME" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("settings") };
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient();

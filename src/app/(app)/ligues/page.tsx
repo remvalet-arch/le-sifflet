@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { LiguesPageClient } from "@/components/ligues/LiguesPageClient";
 
-export const metadata = { title: "Ligues — Vestiaire" };
+export async function generateMetadata() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("Meta");
+  return { title: t("ligues") };
+}
 
 export default async function LiguesPage() {
   const supabase = await createClient();

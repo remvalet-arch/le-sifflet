@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 import { readActiveSquadFromStorage } from "@/lib/squads/active-squad-storage";
 import type { SquadRow } from "@/types/database";
@@ -38,6 +39,7 @@ type ApiResponse<T> = { ok: boolean; data?: T; error?: string };
 
 export function LiguesPageClient({ userId }: { userId: string }) {
   const t = useTranslations("Ligues");
+  const bcp47 = useBcp47();
   const router = useRouter();
   const { squadId: activeId, setActiveSquad } = useActiveSquad();
   const [squads, setSquads] = useState<SquadWithMembers[] | null>(null);
@@ -215,7 +217,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                       </span>
                       <span className="flex items-center gap-1 text-[11px] font-bold text-green-400/90">
                         <Wallet className="h-3 w-3 shrink-0" aria-hidden />
-                        {s.pot_commun.toLocaleString("fr-FR")} Points
+                        {s.pot_commun.toLocaleString(bcp47)} Points
                       </span>
                     </div>
                   </div>

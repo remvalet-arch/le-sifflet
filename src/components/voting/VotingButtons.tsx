@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { LoaderCircle, Swords, X } from "lucide-react";
 import { LIVE_BETTING_WINDOW_SECONDS } from "@/lib/constants/odds";
 import type { BetConfirmed } from "@/hooks/useVotingMarket";
@@ -260,6 +261,7 @@ export function VotingTimer({
 }
 
 // ── AmountPicker ─────────────────────────────────────────────────────────────
+// AmountPicker — needs bcp47 for number formatting
 export function AmountPicker({
   amount,
   setAmount,
@@ -280,6 +282,7 @@ export function AmountPicker({
   expired: boolean;
 }) {
   const t = useTranslations("Voting");
+  const bcp47 = useBcp47();
   const sliderPct =
     Math.max(minBet, siffletsBalance) - minBet > 0
       ? ((amount - minBet) / (Math.max(minBet, siffletsBalance) - minBet)) * 100
@@ -317,7 +320,7 @@ export function AmountPicker({
           style={{ left: `${sliderPct}%`, transform: "translateX(-50%)" }}
         >
           <span className="whitespace-nowrap rounded-md bg-zinc-700 px-1.5 py-0.5 text-[11px] font-black text-white">
-            🪙 {amount.toLocaleString("fr-FR")}
+            🪙 {amount.toLocaleString(bcp47)}
           </span>
         </div>
         <input
@@ -336,7 +339,7 @@ export function AmountPicker({
         <p className="mt-1 text-[10px] text-zinc-600">
           {t("minStakeInfo")}{" "}
           <span className="font-black text-zinc-500">
-            {minBet.toLocaleString("fr-FR")} 🪙
+            {minBet.toLocaleString(bcp47)} 🪙
           </span>
         </p>
       )}
@@ -422,6 +425,7 @@ export function BinaryButtons({
   onVote: (v: string) => void;
 }) {
   const t = useTranslations("Voting");
+  const bcp47 = useBcp47();
   const pct = computePct(poolOdds, ["oui", "non"]);
   const ouiPct = pct["oui"] ?? 50;
   const nonPct = pct["non"] ?? 50;
@@ -450,7 +454,7 @@ export function BinaryButtons({
           </span>
           <span className="text-[10px] font-semibold text-zinc-500">
             {totalInJeu > 0
-              ? t("inPlay", { amount: totalInJeu.toLocaleString("fr-FR") })
+              ? t("inPlay", { amount: totalInJeu.toLocaleString(bcp47) })
               : t("noStake")}
           </span>
           <span className="text-xs font-black text-red-400">

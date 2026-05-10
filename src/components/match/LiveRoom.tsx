@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { toast } from "sonner";
 import { Siren, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -167,6 +168,7 @@ export function LiveRoom({
   }, [localBalance]);
 
   const t = useTranslations("LiveRoom");
+  const bcp47 = useBcp47();
   const { squadId, squadName } = useActiveSquad();
   const { setDrawerAvailable, registerOpenDrawer } = useLiveRoom();
 
@@ -333,7 +335,7 @@ export function LiveRoom({
               });
             } else {
               toast.success(
-                `Prédiction juste ! +${reward.toLocaleString("fr-FR")} 🪙 🎉`,
+                `Prédiction juste ! +${reward.toLocaleString(bcp47)} 🪙 🎉`,
               );
             }
           } else if (bet.status === "lost") {
@@ -358,7 +360,7 @@ export function LiveRoom({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [match.id, userId]);
+  }, [match.id, userId, bcp47]);
 
   // Signale à la BottomNav que le Super Button doit être affiché uniquement en live
   const isLive =

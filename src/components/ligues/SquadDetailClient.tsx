@@ -11,6 +11,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import type { SquadRow } from "@/types/database";
 import { SquadChat } from "./SquadChat";
 import { SquadChampionship } from "./SquadChampionship";
@@ -103,6 +104,7 @@ export function SquadDetailClient({
   currentUserId: string;
 }) {
   const t = useTranslations("Ligues");
+  const bcp47 = useBcp47();
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [nudging, setNudging] = useState(false);
@@ -248,7 +250,7 @@ export function SquadDetailClient({
               <Wallet className="h-4 w-4" aria-hidden />
               {t("cumulatedPoints")}{" "}
               <span className="font-black tabular-nums">
-                {total_xp_earned.toLocaleString("fr-FR")} Points
+                {total_xp_earned.toLocaleString(bcp47)} Points
               </span>
             </span>
           </p>

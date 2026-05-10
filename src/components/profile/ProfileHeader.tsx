@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { useBcp47 } from "@/lib/use-bcp47";
 import { ProfileEditModal } from "./ProfileEditModal";
 
 type TeamInfo = { id: string; name: string; logo_url: string | null } | null;
@@ -30,49 +32,64 @@ function getRankRing(rankLabel: string) {
   return "ring-2 ring-white/20";
 }
 
-function getXpProgress(xp: number): {
+function getXpProgress(
+  xp: number,
+  labels: { district: string; bronze: string; argent: string; boss: string },
+): {
   level: string;
   pct: number;
   next: number;
 } {
-  if (xp >= 5000) return { level: "Boss", pct: 100, next: 5000 };
+  if (xp >= 5000) return { level: labels.boss, pct: 100, next: 5000 };
   if (xp >= 2000)
     return {
-      level: "Argent",
+      level: labels.argent,
       pct: Math.round(((xp - 2000) / 3000) * 100),
       next: 5000,
     };
   if (xp >= 500)
     return {
-      level: "Bronze",
+      level: labels.bronze,
       pct: Math.round(((xp - 500) / 1500) * 100),
       next: 2000,
     };
-  return { level: "District", pct: Math.round((xp / 500) * 100), next: 500 };
+  return {
+    level: labels.district,
+    pct: Math.round((xp / 500) * 100),
+    next: 500,
+  };
 }
 
-function getTrustGradeCompact(score: number) {
+function getTrustGradeCompact(
+  score: number,
+  labels: {
+    elite: string;
+    official: string;
+    alert: string;
+    yellow: string;
+  },
+) {
   if (score >= 200)
     return {
       icon: "🏅",
-      label: "Arbitre Élite",
+      label: labels.elite,
       color: "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
     };
   if (score >= 100)
     return {
       icon: "✅",
-      label: "Arbitre Officiel",
+      label: labels.official,
       color: "text-green-400 border-green-500/30 bg-green-500/10",
     };
   if (score >= 50)
     return {
       icon: "⚡",
-      label: "Lanceur d'Alerte",
+      label: labels.alert,
       color: "text-blue-400 border-blue-500/30 bg-blue-500/10",
     };
   return {
     icon: "⚠️",
-    label: "Carton Jaune",
+    label: labels.yellow,
     color: "text-orange-400 border-orange-500/30 bg-orange-500/10",
   };
 }
@@ -109,6 +126,9 @@ export function ProfileHeader({
   equippedAvatarAsset?: string | null;
   equippedBorderAsset?: string | null;
 }) {
+  const tp = useTranslations("Profile");
+  const bcp47 = useBcp47();
+
   const [editOpen, setEditOpen] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
@@ -126,8 +146,21 @@ export function ProfileHeader({
   const ringCls = equippedBorderAsset
     ? getBorderRingClass(equippedBorderAsset)
     : getRankRing(rank.label);
-  const xpInfo = getXpProgress(xpTotal);
-  const trust = trustScore != null ? getTrustGradeCompact(trustScore) : null;
+  const xpInfo = getXpProgress(xpTotal, {
+    district: tp("xpLevelDistrict"),
+    bronze: tp("xpLevelBronze"),
+    argent: tp("xpLevelArgent"),
+    boss: tp("xpLevelBoss"),
+  });
+  const trust =
+    trustScore != null
+      ? getTrustGradeCompact(trustScore, {
+          elite: tp("trustGradeElite"),
+          official: tp("trustGradeOfficial"),
+          alert: tp("trustGradeAlert"),
+          yellow: tp("trustGradeYellow"),
+        })
+      : null;
 
   async function handleClaimStreak() {
     if (!canClaimStreak || claimingStreak) return;
@@ -140,18 +173,20 @@ export function ProfileHeader({
         error?: string;
       };
       if (res.status === 429) {
-        toast.error("Doucement l'arbitre, tu siffles trop vite !");
+        toast.error(tp("streakClaimRateLimit"));
         return;
       }
       if (!json.ok) {
-        toast.error(json.error ?? "Déjà réclamé !");
+        toast.error(json.error ?? tp("streakClaimAlreadyDone"));
         setStreakClaimed(true);
       } else {
-        toast.success(`+${json.data!.bonus} 🪙 — Série de ${streak} jours !`);
+        toast.success(
+          tp("streakClaimSuccess", { bonus: json.data!.bonus, streak }),
+        );
         setStreakClaimed(true);
       }
     } catch {
-      toast.error("Connexion perdue, réessaie !");
+      toast.error(tp("streakClaimConnLost"));
     } finally {
       setClaimingStreak(false);
     }
@@ -183,7 +218,7 @@ export function ProfileHeader({
           type="button"
           onClick={() => setEditOpen(true)}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-zinc-500 hover:text-white"
-          aria-label="Modifier le profil"
+          aria-label={tp("editProfileAriaLabel")}
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -237,7 +272,7 @@ export function ProfileHeader({
           type="button"
           onClick={() => setEditOpen(true)}
           className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
-          aria-label="Modifier le profil"
+          aria-label={tp("editProfileAriaLabel")}
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -294,8 +329,8 @@ export function ProfileHeader({
                 XP · {xpInfo.level}
               </span>
               <span className="text-[9px] font-black tabular-nums text-white/40">
-                {xpTotal.toLocaleString("fr-FR")} /{" "}
-                {xpInfo.next.toLocaleString("fr-FR")}
+                {xpTotal.toLocaleString(bcp47)} /{" "}
+                {xpInfo.next.toLocaleString(bcp47)}
               </span>
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
@@ -309,10 +344,10 @@ export function ProfileHeader({
           <div className="mt-4 flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-2 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
               <span className="text-2xl font-black tabular-nums text-green-400">
-                {balance.toLocaleString("fr-FR")}
+                {balance.toLocaleString(bcp47)}
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
-                Sifflets
+                {tp("siffletsLabel")}
               </span>
             </div>
 
@@ -327,7 +362,8 @@ export function ProfileHeader({
                     : "border border-white/10 bg-zinc-800 text-zinc-500 cursor-default"
                 }`}
               >
-                🔥 {streak}j
+                🔥 {streak}
+                {tp("streakDaysSuffix")}
                 {canClaimStreak && ` +${50 * Math.min(streak, 7)}🪙`}
               </button>
             )}
