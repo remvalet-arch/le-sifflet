@@ -6,6 +6,8 @@ import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { LiveRoomProvider } from "@/contexts/LiveRoomContext";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { DailyRecapChecker } from "@/components/layout/DailyRecapChecker";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { PostHogIdentify } from "@/components/consent/PostHogIdentify";
 
 async function trackLoginStreak(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -99,6 +101,8 @@ export default async function AppLayout({
 
   return (
     <LiveRoomProvider>
+      <PostHogIdentify userId={user.id} signupDate={user.created_at} />
+      <ConsentBanner />
       {/* Shell layout: position:fixed inset-0 takes the shell out of document flow
           entirely — body has zero scrollable content so Next.js scroll restoration
           and any window.scrollTo() calls never shift the BottomNav in PWA mode.

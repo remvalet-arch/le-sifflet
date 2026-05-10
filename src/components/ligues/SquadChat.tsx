@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { SquadMessageRow } from "@/types/database";
+import { track } from "@/lib/analytics";
 
 type MessageWithProfile = SquadMessageRow & {
   profiles: { username: string; avatar_url: string | null } | null;
@@ -146,6 +147,10 @@ export function SquadChat({
         toast.error(t("chatSendError"));
       } else {
         setText("");
+        track("squad_message_sent", {
+          squad_id: squadId,
+          is_first_message_of_session: false,
+        });
       }
     } catch {
       toast.error(t("chatConnError"));

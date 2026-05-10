@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Target, Shuffle, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { track } from "@/lib/analytics";
 
 type Mode = "classic" | "braquage";
 
@@ -65,6 +66,11 @@ export function CreateLeagueWizard({
       if (memberErr) throw new Error(memberErr.message);
 
       toast.success(t("wizardCreateSuccess"));
+      track("squad_created", {
+        squad_id: squad.id,
+        game_mode: mode,
+        is_private: true,
+      });
       onCreated(squad.id, squad.name);
     } catch (e: unknown) {
       if (e instanceof Error) {

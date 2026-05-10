@@ -5,6 +5,7 @@ import { ServiceWorkerRegister } from "@/components/providers/ServiceWorkerRegis
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { PostHogProvider } from "@/app/providers/PostHogProvider";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -71,10 +72,12 @@ export default async function RootLayout({
     <html lang={locale} className="h-full antialiased">
       <body className="min-h-full bg-zinc-950 text-zinc-50 font-sans">
         <NextIntlClientProvider messages={messages}>
-          {children}
-          <ServiceWorkerRegister />
-          <InstallPrompt />
-          <ToasterProvider />
+          <PostHogProvider>
+            {children}
+            <ServiceWorkerRegister />
+            <InstallPrompt />
+            <ToasterProvider />
+          </PostHogProvider>
         </NextIntlClientProvider>
       </body>
     </html>

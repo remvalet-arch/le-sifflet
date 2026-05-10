@@ -5,10 +5,12 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
+import { track } from "@/lib/analytics";
 
 type Props = {
   isEligible: boolean;
   nextRefillAt: string | null;
+  currentBalance?: number;
 };
 
 function useCountdown(targetIso: string | null) {
@@ -39,7 +41,11 @@ function useCountdown(targetIso: string | null) {
   return `${h}h${String(m).padStart(2, "0")}m${String(s).padStart(2, "0")}s`;
 }
 
-export function RefillButton({ isEligible, nextRefillAt }: Props) {
+export function RefillButton({
+  isEligible,
+  nextRefillAt,
+  currentBalance = 0,
+}: Props) {
   const t = useTranslations("Refill");
   const bcp47 = useBcp47();
   const [loading, setLoading] = useState(false);
@@ -60,9 +66,14 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
         toast.error(json.error ?? t("errorToast"));
         return;
       }
+      const newBalance = json.data?.new_balance ?? 0;
+      track("refill_claimed", {
+        sifflets_received: newBalance - currentBalance,
+        balance_before: currentBalance,
+      });
       toast.success(
         t("successToast", {
-          balance: (json.data?.new_balance ?? 0).toLocaleString(bcp47),
+          balance: newBalance.toLocaleString(bcp47),
         }),
       );
       router.refresh();

@@ -8,6 +8,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
 import { convertOddToPoints } from "@/lib/odds";
+import { trackPronoPlaced } from "@/lib/analytics";
+import { classifyMatchTier } from "@/lib/matchTier";
 import {
   ScorerAllocationEditor,
   aggregateSlots,
@@ -284,6 +286,20 @@ export function MatchPronoCard({
 
       setSubmitted(true);
       onSubmittedChange(true);
+      trackPronoPlaced({
+        match_id: match.id,
+        match_tier: classifyMatchTier({
+          team_home: match.team_home,
+          team_away: match.team_away,
+          competition_id: match.competition_id ?? "",
+        }),
+        prono_type:
+          homeAgg.length > 0 || awayAgg.length > 0
+            ? "scorer_allocation"
+            : "exact_score",
+        booster_applied: null,
+        is_first_prono_of_session: !submitted,
+      });
       toast.success(
         <span className="flex items-center gap-1.5">
           <Bell className="h-4 w-4 text-whistle" />
@@ -312,11 +328,15 @@ export function MatchPronoCard({
   }, [
     canSubmit,
     match.id,
+    match.team_home,
+    match.team_away,
+    match.competition_id,
     homeInt,
     awayInt,
     homeSlots,
     awaySlots,
     selectedBoosterId,
+    submitted,
     onSubmittedChange,
     t,
   ]);

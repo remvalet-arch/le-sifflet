@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { log } from "@/lib/logger";
+import { track } from "@/lib/analytics";
 
 interface VisionBoosterButtonProps {
   eventId: string;
@@ -30,7 +31,7 @@ export function VisionBoosterButton({
       });
       const json = (await res.json()) as {
         ok: boolean;
-        data?: { friend_choices: Record<string, number> };
+        data?: { friend_choices: Record<string, number>; match_id?: string };
         error?: string;
       };
       if (!json.ok) {
@@ -38,7 +39,17 @@ export function VisionBoosterButton({
         return;
       }
       setActivated(true);
-      onActivated(json.data?.friend_choices ?? {});
+      const friendChoices = json.data?.friend_choices ?? {};
+      const friendCount = Object.values(friendChoices).reduce(
+        (sum, n) => sum + n,
+        0,
+      );
+      track("vision_booster_activated", {
+        match_id: json.data?.match_id ?? "",
+        market_id: eventId,
+        friend_choices_count: friendCount,
+      });
+      onActivated(friendChoices);
     } catch (err) {
       log.error("VisionBoosterButton", "activation failed", { error: err });
       toast.error("Erreur réseau");

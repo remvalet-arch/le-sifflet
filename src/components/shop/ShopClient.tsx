@@ -7,6 +7,7 @@ import { useBcp47 } from "@/lib/use-bcp47";
 import { ShoppingBag, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
+import { track } from "@/lib/analytics";
 
 type Tab = "avatar" | "border" | "effect" | "boosters";
 
@@ -110,6 +111,12 @@ export function ShopClient({
       setOwnedIds((prev) => new Set([...prev, item.id]));
       if (json.data?.new_balance !== undefined)
         setBalance(json.data.new_balance);
+      track("shop_purchase", {
+        item_category: "cosmetic",
+        item_slug: item.id,
+        sifflets_spent: json.data?.free ? 0 : price,
+        purchase_quantity: 1,
+      });
       if (json.data?.free) {
         toast.success(`${item.asset_url} ${item.name} débloqué gratuitement !`);
       } else {
@@ -190,6 +197,12 @@ export function ShopClient({
         ...prev,
         [booster.id]: (prev[booster.id] ?? 0) + 1,
       }));
+      track("shop_purchase", {
+        item_category: "booster",
+        item_slug: booster.effect_type,
+        sifflets_spent: booster.price_pts,
+        purchase_quantity: 1,
+      });
       toast.success(`⚡ ${booster.name} ajouté à ton inventaire !`);
     } catch {
       toast.error("Connexion perdue, réessaie !");

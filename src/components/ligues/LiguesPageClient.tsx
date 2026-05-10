@@ -22,6 +22,7 @@ import { useActiveSquad } from "@/hooks/useActiveSquad";
 import { readActiveSquadFromStorage } from "@/lib/squads/active-squad-storage";
 import type { SquadRow } from "@/types/database";
 import { CreateLeagueWizard } from "./CreateLeagueWizard";
+import { track } from "@/lib/analytics";
 
 type SquadMember = {
   user_id: string;
@@ -91,6 +92,10 @@ export function LiguesPageClient({ userId }: { userId: string }) {
         return;
       }
       toast.success(t("joinSuccess"));
+      track("squad_joined", {
+        squad_id: json.data!.squad.id,
+        via: "invite_code",
+      });
       setActiveSquad({ id: json.data!.squad.id, name: json.data!.squad.name });
       setCode("");
       setJoinOpen(false);
