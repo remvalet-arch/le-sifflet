@@ -33,6 +33,27 @@ export type AdminActionType =
   | "ban_user"
   | "unban_user";
 
+// ── PostHog v1.1 types ──────────────────────────────────────────────────────
+
+// flash=0-15s (speed bonus ×1.25), normal=16-45s (×1.00), late=46s+ (×0.90)
+export type SpeedBracket = "flash" | "normal" | "late";
+
+// Maps contre_pied_bonus values: 20→default/evident, 30→rare, 50→tres_rare, 70→mega_rare, 100→ultra_rare
+export type RarityLabel =
+  | "evident"
+  | "rare"
+  | "tres_rare"
+  | "mega_rare"
+  | "ultra_rare"
+  | "default"
+  | null;
+
+export type SmartMuteReason =
+  | "app_visible"
+  | "user_in_match_room"
+  | "opt_out_preference"
+  | "budget_exhausted_ios";
+
 type AnalyticsEvents = {
   landing_viewed: {
     locale: string;
@@ -87,6 +108,8 @@ type AnalyticsEvents = {
     status: "won" | "lost";
     points_earned: number;
     booster_applied: BoosterSlug | null;
+    rarity_label: RarityLabel;
+    bonus_rarity_points: number;
   };
 
   alert_signal_submitted: {
@@ -114,6 +137,8 @@ type AnalyticsEvents = {
     is_first_bet_of_session: boolean;
     bet_rank_in_session: number;
     via_quick_bet: boolean;
+    speed_bracket: SpeedBracket;
+    delay_seconds: number;
   };
   bet_resolved: {
     match_id: string;
@@ -174,6 +199,22 @@ type AnalyticsEvents = {
     target_resource_id?: string;
     actor_role: "moderator" | "founder";
   };
+
+  alert_threshold_reached: {
+    match_id: string;
+    match_tier: MatchTier;
+    event_type: MarketEventType;
+    signals_count: number;
+    active_audience: number;
+    threshold_required: number;
+    time_to_threshold_seconds: number;
+  };
+
+  notif_suppressed_by_smart_mute: {
+    notif_type: NotifType;
+    reason: SmartMuteReason;
+    match_id?: string;
+  };
 };
 
 export function track<K extends keyof AnalyticsEvents>(
@@ -195,4 +236,24 @@ export function trackPronoPlaced(p: AnalyticsEvents["prono_placed"]) {
 
 export function trackMarketOpened(p: AnalyticsEvents["market_opened"]) {
   track("market_opened", p);
+}
+
+// ── PostHog v1.1 helpers ────────────────────────────────────────────────────
+
+export function computeSpeedBracket(delaySeconds: number): SpeedBracket {
+  if (delaySeconds <= 15) return "flash";
+  if (delaySeconds <= 45) return "normal";
+  return "late";
+}
+
+// Maps contre_pied_bonus integer (from pronos row) to a RarityLabel.
+// 0 → null (no bonus earned). 20 → "default" (covers both "evident" >30% and
+// the <5-players fallback which also gives +20pts). 30/50/70/100 → rare grades.
+export function rarityBonusToLabel(bonus: number): RarityLabel {
+  if (bonus === 0) return null;
+  if (bonus === 30) return "rare";
+  if (bonus === 50) return "tres_rare";
+  if (bonus === 70) return "mega_rare";
+  if (bonus === 100) return "ultra_rare";
+  return "default"; // 20pts — "evident" (>30%) or <5 total correct 1N2
 }
