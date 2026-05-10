@@ -17,6 +17,7 @@ import type {
   SeasonArchiveRow,
 } from "@/types/database";
 import { getTranslations } from "next-intl/server";
+import { getCachedBadges, getCachedCurrentSeason } from "@/lib/cached-queries";
 
 export async function generateMetadata() {
   const t = await getTranslations("Meta");
@@ -81,11 +82,11 @@ export default async function ProfilePage() {
   const [
     { data: rawShortBets },
     { data: rawPronos },
-    { data: allBadges },
+    allBadges,
     { data: userBadgesData },
     { data: favoriteTeamData },
     { data: rawSeasonArchives },
-    { data: currentSeason },
+    currentSeason,
     { data: equippedItemsData },
   ] = await Promise.all([
     supabase
@@ -100,7 +101,7 @@ export default async function ProfilePage() {
       .eq("user_id", user.id)
       .order("placed_at", { ascending: false })
       .limit(30),
-    supabase.from("badges").select("*").order("created_at"),
+    getCachedBadges(),
     supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
     profile?.favorite_team_id
       ? supabase
@@ -117,11 +118,7 @@ export default async function ProfilePage() {
       .eq("user_id", user.id)
       .order("archived_at", { ascending: false })
       .limit(10),
-    supabase
-      .from("seasons")
-      .select("id, label, ends_at")
-      .eq("is_current", true)
-      .maybeSingle(),
+    getCachedCurrentSeason(),
     equippedItemIds.length > 0
       ? supabase
           .from("shop_items")
@@ -332,7 +329,7 @@ export default async function ProfilePage() {
       <ProfileClient
         shortBets={shortEntries}
         pronos={pronoEntries}
-        allBadges={allBadges ?? []}
+        allBadges={allBadges}
         unlockedBadgeIds={unlockedBadgeIds}
         amisContent={<AmisContent currentUserId={user.id} />}
         refillContent={
