@@ -69,7 +69,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="h-full antialiased">
-      <body className="min-h-full bg-zinc-950 text-zinc-50 font-sans">
+      <body className="h-full overflow-hidden bg-zinc-950 text-zinc-50 font-sans">
         <NextIntlClientProvider messages={messages}>
           {children}
           <ServiceWorkerRegister />

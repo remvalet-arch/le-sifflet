@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { MatchRow } from "@/lib/matches";
-import { formatMatchStatus, isLobbyLiveStatus } from "@/lib/matches";
+import { isLobbyLiveStatus } from "@/lib/matches";
 import { LiveBadge } from "@/components/lobby/LiveBadge";
 import { MatchCardCountdown } from "@/components/lobby/MatchCardCountdown";
 import { formatMatchDateTimeParis } from "@/lib/format-match-time";
@@ -115,6 +118,8 @@ export function MatchCard({
   mpgLayout?: boolean;
   hasLineups?: boolean;
 }) {
+  const t = useTranslations("Match");
+  const tScoreboard = useTranslations("Scoreboard");
   const href = `/match/${match.id}`;
   const isLive = isLobbyLiveStatus(match.status);
   const isFinished = match.status === "finished";
@@ -193,7 +198,7 @@ export function MatchCard({
 
   const metaRowMpg = isLive ? null : isFinished ? (
     <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
-      {formatMatchStatus("finished")}
+      {tScoreboard("finished")}
     </span>
   ) : lineupsFlag ? (
     <div className="flex items-center gap-2">
@@ -201,7 +206,7 @@ export function MatchCard({
         {when}
       </span>
       <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-400">
-        Compos ✓
+        {t("lineups")}
       </span>
     </div>
   ) : (
@@ -216,7 +221,7 @@ export function MatchCard({
         <LiveBadge status={match.status} />
       ) : isFinished ? (
         <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
-          {formatMatchStatus("finished")}
+          {tScoreboard("finished")}
         </span>
       ) : (
         <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
@@ -290,11 +295,7 @@ export function MatchCard({
           isLive ? "text-green-500/80" : "text-zinc-600"
         }`}
       >
-        {isLive
-          ? "Rejoindre le kop →"
-          : isFinished
-            ? "Voir le résumé →"
-            : "Voir la fiche →"}
+        {isLive ? t("joinKop") : isFinished ? t("seeSummary") : t("seeFiche")}
       </p>
     </Link>
   );

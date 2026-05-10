@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { ShoppingBag, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
@@ -42,6 +43,7 @@ export function ShopClient({
   boosters = [],
   boosterCounts: initialBoosterCounts = {},
 }: Props) {
+  const t = useTranslations("Shop");
   const [activeTab, setActiveTab] = useState<Tab>("avatar");
   const [balance, setBalance] = useState(initialBalance);
   const [ownedIds, setOwnedIds] = useState(new Set(initialOwnedIds));
@@ -52,10 +54,10 @@ export function ShopClient({
   const [boosterCounts, setBoosterCounts] = useState(initialBoosterCounts);
 
   const tabs: { key: Tab; label: string; emoji: string }[] = [
-    { key: "avatar", label: "Avatars", emoji: "🎽" },
-    { key: "border", label: "Bordures", emoji: "✨" },
-    { key: "effect", label: "Effets", emoji: "⚡" },
-    { key: "boosters", label: "Boosters", emoji: "⚡" },
+    { key: "avatar", label: t("tabAvatars"), emoji: "🎽" },
+    { key: "border", label: t("tabBorders"), emoji: "✨" },
+    { key: "effect", label: t("tabEffects"), emoji: "⚡" },
+    { key: "boosters", label: t("tabBoosters"), emoji: "⚡" },
   ];
 
   const displayed = items.filter((i) => i.category === activeTab);
@@ -215,7 +217,7 @@ export function ShopClient({
           </Link>
           <div className="flex flex-1 items-center gap-2">
             <ShoppingBag className="h-5 w-5 text-whistle" />
-            <h1 className="text-lg font-black text-white">Boutique</h1>
+            <h1 className="text-lg font-black text-white">{t("title")}</h1>
           </div>
           <div className="flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5">
             <span className="text-sm font-black tabular-nums text-green-400">
@@ -238,12 +240,12 @@ export function ShopClient({
           </div>
           <div>
             <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
-              Aperçu
+              {t("preview")}
             </p>
             <p className="mt-0.5 text-sm text-white">
               {equippedAvatar
                 ? (items.find((i) => i.id === equippedAvatar)?.name ?? "—")
-                : "Avatar par défaut"}
+                : t("defaultAvatar")}
             </p>
             {equippedBorder && (
               <p className="text-[11px] text-zinc-500">
@@ -301,7 +303,7 @@ export function ShopClient({
                     </p>
                     {count > 0 && (
                       <p className="mt-1 text-[10px] font-black text-amber-400">
-                        ⚡ ×{count} en stock
+                        {t("inStock", { count })}
                       </p>
                     )}
                   </div>
@@ -347,7 +349,7 @@ export function ShopClient({
                 >
                   {equipped && (
                     <span className="absolute top-2 right-2 rounded-full bg-whistle px-1.5 py-0.5 text-[9px] font-black text-zinc-950">
-                      ÉQUIPÉ
+                      {t("equipped")}
                     </span>
                   )}
 
@@ -381,12 +383,12 @@ export function ShopClient({
                     </p>
                     {rankUnlocked && !owned && (
                       <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-green-400">
-                        Débloqué par ton rang — Gratuit !
+                        {t("rankUnlocked")}
                       </p>
                     )}
                     {item.unlock_rank && !rankUnlocked && !owned && (
                       <p className="mt-1 text-[9px] text-zinc-600">
-                        🔓 Gratuit au rang {item.unlock_rank}
+                        {t("freeAtRank", { rank: item.unlock_rank })}
                       </p>
                     )}
                   </div>
@@ -408,9 +410,9 @@ export function ShopClient({
                       {loading
                         ? "…"
                         : rankUnlocked
-                          ? "Réclamer gratuitement"
+                          ? t("claimFree")
                           : canAfford
-                            ? `Acheter · ${price.toLocaleString("fr-FR")} 🪙`
+                            ? t("buy", { price: price.toLocaleString("fr-FR") })
                             : `${price.toLocaleString("fr-FR")} 🪙`}
                     </button>
                   ) : (
@@ -426,7 +428,7 @@ export function ShopClient({
                             : "border border-whistle/40 bg-whistle/10 text-whistle hover:bg-whistle/20"
                       }`}
                     >
-                      {loading ? "…" : equipped ? "Déséquiper" : "Équiper ✓"}
+                      {loading ? "…" : equipped ? t("unequip") : t("equip")}
                     </button>
                   )}
                 </div>
@@ -437,8 +439,7 @@ export function ShopClient({
 
         {/* Apple compliance note */}
         <p className="pb-4 text-center text-[10px] text-zinc-600">
-          Tous les articles s&apos;achètent avec des Sifflets (monnaie
-          virtuelle). Aucun achat avec de l&apos;argent réel, jamais.
+          {t("virtualCurrencyNote")}
         </p>
       </div>
     </div>

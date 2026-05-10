@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import type { MarketEventRow } from "@/types/database";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { useVotingMarket } from "@/hooks/useVotingMarket";
 import {
-  EVENT_CONFIG,
+  getEventConfig,
   collectFocusable,
   BetConfirmedView,
   ModalHeader,
@@ -39,6 +40,8 @@ export function VotingModal({
   squadName,
   audienceCount,
 }: Props) {
+  const tEventConfig = useTranslations("EventConfig");
+  const tVoting = useTranslations("Voting");
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleId = `vote-title-${event.id}`;
   const descId = `vote-desc-${event.id}`;
@@ -114,6 +117,7 @@ export function VotingModal({
     };
   }, [onClose]);
 
+  const EVENT_CONFIG = getEventConfig(tEventConfig);
   const cfg = EVENT_CONFIG[event.type] ?? EVENT_CONFIG.penalty_check;
 
   return (
@@ -174,7 +178,7 @@ export function VotingModal({
           {optimisticVote ? (
             <div className="flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-green-500/50 bg-green-500/10 text-green-400">
               <span className="text-xl font-black uppercase tracking-wide">
-                Pari Validé !
+                {tVoting("betValidated")}
               </span>
               <span className="text-sm font-bold opacity-80">
                 {isStoppage ? `${optimisticVote} min` : optimisticVote}
@@ -201,12 +205,12 @@ export function VotingModal({
           )}
 
           <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
-            Répartition des mises en temps réel
+            {tVoting("oddsDistribution")}
           </p>
 
           {!canBet && !expired && (
             <p className="mt-3 text-center text-xs font-bold text-red-400">
-              Solde insuffisant (min. 10 🪙)
+              {tVoting("insufficientBalance")}
             </p>
           )}
 
@@ -216,7 +220,7 @@ export function VotingModal({
               onClick={onClose}
               className="mt-4 w-full rounded-2xl border border-white/10 py-3 text-sm font-bold text-zinc-500 transition hover:text-white"
             >
-              Fermer
+              {tVoting("close")}
             </button>
           )}
         </div>

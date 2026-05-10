@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Siren, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -165,6 +166,7 @@ export function LiveRoom({
     }
   }, [localBalance]);
 
+  const t = useTranslations("LiveRoom");
   const { squadId, squadName } = useActiveSquad();
   const { setDrawerAvailable, registerOpenDrawer } = useLiveRoom();
 
@@ -430,10 +432,10 @@ export function LiveRoom({
   const cooldownSecsStr = String(cooldownSecs % 60).padStart(2, "0");
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "kop", label: "Kop" },
-    { id: "vestiaire", label: "Vestiaire" },
-    { id: "compo", label: "Compo" },
-    { id: "stats", label: "Stats" },
+    { id: "kop", label: t("tabKop") },
+    { id: "vestiaire", label: t("tabVestiaire") },
+    { id: "compo", label: t("tabCompo") },
+    { id: "stats", label: t("tabStats") },
   ];
 
   return (
@@ -441,9 +443,7 @@ export function LiveRoom({
       <LiveRoomTutorial />
       {/* Zone aria-live polite — annonce les mises à jour temps réel aux lecteurs d'écran */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {activeEvent
-          ? `Marché VAR ouvert : ${activeEvent.type}. Vote en cours.`
-          : ""}
+        {activeEvent ? t("varMarketOpen", { type: activeEvent.type }) : ""}
       </div>
       {!realtimeConnected && (
         <div
@@ -453,7 +453,7 @@ export function LiveRoom({
         >
           <div className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/80 px-3 py-1.5 text-[10px] font-black text-red-400 shadow-lg backdrop-blur-sm">
             <WifiOff className="h-3 w-3" />
-            Reconnexion…
+            {t("reconnecting")}
           </div>
         </div>
       )}
@@ -530,10 +530,10 @@ export function LiveRoom({
               >
                 <Siren className="h-4 w-4" />
                 {sirenLoading
-                  ? "Envoi…"
+                  ? t("sirenSending")
                   : sirenCooldownUntil && sirenCooldownUntil > new Date()
-                    ? "Sirène VAR (cooldown 15 min)"
-                    : "Sirène VAR — Rameuter la ligue 🚨"}
+                    ? t("sirenCooldown")
+                    : t("sirenRally")}
               </button>
             </div>
           )}

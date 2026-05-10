@@ -10,6 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type {
   MatchStatus,
@@ -23,13 +24,6 @@ const ICONS: Record<TimelineEventType, string> = {
   red_card: "🟥",
   substitution: "🔄",
   info: "📣",
-};
-
-const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
-  goal: "⚽ But",
-  yellow_card: "🟨 Carton jaune",
-  red_card: "🟥 Carton rouge",
-  substitution: "🔄 Changement",
 };
 
 const SELECT_CLS =
@@ -155,13 +149,6 @@ type Props = {
   onSwitchToCompo?: () => void;
 };
 
-function timelineEmptyMessage(status: MatchStatus): string {
-  if (status === "finished") {
-    return "Aucun événement disponible pour ce match.";
-  }
-  return "En attente des premiers événements...";
-}
-
 export const MatchTimeline = memo(function MatchTimeline({
   matchId,
   isModerator,
@@ -169,6 +156,16 @@ export const MatchTimeline = memo(function MatchTimeline({
   matchStartTime,
   onSwitchToCompo,
 }: Props) {
+  const tAction = useTranslations("ActionDrawer");
+  const tLive = useTranslations("LiveRoom");
+
+  const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
+    goal: tAction("eventLabelGoal"),
+    yellow_card: tAction("eventLabelYellow"),
+    red_card: tAction("eventLabelRed"),
+    substitution: tAction("eventLabelSubstitution"),
+  };
+
   const [events, setEvents] = useState<MatchTimelineEventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -373,12 +370,12 @@ export const MatchTimeline = memo(function MatchTimeline({
                   {diffH > 0 ? `${diffH}h ${diffMin}min` : `${diffMin} min`}
                 </p>
                 <p className="mt-0.5 text-[11px] font-bold text-zinc-500 uppercase tracking-wide">
-                  avant le coup d&apos;envoi
+                  {tLive("beforeKickoff")}
                 </p>
               </div>
             )}
           <p className="max-w-[220px] text-sm text-zinc-500">
-            Les événements apparaîtront ici dès le coup de sifflet.
+            {tLive("eventsWillAppear")}
           </p>
           {onSwitchToCompo && (
             <button
@@ -386,7 +383,7 @@ export const MatchTimeline = memo(function MatchTimeline({
               onClick={onSwitchToCompo}
               className="mt-1 flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800 px-4 py-2 text-[11px] font-black text-zinc-300 transition hover:bg-zinc-700 active:scale-[0.97]"
             >
-              Voir la Compo →
+              {tLive("switchToCompo")}
             </button>
           )}
         </div>
@@ -394,7 +391,9 @@ export const MatchTimeline = memo(function MatchTimeline({
     }
     return (
       <p className="mt-6 py-10 text-center text-sm text-zinc-500">
-        {timelineEmptyMessage(matchStatus)}
+        {matchStatus === "finished"
+          ? tLive("noEventsAvailable")
+          : tLive("waitingForEvents")}
       </p>
     );
   }
@@ -469,7 +468,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                 <div className="mx-3 rounded-xl border border-white/10 bg-zinc-800/80 p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-[11px] font-black uppercase tracking-wide text-zinc-400">
-                      Modifier l&apos;événement
+                      {tAction("editEvent")}
                     </span>
                     <button
                       onClick={() => setEditingId(null)}
@@ -482,7 +481,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="mb-1 block text-[10px] font-bold text-zinc-500">
-                          Type
+                          {tAction("type")}
                         </label>
                         <select
                           value={editForm.event_type}
@@ -512,7 +511,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                       </div>
                       <div>
                         <label className="mb-1 block text-[10px] font-bold text-zinc-500">
-                          Minute
+                          {tAction("minute")}
                         </label>
                         <input
                           type="number"
@@ -532,7 +531,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                     </div>
                     <div>
                       <label className="mb-1 block text-[10px] font-bold text-zinc-500">
-                        Joueur
+                        {tAction("player")}
                       </label>
                       <input
                         type="text"
@@ -559,7 +558,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                           }
                           className="h-3.5 w-3.5 rounded accent-orange-500"
                         />
-                        Contre son camp (CSC)
+                        {tAction("ownGoal")}
                       </label>
                     )}
                     <button
@@ -570,7 +569,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                       className="flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-green-600 text-xs font-black text-white transition hover:bg-green-500 disabled:opacity-50"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      Enregistrer
+                      {tAction("save")}
                     </button>
                   </div>
                 </div>

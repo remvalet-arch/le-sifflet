@@ -41,6 +41,21 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // On the root landing (unauthenticated), honour the NEXT_LOCALE cookie and
+  // redirect to the matching locale URL so search engines see separate pages.
+  if (path === "/" && !user) {
+    const localeCookie = request.cookies.get("NEXT_LOCALE")?.value;
+    if (
+      localeCookie === "en" ||
+      localeCookie === "es" ||
+      localeCookie === "de" ||
+      localeCookie === "it"
+    ) {
+      return NextResponse.redirect(new URL(`/${localeCookie}`, request.url));
+    }
+  }
+
   const isProtected =
     path.startsWith("/lobby") ||
     path.startsWith("/match") ||

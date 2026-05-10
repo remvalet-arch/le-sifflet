@@ -1,9 +1,26 @@
-import Image from "next/image";
-import type { MatchRow, MatchStatus } from "@/types/database";
-import { formatMatchStatus, isMatchInProgress } from "@/lib/matches";
+"use client";
 
-function getStatusLabel(status: MatchStatus, minute: number | null): string {
-  const base = formatMatchStatus(status);
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+import type { MatchRow, MatchStatus } from "@/types/database";
+import { isMatchInProgress } from "@/lib/matches";
+
+function useStatusLabel(
+  t: ReturnType<typeof useTranslations<"Scoreboard">>,
+  status: MatchStatus,
+  minute: number | null,
+): string {
+  const labels: Record<MatchStatus, string> = {
+    first_half: t("firstHalf"),
+    half_time: t("halfTime"),
+    second_half: t("secondHalf"),
+    paused: t("paused"),
+    finished: t("finished"),
+    upcoming: t("upcoming"),
+    cancelled: t("cancelled"),
+    postponed: t("postponed"),
+  };
+  const base = labels[status] ?? status;
   if (
     minute !== null &&
     (status === "first_half" || status === "second_half")
@@ -74,6 +91,7 @@ function TeamSide({
 }
 
 export function Scoreboard({ match }: { match: MatchRow }) {
+  const tScoreboard = useTranslations("Scoreboard");
   const inProgress = isMatchInProgress(match.status);
   const showScore = inProgress || match.status === "finished";
 
@@ -127,7 +145,7 @@ export function Scoreboard({ match }: { match: MatchRow }) {
                 : "text-zinc-400"
           }`}
         >
-          {getStatusLabel(match.status, match.match_minute)}
+          {useStatusLabel(tScoreboard, match.status, match.match_minute)}
         </span>
       </div>
     </div>

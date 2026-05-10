@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   const yStart = yesterdayStart.toISOString();
   const yEnd = yesterdayEnd.toISOString();
 
-  // Fetch market events resolved yesterday → get bets on those events
+  // VAR bets: market events resolved yesterday
   const { data: resolvedEvents } = await admin
     .from("market_events")
     .select("id")
@@ -59,6 +59,17 @@ export async function GET(request: Request) {
 
   const eventIds = (resolvedEvents ?? []).map((e) => e.id);
 
+  // Pronos: matches that started AND finished yesterday (filter by match date,
+  // not placed_at — pronos are placed days in advance)
+  const { data: finishedMatches } = await admin
+    .from("matches")
+    .select("id")
+    .eq("status", "finished")
+    .gte("start_time", yStart)
+    .lte("start_time", yEnd);
+
+  const matchIds = (finishedMatches ?? []).map((m) => m.id);
+
   const [{ data: bets }, { data: pronos }] = await Promise.all([
     eventIds.length > 0
       ? admin
@@ -66,13 +77,27 @@ export async function GET(request: Request) {
           .select("user_id, status, potential_reward")
           .in("event_id", eventIds)
           .in("status", ["won", "lost"])
-      : { data: [] },
-    admin
-      .from("pronos")
-      .select("user_id, status, points_earned, prono_type")
-      .in("status", ["won", "lost"])
-      .gte("placed_at", yStart)
-      .lte("placed_at", yEnd),
+      : {
+          data: [] as {
+            user_id: string;
+            status: string;
+            potential_reward: number | null;
+          }[],
+        },
+    matchIds.length > 0
+      ? admin
+          .from("pronos")
+          .select("user_id, status, points_earned, prono_type")
+          .in("match_id", matchIds)
+          .in("status", ["won", "lost"])
+      : {
+          data: [] as {
+            user_id: string;
+            status: string;
+            points_earned: number;
+            prono_type: string;
+          }[],
+        },
   ]);
 
   // Aggregate per-user stats
@@ -157,11 +182,21 @@ export async function GET(request: Request) {
     log.info("daily-digest", `Recap insert error: ${insertErr.message}`);
   }
 
+  // Skip push for users who already opened the app and dismissed their recap today
+  const { data: dismissedRows } = await admin
+    .from("user_daily_recaps")
+    .select("user_id")
+    .in("user_id", allActivityUserIds)
+    .eq("recap_date", recapDate)
+    .not("dismissed_at", "is", null);
+
+  const alreadyDismissed = new Set((dismissedRows ?? []).map((d) => d.user_id));
+
   // Send personalized digest pushes + emails to opted-in users
   let sent = 0;
   await Promise.allSettled(
     allActivityUserIds
-      .filter((uid) => optedIn.has(uid))
+      .filter((uid) => optedIn.has(uid) && !alreadyDismissed.has(uid))
       .map(async (uid) => {
         const recap = userRecaps.get(uid)!;
         const earned = recap.points_earned;
