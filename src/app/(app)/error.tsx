@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { log } from "@/lib/logger";
 
 export default function AppError({
   error,
@@ -14,7 +15,7 @@ export default function AppError({
   const t = useTranslations("Common");
 
   useEffect(() => {
-    console.error("[app-error-boundary]", error);
+    log.error("app-error-boundary", error.message, { digest: error.digest });
   }, [error]);
 
   return (

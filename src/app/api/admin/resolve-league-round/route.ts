@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { log } from "@/lib/logger";
 
@@ -23,12 +24,12 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Réservé aux modérateurs", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   const body = (await request.json()) as {
@@ -80,6 +81,13 @@ export async function POST(request: Request) {
       }
     }
 
+    void logAdminAction({
+      actorUserId: user.id,
+      actorRole: profile.role as "user" | "moderator" | "founder",
+      actionType: "resolve_league_round",
+      metadata: { mode: "auto", rounds_processed: rounds.length, errors },
+    });
+
     return successResponse({
       mode: "auto",
       rounds_processed: rounds.length,
@@ -103,6 +111,13 @@ export async function POST(request: Request) {
   });
 
   if (error) return errorResponse(error.message, 500);
+
+  void logAdminAction({
+    actorUserId: user.id,
+    actorRole: profile.role as "user" | "moderator" | "founder",
+    actionType: "resolve_league_round",
+    metadata: { season_id, round_number },
+  });
 
   // Fire-and-forget: send push if season just finished
   const result = data as { season_finished?: boolean } | null;

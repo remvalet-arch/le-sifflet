@@ -3,14 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { log } from "@/lib/logger";
-
-function generateCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from(
-    { length: 6 },
-    () => chars[Math.floor(Math.random() * chars.length)],
-  ).join("");
-}
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 /** GET — toutes les squads dont l'utilisateur est membre (+ membres + username). */
 export async function GET() {
@@ -144,6 +137,17 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
     if (!user) return errorResponse("Non authentifié", 401);
 
+    const { limited, retryAfter } = await checkRateLimit(
+      supabase,
+      user.id,
+      "create-squad",
+    );
+    if (limited)
+      return errorResponse(
+        `Trop de requêtes — réessaie dans ${retryAfter}s`,
+        429,
+      );
+
     let body: { name?: string; is_private?: boolean };
     try {
       body = (await request.json()) as { name?: string; is_private?: boolean };
@@ -157,41 +161,26 @@ export async function POST(request: NextRequest) {
     if (name.trim().length > 30)
       return errorResponse("Nom trop long (30 car. max)", 400);
 
-    const invite_code = is_private ? generateCode() : null;
+    const { data: rows, error: rpcErr } = await supabase.rpc(
+      "create_squad_atomic",
+      {
+        p_name: name.trim(),
+        p_is_private: is_private,
+        p_owner_id: user.id,
+      },
+    );
 
-    const { data: squad, error: squadErr } = await supabase
-      .from("squads")
-      .insert({ name: name.trim(), is_private, invite_code, owner_id: user.id })
-      .select()
-      .single();
-
-    if (squadErr ?? !squad) {
-      if (squadErr)
-        log.error("squads", "Insert squad error", { error: squadErr.message });
+    const squad = rows?.[0];
+    if (rpcErr ?? !squad) {
+      if (rpcErr)
+        log.error("squads", "create_squad_atomic error", {
+          error: rpcErr.message,
+        });
       return errorResponse(
-        squadErr?.message ?? "Erreur lors de la création",
+        rpcErr?.message ?? "Erreur lors de la création",
         500,
       );
     }
-
-    const { error: memberErr } = await supabase
-      .from("squad_members")
-      .insert({ squad_id: squad.id, user_id: user.id });
-
-    if (memberErr) {
-      log.error("squads", "Insert owner member error", {
-        error: memberErr.message,
-      });
-      return errorResponse(memberErr.message, 500);
-    }
-
-    // Message de bienvenue automatique (fire-and-forget)
-    void supabase.from("squad_messages").insert({
-      squad_id: squad.id,
-      user_id: null,
-      content: `🎉 Bienvenue dans **${squad.name}** ! Présentez-vous, chambrez-vous, et que le Boss de la VAR remporte le mois ! 🏆`,
-      is_system_message: true,
-    });
 
     return successResponse(
       {

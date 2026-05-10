@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { MatchStatus } from "@/types/database";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 
 const VALID_STATUSES: MatchStatus[] = [
   "upcoming",
@@ -39,12 +40,12 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès réservé aux modérateurs", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   const body = (await request.json()) as { match_id?: string; status?: string };
@@ -80,6 +81,18 @@ export async function POST(request: NextRequest) {
       details,
     });
   }
+
+  void logAdminAction({
+    actorUserId: user.id,
+    actorRole: profile.role as "user" | "moderator" | "founder",
+    actionType: "admin_match_state_update",
+    targetResourceType: "match",
+    targetResourceId: match_id,
+    metadata: { status: newStatus },
+    ipAddress:
+      request.headers.get("x-forwarded-for")?.split(",")[0] ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  });
 
   return successResponse(data);
 }

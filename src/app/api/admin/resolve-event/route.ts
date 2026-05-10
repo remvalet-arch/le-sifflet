@@ -6,7 +6,8 @@ import { resolveEvent } from "@/lib/resolve-event";
 import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { postSystemMessageToUserSquads } from "@/lib/squad-messages";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
+import { logAdminAction } from "@/lib/audit";
 import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 const EVENT_LABEL: Record<string, string> = {
@@ -45,12 +46,12 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès réservé aux modérateurs", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   const { limited, retryAfter } = await checkRateLimit(
@@ -161,6 +162,18 @@ export async function POST(request: NextRequest) {
       await postSystemMessageToUserSquads(userScores);
     }
   })();
+
+  void logAdminAction({
+    actorUserId: user.id,
+    actorRole: profile.role as "user" | "moderator" | "founder",
+    actionType: "resolve_event",
+    targetResourceType: "market_event",
+    targetResourceId: body.event_id,
+    metadata: { result: body.result },
+    ipAddress:
+      request.headers.get("x-forwarded-for")?.split(",")[0] ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  });
 
   return successResponse({ resolved: true });
 }

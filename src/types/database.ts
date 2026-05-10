@@ -71,6 +71,7 @@ export interface Database {
           equipped_avatar_id: string | null;
           equipped_border_id: string | null;
           equipped_effect_id: string | null;
+          role: "user" | "moderator" | "founder";
         };
         Insert: {
           id: string;
@@ -106,6 +107,7 @@ export interface Database {
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
+          role?: "user" | "moderator" | "founder";
         };
         Update: {
           id?: string;
@@ -141,6 +143,7 @@ export interface Database {
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
+          role?: "user" | "moderator" | "founder";
         };
         Relationships: [];
       };
@@ -218,6 +221,45 @@ export interface Database {
           id?: string;
           user_id?: string;
           route?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      audit_log: {
+        Row: {
+          id: string;
+          actor_user_id: string;
+          actor_role: "user" | "moderator" | "founder";
+          action_type: string;
+          target_resource_type: string | null;
+          target_resource_id: string | null;
+          metadata: Record<string, unknown>;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_user_id: string;
+          actor_role: "user" | "moderator" | "founder";
+          action_type: string;
+          target_resource_type?: string | null;
+          target_resource_id?: string | null;
+          metadata?: Record<string, unknown>;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          actor_user_id?: string;
+          actor_role?: "user" | "moderator" | "founder";
+          action_type?: string;
+          target_resource_type?: string | null;
+          target_resource_id?: string | null;
+          metadata?: Record<string, unknown>;
+          ip_address?: string | null;
+          user_agent?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -1080,42 +1122,6 @@ export interface Database {
         };
         Relationships: [];
       };
-      long_term_bets: {
-        Row: {
-          id: string;
-          match_id: string;
-          user_id: string;
-          bet_type: "scorer" | "exact_score";
-          bet_value: string;
-          amount_staked: number;
-          potential_reward: number;
-          placed_at: string;
-          status: "pending" | "won" | "lost";
-        };
-        Insert: {
-          id?: string;
-          match_id: string;
-          user_id: string;
-          bet_type: "scorer" | "exact_score";
-          bet_value: string;
-          amount_staked: number;
-          potential_reward: number;
-          placed_at?: string;
-          status?: "pending" | "won" | "lost";
-        };
-        Update: {
-          id?: string;
-          match_id?: string;
-          user_id?: string;
-          bet_type?: "scorer" | "exact_score";
-          bet_value?: string;
-          amount_staked?: number;
-          potential_reward?: number;
-          placed_at?: string;
-          status?: "pending" | "won" | "lost";
-        };
-        Relationships: [];
-      };
       player_odds: {
         Row: {
           id: string;
@@ -1552,6 +1558,14 @@ export interface Database {
       };
     };
     Functions: {
+      current_user_role: {
+        Args: Record<PropertyKey, never>;
+        Returns: "user" | "moderator" | "founder";
+      };
+      is_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       close_expired_market_events: {
         Args: Record<PropertyKey, never>;
         Returns: number;
@@ -1594,16 +1608,6 @@ export interface Database {
           implied_multiplier: number;
         }>;
       };
-      place_long_term_bet: {
-        Args: {
-          p_match_id: string;
-          p_bet_type: string;
-          p_bet_value: string;
-          p_amount_staked: number;
-          p_potential_reward: number;
-        };
-        Returns: string;
-      };
       increment_match_score: {
         Args: {
           p_match_id: string;
@@ -1612,22 +1616,17 @@ export interface Database {
         };
         Returns: undefined;
       };
-      resolve_long_term_bets: {
-        Args: { p_match_id: string };
-        Returns: undefined;
-      };
-      place_prono: {
-        Args: {
-          p_match_id: string;
-          p_prono_type: string;
-          p_prono_value: string;
-          p_reward_amount: number;
-        };
-        Returns: string;
-      };
       squad_members_for_my_squads: {
         Args: Record<string, never>;
         Returns: Array<{ squad_id: string; user_id: string }>;
+      };
+      create_squad_atomic: {
+        Args: {
+          p_name: string;
+          p_is_private: boolean;
+          p_owner_id: string;
+        };
+        Returns: Array<Database["public"]["Tables"]["squads"]["Row"]>;
       };
       squad_by_invite_code: {
         Args: { p_invite: string };
@@ -1772,8 +1771,6 @@ export type AlertSignalRow =
   Database["public"]["Tables"]["alert_signals"]["Row"];
 export type MatchTimelineEventRow =
   Database["public"]["Tables"]["match_timeline_events"]["Row"];
-export type LongTermBetRow =
-  Database["public"]["Tables"]["long_term_bets"]["Row"];
 export type PlayerRow = Database["public"]["Tables"]["players"]["Row"];
 export type CompetitionRow =
   Database["public"]["Tables"]["competitions"]["Row"];

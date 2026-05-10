@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 import { PushTestClient } from "./PushTestClient";
 
 export const metadata = { title: "Admin — Test Push" };
@@ -17,11 +17,11 @@ export default async function PushTestPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) redirect("/lobby");
+  if (!profile || !isAdminRole(profile.role)) redirect("/lobby");
 
   const admin = createAdminClient();
   const { data: subs } = await admin

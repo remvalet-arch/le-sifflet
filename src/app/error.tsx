@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { log } from "@/lib/logger";
 
 export default function GlobalError({
   error,
@@ -11,7 +12,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[error-boundary]", error);
+    log.error("error-boundary", error.message, { digest: error.digest });
   }, [error]);
 
   return (

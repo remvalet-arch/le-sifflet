@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,7 @@ const SCENARIOS: Record<
 
 /**
  * POST /api/admin/test-push-self
- * Envoie un push de test à l'utilisateur authentifié (nécessite trust_score >= 150).
+ * Envoie un push de test à l'utilisateur authentifié (rôle moderator ou founder).
  * Body : { scenario: keyof SCENARIOS }
  */
 export async function POST(request: Request) {
@@ -62,12 +62,12 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    return errorResponse("Accès refusé", 403);
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   let body: { scenario?: string };

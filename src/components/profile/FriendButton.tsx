@@ -5,6 +5,7 @@ import { UserPlus, UserCheck, Clock, UserMinus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { log } from "@/lib/logger";
 
 export function FriendButton({
   profileId,
@@ -42,19 +43,29 @@ export function FriendButton({
 
   async function handleAdd() {
     setLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from("friend_requests")
-      .insert({ sender_id: currentUserId, receiver_id: profileId })
-      .select("id")
-      .single();
-
-    if (error) {
+    try {
+      const res = await fetch("/api/friend-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receiver_id: profileId }),
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: { id: string };
+        error?: string;
+      };
+      if (!json.ok) {
+        toast.error(json.error ?? t("friendRequestError"));
+      } else {
+        toast.success(t("friendRequestSent"));
+        setStatus("pending");
+        setRequestId(json.data?.id ?? null);
+      }
+    } catch (err) {
+      log.error("FriendButton", "handleAdd fetch error", {
+        error: String(err),
+      });
       toast.error(t("friendRequestError"));
-    } else {
-      toast.success(t("friendRequestSent"));
-      setStatus("pending");
-      setRequestId(data.id);
     }
     setLoading(false);
   }
@@ -62,17 +73,24 @@ export function FriendButton({
   async function handleRemove() {
     if (!requestId) return;
     setLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
-      .from("friend_requests")
-      .delete()
-      .eq("id", requestId);
-
-    if (error) {
+    try {
+      const res = await fetch("/api/friend-requests", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: requestId }),
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string };
+      if (!json.ok) {
+        toast.error(json.error ?? t("friendRemoveError"));
+      } else {
+        setStatus("none");
+        setRequestId(null);
+      }
+    } catch (err) {
+      log.error("FriendButton", "handleRemove fetch error", {
+        error: String(err),
+      });
       toast.error(t("friendRemoveError"));
-    } else {
-      setStatus("none");
-      setRequestId(null);
     }
     setLoading(false);
   }

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 import { CronTestClient } from "./CronTestClient";
 
 export const metadata = { title: "Admin — Test Crons" };
@@ -16,11 +16,11 @@ export default async function CronTestPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) redirect("/lobby");
+  if (!profile || !isAdminRole(profile.role)) redirect("/lobby");
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 py-6">

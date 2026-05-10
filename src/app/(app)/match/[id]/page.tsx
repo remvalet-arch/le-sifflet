@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { LiveRoom } from "@/components/match/LiveRoom";
 import { getTranslations } from "next-intl/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { log } from "@/lib/logger";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -95,7 +96,9 @@ export default async function MatchPage({ params }: Props) {
       ]);
 
     if (pronosErr) {
-      console.error("Erreur récupération pronos vestiaire:", pronosErr);
+      log.error("match-page", "Erreur récupération pronos vestiaire", {
+        error: String(pronosErr),
+      });
     }
 
     const profilesMap = new Map((profilesData ?? []).map((p) => [p.id, p]));

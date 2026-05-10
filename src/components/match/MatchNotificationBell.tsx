@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Bell, BellOff, LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { MatchSubscriptionRow } from "@/types/database";
+import { log } from "@/lib/logger";
 
 type Props = {
   matchId: string;
@@ -35,7 +36,7 @@ export function MatchNotificationBell({ matchId }: Props) {
       .then(({ data, error }) => {
         if (!alive) return;
         if (error) {
-          console.error("[MatchNotificationBell]", error.message);
+          log.error("MatchNotificationBell", error.message);
           setRow(null);
         } else {
           setRow(data);

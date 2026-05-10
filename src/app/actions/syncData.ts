@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getEventDetails, getTeamRoster } from "@/lib/services/thesportsdb";
 import { mapPosition } from "@/lib/map-tsdb-position";
 import type { MatchStatus } from "@/types/database";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { isAdminRole } from "@/lib/constants/permissions";
 
 // ── Ligues autorisées MVP ─────────────────────────────────────────────────────
 // Ligue 1 : 4334 | Champions League : 4480
@@ -43,12 +43,12 @@ async function assertModerator() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("trust_score")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.trust_score < MODERATOR_THRESHOLD) {
-    throw new Error("Accès réservé aux modérateurs (score ≥ 150)");
+  if (!profile || !isAdminRole(profile.role)) {
+    throw new Error("Accès réservé aux administrateurs");
   }
 }
 
