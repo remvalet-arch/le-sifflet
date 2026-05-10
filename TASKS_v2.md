@@ -800,6 +800,17 @@ Agis en tant que Lead Backend et Game Designer.
   - _Action 1 :_ Mettre en place `next-intl` (qui gère l'App Router via le middleware pour détecter la langue du navigateur et injecter les traductions côté serveur).
   - _Action 2 :_ Extraire toutes les strings d'un seul module précis (ex: la `TopBar` et la `BottomNav`) dans les fichiers `.json` de `next-intl` pour prouver le concept sans casser le reste.
   - _Action 3 :_ Préparer le reste de la traduction pour des itérations futures, composant par composant.
+  - ✅ **Complété 2026-05-10** : Consolidation next-intl complète (lobby, match, voting, shop, profile, settings). Tous les composants utilisent `useTranslations` / `getTranslations`.
+
+- [x] **Tâche 2X-B : Landing pages multi-locale — URLs SEO /en /es /de /it**
+  - _Détails :_ URLs distinctes par langue pour le référencement international, avec hreflang, meta traduits, et sélecteur de langue.
+  - _Action 1 :_ Créer `src/components/landing/LandingPage.tsx` (composant serveur partagé, traduit via `getTranslations({ locale })`).
+  - _Action 2 :_ Créer `src/components/landing/LandingLocaleSwitcher.tsx` (cookie NEXT_LOCALE + redirect URL).
+  - _Action 3 :_ Créer les 4 pages `/en`, `/es`, `/de`, `/it` avec `generateMetadata` + hreflang alternates.
+  - _Action 4 :_ Middleware : redirect cookie → URL locale sur `/` pour les visiteurs non-authentifiés.
+  - _Action 5 :_ Namespace `Landing` (~93 clés) ajouté dans les 5 fichiers `messages/*.json`.
+  - _Action 6 :_ Sitemap mis à jour avec les 4 nouvelles URLs (priority 1).
+  - ✅ **Complété 2026-05-10**
 
 ---
 
