@@ -11,6 +11,7 @@ import {
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/lib/i18n/locale";
 import { LandingLocaleSwitcher } from "./LandingLocaleSwitcher";
+import { LandingTracker } from "./LandingTracker";
 
 export async function LandingPage({
   locale,
@@ -51,6 +52,7 @@ export async function LandingPage({
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-zinc-950 bg-[radial-gradient(ellipse_at_top,_rgba(22,163,74,0.07)_0%,_transparent_55%)] text-white">
+      <LandingTracker locale={locale} />
       {oauthError && (
         <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-red-500/30 bg-red-900/80 px-4 py-2.5 text-sm font-bold text-red-300 shadow-xl backdrop-blur-sm">
           ⚠️ {oauthError}

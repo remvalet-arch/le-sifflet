@@ -20,7 +20,7 @@ Items identifiés pendant le sprint Cleanup & RBAC mais hors scope. À traiter d
 
 ## Hors-scope confirmé (sprints séparés)
 
-- PostHog / analytics
+- ~~PostHog / analytics~~ → résolu Sprint 4 (22 events, consent RGPD, `docs/ANALYTICS.md`)
 - Back-office `/admin` UI
 - Patches des boosters cassés
 - Système de notifications refactorisé

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { log } from "@/lib/logger";
+import { track } from "@/lib/analytics";
 
 export function FriendButton({
   profileId,
@@ -58,6 +59,7 @@ export function FriendButton({
         toast.error(json.error ?? t("friendRequestError"));
       } else {
         toast.success(t("friendRequestSent"));
+        track("friend_request_sent", { is_first_friend_request: false });
         setStatus("pending");
         setRequestId(json.data?.id ?? null);
       }

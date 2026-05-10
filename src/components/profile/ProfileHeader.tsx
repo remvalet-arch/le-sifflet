@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
 import { ProfileEditModal } from "./ProfileEditModal";
+import { track } from "@/lib/analytics";
 
 type TeamInfo = { id: string; name: string; logo_url: string | null } | null;
 
@@ -183,6 +184,11 @@ export function ProfileHeader({
         toast.success(
           tp("streakClaimSuccess", { bonus: json.data!.bonus, streak }),
         );
+        track("daily_streak_claimed", {
+          current_streak: streak,
+          streak_freezes_owned: streakFreezesOwned,
+          points_earned: json.data!.bonus,
+        });
         setStreakClaimed(true);
       }
     } catch {
