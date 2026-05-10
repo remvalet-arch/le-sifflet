@@ -99,10 +99,11 @@ export default async function AppLayout({
 
   return (
     <LiveRoomProvider>
-      {/* Shell layout: outer div is exactly h-[100dvh], TopBar and BottomNav
-          are normal flex-col siblings (no position:fixed), main scrolls internally.
-          This avoids all iOS Safari position:fixed / overflow container traps. */}
-      <div className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-zinc-950 shadow-2xl">
+      {/* Shell layout: position:fixed inset-0 takes the shell out of document flow
+          entirely — body has zero scrollable content so Next.js scroll restoration
+          and any window.scrollTo() calls never shift the BottomNav in PWA mode.
+          max-w-md + mx-auto (left:0 right:0) centers on wide screens. */}
+      <div className="fixed inset-0 mx-auto flex max-w-md flex-col overflow-hidden bg-zinc-950 shadow-2xl">
         <DailyRecapChecker />
         <TopBar
           username={profile.username}
