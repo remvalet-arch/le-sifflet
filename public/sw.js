@@ -62,7 +62,18 @@ self.addEventListener("push", (event) => {
       .matchAll({ type: "window", includeUncontrolled: false })
       .then((clientList) => {
         const appVisible = clientList.some((c) => c.visibilityState === "visible");
-        if (appVisible) return;
+        if (appVisible) {
+          // Notify the app so it can track the suppression in PostHog
+          clientList.forEach((c) =>
+            c.postMessage({
+              type: "NOTIF_SUPPRESSED_BY_SMART_MUTE",
+              notif_type: data.extra_data?.type ?? data.type ?? "var_alert",
+              reason: "app_visible",
+              match_id: data.extra_data?.matchId ?? data.match_id ?? null,
+            })
+          );
+          return;
+        }
         return self.registration.showNotification(title, options);
       })
   );

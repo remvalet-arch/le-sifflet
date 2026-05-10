@@ -1,5 +1,52 @@
 # Analytics — VAR TIME (PostHog Cloud EU)
 
+## v1.1 — 2026-05-10
+
+### Properties étendues
+
+| Event            | Nouvelles properties                                       |
+| ---------------- | ---------------------------------------------------------- |
+| `bet_placed`     | `speed_bracket: SpeedBracket`, `delay_seconds: number`     |
+| `prono_resolved` | `rarity_label: RarityLabel`, `bonus_rarity_points: number` |
+
+### Events nouveaux
+
+| Event                            | Description                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------ |
+| `alert_threshold_reached`        | Déclenché quand le seuil de signaux est atteint et qu'un market VAR s'ouvre    |
+| `notif_suppressed_by_smart_mute` | Déclenché quand un push est supprimé parce que l'app est visible en foreground |
+
+### Nouveaux types (src/lib/analytics.ts)
+
+- `SpeedBracket` = `"flash"` (0-15s) | `"normal"` (16-45s) | `"late"` (46s+)
+- `RarityLabel` = `"evident"` | `"rare"` | `"tres_rare"` | `"mega_rare"` | `"ultra_rare"` | `"default"` | `null`
+- `SmartMuteReason` = `"app_visible"` | `"user_in_match_room"` | `"opt_out_preference"` | `"budget_exhausted_ios"`
+
+### Helpers
+
+- `computeSpeedBracket(delaySeconds)` — calcule le speed bracket depuis les secondes écoulées depuis l'ouverture du market
+- `rarityBonusToLabel(bonus)` — mappe `contre_pied_bonus` (colonne `pronos`) vers un `RarityLabel`
+
+### Insights PostHog à créer manuellement (v1.1)
+
+**Insight 1 — Distribution Speed Bracket**
+
+- Type : Pie chart — Event : `bet_placed` — Breakdown : `speed_bracket`
+- Si > 40% en `late` → revoir l'urgence des notifs push d'ouverture market
+
+**Insight 2 — Distribution Rareté Scores Exacts**
+
+- Type : Bar chart — Event : `prono_resolved` — Breakdown : `rarity_label`
+- Filtres : `prono_type = exact_score` AND `status = won`
+- Équilibrage économique, repérer si `ultra_rare` est trop fréquent ou jamais atteint
+
+**Insight 3 — Funnel Signal → Threshold → Market**
+
+- Type : Funnel — Étapes : `alert_signal_submitted` → `alert_threshold_reached` → `market_opened`
+- Mesurer le ratio de signaux qui se transforment en market ouvert
+
+---
+
 ## Setup
 
 - **Provider**: PostHog Cloud EU (`https://eu.i.posthog.com`)
@@ -27,7 +74,7 @@ Aucune PII identifiante — UUID Supabase uniquement.
 
 ---
 
-## Events instrumentés (22)
+## Events instrumentés (24)
 
 ### Auth & Onboarding (3)
 
@@ -48,20 +95,20 @@ Aucune PII identifiante — UUID Supabase uniquement.
 
 ### Pronos avant-match (2)
 
-| Event            | Properties                                                                             | Fichier              |
-| ---------------- | -------------------------------------------------------------------------------------- | -------------------- |
-| `prono_placed`   | `match_id`, `match_tier`, `prono_type`, `booster_applied`, `is_first_prono_of_session` | `MatchPronoCard.tsx` |
-| `prono_resolved` | `match_id`, `prono_type`, `status`, `points_earned`, `booster_applied`                 | — (Realtime pronos)  |
+| Event            | Properties                                                                                                    | Fichier                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `prono_placed`   | `match_id`, `match_tier`, `prono_type`, `booster_applied`, `is_first_prono_of_session`                        | `MatchPronoCard.tsx`          |
+| `prono_resolved` | `match_id`, `prono_type`, `status`, `points_earned`, `booster_applied`, `rarity_label`, `bonus_rarity_points` | `PronoResolutionListener.tsx` |
 
 ### Paris VAR live (5)
 
-| Event                      | Properties                                                                                                                                                     | Fichier                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| `alert_signal_submitted`   | `match_id`, `match_tier`, `event_type`, `minute`, `user_trust_score`                                                                                           | `LiveRoom.tsx`                        |
-| `market_opened`            | `match_id`, `market_id`, `market_type`, `opening_source`, `minute`, `initiators_count`                                                                         | `LiveRoom.tsx` (Realtime INSERT)      |
-| `bet_placed`               | `match_id`, `market_id`, `market_type`, `chosen_option`, `amount_staked`, `booster_applied`, `is_first_bet_of_session`, `bet_rank_in_session`, `via_quick_bet` | `useVotingMarket.ts`                  |
-| `bet_resolved`             | `match_id`, `market_id`, `status`, `reward_received`, `braquage_bonus`, `booster_applied`                                                                      | `LiveRoom.tsx` (Realtime bets UPDATE) |
-| `vision_booster_activated` | `match_id`, `market_id`, `friend_choices_count`                                                                                                                | `VisionBoosterButton.tsx`             |
+| Event                      | Properties                                                                                                                                                                                       | Fichier                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| `alert_signal_submitted`   | `match_id`, `match_tier`, `event_type`, `minute`, `user_trust_score`                                                                                                                             | `LiveRoom.tsx`                        |
+| `market_opened`            | `match_id`, `market_id`, `market_type`, `opening_source`, `minute`, `initiators_count`                                                                                                           | `LiveRoom.tsx` (Realtime INSERT)      |
+| `bet_placed`               | `match_id`, `market_id`, `market_type`, `chosen_option`, `amount_staked`, `booster_applied`, `is_first_bet_of_session`, `bet_rank_in_session`, `via_quick_bet`, `speed_bracket`, `delay_seconds` | `useVotingMarket.ts`                  |
+| `bet_resolved`             | `match_id`, `market_id`, `status`, `reward_received`, `braquage_bonus`, `booster_applied`                                                                                                        | `LiveRoom.tsx` (Realtime bets UPDATE) |
+| `vision_booster_activated` | `match_id`, `market_id`, `friend_choices_count`                                                                                                                                                  | `VisionBoosterButton.tsx`             |
 
 ### Boutique (2)
 
@@ -86,6 +133,13 @@ Aucune PII identifiante — UUID Supabase uniquement.
 | --------------- | ------------------------- | ------------------ |
 | `push_opted_in` | `permission_status`       | `PushOptIn.tsx`    |
 | `notif_clicked` | `notif_type`, `match_id?` | — (service worker) |
+
+### Nouveaux — v1.1 (2)
+
+| Event                            | Properties                                                                                                                    | Fichier                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `alert_threshold_reached`        | `match_id`, `match_tier`, `event_type`, `signals_count`, `active_audience`, `threshold_required`, `time_to_threshold_seconds` | `LiveRoom.tsx`                  |
+| `notif_suppressed_by_smart_mute` | `notif_type`, `reason`, `match_id?`                                                                                           | `PostHogIdentify.tsx` + `sw.js` |
 
 ### Admin (1)
 
@@ -144,5 +198,4 @@ Classifie un match en `'top' | 'mid' | 'low'` selon les équipes et le contexte 
 - Instrumenter `signup_completed` côté client (post-redirect OAuth)
 - Instrumenter `notif_clicked` dans le service worker
 - Instrumenter `admin_action_performed` post `logAdminAction`
-- Instrumenter `prono_resolved` via listener Realtime sur pronos
 - Envisager Sentry pour les erreurs runtime (Sprint séparé)
