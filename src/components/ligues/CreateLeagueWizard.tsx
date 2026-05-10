@@ -87,8 +87,11 @@ export function CreateLeagueWizard({
           />
         </div>
 
-        {/* Header */}
-        <div className="flex items-center p-4">
+        {/* Header — safe-area-inset-top pour notch/Dynamic Island */}
+        <div
+          className="flex items-center p-4"
+          style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)" }}
+        >
           <button
             onClick={step === 1 ? onClose : () => setStep(step - 1)}
             className="p-2 text-zinc-400 hover:text-white transition"

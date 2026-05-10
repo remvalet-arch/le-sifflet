@@ -456,7 +456,12 @@ export function ProfileEditModal({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/8 px-5 py-4">
+        <div
+          className="border-t border-white/8 px-5 py-4"
+          style={{
+            paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)",
+          }}
+        >
           <button
             type="button"
             onClick={handleSave}

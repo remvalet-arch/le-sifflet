@@ -31,12 +31,13 @@ export async function POST(request: NextRequest) {
     booster_id,
   } = body;
 
-  if (!event_id || !chosen_option) {
+  if (
+    !event_id ||
+    !chosen_option ||
+    typeof chosen_option !== "string" ||
+    chosen_option.trim() === ""
+  ) {
     return errorResponse("Paramètres manquants", 400);
-  }
-
-  if (!["oui", "non"].includes(chosen_option)) {
-    return errorResponse("Vote invalide", 400);
   }
 
   if (
@@ -78,24 +79,27 @@ export async function POST(request: NextRequest) {
     },
   );
 
-  if (oddsErr || !oddsRows?.length) {
+  if (oddsErr) {
     return errorResponse("Impossible de lire les cotes du marché", 500);
   }
 
-  const row = oddsRows.find((r) => r.option === chosen_option);
-  const implied = Number(row?.implied_multiplier ?? 0);
-  if (!Number.isFinite(implied) || implied < 1) {
+  // Fresh market (no bets yet) → oddsRows is empty, all multipliers are valid
+  const row = (oddsRows ?? []).find((r) => r.option === chosen_option);
+  const implied = row ? Number(row.implied_multiplier) : null;
+
+  if (implied !== null && (!Number.isFinite(implied) || implied < 1)) {
     return errorResponse("Cote marché invalide", 500);
   }
 
-  if (multiplier > implied + IMPLIED_ODDS_TOLERANCE) {
+  if (implied !== null && multiplier > implied + IMPLIED_ODDS_TOLERANCE) {
     return errorResponse(
       "Multiplicateur invalide — la cote a bougé, réessaie",
       400,
     );
   }
 
-  const validatedMultiplier = Math.min(multiplier, implied);
+  const validatedMultiplier =
+    implied !== null ? Math.min(multiplier, implied) : multiplier;
 
   const { data: betId, error } = await supabase.rpc("place_bet", {
     p_event_id: event_id,
