@@ -19,6 +19,7 @@
     "ligues": "Leghe",
     "profil": "Profilo",
     "regles": "Regole",
+    "messages": "Messages",
     "ariaCallVar": "Chiama il VAR"
   },
   "TopBar": {
@@ -40,7 +41,11 @@
     "sectionBoutique": "NEGOZIO",
     "ariaMessages": "Messaggi privati",
     "ariaOpenMenu": "Apri il menu",
-    "ariaCloseMenu": "Chiudi il menu"
+    "ariaCloseMenu": "Chiudi il menu",
+    "backStade": "← Stadio",
+    "backMessages": "← Messaggi",
+    "backSettings": "← Impostazioni",
+    "backLigues": "← Leghe"
   },
   "Match": {
     "live": "In Diretta",
@@ -114,7 +119,12 @@
     "close": "Passa",
     "useBoosterShort": "Attiva un booster",
     "betAmount": "Importo del pronostico in punti",
-    "oddMultiplier": "rapporto ×{odd}"
+    "oddMultiplier": "rapporto ×{odd}",
+    "howOddsWork": "Come funzionano le quote?",
+    "rulesLine1": "Nessuna quota fissa — 2 scelte SÌ / NO in base all'azione.",
+    "rulesLine2": "I Sifflets dei perdenti vanno ai vincitori.",
+    "rulesLine3": "90 secondi in cronometro — niente marcia indietro.",
+    "gotIt": "Capito, chiudi"
   },
   "EventConfig": {
     "penaltyCheckQuestion": "C'è rigore lì?!",
@@ -355,6 +365,7 @@
     "freeAtRank": "🔓 Gratis al grado {rank}",
     "claimFree": "Riscatta gratis",
     "buy": "Acquista · {price} 🪙",
+    "owned": "Posseduto",
     "unequip": "Rimuovi",
     "equip": "Equipaggia ✓",
     "virtualCurrencyNote": "Tutto si compra con i Sifflets, la moneta del gioco. Nessuna vincita si converte in denaro reale — non rischi niente."
@@ -399,6 +410,7 @@
   },
   "Rules": {
     "title": "Regole del gioco",
+    "tocTitle": "Sommario",
     "backToLobby": "Torna alla lobby",
     "sectionPronos": "I Pronostici (Risultato e Marcatori)",
     "sectionLiveRoom": "La LiveRoom (Pronostici VAR)",
@@ -604,6 +616,12 @@
     "wizardCreatingText": "Creazione...",
     "wizardCreateSuccess": "Lega creata con successo!",
     "wizardCreateError": "Errore del server",
+    "wizardCelebTitle": "Spogliatoio aperto!",
+    "wizardCelebSubtitle": "La tua lega \"{name}\" è pronta.",
+    "wizardCelebInviteHint": "Condividi questo codice d'invito",
+    "wizardCelebCopyBtn": "Copia invito",
+    "wizardCelebCopied": "Copiato!",
+    "wizardGoToLeague": "Vai alla mia lega",
     "myLeaguesBackLink": "Le mie leghe"
   },
   "Pronos": {
@@ -613,6 +631,7 @@
     "todayAbbrev": "Oggi",
     "tomorrow": "Domani",
     "playerPickerTitle": "Scegli un marcatore",
+    "playerPickerClose": "Chiudi selettore",
     "playerPickerSearch": "Cerca un giocatore...",
     "playerPickerNoResults": "Nessun giocatore trovato",
     "playerSelectPlaceholder": "Seleziona un marcatore...",
@@ -643,7 +662,8 @@
     "editProno": "Modifica",
     "shareProno": "Condividi",
     "enableNotif": "Attiva",
-    "enableNotifDesc": "Attiva le notifiche per non perdere niente."
+    "enableNotifDesc": "Attiva le notifiche per non perdere niente.",
+    "dayProgress": "{done} pronosticato{done, plural, one {} other {i}} · {total} partite"
   },
   "Stats": {
     "allTime": "Tutto il tempo",
@@ -660,7 +680,11 @@
     "varTitle": "⚡ Scommesse VAR",
     "varTotal": "Totale",
     "varWon": "Vinte",
-    "winRateVar": "Win rate VAR"
+    "winRateVar": "Win rate VAR",
+    "trustTitle": "Punteggio di fiducia",
+    "trustDesc": "Segnalazioni corrette: +2 pt · Segnalazioni false: −5 pt",
+    "trustLowAlert": "Il tuo punteggio di fiducia è basso. I tuoi alert VAR hanno meno peso.",
+    "betterThan": "Meglio del {pct}% dei giocatori questa stagione"
   },
   "Refill": {
     "claimButton": "🎁 Riscatta il mio bonus giornaliero (500 🪙)",
@@ -675,10 +699,16 @@
     "allTimeDesc": "Tutto il tempo — Top 50",
     "tabSeason": "Stagione",
     "tabHallOfFame": "Hall of Fame",
+    "tabSquad": "La mia lega",
+    "noSquadMembers": "Unisciti o crea una lega per vedere le classifiche dei tuoi amici.",
     "youLabel": "tu",
     "yourPosition": "La tua posizione",
     "noPlayers": "Nessun giocatore per ora.",
-    "pointsSuffix": "Punti"
+    "pointsSuffix": "Punti",
+    "customizeUsername": "Personalizza il nome",
+    "tabClub": "Il Mio Club",
+    "noClubMembers": "Nessun giocatore con lo stesso club preferito. Aggiungilo nel tuo profilo!",
+    "setFavoriteTeam": "Scegli il mio club"
   },
   "Messages": {
     "title": "Messaggi",
@@ -687,7 +717,8 @@
     "unknownPlayer": "Giocatore sconosciuto",
     "newConversation": "Nuova conversazione",
     "notFriends": "Devi essere amico di questo giocatore per inviargli messaggi.",
-    "friendStatus": "Amico"
+    "friendStatus": "Amico",
+    "newConversationLabel": "Nuova conversazione"
   },
   "Verdict": {
     "suspense": "Il verdetto arriva…",
@@ -852,6 +883,18 @@
     "footerDisclaimer": "VAR Time è un gioco di simulazione. Nessuna vincita si converte in denaro reale.",
     "footerCgu": "Termini",
     "footerMentions": "Note Legali",
-    "footerPrivacy": "Privacy"
+    "footerPrivacy": "Privacy",
+    "socialProofCount": "Unisciti a {count} arbitri già in gioco",
+    "testimonial1Text": "\"Finalmente ho qualcosa da fare durante le partite noiose della mia squadra.\"",
+    "testimonial1Author": "— Thomas B., beta tester",
+    "testimonial2Text": "\"Avevo ragione sul rigore — i miei punti sono esplosi. Avvincente.\"",
+    "testimonial2Author": "— Camille R., beta tester"
+  },
+  "NewSeason": {
+    "title": "Nuova stagione di {month}!",
+    "body": "È iniziata una nuova stagione. I tuoi Punti sono stati azzerati — scala di nuovo la classifica!",
+    "siffletsReset": "I tuoi Sifflets sono stati ridotti al 10% per riequilibrare.",
+    "pointsReset": "I tuoi Punti stagionali sono stati azzerati.",
+    "cta": "Si riparte!"
   }
 }

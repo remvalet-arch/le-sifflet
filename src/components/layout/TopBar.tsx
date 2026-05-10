@@ -13,6 +13,7 @@ import {
   Trophy,
   ShoppingBag,
   MessageCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { switchLocale } from "@/app/actions/locale";
@@ -21,6 +22,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { ProfileRow } from "@/types/database";
 import type { Locale } from "@/lib/i18n/locale";
+import { useLiveRoom } from "@/contexts/LiveRoomContext";
 
 function getSectionLabels(t: ReturnType<typeof useTranslations<"TopBar">>) {
   return [
@@ -43,6 +45,27 @@ function useSectionLabel(
     getSectionLabels(t).find(({ pattern }) => pattern.test(pathname))?.label ??
     null
   );
+}
+
+function useBackRoute(
+  t: ReturnType<typeof useTranslations<"TopBar">>,
+): { href: string; label: string } | null {
+  const pathname = usePathname();
+  if (/^\/match\//.test(pathname))
+    return { href: "/lobby", label: t("backStade") };
+  if (/^\/messages\/.+/.test(pathname))
+    return { href: "/messages", label: t("backMessages") };
+  if (/^\/settings\//.test(pathname))
+    return { href: "/settings", label: t("backSettings") };
+  if (pathname === "/shop") return { href: "/lobby", label: t("backStade") };
+  if (pathname === "/rules") return { href: "/lobby", label: t("backStade") };
+  if (pathname === "/settings")
+    return { href: "/lobby", label: t("backStade") };
+  if (pathname === "/leaderboard")
+    return { href: "/lobby", label: t("backStade") };
+  if (/^\/ligues\/.+/.test(pathname))
+    return { href: "/ligues", label: t("backLigues") };
+  return null;
 }
 
 type Props = {
@@ -72,6 +95,11 @@ export function TopBar({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const sectionLabel = useSectionLabel(t);
+  const backRoute = useBackRoute(t);
+  const { matchTitle } = useLiveRoom();
+  const pathname = usePathname();
+  const isMatchPage = /^\/match\//.test(pathname);
+  const centreLabel = isMatchPage && matchTitle ? matchTitle : sectionLabel;
 
   // Realtime : met à jour rang/XP dès qu'un pari est résolu
   useEffect(() => {
@@ -106,19 +134,32 @@ export function TopBar({
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="flex h-14 items-center justify-between px-4">
-          {/* Logo */}
-          <Link href="/lobby" className="flex items-center">
-            <span className="inline-flex items-center rounded border border-white/25 px-2 py-0.5 text-[11px] font-black tracking-widest text-white">
-              VAR
-              <span className="mx-1.5 text-white/30">⚡</span>
-              TIME
-            </span>
-          </Link>
+          {/* Logo / Back button */}
+          {backRoute ? (
+            <Link
+              href={backRoute.href}
+              className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 text-zinc-400 transition hover:text-white"
+              aria-label={backRoute.label}
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" />
+              <span className="text-[11px] font-black uppercase tracking-wide">
+                {backRoute.label}
+              </span>
+            </Link>
+          ) : (
+            <Link href="/lobby" className="flex items-center">
+              <span className="inline-flex items-center rounded border border-white/25 px-2 py-0.5 text-[11px] font-black tracking-widest text-white">
+                VAR
+                <span className="mx-1.5 text-white/30">⚡</span>
+                TIME
+              </span>
+            </Link>
+          )}
 
-          {/* Section label */}
-          {sectionLabel && (
-            <span className="text-[11px] font-black uppercase tracking-widest text-zinc-400">
-              {sectionLabel}
+          {/* Section label / match title */}
+          {centreLabel && (
+            <span className="max-w-[140px] truncate text-center text-[11px] font-black uppercase tracking-widest text-zinc-400">
+              {centreLabel}
             </span>
           )}
 

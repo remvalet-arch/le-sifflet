@@ -59,5 +59,15 @@ export default async function FrLandingPage({ searchParams }: Props) {
         )
       : null;
 
-  return <LandingPage locale="fr" oauthError={oauthError} />;
+  const { count: playerCount } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
+
+  return (
+    <LandingPage
+      locale="fr"
+      oauthError={oauthError}
+      playerCount={playerCount ?? 0}
+    />
+  );
 }

@@ -136,6 +136,7 @@ export default async function ConversationPage({
         currentUserId={user.id}
         otherId={otherId}
         otherUsername={other.username}
+        otherAvatarUrl={other.avatar_url}
         initialMessages={messages ?? []}
       />
     </main>

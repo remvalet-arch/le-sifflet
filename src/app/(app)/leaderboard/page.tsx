@@ -20,6 +20,7 @@ type Props = { searchParams: Promise<{ mode?: string }> };
 export default async function LeaderboardPage({ searchParams }: Props) {
   const { mode } = await searchParams;
   const isHallOfFame = mode === "alltime";
+  const isSquad = mode === "squad";
   const [t, locale] = await Promise.all([
     getTranslations("Leaderboard"),
     getLocale(),
@@ -31,14 +32,59 @@ export default async function LeaderboardPage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const isClub = mode === "club";
   const scoreCol = isHallOfFame ? "lifetime_points_earned" : "season_points";
 
-  const [{ data: rows }, { data: currentSeason }] = await Promise.all([
-    supabase
+  // For squad mode: resolve member IDs from all squads the user belongs to
+  let squadMemberIds: string[] | null = null;
+  if (isSquad && user) {
+    const { data: memberships } = await supabase
+      .from("squad_members")
+      .select("squad_id")
+      .eq("user_id", user.id);
+    const squadIds = (memberships ?? []).map((m) => m.squad_id);
+    if (squadIds.length > 0) {
+      const { data: allMembers } = await supabase
+        .from("squad_members")
+        .select("user_id")
+        .in("squad_id", squadIds);
+      squadMemberIds = (allMembers ?? []).map((m) => m.user_id);
+    } else {
+      squadMemberIds = [];
+    }
+  }
+
+  // For club mode: get user's favorite_team_id and filter profiles
+  let userFavoriteTeamId: string | null = null;
+  if (isClub && user) {
+    const { data: myProfile } = await supabase
       .from("profiles")
-      .select(`id, username, ${scoreCol}, trust_score`)
-      .order(scoreCol, { ascending: false })
-      .limit(50),
+      .select("favorite_team_id")
+      .eq("id", user.id)
+      .single();
+    userFavoriteTeamId = myProfile?.favorite_team_id ?? null;
+  }
+
+  const profilesQuery = supabase
+    .from("profiles")
+    .select(`id, username, ${scoreCol}, trust_score`)
+    .order(scoreCol, { ascending: false })
+    .limit(50);
+
+  if (squadMemberIds !== null && squadMemberIds.length > 0) {
+    profilesQuery.in("id", squadMemberIds);
+  }
+
+  if (isClub && userFavoriteTeamId) {
+    profilesQuery.eq("favorite_team_id", userFavoriteTeamId);
+  }
+
+  const [{ data: rows }, { data: currentSeason }] = await Promise.all([
+    squadMemberIds !== null && squadMemberIds.length === 0
+      ? Promise.resolve({ data: [] })
+      : isClub && !userFavoriteTeamId
+        ? Promise.resolve({ data: [] })
+        : profilesQuery,
     supabase
       .from("seasons")
       .select("label, ends_at")
@@ -57,6 +103,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
   const rest = players.slice(3);
   const myRank = user ? players.findIndex((p) => p.id === user.id) : -1;
   const me = myRank >= 0 ? players[myRank] : null;
+  const isAutoUsername = (username: string) => /_[0-9a-f]{8}$/i.test(username);
 
   // Podium order: 2nd, 1st, 3rd
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
@@ -71,17 +118,17 @@ export default async function LeaderboardPage({ searchParams }: Props) {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3">
         <p className="text-sm text-zinc-500">
           {isHallOfFame ? t("allTimeDesc") : t("currentSeasonDesc")}
         </p>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 rounded-xl bg-zinc-800 p-1">
+        <div className="flex flex-wrap gap-1 rounded-xl bg-zinc-800 p-1">
           <Link
             href="/leaderboard"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
-              !isHallOfFame
+              !isHallOfFame && !isSquad && !isClub
                 ? "bg-amber-500 text-black"
                 : "text-zinc-400 hover:text-white"
             }`}
@@ -97,6 +144,26 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             }`}
           >
             {t("tabHallOfFame")}
+          </Link>
+          <Link
+            href="/leaderboard?mode=squad"
+            className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
+              isSquad
+                ? "bg-amber-500 text-black"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            {t("tabSquad")}
+          </Link>
+          <Link
+            href="/leaderboard?mode=club"
+            className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
+              isClub
+                ? "bg-amber-500 text-black"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            {t("tabClub")}
           </Link>
         </div>
       </div>
@@ -172,6 +239,14 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                       {t("youLabel")}
                     </span>
                   )}
+                  {isMe && isAutoUsername(player.username) && (
+                    <Link
+                      href="/profile"
+                      className="ml-2 inline-flex items-center gap-0.5 rounded-full border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[9px] font-black text-whistle hover:bg-whistle/20"
+                    >
+                      ✏️ {t("customizeUsername")}
+                    </Link>
+                  )}
                 </p>
                 <span className="shrink-0 text-sm font-black text-zinc-400">
                   {player.score.toLocaleString(bcp47)} Points
@@ -192,8 +267,16 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             <span className="text-lg font-black text-green-400">
               #{myRank + 1}
             </span>
-            <p className="flex-1 truncate font-bold text-white">
+            <p className="flex-1 min-w-0 truncate font-bold text-white">
               {me.username}
+              {isAutoUsername(me.username) && (
+                <Link
+                  href="/profile"
+                  className="ml-2 inline-flex items-center gap-0.5 rounded-full border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[9px] font-black text-whistle hover:bg-whistle/20"
+                >
+                  ✏️ {t("customizeUsername")}
+                </Link>
+              )}
             </p>
             <span className="font-black text-green-400">
               {me.score.toLocaleString(bcp47)} Points
@@ -202,7 +285,33 @@ export default async function LeaderboardPage({ searchParams }: Props) {
         </div>
       )}
 
-      {players.length === 0 && (
+      {players.length === 0 && isSquad && (
+        <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-zinc-700 px-5 py-12 text-center">
+          <span className="text-3xl">🏟️</span>
+          <p className="text-sm font-black text-white">{t("tabSquad")}</p>
+          <p className="text-xs text-zinc-500">{t("noSquadMembers")}</p>
+          <Link
+            href="/ligues"
+            className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
+          >
+            Rejoindre une ligue →
+          </Link>
+        </div>
+      )}
+      {players.length === 0 && isClub && !isSquad && (
+        <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-zinc-700 px-5 py-12 text-center">
+          <span className="text-3xl">⚽</span>
+          <p className="text-sm font-black text-white">{t("tabClub")}</p>
+          <p className="text-xs text-zinc-500">{t("noClubMembers")}</p>
+          <Link
+            href="/profile"
+            className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
+          >
+            {t("setFavoriteTeam")} →
+          </Link>
+        </div>
+      )}
+      {players.length === 0 && !isSquad && !isClub && (
         <p className="mt-8 text-center text-sm text-zinc-600">
           {t("noPlayers")}
         </p>

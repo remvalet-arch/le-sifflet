@@ -203,6 +203,7 @@ export function ProfileClient({
         <StatsSection
           favoriteTeamId={headerFavoriteTeam?.id ?? null}
           favoriteTeamName={headerFavoriteTeam?.name ?? null}
+          trustScore={trustScore}
         />
       )}
     </div>

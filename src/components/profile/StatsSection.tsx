@@ -21,6 +21,7 @@ type SeasonItem = { id: string; label: string; is_current: boolean };
 type Props = {
   favoriteTeamId?: string | null;
   favoriteTeamName?: string | null;
+  trustScore?: number | null;
 };
 
 function WinRateBar({ rate }: { rate: number }) {
@@ -36,7 +37,11 @@ function WinRateBar({ rate }: { rate: number }) {
   );
 }
 
-export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
+export function StatsSection({
+  favoriteTeamId,
+  favoriteTeamName,
+  trustScore,
+}: Props) {
   const t = useTranslations("Stats");
   const bcp47 = useBcp47();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -44,8 +49,9 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
   const [seasons, setSeasons] = useState<SeasonItem[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [clubFilter, setClubFilter] = useState(false);
+  const [percentile, setPercentile] = useState<number | null>(null);
 
-  // Fetch seasons list once
+  // Fetch seasons list + season percentile once
   useEffect(() => {
     const supabase = createClient();
     void supabase
@@ -56,6 +62,32 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
       .then(({ data }) => {
         if (data) setTimeout(() => setSeasons(data), 0);
       });
+
+    void (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: me } = await supabase
+        .from("profiles")
+        .select("season_points")
+        .eq("id", user.id)
+        .single();
+      if (!me || me.season_points == null) return;
+      const [{ count: below }, { count: total }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .lt("season_points", me.season_points),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+      ]);
+      if (total && total > 1) {
+        setTimeout(
+          () => setPercentile(Math.round(((below ?? 0) / total) * 100)),
+          0,
+        );
+      }
+    })();
   }, []);
 
   // Fetch stats on filter change
@@ -105,8 +137,53 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
       ? Math.round((stats.var_bets_won / stats.var_bets_total) * 100)
       : 0;
 
+  const trustPct =
+    trustScore != null
+      ? Math.min(100, Math.round((trustScore / 300) * 100))
+      : null;
+  const trustColor =
+    trustScore == null
+      ? ""
+      : trustScore >= 200
+        ? "bg-yellow-400"
+        : trustScore >= 100
+          ? "bg-green-500"
+          : trustScore >= 50
+            ? "bg-blue-400"
+            : "bg-orange-500";
+  const trustLow = trustScore != null && trustScore < 50;
+
   return (
     <div className="flex flex-col gap-4">
+      {/* Trust score */}
+      {trustScore != null && (
+        <div
+          className={`rounded-2xl border p-4 ${trustLow ? "border-orange-500/30 bg-orange-500/8" : "border-white/8 bg-zinc-900"}`}
+        >
+          <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+            🎖 {t("trustTitle")}
+          </p>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-2xl font-black tabular-nums text-white">
+              {trustScore}
+            </span>
+            <span className="text-[11px] font-bold text-zinc-500">/ 300</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${trustColor}`}
+              style={{ width: `${trustPct ?? 0}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[10px] text-zinc-500">{t("trustDesc")}</p>
+          {trustLow && (
+            <p className="mt-2 rounded-xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-[11px] font-bold text-orange-400">
+              ⚠️ {t("trustLowAlert")}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="space-y-2">
         {/* Season chips */}
@@ -179,6 +256,11 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
             {stats.best_win > 0 && (
               <p className="mt-1 text-xs text-zinc-500">
                 {t("bestWin", { pts: stats.best_win.toLocaleString(bcp47) })}
+              </p>
+            )}
+            {percentile !== null && selectedSeason === null && !clubFilter && (
+              <p className="mt-2 rounded-xl bg-green-500/10 px-3 py-1.5 text-[11px] font-black text-green-400">
+                🏆 {t("betterThan", { pct: percentile })}
               </p>
             )}
           </div>
