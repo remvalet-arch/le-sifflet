@@ -21,7 +21,8 @@
     "pronos": "Tipps",
     "ligues": "Ligen",
     "profil": "Profil",
-    "regles": "Regeln"
+    "regles": "Regeln",
+    "ariaCallVar": "VAR rufen"
   },
   "TopBar": {
     "connected": "Verbunden",
@@ -39,7 +40,10 @@
     "sectionMatch": "LIVE",
     "sectionMessages": "MESSAGES",
     "sectionClassement": "RANGLISTE",
-    "sectionBoutique": "SHOP"
+    "sectionBoutique": "SHOP",
+    "ariaMessages": "Direktnachrichten",
+    "ariaOpenMenu": "Menü öffnen",
+    "ariaCloseMenu": "Menü schließen"
   },
   "Match": {
     "live": "Live",
@@ -54,7 +58,14 @@
     "joinKop": "In die Kurve →",
     "seeSummary": "Zusammenfassung →",
     "seeFiche": "Spieldetails →",
-    "lineups": "Aufstellung ✓"
+    "lineups": "Aufstellung ✓",
+    "lineupGlobalSquad": "Gesamtkader — keine Spielaufstellung verfügbar",
+    "lineupNoPlayers": "Keine Spieler eingetragen",
+    "lineupSubstitutes": "Ersatzspieler",
+    "posGK": "Torwart",
+    "posDEF": "Verteidiger",
+    "posMID": "Mittelfeld",
+    "posFWD": "Stürmer"
   },
   "Lobby": {
     "title": "Die Spiele",
@@ -257,7 +268,16 @@
     "dailyDigestLabel": "Morgen-Übersicht (09:00)",
     "dailyDigestDesc": "Deine Gewinne von gestern und dein aktueller Platz.",
     "squadChatLabel": "Aktiver Liga-Chat",
-    "squadChatDesc": "Wenn dein Liga-Chat brodelt. Max. 1 Push / Liga / 30 Min."
+    "squadChatDesc": "Wenn dein Liga-Chat brodelt. Max. 1 Push / Liga / 30 Min.",
+    "pushEnabled": "Push-Benachrichtigungen aktiviert!",
+    "errorPermission": "Benachrichtigungen blockiert — erlaube sie in Einstellungen > Safari > Benachrichtigungen.",
+    "errorPushNotSupported": "Web Push nicht unterstützt. Auf iPhone muss die App auf dem Startbildschirm installiert sein.",
+    "errorNoVapidKey": "Server-Konfiguration fehlt (VAPID). Kontaktiere den Admin.",
+    "errorSwNotReady": "Service Worker nicht bereit. Schließe die App, öffne sie erneut und versuch's nochmal.",
+    "errorSubscribeFailed": "Auf iPhone, öffne die App vom Startbildschirm aus (nicht direkt über Safari).",
+    "saveFailed": "Speichern fehlgeschlagen.",
+    "toggleOn": "Benachrichtigung aktiviert!",
+    "toggleOff": "Benachrichtigung deaktiviert."
   },
   "Rules": {
     "title": "Spielregeln",
@@ -361,9 +381,15 @@
     "send": "Senden",
     "next": "Weiter",
     "continue": "Weiter",
-    "points": "Punkte"
+    "points": "Punkte",
+    "errorTitle": "Rote Karte",
+    "errorHeading": "Etwas ist schiefgelaufen",
+    "errorDesc": "Der Schiri hat den Faden verloren. Versuch's nochmal oder geh zurück zur Lobby.",
+    "retry": "Nochmal versuchen"
   },
   "Ligues": {
+    "pageTitle": "Ligen",
+    "pageSubtitle": "Kabine — Raubzug, gemeinsamer Pott, Rangliste",
     "privateLabel": "Private Liga",
     "publicLabel": "Öffentlich",
     "cumulatedPoints": "Gesammelte Punkte:",
@@ -466,6 +492,17 @@
     "today": "Heute",
     "todayAbbrev": "Heute",
     "tomorrow": "Morgen",
+    "playerPickerTitle": "Torschützen wählen",
+    "playerPickerSearch": "Spieler suchen...",
+    "playerPickerNoResults": "Kein Spieler gefunden",
+    "playerSelectPlaceholder": "Torschützen auswählen...",
+    "playerSelectSearch": "Suchen...",
+    "playerSelectNoResults": "Kein Spieler gefunden",
+    "posGK": "Torhüter",
+    "posDEF": "Verteidiger",
+    "posMID": "Mittelfeld",
+    "posFWD": "Stürmer",
+    "posOther": "Andere",
     "progressLabel": "{done}/{total} Spiele getippt",
     "progressComplete": "Vollständig ✓",
     "noMatchesWeekTitle": "Keine Spiele diese Woche",
@@ -528,7 +565,56 @@
     "noMessages": "Keine Nachrichten",
     "noMessagesDesc": "Füge zuerst Freunde hinzu und schick ihnen eine Direktnachricht von ihrem Profil.",
     "unknownPlayer": "Unbekannter Spieler",
-    "newConversation": "Neue Unterhaltung"
+    "newConversation": "Neue Unterhaltung",
+    "notFriends": "Du musst mit diesem Spieler befreundet sein, um ihm Nachrichten zu senden.",
+    "friendStatus": "Freund"
+  },
+  "Verdict": {
+    "suspense": "Das Urteil kommt…",
+    "won": "Du hattest recht!",
+    "lost": "Pech gehabt…",
+    "nextTime": "Nächstes Mal!",
+    "topPredictors": "Top-Tipper",
+    "shareVictory": "Sieg teilen",
+    "tapToClose": "Tippen zum Schließen"
+  },
+  "DailyRecap": {
+    "title": "Rückblick gestern",
+    "heading": "Zeit für die Auswertung!",
+    "pointsLabel": "Gestern verdiente Punkte",
+    "statPronos": "Richtige Tipps",
+    "statExact": "Exakte Ergebnisse",
+    "statVar": "VAR-Tipps gewonnen",
+    "statWon": "Tipps gesamt",
+    "viewRanking": "Meine Rangliste →",
+    "close": "Schließen"
+  },
+  "Settings": {
+    "title": "Einstellungen",
+    "subtitle": "Konfiguration deines Kontos.",
+    "quickBetTitle": "Schnelltipp VAR",
+    "quickBetDesc": "Wenn du eine VAR-Benachrichtigung erhältst und direkt auf JA oder NEIN tippst, wird dieser Betrag automatisch gesetzt — ohne die App zu öffnen.",
+    "quickBetAriaLabel": "Schnelltipp-Betrag",
+    "saving": "Wird gespeichert…",
+    "save": "Speichern",
+    "streakFreezeTitle": "Streak Freeze",
+    "streakFreezeDesc": "Wenn du mal vergisst, dich einzuloggen, aktiviert sich ein Streak Freeze automatisch, um deine Serie zu schützen. Max. 3 im Vorrat.",
+    "streakFreezeBalance": "Guthaben: {balance} 🪙",
+    "streakFreezeStock": "Vorrat: 🛡️ ×{count}",
+    "streakFreezeBuy": "Streak Freeze kaufen — 500 🪙",
+    "streakFreezeBuying": "Kauf läuft…",
+    "streakFreezeFullStock": "Vorrat voll (3/3)",
+    "streakFreezeInsufficientBalance": "Zu wenig Sifflets (500 🪙 benötigt)",
+    "streakFreezeBought": "🛡️ Streak Freeze gekauft! Du hast jetzt {count}.",
+    "saveBetSuccess": "Schnelltipp auf {amount} 🪙 gesetzt!",
+    "saveBetError": "Einstellungen konnten nicht gespeichert werden.",
+    "connectionLost": "Verbindung unterbrochen"
+  },
+  "PWA": {
+    "installTitle": "VAR Time installieren 📺",
+    "installDesc": "Für ein besseres Erlebnis ohne Verzögerung im Stadion, füge die App zu deinem Startbildschirm hinzu!",
+    "installButton": "App installieren",
+    "installIosInstructions": "Auf iOS: Tippe auf Teilen, dann Zum Home-Bildschirm"
   },
   "Landing": {
     "metaTitle": "VAR Time — Der VAR, aber als Spiel",

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { MessagesConversation } from "@/components/messages/MessagesConversation";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,6 +15,7 @@ export default async function ConversationPage({
   params: Promise<{ otherId: string }>;
 }) {
   const { otherId } = await params;
+  const t = await getTranslations("Messages");
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,9 +48,7 @@ export default async function ConversationPage({
   if (!friendship) {
     return (
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-5">
-        <p className="text-zinc-400 text-sm">
-          Tu dois être ami avec ce joueur pour lui envoyer des messages.
-        </p>
+        <p className="text-zinc-400 text-sm">{t("notFriends")}</p>
       </main>
     );
   }
@@ -123,7 +123,7 @@ export default async function ConversationPage({
         </div>
         <Link href={`/profile/${otherId}`} className="min-w-0">
           <p className="font-black text-white">{other.username}</p>
-          <p className="text-[10px] text-zinc-600">Ami</p>
+          <p className="text-[10px] text-zinc-600">{t("friendStatus")}</p>
         </Link>
       </div>
 

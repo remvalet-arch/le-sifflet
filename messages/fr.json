@@ -10,7 +10,8 @@
     "pronos": "Pronos",
     "ligues": "Ligues",
     "profil": "Profil",
-    "regles": "Règles"
+    "regles": "Règles",
+    "ariaCallVar": "Appeler la VAR"
   },
   "TopBar": {
     "connected": "Connecté",
@@ -28,7 +29,10 @@
     "sectionMatch": "EN DIRECT",
     "sectionMessages": "MESSAGES",
     "sectionClassement": "CLASSEMENT",
-    "sectionBoutique": "BOUTIQUE"
+    "sectionBoutique": "BOUTIQUE",
+    "ariaMessages": "Messages privés",
+    "ariaOpenMenu": "Ouvrir le menu",
+    "ariaCloseMenu": "Fermer le menu"
   },
   "Match": {
     "live": "En Direct",
@@ -43,7 +47,14 @@
     "joinKop": "Rejoindre le kop →",
     "seeSummary": "Voir le résumé →",
     "seeFiche": "Voir la fiche →",
-    "lineups": "Compos ✓"
+    "lineups": "Compos ✓",
+    "lineupGlobalSquad": "Effectif global — composition de match non disponible",
+    "lineupNoPlayers": "Aucun joueur renseigné",
+    "lineupSubstitutes": "Remplaçants",
+    "posGK": "Gardien",
+    "posDEF": "Défenseur",
+    "posMID": "Milieu",
+    "posFWD": "Attaquant"
   },
   "Lobby": {
     "title": "Les Matchs",
@@ -246,7 +257,16 @@
     "dailyDigestLabel": "Bilan du matin (09h00)",
     "dailyDigestDesc": "Tes gains de la veille et ta place au classement.",
     "squadChatLabel": "Chat de ligue actif",
-    "squadChatDesc": "Quand ça parle dans ton chat de ligue. Max 1 push / ligue / 30 min."
+    "squadChatDesc": "Quand ça parle dans ton chat de ligue. Max 1 push / ligue / 30 min.",
+    "pushEnabled": "Notifications push activées !",
+    "errorPermission": "Notifications bloquées — autorise-les dans Réglages > Safari > Notifications.",
+    "errorPushNotSupported": "Web Push non supporté. Sur iPhone, l'app doit être installée sur l'écran d'accueil.",
+    "errorNoVapidKey": "Configuration serveur manquante (VAPID). Contacte l'admin.",
+    "errorSwNotReady": "Service Worker non prêt. Ferme l'app, réouvre-la et réessaie.",
+    "errorSubscribeFailed": "Sur iPhone, ouvre l'app depuis l'écran d'accueil (pas via Safari directement).",
+    "saveFailed": "Impossible de sauvegarder.",
+    "toggleOn": "Notification activée !",
+    "toggleOff": "Notification désactivée."
   },
   "Rules": {
     "title": "Règles du jeu",
@@ -350,9 +370,15 @@
     "send": "Envoyer",
     "next": "Suivant",
     "continue": "Continuer",
-    "points": "Points"
+    "points": "Points",
+    "errorTitle": "Carton Rouge",
+    "errorHeading": "Quelque chose a merdé",
+    "errorDesc": "L'arbitre a perdu le fil. Réessaie ou retourne au lobby.",
+    "retry": "Réessayer"
   },
   "Ligues": {
+    "pageTitle": "Ligues",
+    "pageSubtitle": "Vestiaire — braquage, pot commun, classement",
     "privateLabel": "Ligue privée",
     "publicLabel": "Publique",
     "cumulatedPoints": "Points cumulés :",
@@ -455,6 +481,17 @@
     "today": "Aujourd'hui",
     "todayAbbrev": "Auj.",
     "tomorrow": "Demain",
+    "playerPickerTitle": "Choisir un buteur",
+    "playerPickerSearch": "Rechercher un joueur...",
+    "playerPickerNoResults": "Aucun joueur trouvé",
+    "playerSelectPlaceholder": "Sélectionner un buteur...",
+    "playerSelectSearch": "Rechercher...",
+    "playerSelectNoResults": "Aucun joueur trouvé",
+    "posGK": "Gardiens",
+    "posDEF": "Défenseurs",
+    "posMID": "Milieux",
+    "posFWD": "Attaquants",
+    "posOther": "Autres",
     "progressLabel": "{done}/{total} matchs pronostiqués",
     "progressComplete": "Complet ✓",
     "noMatchesWeekTitle": "Aucun match cette semaine",
@@ -517,7 +554,56 @@
     "noMessages": "Aucun message",
     "noMessagesDesc": "Commence par ajouter des amis et envoie-leur un MP depuis leur profil.",
     "unknownPlayer": "Joueur inconnu",
-    "newConversation": "Nouvelle conversation"
+    "newConversation": "Nouvelle conversation",
+    "notFriends": "Tu dois être ami avec ce joueur pour lui envoyer des messages.",
+    "friendStatus": "Ami"
+  },
+  "Verdict": {
+    "suspense": "Le verdict tombe…",
+    "won": "Tu avais raison !",
+    "lost": "Pas de chance…",
+    "nextTime": "Prochaine fois !",
+    "topPredictors": "Top Prédicteurs",
+    "shareVictory": "Partager ma victoire",
+    "tapToClose": "Appuie pour fermer"
+  },
+  "DailyRecap": {
+    "title": "Bilan d'hier",
+    "heading": "C'est l'heure du bilan !",
+    "pointsLabel": "Points gagnés hier",
+    "statPronos": "Pronos corrects",
+    "statExact": "Scores exacts",
+    "statVar": "Paris VAR gagnés",
+    "statWon": "Total pronos",
+    "viewRanking": "Voir mon classement →",
+    "close": "Fermer"
+  },
+  "Settings": {
+    "title": "Paramètres",
+    "subtitle": "Configuration de ton compte.",
+    "quickBetTitle": "Pari rapide VAR",
+    "quickBetDesc": "Quand tu reçois une notif VAR et que tu tapes OUI ou NON directement depuis la notification, ce montant est misé automatiquement — sans ouvrir l'app.",
+    "quickBetAriaLabel": "Montant de mise rapide",
+    "saving": "Enregistrement…",
+    "save": "Sauvegarder",
+    "streakFreezeTitle": "Streak Freeze",
+    "streakFreezeDesc": "Si tu oublies de te connecter un jour, un Streak Freeze s'active automatiquement pour préserver ta série. Max 3 en stock.",
+    "streakFreezeBalance": "Solde : {balance} 🪙",
+    "streakFreezeStock": "En stock : 🛡️ ×{count}",
+    "streakFreezeBuy": "Acheter un Streak Freeze — 500 🪙",
+    "streakFreezeBuying": "Achat en cours…",
+    "streakFreezeFullStock": "Stock plein (3/3)",
+    "streakFreezeInsufficientBalance": "Solde insuffisant (500 🪙 requis)",
+    "streakFreezeBought": "🛡️ Streak Freeze acheté ! Tu en as maintenant {count}.",
+    "saveBetSuccess": "Mise rapide fixée à {amount} 🪙 !",
+    "saveBetError": "Impossible de sauvegarder les paramètres.",
+    "connectionLost": "Connexion perdue"
+  },
+  "PWA": {
+    "installTitle": "Installe VAR Time 📺",
+    "installDesc": "Pour une meilleure expérience sans latence au stade, ajoute l'app sur ton écran d'accueil !",
+    "installButton": "Installer l'application",
+    "installIosInstructions": "Sur iOS : appuie sur Partager puis Sur l'écran d'accueil"
   },
   "Landing": {
     "metaTitle": "VAR Time — La VAR, mais en jeu",

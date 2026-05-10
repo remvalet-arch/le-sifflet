@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { LineupRow } from "@/types/database";
 import { startersForPitchRow } from "@/lib/pitch-lineups";
@@ -89,6 +90,7 @@ function RosterList({
   awayPlayers,
   bench,
   isGlobal,
+  tMatch,
 }: {
   teamHome: string;
   teamAway: string;
@@ -96,12 +98,13 @@ function RosterList({
   awayPlayers: { id: string; player_name: string; position: string }[];
   bench: { id: string; player_name: string }[];
   isGlobal: boolean;
+  tMatch: ReturnType<typeof useTranslations<"Match">>;
 }) {
   return (
     <div className="mt-4 space-y-3">
       {isGlobal && (
         <p className="text-center text-[11px] text-zinc-600">
-          Effectif global — composition de match non disponible
+          {tMatch("lineupGlobalSquad")}
         </p>
       )}
       {[
@@ -116,7 +119,7 @@ function RosterList({
             {label}
           </p>
           {players.length === 0 ? (
-            <p className="text-xs text-zinc-600">Aucun joueur renseigné</p>
+            <p className="text-xs text-zinc-600">{tMatch("lineupNoPlayers")}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {players
@@ -140,7 +143,7 @@ function RosterList({
       {bench.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
           <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">
-            Remplaçants
+            {tMatch("lineupSubstitutes")}
           </p>
           <div className="flex flex-wrap gap-2">
             {bench.map((p) => (
@@ -175,6 +178,7 @@ export const SoccerPitch = memo(function SoccerPitch({
   homeTeamColor,
   awayTeamColor,
 }: Props) {
+  const tMatch = useTranslations("Match");
   const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -246,6 +250,7 @@ export const SoccerPitch = memo(function SoccerPitch({
           awayPlayers={awayStarters}
           bench={bench}
           isGlobal={false}
+          tMatch={tMatch}
         />
       );
     }
@@ -327,7 +332,7 @@ export const SoccerPitch = memo(function SoccerPitch({
         {bench.length > 0 && (
           <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
             <p className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500">
-              Remplaçants
+              {tMatch("lineupSubstitutes")}
             </p>
             <div className="flex flex-wrap gap-2">
               {bench.map((p) => (

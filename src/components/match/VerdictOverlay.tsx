@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import type { MarketEventType } from "@/types/database";
+
+const BCP47: Record<string, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  es: "es-ES",
+  de: "de-DE",
+  it: "it-IT",
+};
 
 const EVENT_LABEL: Record<MarketEventType, string> = {
   penalty_check: "PENALTY",
@@ -45,6 +54,9 @@ export function VerdictOverlay({
   matchLabel,
   onClose,
 }: Props) {
+  const t = useTranslations("Verdict");
+  const locale = useLocale();
+  const bcp47 = BCP47[locale] ?? "fr-FR";
   const [phase, setPhase] = useState<"suspense" | "result">("suspense");
   const [predictors, setPredictors] = useState<Predictor[]>([]);
 
@@ -88,7 +100,7 @@ export function VerdictOverlay({
         <div className="flex flex-col items-center gap-4 text-center">
           <span className="animate-float text-7xl">⏳</span>
           <p className="text-2xl font-black uppercase tracking-widest text-zinc-300">
-            Le verdict tombe…
+            {t("suspense")}
           </p>
         </div>
       )}
@@ -141,10 +153,10 @@ export function VerdictOverlay({
               style={{ animationDelay: "100ms" }}
             >
               <p className="text-xl font-black text-white">
-                Tu avais raison ! {isFireworks && <span>🔥</span>}
+                {t("won")} {isFireworks && <span>🔥</span>}
               </p>
               <p className="text-4xl font-black text-green-400">
-                +{reward.toLocaleString("fr-FR")} 🪙
+                +{reward.toLocaleString(bcp47)} 🪙
               </p>
             </div>
           ) : (
@@ -152,8 +164,8 @@ export function VerdictOverlay({
               className="animate-verdict-pop flex flex-col items-center gap-1"
               style={{ animationDelay: "100ms" }}
             >
-              <p className="text-xl font-black text-zinc-300">Pas de chance…</p>
-              <p className="text-sm text-zinc-500">Prochaine fois !</p>
+              <p className="text-xl font-black text-zinc-300">{t("lost")}</p>
+              <p className="text-sm text-zinc-500">{t("nextTime")}</p>
             </div>
           )}
 
@@ -164,7 +176,7 @@ export function VerdictOverlay({
               style={{ animationDelay: "300ms" }}
             >
               <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                🏆 Top Prédicteurs
+                🏆 {t("topPredictors")}
               </p>
               <div className="flex flex-col gap-1.5">
                 {predictors.map((p) => (
@@ -177,7 +189,7 @@ export function VerdictOverlay({
                       <span className="font-bold text-white">{p.username}</span>
                     </span>
                     <span className="font-black text-green-400">
-                      +{p.reward.toLocaleString("fr-FR")} 🪙
+                      +{p.reward.toLocaleString(bcp47)} 🪙
                     </span>
                   </div>
                 ))}
@@ -211,11 +223,11 @@ export function VerdictOverlay({
               className="animate-verdict-pop flex items-center gap-2 rounded-2xl border border-green-500/30 bg-green-500/10 px-5 py-2.5 text-sm font-black text-green-400 transition hover:bg-green-500/20 active:scale-95"
               style={{ animationDelay: "400ms" }}
             >
-              🔗 Partager ma victoire
+              🔗 {t("shareVictory")}
             </button>
           )}
 
-          <p className="text-xs text-zinc-600">Appuie pour fermer</p>
+          <p className="text-xs text-zinc-600">{t("tapToClose")}</p>
         </div>
       )}
     </div>

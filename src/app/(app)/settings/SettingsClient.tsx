@@ -4,7 +4,16 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Bell, ChevronRight, Shield, Zap } from "lucide-react";
 import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+
+const BCP47: Record<string, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  es: "es-ES",
+  de: "de-DE",
+  it: "it-IT",
+};
 
 const STEP = 10;
 const MIN = 10;
@@ -22,6 +31,9 @@ export default function SettingsClient({
   initialBalance: number;
   initialFreezesOwned: number;
 }) {
+  const t = useTranslations("Settings");
+  const locale = useLocale();
+  const bcp47 = BCP47[locale] ?? "fr-FR";
   const [betAmount, setBetAmount] = useState(initialBetAmount);
   const [isPending, startTransition] = useTransition();
   const [freezesOwned, setFreezesOwned] = useState(initialFreezesOwned);
@@ -39,12 +51,10 @@ export default function SettingsClient({
       } else if (data) {
         setFreezesOwned(data.freezes_owned);
         setBalance(data.remaining_balance);
-        toast.success(
-          `🛡️ Streak Freeze acheté ! Tu en as maintenant ${data.freezes_owned}.`,
-        );
+        toast.success(t("streakFreezeBought", { count: data.freezes_owned }));
       }
     } catch {
-      toast.error("Connexion perdue");
+      toast.error(t("connectionLost"));
     } finally {
       setBuyingFreeze(false);
     }
@@ -58,9 +68,9 @@ export default function SettingsClient({
         .update({ default_var_bet_amount: value })
         .eq("id", userId);
       if (error) {
-        toast.error("Impossible de sauvegarder les paramètres.");
+        toast.error(t("saveBetError"));
       } else {
-        toast.success(`Mise rapide fixée à ${value} 🪙 !`);
+        toast.success(t("saveBetSuccess", { amount: value }));
         setBetAmount(value);
       }
     });
@@ -69,15 +79,15 @@ export default function SettingsClient({
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
       <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-        Paramètres
+        {t("title")}
       </h1>
-      <p className="mt-1 text-sm text-zinc-400">Configuration de ton compte.</p>
+      <p className="mt-1 text-sm text-zinc-400">{t("subtitle")}</p>
 
       {/* Section Pari rapide */}
       <section className="mt-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <Zap className="h-3 w-3" />
-          Pari rapide VAR
+          {t("quickBetTitle")}
         </h2>
         <div className="rounded-2xl border border-white/8 bg-zinc-900 p-5">
           <p className="text-sm leading-relaxed text-zinc-400">
@@ -104,7 +114,7 @@ export default function SettingsClient({
               value={betAmount}
               onChange={(e) => setBetAmount(Number(e.target.value))}
               className="w-full accent-yellow-400"
-              aria-label="Montant de mise rapide"
+              aria-label={t("quickBetAriaLabel")}
             />
             <div className="mt-1 flex justify-between text-[10px] text-zinc-600">
               <span>{MIN} 🪙</span>
@@ -137,7 +147,7 @@ export default function SettingsClient({
             disabled={isPending || betAmount === initialBetAmount}
             className="mt-5 w-full rounded-xl bg-yellow-400 py-3 text-sm font-black text-zinc-900 transition disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
           >
-            {isPending ? "Enregistrement…" : "Sauvegarder"}
+            {isPending ? t("saving") : t("save")}
           </button>
         </div>
       </section>
@@ -146,29 +156,23 @@ export default function SettingsClient({
       <section className="mt-6">
         <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
           <Shield className="h-3 w-3" />
-          Streak Freeze
+          {t("streakFreezeTitle")}
         </h2>
         <div className="rounded-2xl border border-white/8 bg-zinc-900 p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <p className="text-sm font-bold text-white">
-                🛡️ Protège ta série quotidienne
+                🛡️ {t("streakFreezeTitle")}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                Si tu oublies de te connecter un jour, un Streak Freeze
-                s&apos;active automatiquement pour préserver ta série. Max 3 en
-                stock.
+                {t("streakFreezeDesc")}
               </p>
               <p className="mt-2 text-xs text-zinc-500">
-                Solde :{" "}
-                <span className="font-black text-white">
-                  {balance.toLocaleString("fr-FR")} 🪙
-                </span>
+                {t("streakFreezeBalance", {
+                  balance: balance.toLocaleString(bcp47),
+                })}
                 {" · "}
-                En stock :{" "}
-                <span className="font-black text-sky-400">
-                  🛡️ ×{freezesOwned}
-                </span>
+                {t("streakFreezeStock", { count: freezesOwned })}
               </p>
             </div>
           </div>
@@ -180,12 +184,12 @@ export default function SettingsClient({
             className="mt-4 w-full rounded-xl bg-sky-500/20 border border-sky-500/30 py-3 text-sm font-black text-sky-400 transition hover:bg-sky-500/30 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
           >
             {buyingFreeze
-              ? "Achat en cours…"
+              ? t("streakFreezeBuying")
               : freezesOwned >= 3
-                ? "Stock plein (3/3)"
+                ? t("streakFreezeFullStock")
                 : balance < 500
-                  ? "Solde insuffisant (500 🪙 requis)"
-                  : `Acheter un Streak Freeze — 500 🪙`}
+                  ? t("streakFreezeInsufficientBalance")
+                  : t("streakFreezeBuy")}
           </button>
         </div>
       </section>
