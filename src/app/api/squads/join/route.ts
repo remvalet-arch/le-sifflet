@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
 import { log } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +12,17 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return errorResponse("Non authentifié", 401);
+
+    const { limited, retryAfter } = await checkRateLimit(
+      supabase,
+      user.id,
+      "join-squad",
+    );
+    if (limited)
+      return errorResponse(
+        `Trop de requêtes — réessaie dans ${retryAfter}s`,
+        429,
+      );
 
     let body: { invite_code?: string };
     try {

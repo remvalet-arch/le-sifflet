@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { log } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -143,6 +144,17 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return errorResponse("Non authentifié", 401);
+
+    const { limited, retryAfter } = await checkRateLimit(
+      supabase,
+      user.id,
+      "create-squad",
+    );
+    if (limited)
+      return errorResponse(
+        `Trop de requêtes — réessaie dans ${retryAfter}s`,
+        429,
+      );
 
     let body: { name?: string; is_private?: boolean };
     try {

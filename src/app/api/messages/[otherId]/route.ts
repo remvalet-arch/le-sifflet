@@ -3,9 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import { sendPushToUsers } from "@/lib/push-sender";
+import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 const MAX_CHARS = 500;
-const RATE_LIMIT_MS = 2000;
 
 export async function POST(
   request: NextRequest,
@@ -17,6 +17,17 @@ export async function POST(
   } = await supabase.auth.getUser();
 
   if (!user) return errorResponse("Non authentifié", 401);
+
+  const { limited, retryAfter } = await checkRateLimit(
+    supabase,
+    user.id,
+    "direct-message",
+  );
+  if (limited)
+    return errorResponse(
+      `Trop de requêtes — réessaie dans ${retryAfter}s`,
+      429,
+    );
 
   const { otherId } = await params;
   if (!otherId || otherId === user.id)
@@ -32,16 +43,6 @@ export async function POST(
       `Message trop long (max ${MAX_CHARS} caractères)`,
       400,
     );
-
-  // Rate limit : max 1 message toutes les 2s
-  const { count: recentCount } = await supabase
-    .from("direct_messages")
-    .select("id", { count: "exact", head: true })
-    .eq("sender_id", user.id)
-    .gte("sent_at", new Date(Date.now() - RATE_LIMIT_MS).toISOString());
-
-  if ((recentCount ?? 0) > 0)
-    return errorResponse("Doucement, laisse souffler l'autre !", 429);
 
   // Vérification amitié acceptée
   const admin = createAdminClient();
