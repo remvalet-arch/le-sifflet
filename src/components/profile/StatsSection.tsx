@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 type Stats = {
@@ -35,6 +36,7 @@ function WinRateBar({ rate }: { rate: number }) {
 }
 
 export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
+  const t = useTranslations("Stats");
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [seasons, setSeasons] = useState<SeasonItem[]>([]);
@@ -116,7 +118,7 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
             }`}
           >
-            Tout temps
+            {t("allTime")}
           </button>
           {seasons.map((s) => (
             <button
@@ -132,7 +134,7 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
               {s.label}
               {s.is_current && (
                 <span className="ml-1 rounded-full bg-green-500/30 px-1 text-[9px] text-green-400">
-                  EN COURS
+                  {t("seasonCurrent")}
                 </span>
               )}
             </button>
@@ -150,7 +152,7 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
             }`}
           >
-            ⚽ Mon club : {favoriteTeamName}
+            {t("myClub", { name: favoriteTeamName })}
           </button>
         )}
       </div>
@@ -161,23 +163,20 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
           <LoaderCircle className="h-6 w-6 animate-spin text-zinc-600" />
         </div>
       ) : !stats ? (
-        <p className="py-8 text-center text-sm text-zinc-500">
-          Aucune donnée pour ces filtres.
-        </p>
+        <p className="py-8 text-center text-sm text-zinc-500">{t("noData")}</p>
       ) : (
         <div className="space-y-4">
           {/* Points hero */}
           <div className="rounded-2xl border border-green-500/20 bg-green-500/8 p-4 text-center">
             <p className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
-              Points gagnés
+              {t("pointsEarned")}
             </p>
             <p className="mt-1 text-4xl font-black tabular-nums text-green-400">
               +{stats.points_total.toLocaleString("fr-FR")}
             </p>
             {stats.best_win > 0 && (
               <p className="mt-1 text-xs text-zinc-500">
-                Plus gros gain : +{stats.best_win.toLocaleString("fr-FR")}{" "}
-                Points
+                {t("bestWin", { pts: stats.best_win.toLocaleString("fr-FR") })}
               </p>
             )}
           </div>
@@ -185,32 +184,38 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
           {/* Pronos section */}
           <div className="rounded-2xl border border-white/8 bg-zinc-900 p-4">
             <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              🎯 Pronos
+              {t("pronosTitle")}
             </p>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
                 <p className="text-3xl font-black tabular-nums text-white">
                   {stats.pronos_total}
                 </p>
-                <p className="text-[9px] uppercase text-zinc-500">Total</p>
+                <p className="text-[9px] uppercase text-zinc-500">
+                  {t("pronosTotal")}
+                </p>
               </div>
               <div>
                 <p className="text-3xl font-black tabular-nums text-green-400">
                   {stats.pronos_correct}
                 </p>
-                <p className="text-[9px] uppercase text-zinc-500">Corrects</p>
+                <p className="text-[9px] uppercase text-zinc-500">
+                  {t("pronosCorrect")}
+                </p>
               </div>
               <div>
                 <p className="text-3xl font-black tabular-nums text-amber-400">
                   {stats.pronos_exact}
                 </p>
-                <p className="text-[9px] uppercase text-zinc-500">Exacts</p>
+                <p className="text-[9px] uppercase text-zinc-500">
+                  {t("pronosExact")}
+                </p>
               </div>
             </div>
             {stats.pronos_total > 0 && (
               <div className="mt-3">
                 <div className="flex justify-between text-[10px] text-zinc-500">
-                  <span>Win rate</span>
+                  <span>{t("winRate")}</span>
                   <span
                     className={
                       pronoWinRate >= 60
@@ -231,26 +236,30 @@ export function StatsSection({ favoriteTeamId, favoriteTeamName }: Props) {
           {/* VAR bets section */}
           <div className="rounded-2xl border border-white/8 bg-zinc-900 p-4">
             <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              ⚡ Paris VAR
+              {t("varTitle")}
             </p>
             <div className="grid grid-cols-2 gap-3 text-center">
               <div>
                 <p className="text-3xl font-black tabular-nums text-white">
                   {stats.var_bets_total}
                 </p>
-                <p className="text-[9px] uppercase text-zinc-500">Total</p>
+                <p className="text-[9px] uppercase text-zinc-500">
+                  {t("varTotal")}
+                </p>
               </div>
               <div>
                 <p className="text-3xl font-black tabular-nums text-blue-400">
                   {stats.var_bets_won}
                 </p>
-                <p className="text-[9px] uppercase text-zinc-500">Gagnés</p>
+                <p className="text-[9px] uppercase text-zinc-500">
+                  {t("varWon")}
+                </p>
               </div>
             </div>
             {stats.var_bets_total > 0 && (
               <div className="mt-3">
                 <div className="flex justify-between text-[10px] text-zinc-500">
-                  <span>Win rate VAR</span>
+                  <span>{t("winRateVar")}</span>
                   <span
                     className={
                       varWinRate >= 60

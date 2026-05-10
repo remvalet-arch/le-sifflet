@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { SquadMessageRow } from "@/types/database";
 
@@ -27,6 +28,7 @@ export function SquadChat({
   squadId: string;
   currentUserId: string;
 }) {
+  const t = useTranslations("Ligues");
   const [messages, setMessages] = useState<MessageWithProfile[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -127,7 +129,7 @@ export function SquadChat({
 
     const now = Date.now();
     if (now - lastSentAt < RATE_LIMIT_MS) {
-      toast.error("Doucement, laisse les autres parler !");
+      toast.error(t("chatRateLimitError"));
       return;
     }
 
@@ -141,12 +143,12 @@ export function SquadChat({
         body: JSON.stringify({ content: trimmed }),
       });
       if (!res.ok) {
-        toast.error("Message non envoyé, réessaie.");
+        toast.error(t("chatSendError"));
       } else {
         setText("");
       }
     } catch {
-      toast.error("Connexion perdue, réessaie.");
+      toast.error(t("chatConnError"));
     } finally {
       setSending(false);
     }
@@ -163,7 +165,7 @@ export function SquadChat({
     <div className="flex flex-col rounded-2xl border border-white/8 bg-zinc-900 overflow-hidden">
       <div className="px-4 py-2.5 border-b border-white/5">
         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          Chat de la ligue
+          {t("chatTitle")}
         </p>
       </div>
 
@@ -172,11 +174,9 @@ export function SquadChat({
         {messages.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-6 text-center">
             <span className="text-3xl">💬</span>
-            <p className="text-sm font-black text-zinc-400">
-              Soyez les premiers !
-            </p>
+            <p className="text-sm font-black text-zinc-400">{t("chatEmpty")}</p>
             <p className="text-xs text-zinc-600 max-w-[180px]">
-              Personne n&apos;a encore pris la parole. Brisez la glace&nbsp;!
+              {t("chatEmptyDesc")}
             </p>
           </div>
         ) : (
@@ -233,11 +233,11 @@ export function SquadChat({
       <div className="flex items-center gap-2 border-t border-white/5 px-3 py-2">
         <input
           type="text"
-          aria-label="Écrire un message"
+          aria-label={t("chatInputAriaLabel")}
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
           onKeyDown={handleKeyDown}
-          placeholder="Écris un message…"
+          placeholder={t("chatPlaceholder")}
           className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-600 outline-none min-h-[36px]"
         />
         <span
@@ -250,7 +250,7 @@ export function SquadChat({
           onClick={() => void handleSend()}
           disabled={!text.trim() || sending}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-whistle/20 text-whistle transition hover:bg-whistle/30 disabled:opacity-40"
-          aria-label="Envoyer"
+          aria-label={t("chatSendAriaLabel")}
         >
           <Send className="h-3.5 w-3.5" />
         </button>

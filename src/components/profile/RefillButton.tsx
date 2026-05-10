@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type Props = {
   isEligible: boolean;
@@ -38,6 +39,7 @@ function useCountdown(targetIso: string | null) {
 }
 
 export function RefillButton({ isEligible, nextRefillAt }: Props) {
+  const t = useTranslations("Refill");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const countdown = useCountdown(isEligible ? null : nextRefillAt);
@@ -53,15 +55,17 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
         error?: string;
       };
       if (!res.ok) {
-        toast.error(json.error ?? "Erreur inattendue");
+        toast.error(json.error ?? t("errorToast"));
         return;
       }
       toast.success(
-        `+500 🪙 Sifflets ! Nouveau solde : ${(json.data?.new_balance ?? 0).toLocaleString("fr-FR")} 🪙 🎉`,
+        t("successToast", {
+          balance: (json.data?.new_balance ?? 0).toLocaleString("fr-FR"),
+        }),
       );
       router.refresh();
     } catch {
-      toast.error("Connexion perdue, réessaie !");
+      toast.error(t("connLostToast"));
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,7 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
         disabled={loading}
         className="mt-4 flex w-full animate-pulse items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 text-base font-black uppercase tracking-wide text-zinc-950 shadow-lg transition hover:animate-none hover:bg-green-400 active:scale-[0.98] disabled:opacity-60"
       >
-        {loading ? "Chargement…" : "🎁 Récupérer ma mise quotidienne (500 🪙)"}
+        {loading ? t("loading") : t("claimButton")}
       </button>
     );
   }
@@ -83,7 +87,7 @@ export function RefillButton({ isEligible, nextRefillAt }: Props) {
     return (
       <div className="mt-4 rounded-2xl border border-white/10 bg-zinc-900 px-5 py-4 text-center">
         <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-          Prochain bonus dans
+          {t("nextBonusLabel")}
         </p>
         <p className="mt-1 text-2xl font-black tabular-nums text-white">
           {countdown}

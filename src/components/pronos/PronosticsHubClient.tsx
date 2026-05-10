@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { MatchFilterBar } from "./MatchFilterBar";
 import { CompetitionFilter } from "@/components/shared/CompetitionFilter";
 import { usePreferredCompetitions } from "@/hooks/usePreferredCompetitions";
@@ -62,6 +63,7 @@ export function PronosticsHubClient({
   competitions: CompetitionStub[];
   preferredCompetitions?: string[];
 }) {
+  const t = useTranslations("Pronos");
   // Build prono lookup from server data
   const pronoByMatchId = new Map<
     string,
@@ -198,11 +200,9 @@ export function PronosticsHubClient({
         </div>
         <div>
           <p className="text-sm font-black text-white">
-            Aucun match cette semaine
+            {t("noMatchesWeekTitle")}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
-            Les pronos apparaîtront ici dès que des matchs sont programmés.
-          </p>
+          <p className="mt-1 text-xs text-zinc-500">{t("noMatchesWeekDesc")}</p>
         </div>
       </div>
     );
@@ -216,10 +216,12 @@ export function PronosticsHubClient({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-[11px]">
           <span className="font-bold text-zinc-400">
-            {submittedCount}/{total} matchs pronostiqués
+            {t("progressLabel", { done: submittedCount, total })}
           </span>
           {submittedCount === total && (
-            <span className="font-black text-green-400">Complet ✓</span>
+            <span className="font-black text-green-400">
+              {t("progressComplete")}
+            </span>
           )}
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
@@ -253,28 +255,26 @@ export function PronosticsHubClient({
         <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
           <p className="mb-2 text-2xl">📅</p>
           <p className="text-sm font-black text-white">
-            Pas de matchs ce jour-là
+            {t("noMatchesDayTitle")}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
-            Essaie un autre jour ou reviens plus tard.
-          </p>
+          <p className="mt-1 text-xs text-zinc-500">{t("noMatchesDayDesc")}</p>
         </div>
       )}
       {selectedCompMap && total === 0 && filterActive && (
         <div className="space-y-3 rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
           <p className="text-2xl">🔍</p>
           <p className="text-sm font-black text-white">
-            Aucun match pour tes ligues ce jour-là
+            {t("noMatchesFilterTitle")}
           </p>
           <p className="mt-1 text-xs text-zinc-500">
-            Essaie une autre date ou élargis tes ligues.
+            {t("noMatchesFilterDesc")}
           </p>
           <button
             type="button"
             onClick={() => setSelectedCompIds([])}
             className="mt-2 rounded-full border border-white/10 bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-300 transition hover:text-white"
           >
-            Voir tous les matchs
+            {t("showAllMatches")}
           </button>
         </div>
       )}
@@ -324,14 +324,14 @@ export function PronosticsHubClient({
                           <span className="shrink-0 text-sm">🏆</span>
                         )}
                         <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300 underline-offset-2 hover:underline">
-                          {comp?.name ?? "Autre"}
+                          {comp?.name ?? t("competitionFallback")}
                         </span>
                       </Link>
                     ) : (
                       <div className="flex min-w-0 flex-1 items-center gap-2.5">
                         <span className="shrink-0 text-sm">🏆</span>
                         <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300">
-                          {comp?.name ?? "Autre"}
+                          {comp?.name ?? t("competitionFallback")}
                         </span>
                       </div>
                     )}

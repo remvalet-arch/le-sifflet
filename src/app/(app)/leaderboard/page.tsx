@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { SeasonBadge } from "@/components/shared/SeasonBadge";
@@ -13,6 +14,7 @@ type Props = { searchParams: Promise<{ mode?: string }> };
 export default async function LeaderboardPage({ searchParams }: Props) {
   const { mode } = await searchParams;
   const isHallOfFame = mode === "alltime";
+  const t = await getTranslations("Leaderboard");
 
   const supabase = await createClient();
   const {
@@ -64,7 +66,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-zinc-500">
-          {isHallOfFame ? "Tous temps — Top 50" : "Saison courante — Top 50"}
+          {isHallOfFame ? t("allTimeDesc") : t("currentSeasonDesc")}
         </p>
 
         {/* Filter tabs */}
@@ -77,7 +79,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            Saison
+            {t("tabSeason")}
           </Link>
           <Link
             href="/leaderboard?mode=alltime"
@@ -87,7 +89,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            Hall of Fame
+            {t("tabHallOfFame")}
           </Link>
         </div>
       </div>
@@ -160,7 +162,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                   )}
                   {isMe && (
                     <span className="ml-2 text-[10px] font-black uppercase text-green-500">
-                      vous
+                      {t("youLabel")}
                     </span>
                   )}
                 </p>
@@ -177,7 +179,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
       {me && myRank >= 3 && (
         <div className="mt-4 rounded-2xl border border-green-500/40 bg-green-500/10 px-4 py-3">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-green-500/70">
-            Votre position
+            {t("yourPosition")}
           </p>
           <div className="mt-2 flex items-center gap-3">
             <span className="text-lg font-black text-green-400">
@@ -195,7 +197,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
 
       {players.length === 0 && (
         <p className="mt-8 text-center text-sm text-zinc-600">
-          Aucun joueur pour l&apos;instant.
+          {t("noPlayers")}
         </p>
       )}
     </main>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Swords, CalendarDays } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type ChampionshipStanding = {
   user_id: string;
@@ -42,6 +43,8 @@ type Props = {
 };
 
 export function SquadChampionship({ championship, currentUserId }: Props) {
+  const t = useTranslations("Ligues");
+  const tCommon = useTranslations("Common");
   return (
     <div className="space-y-6">
       {/* Podium de fin de saison */}
@@ -49,7 +52,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
         championship.standings.length >= 1 && (
           <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-5 text-center space-y-3">
             <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
-              Saison terminée 🏆
+              {t("championshipSeasonFinished")}
             </p>
             <div className="flex items-end justify-center gap-4">
               {championship.standings[1] && (
@@ -59,7 +62,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                   </div>
                   <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
                     {championship.standings[1].user_id === currentUserId
-                      ? "Toi"
+                      ? tCommon("you")
                       : championship.standings[1].username}
                   </p>
                   <p className="text-[10px] text-zinc-500">
@@ -73,7 +76,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                 </div>
                 <p className="text-sm font-black text-yellow-300 max-w-[80px] truncate">
                   {championship.standings[0].user_id === currentUserId
-                    ? "Toi 🎉"
+                    ? tCommon("youCelebration")
                     : championship.standings[0].username}
                 </p>
                 <p className="text-[10px] text-yellow-500">
@@ -87,7 +90,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                   </div>
                   <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
                     {championship.standings[2].user_id === currentUserId
-                      ? "Toi"
+                      ? tCommon("you")
                       : championship.standings[2].username}
                   </p>
                   <p className="text-[10px] text-zinc-500">
@@ -98,7 +101,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
             </div>
             {championship.standings[0].user_id === currentUserId && (
               <p className="text-xs font-bold text-yellow-400">
-                Félicitations, tu es Champion de la ligue ! 🎊
+                {t("championshipCongrats")}
               </p>
             )}
           </div>
@@ -109,12 +112,14 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
         <div className="mb-3 flex items-center gap-2">
           <Swords className="h-4 w-4 text-amber-400" aria-hidden />
           <h2 className="text-sm font-black uppercase tracking-wide text-white">
-            Championnat — J{championship.current_round}/
-            {championship.total_rounds}
+            {t("championshipTitle", {
+              round: championship.current_round,
+              total: championship.total_rounds,
+            })}
           </h2>
           {championship.status === "finished" && (
             <span className="ml-auto rounded-lg bg-zinc-700 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-zinc-300">
-              Terminé
+              {t("championshipFinished")}
             </span>
           )}
         </div>
@@ -123,7 +128,9 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
             <thead>
               <tr className="border-b border-white/8 text-[10px] font-black uppercase tracking-wide text-zinc-500">
                 <th className="px-3 py-2 text-left">#</th>
-                <th className="px-3 py-2 text-left">Joueur</th>
+                <th className="px-3 py-2 text-left">
+                  {t("championshipTablePlayer")}
+                </th>
                 <th className="px-2 py-2 text-center">J</th>
                 <th className="px-2 py-2 text-center">V</th>
                 <th className="px-2 py-2 text-center">N</th>
@@ -160,10 +167,12 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                       <p
                         className={`font-bold ${isMe ? "text-amber-300" : "text-white"}`}
                       >
-                        {isMe ? "Toi" : s.username}
+                        {isMe ? tCommon("you") : s.username}
                       </p>
                       <p className="text-[10px] text-zinc-500">
-                        {s.pronos_pts.toLocaleString("fr-FR")} Points cumulés
+                        {t("championshipCumulatedPoints", {
+                          count: s.pronos_pts.toLocaleString("fr-FR"),
+                        })}
                       </p>
                     </td>
                     <td className="px-2 py-2.5 text-center text-zinc-400">
@@ -195,7 +204,9 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
           <div className="mb-3 flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-blue-400" aria-hidden />
             <h2 className="text-sm font-black uppercase tracking-wide text-white">
-              Journée {championship.current_round}
+              {t("championshipMatchWeek", {
+                round: championship.current_round,
+              })}
             </h2>
           </div>
           <div className="flex flex-col gap-2">
@@ -215,7 +226,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                 >
                   {isMyMatch && (
                     <p className="mb-1.5 text-[10px] font-black uppercase tracking-wide text-amber-400">
-                      Ton match cette semaine
+                      {t("championshipMyMatch")}
                     </p>
                   )}
                   <div className="flex items-center justify-between gap-2">
@@ -228,7 +239,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                         }`}
                       >
                         {f.home_member_id === currentUserId
-                          ? "Toi"
+                          ? tCommon("you")
                           : f.home_username}
                       </p>
                       {isFinished && (
@@ -238,7 +249,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                       )}
                     </div>
                     <div className="shrink-0 px-2 text-xs font-black text-zinc-500">
-                      {isFinished ? "FIN" : "VS"}
+                      {isFinished ? t("championshipEnd") : t("championshipVS")}
                     </div>
                     <div className="min-w-0 flex-1 text-center">
                       <p
@@ -249,7 +260,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                         }`}
                       >
                         {f.away_member_id === currentUserId
-                          ? "Toi"
+                          ? tCommon("you")
                           : f.away_username}
                       </p>
                       {isFinished && (
@@ -261,9 +272,9 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                   </div>
                   {isFinished && f.winner_id && (
                     <p className="mt-1.5 text-center text-[10px] font-bold text-green-400">
-                      Victoire :{" "}
+                      {t("championshipVictory")}{" "}
                       {f.winner_id === currentUserId
-                        ? "Toi"
+                        ? tCommon("you")
                         : f.winner_id === f.home_member_id
                           ? f.home_username
                           : f.away_username}
@@ -271,7 +282,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                   )}
                   {isFinished && !f.winner_id && (
                     <p className="mt-1.5 text-center text-[10px] font-bold text-zinc-400">
-                      Match nul
+                      {t("championshipDraw")}
                     </p>
                   )}
                 </div>

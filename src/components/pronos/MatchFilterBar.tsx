@@ -2,6 +2,7 @@
 
 import { format, isToday, isTomorrow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useTranslations } from "next-intl";
 
 type MatchStub = { id: string };
 
@@ -11,7 +12,11 @@ function dayDiffDays(dk1: string, dk2: string): number {
   );
 }
 
-function getDayPill(dayKey: string): {
+function getDayPill(
+  dayKey: string,
+  todayLabel: string,
+  tomorrowLabel: string,
+): {
   abbrev: string;
   num: string;
   sub?: string;
@@ -22,19 +27,23 @@ function getDayPill(dayKey: string): {
     return {
       abbrev: format(date, "EEE", { locale: fr }),
       num: format(date, "d", { locale: fr }),
-      sub: "Auj.",
+      sub: todayLabel,
     };
   const abbrev = format(date, "EEE", { locale: fr });
   const num = format(date, "d", { locale: fr });
-  if (isTomorrow(date)) return { abbrev, num, sub: "Demain" };
+  if (isTomorrow(date)) return { abbrev, num, sub: tomorrowLabel };
   return { abbrev, num };
 }
 
-function getDayFullLabel(dayKey: string): string {
+function getDayFullLabel(
+  dayKey: string,
+  todayFull: string,
+  tomorrowLabel: string,
+): string {
   const [y, mo, d] = dayKey.split("-").map(Number);
   const date = new Date(y!, mo! - 1, d!);
-  if (isToday(date)) return "Aujourd'hui";
-  if (isTomorrow(date)) return "Demain";
+  if (isToday(date)) return todayFull;
+  if (isTomorrow(date)) return tomorrowLabel;
   return format(date, "EEEE d MMMM", { locale: fr });
 }
 
@@ -53,6 +62,10 @@ export function MatchFilterBar({
   onSelectedDayChange,
   isMatchDone,
 }: Props) {
+  const t = useTranslations("Pronos");
+  const todayAbbrev = t("todayAbbrev");
+  const tomorrowLabel = t("tomorrow");
+  const todayFull = t("today");
   const selectedCompMap = dayMap.get(selectedDay);
 
   return (
@@ -73,7 +86,7 @@ export function MatchFilterBar({
           );
           const allDone = dayDone === dayTotal;
           const isSelected = dk === selectedDay;
-          const pill = getDayPill(dk);
+          const pill = getDayPill(dk, todayAbbrev, tomorrowLabel);
 
           return (
             <span key={dk} className="flex shrink-0 items-center gap-2">
@@ -134,7 +147,7 @@ export function MatchFilterBar({
       {selectedDay && (
         <div className="flex items-center gap-2">
           <span className="text-xs font-black uppercase tracking-widest text-chalk capitalize">
-            {getDayFullLabel(selectedDay)}
+            {getDayFullLabel(selectedDay, todayFull, tomorrowLabel)}
           </span>
           {selectedCompMap && (
             <>

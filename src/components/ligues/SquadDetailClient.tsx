@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   UserPlus,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { SquadRow } from "@/types/database";
 import { SquadChat } from "./SquadChat";
 import { SquadChampionship } from "./SquadChampionship";
@@ -101,6 +102,7 @@ export function SquadDetailClient({
   squadId: string;
   currentUserId: string;
 }) {
+  const t = useTranslations("Ligues");
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [nudging, setNudging] = useState(false);
@@ -115,7 +117,7 @@ export function SquadDetailClient({
       .then((json: ApiResponse<ApiPayload>) => {
         if (!alive) return;
         if (!json.ok) {
-          toast.error(json.error ?? "Erreur");
+          toast.error(json.error ?? t("connectionLost"));
           setData(null);
           return;
         }
@@ -123,7 +125,7 @@ export function SquadDetailClient({
       })
       .catch(() => {
         if (!alive) return;
-        toast.error("Connexion perdue");
+        toast.error(t("connectionLost"));
         setData(null);
       })
       .finally(() => {
@@ -145,9 +147,9 @@ export function SquadDetailClient({
   if (!data) {
     return (
       <p className="py-12 text-center text-sm text-zinc-500">
-        Impossible de charger cette ligue.{" "}
+        {t("errorLoadingLeague")}{" "}
         <Link href="/ligues" className="font-bold text-amber-400 underline">
-          Retour
+          {t("errorLoadingLeagueBack")}
         </Link>
       </p>
     );
@@ -176,17 +178,17 @@ export function SquadDetailClient({
         error?: string;
       };
       if (!json.ok) {
-        toast.error(json.error ?? "Impossible d'envoyer le nudge");
+        toast.error(json.error ?? t("nudgeError"));
       } else {
         const n = json.data?.sent_count ?? 0;
         toast.success(
           n > 0
-            ? `Nudge envoyé à ${n} joueur${n > 1 ? "s" : ""} ! 🎯`
-            : "Tout le monde a déjà pronostiqué !",
+            ? t(n > 1 ? "nudgeSentPlural" : "nudgeSentOne", { count: n })
+            : t("nudgeAllDone"),
         );
       }
     } catch {
-      toast.error("Connexion perdue");
+      toast.error(t("connectionLost"));
     } finally {
       setNudging(false);
     }
@@ -198,24 +200,24 @@ export function SquadDetailClient({
     const myUsername = leaderboard.find(
       (m) => m.user_id === currentUserId,
     )?.username;
-    const from = myUsername ?? "Un pote";
+    const from = myUsername ?? t("shareTextFrom");
     const joinUrl = `https://vartime.app/join/${squad.invite_code}`;
-    const text = `Hey ! ⚽ ${from} t'invite à rejoindre sa ligue "${squad.name}" sur VAR TIME.`;
+    const text = t("shareTextBody", { from, name: squad.name });
 
     if (navigator.share) {
       navigator
         .share({
-          title: `Rejoins ${squad.name} sur VAR TIME`,
+          title: t("shareJoinTitle", { name: squad.name }),
           text,
           url: joinUrl,
         })
         .catch(() => {
           void navigator.clipboard.writeText(`${text}\n\n${joinUrl}`);
-          toast.success("Lien copié !");
+          toast.success(t("shareCopied"));
         });
     } else {
       void navigator.clipboard.writeText(`${text}\n\n${joinUrl}`);
-      toast.success("Lien copié !");
+      toast.success(t("shareCopied"));
     }
   }
 
@@ -228,14 +230,14 @@ export function SquadDetailClient({
         className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
       >
         <ChevronLeft className="h-4 w-4" />
-        Mes ligues
+        {t("myLeaguesBackLink")}
       </Link>
 
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-xl mt-4">
         <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-amber-500/20 blur-3xl" />
 
         <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80 relative z-10">
-          {squad.is_private ? "Ligue privée" : "Publique"}
+          {squad.is_private ? t("privateLabel") : t("publicLabel")}
         </p>
         <h1 className="text-3xl font-black tracking-tight text-white relative z-10 mt-1 mb-4">
           {squad.name}
@@ -244,7 +246,7 @@ export function SquadDetailClient({
           <p className="flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
             <span className="inline-flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-xl border border-green-500/20">
               <Wallet className="h-4 w-4" aria-hidden />
-              Points cumulés :{" "}
+              {t("cumulatedPoints")}{" "}
               <span className="font-black tabular-nums">
                 {total_xp_earned.toLocaleString("fr-FR")} Points
               </span>
@@ -262,7 +264,7 @@ export function SquadDetailClient({
               ) : (
                 <BellRing className="h-3.5 w-3.5 text-whistle" />
               )}
-              Nudge
+              {t("nudgeButton")}
             </button>
             {isAdmin && squad.invite_code && (
               <button
@@ -271,7 +273,7 @@ export function SquadDetailClient({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800/80 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 border border-white/5 backdrop-blur-md"
               >
                 <UserPlus className="h-3.5 w-3.5 text-amber-400" />
-                Inviter
+                {t("inviteButton")}
               </button>
             )}
           </div>
@@ -289,13 +291,13 @@ export function SquadDetailClient({
             value="classement"
             className="flex-1 text-sm font-black uppercase tracking-wide"
           >
-            🏆 Classement
+            {t("tabLeaderboard")}
           </TabsTrigger>
           <TabsTrigger
             value="vestiaire"
             className="flex-1 text-sm font-black uppercase tracking-wide relative"
           >
-            💬 Vestiaire
+            {t("tabLocker")}
             {!vestiaireSeen && (
               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
             )}
