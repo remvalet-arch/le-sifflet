@@ -124,7 +124,7 @@ export default async function AppLayout({
           {children}
         </main>
 
-        <BottomNav userId={user.id} hasUnreadDm={hasUnreadDm} />
+        <BottomNav userId={user.id} />
       </div>
     </LiveRoomProvider>
   );

@@ -3,14 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Landmark,
-  User,
-  Users,
-  Target,
-  MonitorPlay,
-  MessageCircle,
-} from "lucide-react";
+import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLiveRoom } from "@/contexts/LiveRoomContext";
 import { createClient } from "@/lib/supabase/client";
@@ -22,13 +15,7 @@ function useLikelyLiveHour(): boolean {
   return isWeekend ? h >= 13 && h < 23 : h >= 18 && h < 23;
 }
 
-export function BottomNav({
-  userId,
-  hasUnreadDm = false,
-}: {
-  userId?: string;
-  hasUnreadDm?: boolean;
-}) {
+export function BottomNav({ userId }: { userId?: string }) {
   const pathname = usePathname();
   const t = useTranslations("Navigation");
   const { drawerAvailable, openDrawer } = useLiveRoom();
@@ -38,8 +25,6 @@ export function BottomNav({
   const fabActive = isMatchPage && drawerAvailable;
   const isOnLigues = pathname === "/ligues" || pathname.startsWith("/ligues/");
 
-  const isOnMessages =
-    pathname === "/messages" || pathname.startsWith("/messages/");
   const [hasUnread, setHasUnread] = useState(false);
   const [showVarTooltip, setShowVarTooltip] = useState(false);
   const squadIdsRef = useRef<string[]>([]);
@@ -145,7 +130,7 @@ export function BottomNav({
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div
-        className={`relative grid h-16 ${isMatchPage ? "grid-cols-6" : "grid-cols-5"}`}
+        className={`relative grid h-16 ${isMatchPage ? "grid-cols-5" : "grid-cols-4"}`}
       >
         <TabLink
           href="/lobby"
@@ -209,13 +194,6 @@ export function BottomNav({
           label={t("ligues")}
           pathname={pathname}
           badge={hasUnread}
-        />
-        <TabLink
-          href="/messages"
-          Icon={MessageCircle}
-          label={t("messages")}
-          pathname={pathname}
-          badge={hasUnreadDm && !isOnMessages}
         />
         <TabLink
           href="/profile"
