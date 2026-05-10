@@ -7,6 +7,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, MarketEventType } from "@/types/database";
 import { resolveEvent } from "@/lib/resolve-event";
+import { notifyVarBetResults } from "@/lib/var-notifications";
 
 type Admin = SupabaseClient<Database>;
 
@@ -152,6 +153,7 @@ async function resolveOpen(
   if (!row?.id) return false;
   try {
     await resolveEvent(row.id, result);
+    void notifyVarBetResults(admin, row.id, type, matchId, result);
     return true;
   } catch {
     return false;
