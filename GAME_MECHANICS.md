@@ -19,11 +19,11 @@
 
 ## 1. Économie — Les monnaies
 
-| Monnaie | Rôle | Modifiable par le joueur |
-|---------|------|--------------------------|
-| **Sifflets 🪙** | Monnaie de pari VAR (dépensable) | Non — reçus via jeu et récompenses |
-| **Points 🏆** | Score de saison, classement ligue | Non — gagnés sur pronos et paris gagnants |
-| **XP** | Rang global permanent | Non — progressif |
+| Monnaie         | Rôle                              | Modifiable par le joueur                  |
+| --------------- | --------------------------------- | ----------------------------------------- |
+| **Sifflets 🪙** | Monnaie de pari VAR (dépensable)  | Non — reçus via jeu et récompenses        |
+| **Points 🏆**   | Score de saison, classement ligue | Non — gagnés sur pronos et paris gagnants |
+| **XP**          | Rang global permanent             | Non — progressif                          |
 
 ### Solde de départ
 
@@ -46,11 +46,11 @@ bonus_quotidien = 50 × min(login_streak, 7)
 
 ### 2.1 Types de pronos
 
-| Type | Description | Odds par défaut |
-|------|-------------|-----------------|
-| **1N2** | Victoire domicile / Nul / Victoire extérieur | Cote de marché (ex : 2.1×) |
-| **Score exact** | Prédire le score final | Dynamique (voir formule) |
-| **Buteur** | Prédire un buteur + sa position | Position-based (voir tableau) |
+| Type            | Description                                  | Odds par défaut               |
+| --------------- | -------------------------------------------- | ----------------------------- |
+| **1N2**         | Victoire domicile / Nul / Victoire extérieur | Cote de marché (ex : 2.1×)    |
+| **Score exact** | Prédire le score final                       | Dynamique (voir formule)      |
+| **Buteur**      | Prédire un buteur + sa position              | Position-based (voir tableau) |
 
 ### 2.2 Cotes et Points — Score exact
 
@@ -76,11 +76,11 @@ points = max(10, arrondi(220 × (1 - 1/cote)))
 
 ### 2.3 Cotes Buteur par position
 
-| Position | Cote | Points potentiels max |
-|----------|------|-----------------------|
-| **Attaquant (A)** | ×3.5 | ~150 pts |
-| **Milieu (M)** | ×7.0 | ~150 pts |
-| **Défenseur (D)** | ×15.0 | ~150 pts |
+| Position          | Cote  | Points potentiels max |
+| ----------------- | ----- | --------------------- |
+| **Attaquant (A)** | ×3.5  | ~150 pts              |
+| **Milieu (M)**    | ×7.0  | ~150 pts              |
+| **Défenseur (D)** | ×15.0 | ~150 pts              |
 
 - Plafond points buteur : **150 pts** (`SCORER_MAX_POINTS`) — cumulable sur plusieurs buteurs
 - Plafond points prono 1N2 / score exact : **220 pts** (`maxPoints`)
@@ -97,6 +97,7 @@ Déclenchée via `POST /api/admin/finish-match` (passage du match en `finished`)
 6. Synchronisation stats hub ligue
 
 **Message score exact dans les squads :**
+
 > 🎯 **{username}** avait prédit le score exact **{score}** sur {match} — Respect. 👏
 
 ---
@@ -109,20 +110,20 @@ Un utilisateur appuie sur un bouton VAR dans le LiveRoom → signal enregistré 
 
 **Conditions pour qu'un signal soit pris en compte :**
 
-| Condition | Valeur |
-|-----------|--------|
-| Trust score minimum | 50 (`MIN_TRUST_ALERT_SCORE`) |
-| Rate limit utilisateur | Max 5 alertes / 60 secondes (fail silencieux) |
-| Cooldown match (même type) | 5 minutes (`COOLDOWN_MINUTES`) |
+| Condition                  | Valeur                                        |
+| -------------------------- | --------------------------------------------- |
+| Trust score minimum        | 50 (`MIN_TRUST_ALERT_SCORE`)                  |
+| Rate limit utilisateur     | Max 5 alertes / 60 secondes (fail silencieux) |
+| Cooldown match (même type) | 5 minutes (`COOLDOWN_MINUTES`)                |
 
 **Seuil dynamique** (anti-spam adaptatif, calculé sur l'audience active des 5 dernières minutes) :
 
-| Audience active | Signaux requis |
-|-----------------|----------------|
-| ≤ 5 utilisateurs | 1 signal |
-| 6–20 utilisateurs | 2 signaux |
-| 21–100 utilisateurs | 3 signaux |
-| > 100 utilisateurs | 5 signaux |
+| Audience active     | Signaux requis |
+| ------------------- | -------------- |
+| ≤ 5 utilisateurs    | 1 signal       |
+| 6–20 utilisateurs   | 2 signaux      |
+| 21–100 utilisateurs | 3 signaux      |
+| > 100 utilisateurs  | 5 signaux      |
 
 - Fenêtre d'agrégation des signaux : **30 secondes** (`ALERT_WINDOW_SECONDS`)
 - Les signaux doivent venir d'utilisateurs **distincts**
@@ -134,6 +135,7 @@ Le cron `match-monitor` (toutes les ~1 min) appelle `syncMatchEvents` → `apply
 ### 3.3 Marchés stoppage-time
 
 Ouverts automatiquement par le cron à :
+
 - **Minute 41+** de la 1ère mi-temps → marché `stoppage_ht`
 - **Minute 86+** de la 2ème mi-temps → marché `stoppage_ft`
 
@@ -145,16 +147,16 @@ Résolus quand le match passe en `HT` (mi-temps) ou `FT` (fin de match).
 
 ### 4.1 Tableau complet
 
-| Type | Label | Déclencheur | Résolution |
-|------|-------|-------------|------------|
-| `var_goal` | But sous VAR | Signal communautaire ou API-Football (VAR review) | Verdict API ou fallback 3 min |
-| `penalty_check` | Penalty en discussion | Signal communautaire ou API-Football | Verdict API ou fallback 3 min → **Effet Domino** si OUI |
-| `penalty_outcome` | Résultat penalty | **Automatique** après `penalty_check = OUI` | Goal penalty = OUI, penalty raté/arrêté = NON |
-| `red_card` | Carton rouge | Signal communautaire ou API-Football | Carton rouge API dans la fenêtre = OUI |
-| `free_kick` | Coup franc dangereux | Signal communautaire | Goal dans les 3 min = OUI, sinon NON |
-| `corner` | Corner | Signal communautaire | Goal dans les 3 min = OUI, sinon NON |
-| `stoppage_ht` | Arrêts de jeu mi-temps | Cron automatique (min 41+) | Calculé depuis les données API-Football au sifflet mi-temps |
-| `stoppage_ft` | Arrêts de jeu temps réglementaire | Cron automatique (min 86+) | Calculé depuis les données API-Football au sifflet final |
+| Type              | Label                             | Déclencheur                                       | Résolution                                                  |
+| ----------------- | --------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| `var_goal`        | But sous VAR                      | Signal communautaire ou API-Football (VAR review) | Verdict API ou fallback 3 min                               |
+| `penalty_check`   | Penalty en discussion             | Signal communautaire ou API-Football              | Verdict API ou fallback 3 min → **Effet Domino** si OUI     |
+| `penalty_outcome` | Résultat penalty                  | **Automatique** après `penalty_check = OUI`       | Goal penalty = OUI, penalty raté/arrêté = NON               |
+| `red_card`        | Carton rouge                      | Signal communautaire ou API-Football              | Carton rouge API dans la fenêtre = OUI                      |
+| `free_kick`       | Coup franc dangereux              | Signal communautaire                              | Goal dans les 3 min = OUI, sinon NON                        |
+| `corner`          | Corner                            | Signal communautaire                              | Goal dans les 3 min = OUI, sinon NON                        |
+| `stoppage_ht`     | Arrêts de jeu mi-temps            | Cron automatique (min 41+)                        | Calculé depuis les données API-Football au sifflet mi-temps |
+| `stoppage_ft`     | Arrêts de jeu temps réglementaire | Cron automatique (min 86+)                        | Calculé depuis les données API-Football au sifflet final    |
 
 ### 4.2 Fenêtre de vote
 
@@ -172,17 +174,18 @@ penalty_check = OUI → ouvre penalty_outcome
 ### 4.4 Fallback temporel (API-Football)
 
 Si l'API-Football ne donne pas de verdict explicite dans les 3 minutes :
+
 - `var_goal`, `penalty_check`, `red_card` : cherche un event positif dans la fenêtre → si rien, résout **NON**
 - `corner`, `free_kick` : goal dans les 3 min → OUI, sinon NON via le cron de clôture
 
 ### 4.5 Chemins de résolution
 
-| Chemin | Qui appelle | Notifications bettors |
-|--------|------------|----------------------|
-| `POST /api/admin/resolve-event` | Admin manuel | ✅ `notifyVarBetResults` |
-| `POST /api/verify-event` | UI (bouton "Vérifier") | ✅ `notifyVarBetResults` |
-| Cron `match-monitor` → `syncMatchEvents` | Automatique API-Football | ✅ `notifyVarBetResults` (depuis fix 2026-05-10) |
-| Cron `match-monitor` → `resolveStoppageMarket` | Automatique stoppage | ✅ `notifyVarBetResults` (depuis fix 2026-05-10) |
+| Chemin                                         | Qui appelle              | Notifications bettors                            |
+| ---------------------------------------------- | ------------------------ | ------------------------------------------------ |
+| `POST /api/admin/resolve-event`                | Admin manuel             | ✅ `notifyVarBetResults`                         |
+| `POST /api/verify-event`                       | UI (bouton "Vérifier")   | ✅ `notifyVarBetResults`                         |
+| Cron `match-monitor` → `syncMatchEvents`       | Automatique API-Football | ✅ `notifyVarBetResults` (depuis fix 2026-05-10) |
+| Cron `match-monitor` → `resolveStoppageMarket` | Automatique stoppage     | ✅ `notifyVarBetResults` (depuis fix 2026-05-10) |
 
 ---
 
@@ -190,11 +193,11 @@ Si l'API-Football ne donne pas de verdict explicite dans les 3 minutes :
 
 ### 5.1 Règles de mise
 
-| Règle | Valeur |
-|-------|--------|
-| Mise minimum | **10 Sifflets** |
-| Un seul pari par user/event | Contrainte UNIQUE en DB |
-| Rate limit | Max 10 paris / 60 secondes |
+| Règle                               | Valeur                         |
+| ----------------------------------- | ------------------------------ |
+| Mise minimum                        | **10 Sifflets**                |
+| Un seul pari par user/event         | Contrainte UNIQUE en DB        |
+| Rate limit                          | Max 10 paris / 60 secondes     |
 | Tolérance de slippage sur les cotes | ±3% (`IMPLIED_ODDS_TOLERANCE`) |
 
 ### 5.2 Flux de placement (`POST /api/bet`)
@@ -237,6 +240,7 @@ En mode **braquage** (1v1 entre squads), des bonus supplémentaires sont distrib
 ### 6.4 Notifications de gains
 
 Après résolution, `notifyVarBetResults` envoie :
+
 - Push personnalisé à chaque bettor non-opted-out (préférence `notif_var_results`)
 - Format gagnant : `"{verdict} +{potential_reward} 🪙 gagnés 🔥"`
 - Format perdant : `"{verdict} {amount_staked} 🪙 perdus."`
@@ -248,12 +252,12 @@ Après résolution, `notifyVarBetResults` envoie :
 
 ### 7.1 Notifications VAR (temps réel)
 
-| Déclencheur | Destinataires | Titre | URL |
-|-------------|---------------|-------|-----|
-| Ouverture marché VAR (seuil atteint) | Abonnés du match (`match_subscriptions`, non-mutes) | `VAR Time 🟨` | `/match/{id}` |
-| Ouverture marché VAR | Joueurs en présence active (15 min) avec `notif_var_results=true` | `⚡ VAR en cours !` | `/match/{id}` |
-| Résolution VAR (gagnant) | Bettor concerné | `⚡ VAR Résolue — {type}` | `/match/{id}` |
-| Résolution VAR (perdant) | Bettor concerné | `⚡ VAR Résolue — {type}` | `/match/{id}` |
+| Déclencheur                          | Destinataires                                                     | Titre                     | URL           |
+| ------------------------------------ | ----------------------------------------------------------------- | ------------------------- | ------------- |
+| Ouverture marché VAR (seuil atteint) | Abonnés du match (`match_subscriptions`, non-mutes)               | `VAR Time 🟨`             | `/match/{id}` |
+| Ouverture marché VAR                 | Joueurs en présence active (15 min) avec `notif_var_results=true` | `⚡ VAR en cours !`       | `/match/{id}` |
+| Résolution VAR (gagnant)             | Bettor concerné                                                   | `⚡ VAR Résolue — {type}` | `/match/{id}` |
+| Résolution VAR (perdant)             | Bettor concerné                                                   | `⚡ VAR Résolue — {type}` | `/match/{id}` |
 
 **Paramètres push pour les alertes d'ouverture** : `urgency: high`, `TTL: 60s`, `requireInteraction: true`, boutons d'action OUI/NON (Android/desktop uniquement).
 
@@ -263,53 +267,53 @@ Après résolution, `notifyVarBetResults` envoie :
 
 ### 7.2 Notifications Pronos (crons programmés)
 
-| Cron | Timing | Titre | URL de deep-link |
-|------|--------|-------|-----------------|
-| `match-reminder-2h` | 2h avant coup d'envoi | `⚽ {domicile} – {extérieur} dans 2h !` | `/match/{id}` |
-| `prono-reminders` | 50–70 min avant | `⏰ {domicile} – {extérieur} dans 1h` | `/match/{id}` |
-| `match-imminent` | 5–8 min avant | `🔴 Match imminent !` | `/match/{id}` |
+| Cron                | Timing                | Titre                                   | URL de deep-link |
+| ------------------- | --------------------- | --------------------------------------- | ---------------- |
+| `match-reminder-2h` | 2h avant coup d'envoi | `⚽ {domicile} – {extérieur} dans 2h !` | `/match/{id}`    |
+| `prono-reminders`   | 50–70 min avant       | `⏰ {domicile} – {extérieur} dans 1h`   | `/match/{id}`    |
+| `match-imminent`    | 5–8 min avant         | `🔴 Match imminent !`                   | `/match/{id}`    |
 
 > Seuls les utilisateurs **sans prono** sur ce match sont notifiés (filtrage côté cron).
 
 ### 7.3 Notifications Résultats
 
-| Déclencheur | Destinataires | Titre | URL |
-|-------------|---------------|-------|-----|
-| Fin de match (prono fait) | Parieurs du match | `⏱ Match terminé !` + score + pts | `/match/{id}` |
-| Fin de match (pas de prono) | Abonnés du match | `⏱ Match terminé !` + score | `/match/{id}` |
-| Ami dépassé au classement ligue | Utilisateur dépassé | `🔥 Dépassé !` | `/ligues` |
-| Bilan quotidien | Tous (opt-in) | `📊 Bilan du jour — VAR TIME` | `/profile` |
-| Fin de saison | Tous | `🏆 {saison} terminée !` | `/leaderboard` |
+| Déclencheur                     | Destinataires       | Titre                             | URL            |
+| ------------------------------- | ------------------- | --------------------------------- | -------------- |
+| Fin de match (prono fait)       | Parieurs du match   | `⏱ Match terminé !` + score + pts | `/match/{id}`  |
+| Fin de match (pas de prono)     | Abonnés du match    | `⏱ Match terminé !` + score       | `/match/{id}`  |
+| Ami dépassé au classement ligue | Utilisateur dépassé | `🔥 Dépassé !`                    | `/ligues`      |
+| Bilan quotidien                 | Tous (opt-in)       | `📊 Bilan du jour — VAR TIME`     | `/profile`     |
+| Fin de saison                   | Tous                | `🏆 {saison} terminée !`          | `/leaderboard` |
 
 ### 7.4 Notifications Sociales
 
-| Déclencheur | Destinataires | Titre | URL |
-|-------------|---------------|-------|-----|
-| Message dans le chat squad | Membres du squad (opt-in `notif_squad_chat`) | `💬 {pseudo} dans {squad}` | `/ligues/{squad_id}` |
-| Nouveau membre rejoint squad | Owner du squad | `🎉 Nouveau membre !` | `/ligues/{squad_id}` |
-| Nudge squad | Membres sans prono | `VAR Time — Pronos en attente 🎯` | `/pronos` |
-| Sirène VAR (squad) | Membres du squad | `🚨 Sirène VAR — {pseudo} t'appelle !` | `/match/{id}` |
-| Message direct (DM) | Destinataire | `💬 {pseudo}` | `/messages/{user_id}` |
+| Déclencheur                  | Destinataires                                | Titre                                  | URL                   |
+| ---------------------------- | -------------------------------------------- | -------------------------------------- | --------------------- |
+| Message dans le chat squad   | Membres du squad (opt-in `notif_squad_chat`) | `💬 {pseudo} dans {squad}`             | `/ligues/{squad_id}`  |
+| Nouveau membre rejoint squad | Owner du squad                               | `🎉 Nouveau membre !`                  | `/ligues/{squad_id}`  |
+| Nudge squad                  | Membres sans prono                           | `VAR Time — Pronos en attente 🎯`      | `/pronos`             |
+| Sirène VAR (squad)           | Membres du squad                             | `🚨 Sirène VAR — {pseudo} t'appelle !` | `/match/{id}`         |
+| Message direct (DM)          | Destinataire                                 | `💬 {pseudo}`                          | `/messages/{user_id}` |
 
 ### 7.5 Notifications Lifecycle
 
-| Déclencheur | Timing | Titre | URL |
-|-------------|--------|-------|-----|
-| Utilisateur inactif (J+1) | 23–25h après inscription | `Tu es là pour parier ou pour regarder ? 👀` | `/pronos` |
-| Utilisateur actif sans ligue (J+3) | 71–73h après inscription | `🏟️ Joue avec tes potes !` | `/ligues` |
+| Déclencheur                        | Timing                   | Titre                                        | URL       |
+| ---------------------------------- | ------------------------ | -------------------------------------------- | --------- |
+| Utilisateur inactif (J+1)          | 23–25h après inscription | `Tu es là pour parier ou pour regarder ? 👀` | `/pronos` |
+| Utilisateur actif sans ligue (J+3) | 71–73h après inscription | `🏟️ Joue avec tes potes !`                   | `/ligues` |
 
 ### 7.6 Préférences utilisateur (opt-out)
 
 Chaque utilisateur peut désactiver indépendamment dans **Paramètres > Notifications** :
 
-| Clé DB | Description |
-|--------|-------------|
-| `notif_var_results` | Résultats et gains VAR |
-| `notif_prono_results` | Résultats des pronos |
-| `notif_pre_match_2h` | Rappel prono 2h avant |
-| `notif_pre_match_5min` | Alerte match imminent |
-| `notif_daily_digest` | Bilan quotidien |
-| `notif_squad_chat` | Messages du chat ligue |
+| Clé DB                 | Description            |
+| ---------------------- | ---------------------- |
+| `notif_var_results`    | Résultats et gains VAR |
+| `notif_prono_results`  | Résultats des pronos   |
+| `notif_pre_match_2h`   | Rappel prono 2h avant  |
+| `notif_pre_match_5min` | Alerte match imminent  |
+| `notif_daily_digest`   | Bilan quotidien        |
+| `notif_squad_chat`     | Messages du chat ligue |
 
 ### 7.7 Conditions pour recevoir un push
 
@@ -324,9 +328,9 @@ Chaque utilisateur peut désactiver indépendamment dans **Paramètres > Notific
 
 ### 8.1 Modes de jeu
 
-| Mode | Description |
-|------|-------------|
-| **Classic** | Classement collectif des membres sur la saison |
+| Mode         | Description                                               |
+| ------------ | --------------------------------------------------------- |
+| **Classic**  | Classement collectif des membres sur la saison            |
 | **Braquage** | Oppositions 1v1 entre squads avec bonus sur les gains VAR |
 
 ### 8.2 Pot commun
@@ -343,4 +347,4 @@ Les ligues privées utilisent un code d'invitation à 6 caractères (charset `AB
 
 ---
 
-*Généré le 2026-05-10 — à mettre à jour à chaque évolution des règles.*
+_Généré le 2026-05-10 — à mettre à jour à chaque évolution des règles._
