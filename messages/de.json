@@ -891,7 +891,9 @@
     "testimonial1Text": "\"Endlich hab ich was zu tun bei langweiligen Spielen.\"",
     "testimonial1Author": "— Thomas B., Beta-Tester",
     "testimonial2Text": "\"Ich hatte recht mit dem Elfmeter — meine Punkte sind explodiert. Süchtig.\"",
-    "testimonial2Author": "— Camille R., Beta-Testerin"
+    "testimonial2Author": "— Camille R., Beta-Testerin",
+    "varMechanicLabel": "Live, so funktioniert es",
+    "varMechanicDesc": "90 Sekunden auf der Uhr — tippe JA oder NEIN. Gewinner teilen den Pot, Parimutuel-Stil."
   },
   "NewSeason": {
     "title": "Neue Saison im {month}!",

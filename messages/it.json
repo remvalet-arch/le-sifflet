@@ -888,7 +888,9 @@
     "testimonial1Text": "\"Finalmente ho qualcosa da fare durante le partite noiose della mia squadra.\"",
     "testimonial1Author": "— Thomas B., beta tester",
     "testimonial2Text": "\"Avevo ragione sul rigore — i miei punti sono esplosi. Avvincente.\"",
-    "testimonial2Author": "— Camille R., beta tester"
+    "testimonial2Author": "— Camille R., beta tester",
+    "varMechanicLabel": "In diretta, ecco come funziona",
+    "varMechanicDesc": "90 secondi in gioco — punta SÌ o NO. I vincitori si dividono il montepremi in stile parimutuel."
   },
   "NewSeason": {
     "title": "Nuova stagione di {month}!",

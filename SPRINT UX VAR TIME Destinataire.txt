@@ -387,7 +387,7 @@ Audit complet de tous les `<button>` sans `textContent` ni `aria-label`.
 
 ---
 
-### TICKET-020 — Ajouter un visuel de la mécanique VAR live sur la landing
+### TICKET-020 ✅ — Ajouter un visuel de la mécanique VAR live sur la landing
 
 **Action :** Créer un GIF ou court loop vidéo (3-5s) montrant : sirène → marché OUI/NON → timer → résultat. L'insérer dans la section hero ou juste après le premier CTA. C'est la mécanique core et elle n'est actuellement visible nulle part sur la landing.
 

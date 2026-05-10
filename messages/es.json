@@ -889,7 +889,9 @@
     "testimonial1Text": "\"Por fin tengo algo que hacer durante los partidos aburridos de mi equipo.\"",
     "testimonial1Author": "— Thomas B., beta tester",
     "testimonial2Text": "\"Tenía razón sobre el penalti — mis puntos se dispararon. Adictivo.\"",
-    "testimonial2Author": "— Camille R., beta tester"
+    "testimonial2Author": "— Camille R., beta tester",
+    "varMechanicLabel": "En directo, así funciona",
+    "varMechanicDesc": "90 segundos en el reloj — apuesta SÍ o NO. Los ganadores comparten el bote al estilo parimutuel."
   },
   "NewSeason": {
     "title": "¡Nueva temporada de {month}!",

@@ -881,7 +881,9 @@
     "testimonial1Text": "\"I finally have something to do during my team's boring matches.\"",
     "testimonial1Author": "— Thomas B., beta tester",
     "testimonial2Text": "\"I was right about the penalty — my points exploded. Addictive.\"",
-    "testimonial2Author": "— Camille R., beta tester"
+    "testimonial2Author": "— Camille R., beta tester",
+    "varMechanicLabel": "Live, this is how it works",
+    "varMechanicDesc": "90 seconds on the clock — bet YES or NO. Winners share the pot, parimutuel style."
   },
   "NewSeason": {
     "title": "{month} season starts!",

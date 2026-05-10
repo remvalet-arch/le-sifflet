@@ -12,6 +12,7 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/lib/i18n/locale";
 import { LandingLocaleSwitcher } from "./LandingLocaleSwitcher";
 import { LandingTracker } from "./LandingTracker";
+import { VarMechanicLoop } from "./VarMechanicLoop";
 
 export async function LandingPage({
   locale,
@@ -427,6 +428,21 @@ export async function LandingPage({
               title={t("step03Title")}
               body={t("step03Body")}
             />
+          </div>
+
+          {/* VAR mechanic visual loop */}
+          <div className="mt-14 flex flex-col items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="h-px w-12 bg-white/8" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                {t("varMechanicLabel")}
+              </span>
+              <div className="h-px w-12 bg-white/8" />
+            </div>
+            <VarMechanicLoop />
+            <p className="max-w-[260px] text-center text-xs leading-relaxed text-zinc-500">
+              {t("varMechanicDesc")}
+            </p>
           </div>
 
           {/* Pronos avant match */}

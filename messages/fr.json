@@ -880,7 +880,9 @@
     "testimonial1Text": "\"J'ai enfin un truc à faire pendant les matchs nuls de mon équipe.\"",
     "testimonial1Author": "— Thomas B., bêta-testeur",
     "testimonial2Text": "\"J'avais raison sur le penalty, mes points ont explosé. Addictif.\"",
-    "testimonial2Author": "— Camille R., bêta-testrice"
+    "testimonial2Author": "— Camille R., bêta-testrice",
+    "varMechanicLabel": "En direct, c'est ça",
+    "varMechanicDesc": "En 90 secondes chrono, mise sur OUI ou NON. Le pot se partage entre les gagnants — parimutuel."
   },
   "NewSeason": {
     "title": "Nouvelle saison de {month} !",
