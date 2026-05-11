@@ -114,8 +114,9 @@ export const OPTION_COLORS = [
 // ── BetConfirmedView ────────────────────────────────────────────────────────
 export function BetConfirmedView({ bet }: { bet: BetConfirmed }) {
   const t = useTranslations("Voting");
+  const potentialGain = Math.floor(bet.staked * bet.multiplier);
   return (
-    <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+    <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 text-center">
       <span className="text-5xl">⚡</span>
       <p className="text-xl font-black uppercase tracking-tight text-white">
         {t("betRegistered")}
@@ -129,13 +130,18 @@ export function BetConfirmedView({ bet }: { bet: BetConfirmed }) {
           {t("boosterActive", { name: bet.boosterName })}
         </p>
       )}
-      <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-        {t("potentialGain")}{" "}
-        <span className="text-green-400">
-          {Math.floor(bet.staked * bet.multiplier)} 🪙
-        </span>
-      </p>
-      <p className="text-[10px] text-zinc-600">{t("verdictComing")}</p>
+      <div className="mt-2 flex flex-col items-center gap-0.5">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          {t("potentialGain")}
+        </p>
+        <p className="text-4xl font-black text-green-400">
+          +{potentialGain} 🪙
+        </p>
+        <p className="text-[10px] text-zinc-600">
+          ×{bet.multiplier.toFixed(2)}
+        </p>
+      </div>
+      <p className="mt-1 text-[10px] text-zinc-600">{t("verdictComing")}</p>
     </div>
   );
 }
@@ -221,6 +227,8 @@ export function VotingTimer({
     <div className="mb-5 flex flex-col items-center gap-2">
       <div
         className={`tabular-nums text-6xl font-black leading-none tracking-tight transition-colors ${
+          isUrgent ? "animate-pulse" : ""
+        } ${
           expired
             ? "text-zinc-600"
             : isUrgent
@@ -494,17 +502,19 @@ export function BinaryButtons({
                   <span className="text-xl font-black uppercase tracking-wide text-white">
                     {label}
                   </span>
-                  <span
-                    className={`text-sm font-black tabular-nums ${
-                      v === "oui" ? "text-green-400" : "text-red-400"
-                    }`}
-                    aria-live="polite"
-                  >
-                    {votePct}%
-                  </span>
-                  <span className="sr-only">
-                    {t("oddMultiplier", { odd: odd.toFixed(2) })}
-                  </span>
+                  <div className="flex items-center gap-1" aria-live="polite">
+                    <span
+                      className={`text-sm font-black tabular-nums ${
+                        v === "oui" ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {votePct}%
+                    </span>
+                    <span className="text-zinc-600">·</span>
+                    <span className="text-xs font-bold tabular-nums text-zinc-400">
+                      ×{odd.toFixed(2)}
+                    </span>
+                  </div>
                 </>
               )}
             </button>
