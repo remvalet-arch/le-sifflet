@@ -145,7 +145,11 @@ export function VotingModal({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="animate-modal-sheet w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl sm:animate-modal-center"
+        className="animate-modal-sheet w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl sm:animate-modal-center"
+        style={{
+          maxHeight:
+            "calc(100dvh - max(env(safe-area-inset-top, 0px), 1rem) - 6rem)",
+        }}
       >
         {betConfirmed && <BetConfirmedView bet={betConfirmed} />}
 
@@ -292,9 +296,9 @@ export function VotingModal({
                     type="button"
                     onClick={() => setRulesOpen(false)}
                     aria-label={tVoting("closeWindow")}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-500 hover:text-white"
+                    className="flex size-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-500 hover:text-white"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="size-4" />
                   </button>
                 </div>
                 <div className="flex flex-col gap-3 text-sm text-zinc-300">

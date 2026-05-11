@@ -14,7 +14,6 @@ import {
   ScorerAllocationEditor,
   aggregateSlots,
 } from "./ScorerAllocationEditor";
-import { BoosterPickerForPronos } from "./BoosterPickerForPronos";
 
 const BCP47_LOCALE: Record<string, string> = {
   fr: "fr-FR",
@@ -98,9 +97,9 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
           return (
             <div
               key={i}
-              className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500"
+              className="flex size-2.5 items-center justify-center rounded-full bg-green-500"
             >
-              <Check className="h-1.5 w-1.5 text-white" strokeWidth={4} />
+              <Check className="size-1.5 text-white" strokeWidth={4} />
             </div>
           );
         }
@@ -108,9 +107,9 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
           return (
             <div
               key={i}
-              className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500"
+              className="flex size-2.5 items-center justify-center rounded-full bg-red-500"
             >
-              <X className="h-1.5 w-1.5 text-white" strokeWidth={4} />
+              <X className="size-1.5 text-white" strokeWidth={4} />
             </div>
           );
         }
@@ -118,16 +117,16 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
           return (
             <div
               key={i}
-              className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-zinc-500"
+              className="flex size-2.5 items-center justify-center rounded-full bg-zinc-500"
             >
-              <Minus className="h-1.5 w-1.5 text-white" strokeWidth={4} />
+              <Minus className="size-1.5 text-white" strokeWidth={4} />
             </div>
           );
         }
         return (
           <div
             key={i}
-            className="flex h-2.5 w-2.5 items-center justify-center rounded-full border border-white/10 bg-zinc-800"
+            className="flex size-2.5 items-center justify-center rounded-full border border-white/10 bg-zinc-800"
           />
         );
       })}
@@ -158,12 +157,12 @@ function TeamLogo({ logo, name }: { logo: string | null; name: string }) {
         alt={name}
         width={40}
         height={40}
-        className="h-10 w-10 object-contain drop-shadow-md"
+        className="size-10 object-contain drop-shadow-md"
       />
     );
   }
   return (
-    <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-sm">
+    <span className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-sm">
       ⚽
     </span>
   );
@@ -234,10 +233,6 @@ export function MatchPronoCard({
 
   const [homeSlots, setHomeSlots] = useState<string[]>([]);
   const [awaySlots, setAwaySlots] = useState<string[]>([]);
-  const [selectedBoosterId, setSelectedBoosterId] = useState<string | null>(
-    null,
-  );
-
   const isLocked = match.status !== "upcoming";
   const awayRef = useRef<HTMLInputElement | null>(null);
 
@@ -268,7 +263,7 @@ export function MatchPronoCard({
         p_home_score: homeInt,
         p_away_score: awayInt,
         p_scorers_json: scorersObj,
-        p_booster_id: selectedBoosterId,
+        p_booster_id: null,
       });
 
       if (error) {
@@ -298,7 +293,7 @@ export function MatchPronoCard({
       });
       toast.success(
         <span className="flex items-center gap-1.5">
-          <Bell className="h-4 w-4 text-whistle" />
+          <Bell className="size-4 text-whistle" />
           Prono enregistré !
         </span>,
       );
@@ -331,7 +326,6 @@ export function MatchPronoCard({
     awayInt,
     homeSlots,
     awaySlots,
-    selectedBoosterId,
     submitted,
     onSubmittedChange,
     t,
@@ -470,15 +464,15 @@ export function MatchPronoCard({
         )}
         <div className="relative z-10 flex items-center gap-2 overflow-hidden">
           <Check
-            className={`h-4 w-4 shrink-0 ${existingProno?.status === "lost" ? "text-red-400" : "text-green-400"}`}
+            className={`size-4 shrink-0 ${existingProno?.status === "lost" ? "text-red-400" : "text-green-400"}`}
           />
           <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm font-bold text-white">
             <span className="truncate">{match.team_home}</span>
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-amber-400 shadow-inner">
+            <div className="flex size-6 shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-amber-400 shadow-inner">
               {homeScore}
             </div>
             <span className="shrink-0 font-bold text-zinc-600">-</span>
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-amber-400 shadow-inner">
+            <div className="flex size-6 shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-amber-400 shadow-inner">
               {awayScore}
             </div>
             <span className="truncate">{match.team_away}</span>
@@ -530,7 +524,7 @@ export function MatchPronoCard({
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 transition hover:text-zinc-300"
               aria-label="Partager mon prono"
             >
-              <Share2 className="h-3 w-3" />
+              <Share2 className="size-3" />
               {t("shareProno")}
             </button>
           </div>
@@ -580,7 +574,7 @@ export function MatchPronoCard({
                 match.status === "extra_time" ||
                 match.status === "penalties" ? (
                   <>
-                    <span className="block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                    <span className="block size-2.5 animate-pulse rounded-full bg-red-500" />
                     <p className="text-[11px] font-black uppercase tracking-widest text-red-400">
                       En direct
                     </p>
@@ -721,7 +715,7 @@ export function MatchPronoCard({
             href={`/match/${match.id}`}
             className="mt-4 flex w-full animate-pulse items-center justify-center gap-2 rounded-xl bg-red-600 py-4 text-sm font-black uppercase tracking-wide text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] transition hover:bg-red-500 active:scale-[0.98]"
           >
-            <span className="h-2 w-2 rounded-full bg-white" />
+            <span className="size-2 rounded-full bg-white" />
             REJOINDRE LE STADE
           </a>
         ) : isLocked ? (
@@ -730,11 +724,6 @@ export function MatchPronoCard({
           </div>
         ) : scoresValid ? (
           <>
-            <BoosterPickerForPronos
-              selectedBoosterId={selectedBoosterId}
-              onSelect={setSelectedBoosterId}
-              disabled={loading}
-            />
             <button
               type="button"
               disabled={!canSubmit || loading}
@@ -742,10 +731,10 @@ export function MatchPronoCard({
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-whistle py-3 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
             >
               {loading ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-pitch-900/40 border-t-pitch-900" />
+                <span className="size-4 animate-spin rounded-full border-2 border-pitch-900/40 border-t-pitch-900" />
               ) : (
                 <>
-                  <Target className="h-4 w-4" />
+                  <Target className="size-4" />
                   {t("submitProno")}
                 </>
               )}
