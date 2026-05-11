@@ -7,11 +7,10 @@ import type { H2HResult } from "@/app/api/matches/[id]/h2h/route";
 export function HeadToHead({
   matchId,
   teamHome,
-  teamAway,
 }: {
   matchId: string;
   teamHome: string;
-  teamAway: string;
+  teamAway?: string;
 }) {
   const t = useTranslations("HeadToHead");
   const [results, setResults] = useState<H2HResult[]>([]);

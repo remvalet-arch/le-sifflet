@@ -266,6 +266,7 @@ export function VotingModal({
           <button
             type="button"
             onClick={() => setRulesOpen(true)}
+            data-testid="voting-rules-button"
             className="mt-3 w-full text-center text-[11px] font-bold text-zinc-600 transition hover:text-zinc-400"
           >
             ❓ {tVoting("howOddsWork")}

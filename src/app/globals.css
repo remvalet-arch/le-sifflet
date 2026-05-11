@@ -133,6 +133,9 @@
   --radius-card: 16px;
   --radius-sheet: 24px;
   --radius-pill: 9999px;
+
+  /* Accessibility */
+  --color-text-secondary: #a1a1aa; /* zinc-400 — minimum WCAG AA on dark */
 }
 
 body {
@@ -151,4 +154,30 @@ textarea {
 ::selection {
   background-color: var(--color-pitch-600);
   color: var(--color-chalk);
+}
+
+/* ── Accessibilité — focus visible ──────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-whistle);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Supprime l'outline custom sur les éléments qui ont leur propre indicateur visuel */
+[data-focus-custom]:focus-visible {
+  outline: none;
+}
+
+/* ── Accessibilité — réduction de mouvement ─────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

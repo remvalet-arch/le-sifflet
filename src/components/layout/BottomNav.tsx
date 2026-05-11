@@ -174,6 +174,7 @@ export function BottomNav({ userId }: { userId?: string }) {
                 openDrawer();
               }}
               aria-label={t("ariaCallVar")}
+              data-testid="fab-var-button"
               className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
                 fabActive
                   ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400"
@@ -225,26 +226,40 @@ function TabLink({
   return (
     <Link
       href={href}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={
+        liveIndicator
+          ? `${label} — matchs en cours`
+          : badge
+            ? `${label} — nouveaux messages`
+            : label
+      }
       className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors active:scale-95 ${
-        isActive ? "text-green-500" : "text-zinc-500 hover:text-zinc-300"
+        isActive ? "text-green-500" : "text-zinc-400 hover:text-zinc-200"
       }`}
     >
       <span className="relative inline-flex">
-        <Icon className="h-5 w-5" />
+        <Icon className="h-5 w-5" aria-hidden="true" />
         {liveIndicator && (
-          <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+          <span
+            className="absolute -right-1 -top-1 flex h-2.5 w-2.5"
+            aria-hidden="true"
+          >
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
           </span>
         )}
         {badge && !liveIndicator && (
-          <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+          <span
+            className="absolute -right-1 -top-1 flex h-2.5 w-2.5"
+            aria-hidden="true"
+          >
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-whistle opacity-60" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-whistle" />
           </span>
         )}
       </span>
-      <span>{label}</span>
+      <span aria-hidden="true">{label}</span>
     </Link>
   );
 }

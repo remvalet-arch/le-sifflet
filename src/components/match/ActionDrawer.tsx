@@ -808,19 +808,26 @@ function AlertGrid({
             key={type}
             onClick={() => onAlert(type)}
             disabled={disabled}
+            aria-label={isSignaled ? `${label} — ${t("waiting")}` : label}
+            aria-pressed={isSignaled}
+            data-testid={`alert-btn-${type}`}
             className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
               isSignaled
                 ? "border-yellow-400/40 bg-yellow-400/10"
                 : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
             }`}
           >
-            <span className="text-3xl leading-none">
+            <span className="text-3xl leading-none" aria-hidden="true">
               {isPending ? "" : isSignaled ? "⏳" : emoji}
             </span>
             {isPending ? (
-              <LoaderCircle className="h-4 w-4 animate-spin text-zinc-400" />
+              <LoaderCircle
+                className="h-4 w-4 animate-spin text-zinc-400"
+                aria-hidden="true"
+              />
             ) : (
               <span
+                aria-hidden="true"
                 className={`px-2 text-center text-[11px] font-black uppercase leading-tight ${
                   isSignaled ? "text-yellow-400" : "text-zinc-300"
                 }`}

@@ -191,7 +191,8 @@ export function ModalHeader({
         type="button"
         onClick={onClose}
         aria-label={t("closeWindow")}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-500 transition hover:bg-zinc-700 hover:text-white active:scale-90"
+        data-testid="voting-modal-close"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 transition hover:bg-zinc-700 hover:text-white active:scale-90"
       >
         <X className="h-4 w-4" aria-hidden />
       </button>
@@ -476,6 +477,7 @@ export function BinaryButtons({
               onClick={() => onVote(v)}
               disabled={disabled}
               aria-label={`${label} — ${votePct}%`}
+              data-testid={`vote-btn-${v}`}
               className={`flex h-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
                 v === "oui"
                   ? "border-green-500/60 bg-green-500/10 hover:border-green-500 hover:bg-green-500/20"
