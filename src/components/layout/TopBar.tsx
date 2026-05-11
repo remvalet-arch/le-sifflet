@@ -12,7 +12,6 @@ import {
   Trophy,
   ShoppingBag,
   MessageCircle,
-  Bell,
   ArrowLeft,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
@@ -82,7 +81,6 @@ type Props = {
   rank: string;
   xp: number;
   hasUnreadDm?: boolean;
-  unreadNotifCount?: number;
 };
 
 export function TopBar({
@@ -91,12 +89,10 @@ export function TopBar({
   rank,
   xp: initialXp,
   hasUnreadDm = false,
-  unreadNotifCount = 0,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [liveRank, setLiveRank] = useState(rank);
   const [liveXp, setLiveXp] = useState(initialXp);
-  const [localUnreadNotif, setLocalUnreadNotif] = useState(unreadNotifCount);
   const locale = useLocale() as Locale;
   const t = useTranslations("TopBar");
   const bcp47 =
@@ -111,13 +107,6 @@ export function TopBar({
   const pathname = usePathname();
   const isMatchPage = /^\/match\//.test(pathname);
   const centreLabel = isMatchPage && matchTitle ? matchTitle : sectionLabel;
-
-  // Sync badge count when navigating to/from /notifications
-  useEffect(() => {
-    if (pathname === "/notifications") {
-      setTimeout(() => setLocalUnreadNotif(0), 0);
-    }
-  }, [pathname]);
 
   // Realtime : met à jour rang/XP dès qu'un pari est résolu
   useEffect(() => {
@@ -145,30 +134,6 @@ export function TopBar({
     };
   }, [userId]);
 
-  // Realtime : badge notifications — s'incrémente à chaque nouvelle notif
-  useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`topbar-notifs-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        () => {
-          setTimeout(() => setLocalUnreadNotif((n) => n + 1), 0);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [userId]);
-
   return (
     <>
       <header
@@ -187,7 +152,7 @@ export function TopBar({
               className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 text-zinc-400 transition hover:text-white active:scale-95"
               aria-label={backRoute.label}
             >
-              <ArrowLeft className="h-4 w-4 shrink-0" />
+              <ArrowLeft className="size-4 shrink-0" />
               <span className="text-[11px] font-black uppercase tracking-wide">
                 {backRoute.label}
               </span>
@@ -210,32 +175,15 @@ export function TopBar({
           )}
 
           <div className="flex items-center gap-2">
-            {/* Notifications bell */}
-            <Link
-              href="/notifications"
-              aria-label={t("ariaNotifications")}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
-            >
-              <Bell className="h-5 w-5" aria-hidden="true" />
-              {localUnreadNotif > 0 && (
-                <span
-                  className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-whistle text-[9px] font-black text-zinc-950 ring-2 ring-zinc-950"
-                  aria-hidden="true"
-                >
-                  {localUnreadNotif > 9 ? "9+" : localUnreadNotif}
-                </span>
-              )}
-            </Link>
-
             {/* Messages privés */}
             <Link
               href="/messages"
               aria-label={t("ariaMessages")}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+              className="relative flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
             >
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="size-5" />
               {hasUnreadDm && (
-                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-whistle ring-2 ring-zinc-950" />
+                <span className="absolute right-2 top-2 size-2.5 rounded-full bg-whistle ring-2 ring-zinc-950" />
               )}
             </Link>
 
@@ -245,9 +193,9 @@ export function TopBar({
               aria-label={t("ariaOpenMenu")}
               aria-expanded={open}
               aria-haspopup="true"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+              className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="size-5" />
             </button>
           </div>
         </div>
@@ -289,9 +237,9 @@ export function TopBar({
           <button
             onClick={() => setOpen(false)}
             aria-label={t("ariaCloseMenu")}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:text-white active:scale-90"
+            className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:text-white active:scale-90"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
@@ -299,25 +247,25 @@ export function TopBar({
         <nav className="flex flex-col gap-1 p-3">
           <SheetLink
             href="/leaderboard"
-            icon={<Trophy className="h-4 w-4" />}
+            icon={<Trophy className="size-4" />}
             label={t("leaderboard")}
             onClick={() => setOpen(false)}
           />
           <SheetLink
             href="/shop"
-            icon={<ShoppingBag className="h-4 w-4" />}
+            icon={<ShoppingBag className="size-4" />}
             label={t("shop")}
             onClick={() => setOpen(false)}
           />
           <SheetLink
             href="/rules"
-            icon={<BookOpen className="h-4 w-4" />}
+            icon={<BookOpen className="size-4" />}
             label={t("rules")}
             onClick={() => setOpen(false)}
           />
           <SheetLink
             href="/settings"
-            icon={<Settings className="h-4 w-4" />}
+            icon={<Settings className="size-4" />}
             label={t("settings")}
             onClick={() => setOpen(false)}
           />
@@ -360,7 +308,7 @@ export function TopBar({
               type="submit"
               className="flex w-full items-center gap-3 rounded-xl border border-red-500/20 bg-red-950/20 px-4 py-3 text-sm font-bold text-red-400 transition hover:bg-red-950/40 active:scale-[0.98]"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="size-4" />
               {t("logout")}
             </button>
           </form>

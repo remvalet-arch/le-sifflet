@@ -86,23 +86,12 @@ export default async function AppLayout({
 
   void trackLoginStreak(supabase, user.id);
 
-  // Vérifie les DMs non lus et le nombre de notifications non lues en parallèle
-  const [{ data: unreadThreads }, { count: unreadNotifCount }] =
-    await Promise.all([
-      supabase
-        .from("direct_message_threads")
-        .select(
-          "id, user_a_id, user_a_read_at, user_b_read_at, last_message_at",
-        )
-        .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-        .not("last_message_at", "is", null)
-        .limit(20),
-      supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("read", false),
-    ]);
+  const { data: unreadThreads } = await supabase
+    .from("direct_message_threads")
+    .select("id, user_a_id, user_a_read_at, user_b_read_at, last_message_at")
+    .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+    .not("last_message_at", "is", null)
+    .limit(20);
 
   const hasUnreadDm = (unreadThreads ?? []).some((t) => {
     if (!t.last_message_at) return false;
@@ -128,7 +117,6 @@ export default async function AppLayout({
           xp={profile.xp ?? 0}
           userId={user.id}
           hasUnreadDm={hasUnreadDm}
-          unreadNotifCount={unreadNotifCount ?? 0}
         />
 
         <main className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden text-white">
