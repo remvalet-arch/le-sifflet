@@ -104,12 +104,27 @@ export async function POST(
     .eq("id", user.id)
     .maybeSingle();
 
-  if (recipient?.notif_dm && sender) {
-    void sendPushToUsers([otherId], {
+  if (sender) {
+    const preview = content.length > 80 ? `${content.slice(0, 77)}…` : content;
+
+    // In-app notification (always, regardless of push preference)
+    void admin.from("notifications").insert({
+      user_id: otherId,
+      type: "dm",
       title: `💬 ${sender.username}`,
-      body: "Nouveau message",
+      body: preview,
       url: `/messages/${user.id}`,
     });
+
+    // Push if preference enabled
+    if (recipient?.notif_dm) {
+      void sendPushToUsers([otherId], {
+        title: `💬 ${sender.username}`,
+        body: preview,
+        url: `/messages/${user.id}`,
+        tag: `dm-${user.id}`,
+      });
+    }
   }
 
   return successResponse({ thread_id: thread.id });

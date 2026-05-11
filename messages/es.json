@@ -41,6 +41,7 @@
     "sectionClassement": "CLASIFICACIÓN",
     "sectionBoutique": "TIENDA",
     "ariaMessages": "Mensajes privados",
+    "ariaNotifications": "Notificaciones",
     "ariaOpenMenu": "Abrir menú",
     "ariaCloseMenu": "Cerrar menú",
     "backStade": "← Estadio",
@@ -409,7 +410,16 @@
     "errorSubscribeFailed": "En iPhone, abre la app desde la pantalla de inicio (no directamente desde Safari).",
     "saveFailed": "No se pudo guardar.",
     "toggleOn": "¡Notificación activada!",
-    "toggleOff": "Notificación desactivada."
+    "toggleOff": "Notificación desactivada.",
+    "groupFriendsTitle": "Amigos y Mensajes",
+    "friendRequestLabel": "Solicitud de amistad recibida",
+    "friendRequestDesc": "Cuando alguien te envía una solicitud de amistad.",
+    "dmLabel": "Mensajes privados",
+    "dmDesc": "Cuando recibes un mensaje privado."
+  },
+  "NotifCenter": {
+    "pageTitle": "Notificaciones",
+    "emptyState": "Sin notificaciones por ahora."
   },
   "Rules": {
     "title": "Reglas del juego",

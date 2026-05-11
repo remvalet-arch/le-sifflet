@@ -33,6 +33,7 @@
     "sectionClassement": "LEADERBOARD",
     "sectionBoutique": "SHOP",
     "ariaMessages": "Private messages",
+    "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Open menu",
     "ariaCloseMenu": "Close menu",
     "backStade": "← Stadium",
@@ -401,7 +402,16 @@
     "errorSubscribeFailed": "On iPhone, open the app from the home screen (not directly via Safari).",
     "saveFailed": "Unable to save.",
     "toggleOn": "Notification enabled!",
-    "toggleOff": "Notification disabled."
+    "toggleOff": "Notification disabled.",
+    "groupFriendsTitle": "Friends & Messages",
+    "friendRequestLabel": "Friend request received",
+    "friendRequestDesc": "When someone sends you a friend request.",
+    "dmLabel": "Private messages",
+    "dmDesc": "When you receive a private message."
+  },
+  "NotifCenter": {
+    "pageTitle": "Notifications",
+    "emptyState": "No notifications yet."
   },
   "Rules": {
     "title": "Game rules",

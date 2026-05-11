@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Loader2,
   Users,
+  MessageCircle,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
@@ -24,7 +25,9 @@ type ToggleKey =
   | "notif_var_results"
   | "notif_prono_results"
   | "notif_daily_digest"
-  | "notif_squad_chat";
+  | "notif_squad_chat"
+  | "notif_dm"
+  | "notif_friend_request";
 
 export default function NotificationsClient({
   userId,
@@ -34,6 +37,8 @@ export default function NotificationsClient({
   initialPronoResults,
   initialDailyDigest,
   initialSquadChat,
+  initialDm,
+  initialFriendRequest,
 }: {
   userId: string;
   initialPreMatch5: boolean;
@@ -42,6 +47,8 @@ export default function NotificationsClient({
   initialPronoResults: boolean;
   initialDailyDigest: boolean;
   initialSquadChat: boolean;
+  initialDm: boolean;
+  initialFriendRequest: boolean;
 }) {
   const t = useTranslations("Notifications");
 
@@ -106,6 +113,22 @@ export default function NotificationsClient({
         },
       ],
     },
+    {
+      title: t("groupFriendsTitle"),
+      icon: MessageCircle,
+      items: [
+        {
+          key: "notif_friend_request" as ToggleKey,
+          label: t("friendRequestLabel"),
+          desc: t("friendRequestDesc"),
+        },
+        {
+          key: "notif_dm" as ToggleKey,
+          label: t("dmLabel"),
+          desc: t("dmDesc"),
+        },
+      ],
+    },
   ];
 
   const [values, setValues] = useState<Record<ToggleKey, boolean>>({
@@ -115,6 +138,8 @@ export default function NotificationsClient({
     notif_prono_results: initialPronoResults,
     notif_daily_digest: initialDailyDigest,
     notif_squad_chat: initialSquadChat,
+    notif_dm: initialDm,
+    notif_friend_request: initialFriendRequest,
   });
   const [isPending, startTransition] = useTransition();
   const [subStatus, setSubStatus] = useState<

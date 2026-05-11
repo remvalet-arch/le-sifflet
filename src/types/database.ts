@@ -66,6 +66,7 @@ export interface Database {
           notif_pre_match_2h: boolean;
           notif_squad_chat: boolean;
           notif_dm: boolean;
+          notif_friend_request: boolean;
           streak_freezes_owned: number;
           streak_freezes_used_count: number;
           equipped_avatar_id: string | null;
@@ -103,6 +104,7 @@ export interface Database {
           notif_pre_match_2h?: boolean;
           notif_squad_chat?: boolean;
           notif_dm?: boolean;
+          notif_friend_request?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
@@ -140,6 +142,7 @@ export interface Database {
           notif_pre_match_2h?: boolean;
           notif_squad_chat?: boolean;
           notif_dm?: boolean;
+          notif_friend_request?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
@@ -147,6 +150,39 @@ export interface Database {
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
           username_last_changed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          url: string | null;
+          read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          url?: string | null;
+          read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          body?: string;
+          url?: string | null;
+          read?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -1835,3 +1871,7 @@ export type RateLimitLogInsert =
   Database["public"]["Tables"]["rate_limit_log"]["Insert"];
 
 export type PlayerOddsRow = Database["public"]["Tables"]["player_odds"]["Row"];
+export type NotificationRow =
+  Database["public"]["Tables"]["notifications"]["Row"];
+export type NotificationInsert =
+  Database["public"]["Tables"]["notifications"]["Insert"];

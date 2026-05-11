@@ -43,6 +43,7 @@
     "sectionClassement": "RANGLISTE",
     "sectionBoutique": "SHOP",
     "ariaMessages": "Direktnachrichten",
+    "ariaNotifications": "Benachrichtigungen",
     "ariaOpenMenu": "Menü öffnen",
     "ariaCloseMenu": "Menü schließen",
     "backStade": "← Stadion",
@@ -411,7 +412,16 @@
     "errorSubscribeFailed": "Auf iPhone, öffne die App vom Startbildschirm aus (nicht direkt über Safari).",
     "saveFailed": "Speichern fehlgeschlagen.",
     "toggleOn": "Benachrichtigung aktiviert!",
-    "toggleOff": "Benachrichtigung deaktiviert."
+    "toggleOff": "Benachrichtigung deaktiviert.",
+    "groupFriendsTitle": "Freunde & Nachrichten",
+    "friendRequestLabel": "Freundschaftsanfrage",
+    "friendRequestDesc": "Wenn jemand dir eine Freundschaftsanfrage schickt.",
+    "dmLabel": "Direktnachrichten",
+    "dmDesc": "Wenn du eine Direktnachricht erhältst."
+  },
+  "NotifCenter": {
+    "pageTitle": "Benachrichtigungen",
+    "emptyState": "Noch keine Benachrichtigungen."
   },
   "Rules": {
     "title": "Spielregeln",

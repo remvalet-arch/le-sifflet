@@ -13,6 +13,7 @@ import {
   Trophy,
   ShoppingBag,
   MessageCircle,
+  Bell,
   ArrowLeft,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
@@ -74,6 +75,7 @@ type Props = {
   rank: string;
   xp: number;
   hasUnreadDm?: boolean;
+  unreadNotifCount?: number;
 };
 
 export function TopBar({
@@ -82,6 +84,7 @@ export function TopBar({
   rank,
   xp: initialXp,
   hasUnreadDm = false,
+  unreadNotifCount = 0,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [liveRank, setLiveRank] = useState(rank);
@@ -164,6 +167,20 @@ export function TopBar({
           )}
 
           <div className="flex items-center gap-2">
+            {/* Notifications bell */}
+            <Link
+              href="/notifications"
+              aria-label={t("ariaNotifications")}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-whistle text-[9px] font-black text-zinc-950 ring-2 ring-zinc-950">
+                  {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                </span>
+              )}
+            </Link>
+
             {/* Messages privés */}
             <Link
               href="/messages"
