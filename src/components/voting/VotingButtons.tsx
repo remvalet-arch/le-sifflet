@@ -341,7 +341,7 @@ export function AmountPicker({
           onChange={(e) => setAmount(clamp(parseInt(e.target.value, 10)))}
           disabled={!canBet || expired}
           aria-label={t("betAmount")}
-          className="w-full accent-green-500 disabled:opacity-40"
+          className="h-11 w-full cursor-pointer accent-green-500 disabled:opacity-40 [&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-green-500"
         />
       </div>
       {minBet > 5 && (

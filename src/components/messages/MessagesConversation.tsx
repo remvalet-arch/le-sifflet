@@ -348,7 +348,10 @@ export function MessagesConversation({
       </div>
 
       {/* Input */}
-      <div className="flex items-center gap-2 border-t border-white/8 px-3 py-2">
+      <div
+        className="flex items-center gap-2 border-t border-white/8 px-3 pt-2"
+        style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+      >
         <input
           type="text"
           aria-label="Écrire un message"

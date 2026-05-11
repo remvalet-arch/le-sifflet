@@ -605,7 +605,9 @@ export function LiveRoom({
     { id: "kop", label: t("tabKop") },
     { id: "vestiaire", label: t("tabVestiaire") },
     { id: "compo", label: t("tabCompo") },
-    { id: "stats", label: t("tabStats") },
+    ...(liveMatch.status !== "upcoming"
+      ? [{ id: "stats" as Tab, label: t("tabStats") }]
+      : []),
   ];
 
   return (

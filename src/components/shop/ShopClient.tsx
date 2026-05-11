@@ -294,22 +294,28 @@ export function ShopClient({
           </span>
         </button>
 
-        {/* Tabs */}
-        <div className="flex gap-2">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setActiveTab(t.key)}
-              className={`flex-1 rounded-xl py-2 text-[11px] font-black transition ${
-                activeTab === t.key
-                  ? "bg-whistle text-zinc-950"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
-            >
-              {t.emoji} {t.label}
-            </button>
-          ))}
+        {/* Tabs — scroll horizontal sur mobile */}
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setActiveTab(t.key)}
+                className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-black transition ${
+                  activeTab === t.key
+                    ? "bg-whistle text-zinc-950"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                }`}
+              >
+                {t.emoji} {t.label}
+              </button>
+            ))}
+          </div>
+          <div
+            className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950 to-transparent"
+            aria-hidden
+          />
         </div>
 
         {/* Quick filter (shop tabs only) */}
