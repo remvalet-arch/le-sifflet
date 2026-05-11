@@ -940,5 +940,9 @@
     "avgScore": "Ø vorhergesagtes Ergebnis:",
     "pronos": "Tipps",
     "prono": "Tipp"
+  },
+  "HeadToHead": {
+    "title": "Direktvergleich",
+    "source": "via TheSportsDB"
   }
 }

@@ -104,21 +104,37 @@ export function MatchNotificationBell({ matchId }: Props) {
   if (subscribed && !muted) label = "Mettre en sourdine (garder l'abonnement)";
   if (muted) label = "Réactiver les notifications";
 
+  // When not yet subscribed, show a pill button with label to invite action
+  if (!loading && !subscribed) {
+    return (
+      <button
+        type="button"
+        onClick={handlePress}
+        disabled={pending}
+        aria-label={label}
+        className="flex items-center gap-1.5 rounded-full border border-white/15 bg-zinc-900/80 px-3 py-2 text-[11px] font-black text-zinc-400 transition hover:border-white/25 hover:text-zinc-200 active:scale-95 disabled:opacity-40"
+      >
+        {pending ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
+        ) : (
+          <Bell className="h-4 w-4 shrink-0" aria-hidden />
+        )}
+        <span>Suivre</span>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
-      onClick={() => {
-        handlePress();
-      }}
+      onClick={handlePress}
       disabled={loading || pending}
       aria-label={label}
       aria-pressed={subscribed && !muted}
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition active:scale-95 disabled:opacity-40 ${
         muted
           ? "border-amber-500/50 bg-amber-500/15 text-amber-300"
-          : subscribed
-            ? "border-green-500/50 bg-green-500/15 text-green-400"
-            : "border-white/15 bg-zinc-900/80 text-zinc-500 hover:border-white/25 hover:text-zinc-300"
+          : "border-green-500/50 bg-green-500/15 text-green-400"
       }`}
     >
       {loading || pending ? (
@@ -126,10 +142,7 @@ export function MatchNotificationBell({ matchId }: Props) {
       ) : muted ? (
         <BellOff className="h-5 w-5" aria-hidden />
       ) : (
-        <Bell
-          className={`h-5 w-5 ${subscribed ? "fill-current" : ""}`}
-          aria-hidden
-        />
+        <Bell className="h-5 w-5 fill-current" aria-hidden />
       )}
     </button>
   );

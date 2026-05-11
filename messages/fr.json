@@ -929,5 +929,9 @@
     "avgScore": "Score moyen pronostiqué :",
     "pronos": "pronos",
     "prono": "prono"
+  },
+  "HeadToHead": {
+    "title": "Face à face",
+    "source": "via TheSportsDB"
   }
 }

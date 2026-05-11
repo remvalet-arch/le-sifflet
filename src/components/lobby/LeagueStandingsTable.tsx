@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { LeagueStandingRow } from "@/types/database";
+import { SkeletonTable } from "@/components/ui/SkeletonCard";
 
 const FORM_COLOR: Record<string, string> = {
   W: "bg-green-500 text-white",
@@ -151,11 +152,7 @@ export function LeagueStandingsTable({ leagueApiId }: { leagueApiId: number }) {
   }, [standings]);
 
   if (loading) {
-    return (
-      <div className="py-10 text-center text-sm text-zinc-500">
-        Chargement du classement…
-      </div>
-    );
+    return <SkeletonTable rows={8} />;
   }
 
   if (standings.length === 0) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -179,6 +179,11 @@ export function PronosticsHubClient({
   const submittedCount = filteredMatches.filter((m) =>
     isMatchDone(m.id),
   ).length;
+  const pct = total > 0 ? (submittedCount / total) * 100 : 0;
+  const [animatedPct, setAnimatedPct] = useState(0);
+  useEffect(() => {
+    setTimeout(() => setAnimatedPct(pct), 0);
+  }, [pct]);
 
   const countsForSelectedDay = (() => {
     const map: Record<string, number> = {};
@@ -229,12 +234,12 @@ export function PronosticsHubClient({
             </span>
           )}
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-800">
           <div
-            className="h-full rounded-full bg-whistle transition-all duration-500"
-            style={{
-              width: `${total > 0 ? (submittedCount / total) * 100 : 0}%`,
-            }}
+            className={`h-full rounded-full transition-all duration-700 ease-out ${
+              pct > 50 ? "bg-yellow-400" : "bg-zinc-600"
+            }`}
+            style={{ width: `${animatedPct}%` }}
           />
         </div>
       </div>

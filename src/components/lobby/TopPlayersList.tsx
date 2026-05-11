@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { LeagueTopPlayerRow } from "@/types/database";
+import { SkeletonList } from "@/components/ui/SkeletonCard";
 
 export function TopPlayersList({
   leagueApiId,
@@ -47,11 +48,7 @@ export function TopPlayersList({
   const emptyLabel = type === "scorer" ? "buteurs" : "passeurs";
 
   if (loading) {
-    return (
-      <div className="py-10 text-center text-sm text-zinc-500">
-        Chargement des {emptyLabel}…
-      </div>
-    );
+    return <SkeletonList rows={5} />;
   }
 
   if (players.length === 0) {

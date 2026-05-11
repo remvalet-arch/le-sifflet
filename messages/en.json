@@ -930,5 +930,9 @@
     "avgScore": "Avg predicted score:",
     "pronos": "predictions",
     "prono": "prediction"
+  },
+  "HeadToHead": {
+    "title": "Head to Head",
+    "source": "via TheSportsDB"
   }
 }

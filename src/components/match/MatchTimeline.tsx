@@ -17,6 +17,7 @@ import type {
   MatchTimelineEventRow,
   TimelineEventType,
 } from "@/types/database";
+import { HeadToHead } from "./HeadToHead";
 
 /** Stable per-event flavor text selection (deterministic, not random each render). */
 function pickFlavorText(texts: string[], eventId: string): string {
@@ -213,6 +214,7 @@ export const MatchTimeline = memo(function MatchTimeline({
   });
   const [saving, setSaving] = useState(false);
   const [flavorMap, setFlavorMap] = useState<Map<string, string[]>>(new Map());
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
     const supabase = createClient();
@@ -308,6 +310,15 @@ export const MatchTimeline = memo(function MatchTimeline({
       setFlavorMap(map);
     });
   }, [showFlavorTexts]);
+
+  // Live countdown tick — only when upcoming and match time is known
+  useEffect(() => {
+    if (matchStatus !== "upcoming" || !matchStartTime) return;
+    const id = setInterval(() => {
+      setTimeout(() => setNowMs(Date.now()), 0);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [matchStatus, matchStartTime]);
 
   function startEdit(ev: MatchTimelineEventRow) {
     if (ev.event_type === "info") return;
@@ -415,32 +426,49 @@ export const MatchTimeline = memo(function MatchTimeline({
   if (events.length === 0) {
     if (matchStatus === "upcoming") {
       const kickoff = matchStartTime ? new Date(matchStartTime) : null;
-      const now = new Date();
-      const diffMs = kickoff ? kickoff.getTime() - now.getTime() : null;
-      const diffH = diffMs != null ? Math.floor(diffMs / 3600000) : null;
+      const diffMs = kickoff ? kickoff.getTime() - nowMs : null;
+      const diffD = diffMs != null ? Math.floor(diffMs / 86400000) : null;
+      const diffH =
+        diffMs != null ? Math.floor((diffMs % 86400000) / 3600000) : null;
       const diffMin =
         diffMs != null ? Math.floor((diffMs % 3600000) / 60000) : null;
+      const diffSec =
+        diffMs != null ? Math.floor((diffMs % 60000) / 1000) : null;
+
+      const countdownStr = (() => {
+        if (diffMs == null || diffMs <= 0) return null;
+        if (diffD != null && diffD >= 1)
+          return `${diffD}j ${diffH}h ${String(diffMin).padStart(2, "0")}min`;
+        if (diffH != null && diffH >= 1)
+          return `${diffH}h ${String(diffMin).padStart(2, "0")}min`;
+        if (diffMin != null && diffMin >= 1)
+          return `${diffMin}min ${String(diffSec).padStart(2, "0")}s`;
+        return diffSec != null ? `${diffSec}s` : null;
+      })();
 
       return (
         <div className="mt-6 flex flex-col items-center gap-4 py-10 text-center">
           <span className="text-4xl">🕐</span>
-          {kickoff &&
-            diffMs != null &&
-            diffMs > 0 &&
-            diffH != null &&
-            diffMin != null && (
-              <div>
-                <p className="text-2xl font-black tabular-nums text-white">
-                  {diffH > 0 ? `${diffH}h ${diffMin}min` : `${diffMin} min`}
-                </p>
-                <p className="mt-0.5 text-[11px] font-bold text-zinc-500 uppercase tracking-wide">
-                  {tLive("beforeKickoff")}
-                </p>
-              </div>
-            )}
+          {countdownStr && (
+            <div>
+              <p className="font-mono text-3xl font-black tabular-nums text-white">
+                {countdownStr}
+              </p>
+              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-zinc-500">
+                {tLive("beforeKickoff")}
+              </p>
+            </div>
+          )}
           <p className="max-w-[220px] text-sm text-zinc-500">
             {tLive("eventsWillAppear")}
           </p>
+          {teamHome && teamAway && (
+            <HeadToHead
+              matchId={matchId}
+              teamHome={teamHome}
+              teamAway={teamAway}
+            />
+          )}
           {onSwitchToCompo && (
             <button
               type="button"

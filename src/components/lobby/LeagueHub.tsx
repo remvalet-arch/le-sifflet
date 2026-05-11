@@ -7,6 +7,7 @@ import { MatchCard } from "@/components/lobby/MatchCard";
 import { LeagueStandingsTable } from "@/components/lobby/LeagueStandingsTable";
 import { TopPlayersList } from "@/components/lobby/TopPlayersList";
 import type { MatchRow } from "@/types/database";
+import { SkeletonMatchCard } from "@/components/ui/SkeletonCard";
 
 type HubTabId = "results" | "standings" | "scorers" | "assists";
 
@@ -264,8 +265,10 @@ export function LeagueHub({
           )}
 
           {loading ? (
-            <div className="py-10 text-center text-sm text-zinc-500">
-              Chargement des matchs…
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonMatchCard key={i} />
+              ))}
             </div>
           ) : roundMatches.length === 0 ? (
             <p className="rounded-2xl border border-white/8 bg-zinc-900/60 px-4 py-8 text-center text-sm text-zinc-500">

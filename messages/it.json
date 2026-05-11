@@ -937,5 +937,9 @@
     "avgScore": "Punteggio medio pronosticato:",
     "pronos": "pronostici",
     "prono": "pronostico"
+  },
+  "HeadToHead": {
+    "title": "Testa a testa",
+    "source": "via TheSportsDB"
   }
 }
