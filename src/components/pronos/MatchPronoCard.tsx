@@ -238,11 +238,7 @@ export function MatchPronoCard({
     null,
   );
 
-  const [nowMs] = useState(() => Date.now());
-  const LOCK_BEFORE_MS = 45 * 60 * 1000;
-  const isLocked =
-    match.status !== "upcoming" ||
-    new Date(match.start_time).getTime() - nowMs < LOCK_BEFORE_MS;
+  const isLocked = match.status !== "upcoming";
   const awayRef = useRef<HTMLInputElement | null>(null);
 
   const scoresValid =
@@ -730,7 +726,7 @@ export function MatchPronoCard({
           </a>
         ) : isLocked ? (
           <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800/50 py-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
-            🔒 Pronos fermés — départ dans moins d&apos;une heure
+            🔒 Pronos fermés — match en cours
           </div>
         ) : scoresValid ? (
           <>
