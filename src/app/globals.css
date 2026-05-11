@@ -181,3 +181,68 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Thèmes ────────────────────────────────────────────────────────────────── */
+
+[data-theme="light"] {
+  --background: #f4f4f5;
+  --foreground: #09090b;
+  --color-text-secondary: #52525b;
+  color-scheme: light;
+}
+
+[data-theme="high-contrast"] {
+  --background: #000000;
+  --foreground: #ffffff;
+  --color-text-secondary: #e4e4e7;
+  color-scheme: dark;
+}
+
+/*
+ * Light mode — surface overrides.
+ * Unlayered rules take priority over Tailwind @layer utilities in the CSS cascade.
+ */
+[data-theme="light"] .bg-zinc-950 {
+  background-color: #f4f4f5;
+}
+[data-theme="light"] .bg-zinc-900 {
+  background-color: #ffffff;
+}
+[data-theme="light"] .bg-zinc-800 {
+  background-color: #e4e4e7;
+}
+[data-theme="light"] .bg-zinc-700 {
+  background-color: #d4d4d8;
+}
+[data-theme="light"] :is(.text-white, .text-zinc-50) {
+  color: #09090b;
+}
+[data-theme="light"] .text-zinc-300 {
+  color: #3f3f46;
+}
+[data-theme="light"] .text-zinc-400 {
+  color: #52525b;
+}
+[data-theme="light"] .text-zinc-500 {
+  color: #71717a;
+}
+[data-theme="light"] .text-zinc-600 {
+  color: #a1a1aa;
+}
+
+/* High contrast — stronger contrast for muted elements */
+[data-theme="high-contrast"] .text-zinc-400 {
+  color: #e4e4e7;
+}
+[data-theme="high-contrast"] .text-zinc-500 {
+  color: #d4d4d8;
+}
+[data-theme="high-contrast"] .text-zinc-600 {
+  color: #a1a1aa;
+}
+[data-theme="high-contrast"] .bg-zinc-900 {
+  background-color: #030303;
+}
+[data-theme="high-contrast"] .bg-zinc-800 {
+  background-color: #0a0a0a;
+}

@@ -795,7 +795,14 @@
     "streakFreezeBought": "🛡️ ¡Streak Freeze comprado! Ahora tienes {count}.",
     "saveBetSuccess": "¡Apuesta rápida fijada en {amount} 🪙!",
     "saveBetError": "No se pudo guardar la configuración.",
-    "connectionLost": "Conexión perdida"
+    "connectionLost": "Conexión perdida",
+    "themeTitle": "Apariencia",
+    "themeDark": "Oscuro",
+    "themeLight": "Claro",
+    "themeHighContrast": "Alto contraste",
+    "themeChanged": "¡Tema actualizado!",
+    "onboardingReplay": "Repetir intro",
+    "onboardingReplayDesc": "Vuelve a ver el tutorial de introducción"
   },
   "Banner": {
     "migrationBold": "VAR TIME tiene su dominio real:",

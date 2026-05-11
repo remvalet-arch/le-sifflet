@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ToasterProvider } from "@/components/providers/ToasterProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/components/providers/ServiceWorkerRegister";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { NextIntlClientProvider } from "next-intl";
@@ -70,9 +71,18 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="h-full antialiased">
+      <head>
+        {/* Apply saved theme before first paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme');if(t==='light'||t==='high-contrast')document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full bg-zinc-950 text-zinc-50 font-sans">
         <NextIntlClientProvider messages={messages}>
           <PostHogProvider>
+            <ThemeProvider />
             {children}
             <ServiceWorkerRegister />
             <InstallPrompt />

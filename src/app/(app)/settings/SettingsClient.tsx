@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronRight, LogOut, Shield, Zap } from "lucide-react";
+import {
+  Bell,
+  ChevronRight,
+  LogOut,
+  Palette,
+  RefreshCw,
+  Shield,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/app/actions/auth";
+
+type Theme = "dark" | "light" | "high-contrast";
 
 const BCP47: Record<string, string> = {
   fr: "fr-FR",
@@ -40,6 +50,43 @@ export default function SettingsClient({
   const [freezesOwned, setFreezesOwned] = useState(initialFreezesOwned);
   const [balance, setBalance] = useState(initialBalance);
   const [buyingFreeze, setBuyingFreeze] = useState(false);
+  const [theme, setThemeState] = useState<Theme>("dark");
+  const isFirstThemeRender = useRef(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") as Theme | null;
+    if (saved === "light" || saved === "high-contrast") {
+      setTimeout(() => setThemeState(saved), 0);
+    }
+  }, []);
+
+  // Sync theme state → DOM (skip first render; ThemeProvider handles initial paint)
+  useEffect(() => {
+    if (isFirstThemeRender.current) {
+      isFirstThemeRender.current = false;
+      return;
+    }
+    if (theme === "dark") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.dataset.theme = theme;
+    }
+  }, [theme]);
+
+  function handleThemeChange(newTheme: Theme) {
+    setThemeState(newTheme);
+    if (newTheme === "dark") {
+      localStorage.removeItem("theme");
+    } else {
+      localStorage.setItem("theme", newTheme);
+    }
+    toast.success(t("themeChanged"));
+  }
+
+  function handleReplayOnboarding() {
+    localStorage.removeItem("hasCompletedOnboarding");
+    window.location.href = "/lobby";
+  }
 
   async function handleBuyFreeze() {
     if (buyingFreeze || freezesOwned >= 3 || balance < 500) return;
@@ -215,6 +262,64 @@ export default function SettingsClient({
           </div>
           <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
         </Link>
+      </section>
+
+      {/* Section Apparence */}
+      <section className="mt-6">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          <Palette className="h-3 w-3" />
+          {t("themeTitle")}
+        </h2>
+        <div className="rounded-2xl border border-white/8 bg-zinc-900 p-5">
+          <div className="flex overflow-hidden rounded-xl border border-white/10">
+            {(
+              [
+                { key: "dark", label: t("themeDark") },
+                { key: "light", label: t("themeLight") },
+                { key: "high-contrast", label: t("themeHighContrast") },
+              ] as { key: Theme; label: string }[]
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                data-testid={`theme-btn-${key}`}
+                aria-pressed={theme === key}
+                onClick={() => handleThemeChange(key)}
+                className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wide transition ${
+                  theme === key
+                    ? "bg-whistle text-zinc-950"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section Intro */}
+      <section className="mt-6">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          <RefreshCw className="h-3 w-3" />
+          {t("onboardingReplay")}
+        </h2>
+        <button
+          type="button"
+          data-testid="onboarding-replay-btn"
+          onClick={handleReplayOnboarding}
+          className="flex w-full items-center justify-between gap-4 rounded-2xl border border-white/8 bg-zinc-900 p-5 transition hover:bg-zinc-800/80 active:scale-[0.98]"
+        >
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-white">
+              {t("onboardingReplay")}
+            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-zinc-400">
+              {t("onboardingReplayDesc")}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
+        </button>
       </section>
 
       {/* Section Compte */}
