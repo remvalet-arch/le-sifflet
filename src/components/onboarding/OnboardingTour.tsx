@@ -2,18 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { trySubscribePush } from "@/components/pwa/PushOptIn";
-import {
-  X,
-  BellRing,
-  Siren,
-  Moon,
-  Sun,
-  Monitor,
-  CheckCircle2,
-} from "lucide-react";
+import { X, BellRing, Siren, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 type VarVote = "oui" | "non" | "timeout" | null;
 
 function ProgressDots({ current }: { current: number }) {
@@ -21,13 +13,13 @@ function ProgressDots({ current }: { current: number }) {
     <div className="flex items-center justify-center gap-1.5 mb-6">
       {Array.from({ length: TOTAL_STEPS }, (_, i) => (
         <div
-          key={i}
+          key={`step-`}
           className={`rounded-full transition-all duration-300 ${
             i + 1 === current
               ? "h-2 w-6 bg-whistle"
               : i + 1 < current
-                ? "h-2 w-2 bg-whistle/60"
-                : "h-2 w-2 bg-white/15"
+                ? "size-2 bg-whistle/60"
+                : "size-2 bg-white/15"
           }`}
         />
       ))}
@@ -51,16 +43,12 @@ export function OnboardingTour() {
   const [awayScore, setAwayScore] = useState("");
   const [pronoSubmitted, setPronoSubmitted] = useState(false);
 
-  // Step 4 — theme
-  const [selectedTheme, setSelectedTheme] = useState<
-    "dark" | "light" | "system"
-  >("dark");
-
   useEffect(() => {
     if (localStorage.getItem("hasCompletedOnboarding")) return;
     const saved = localStorage.getItem("onboardingStep");
     const startStep = saved ? parseInt(saved, 10) : 1;
-    setTimeout(() => setStep(startStep), 0);
+    const id = setTimeout(() => setStep(startStep), 0);
+    return () => clearTimeout(id);
   }, []);
 
   // Step 2 countdown timer — varTimer already initialized to 30 via useState
@@ -103,24 +91,13 @@ export function OnboardingTour() {
     setTimeout(() => setShowVarResult(true), 350);
   }
 
-  function handleThemeSelect(theme: "dark" | "light" | "system") {
-    setSelectedTheme(theme);
-    if (theme === "light") {
-      localStorage.setItem("theme", "light");
-      document.documentElement.dataset.theme = "light";
-    } else {
-      localStorage.removeItem("theme");
-      document.documentElement.removeAttribute("data-theme");
-    }
-  }
-
   // Skip confirmation overlay
   if (showSkipConfirm) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px]" />
         <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in zoom-in-95">
-          <h2 className="text-center text-xl font-black text-white">
+          <h2 className="text-center text-xl font-bold text-white">
             {t("skipConfirm")}
           </h2>
           <p className="mt-2 text-center text-sm text-zinc-400">
@@ -158,20 +135,20 @@ export function OnboardingTour() {
             type="button"
             onClick={() => setShowSkipConfirm(true)}
             aria-label={t("skip")}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+            className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
 
           <ProgressDots current={1} />
 
           <div className="mb-6 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-whistle/20">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-whistle/20">
               <span className="text-3xl" aria-hidden="true">
                 🏆
               </span>
             </div>
-            <h2 className="text-3xl font-black uppercase tracking-tight text-white">
+            <h2 className="text-3xl font-bold uppercase tracking-tight text-white">
               VAR TIME
             </h2>
             <p className="mt-1 text-xs font-black uppercase tracking-widest text-whistle">
@@ -200,9 +177,9 @@ export function OnboardingTour() {
             type="button"
             onClick={() => setShowSkipConfirm(true)}
             aria-label={t("skip")}
-            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+            className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
 
           {!showVarResult ? (
@@ -212,7 +189,7 @@ export function OnboardingTour() {
               <p className="mb-1 text-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 {t("step2Subtitle")}
               </p>
-              <h2 className="mb-5 text-center text-xl font-black text-white">
+              <h2 className="mb-5 text-center text-xl font-bold text-white">
                 {t("step2Title")}
               </h2>
 
@@ -308,14 +285,14 @@ export function OnboardingTour() {
               </div>
 
               {/* Rules */}
-              <h3 className="mb-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                 {t("step2RulesTitle")}
               </h3>
               <ul className="mb-5 space-y-2">
                 {[t("step2Rule1"), t("step2Rule2"), t("step2Rule3")].map(
                   (rule, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-whistle/20 text-xs font-black text-whistle">
+                    <li key={`step-`} className="flex items-start gap-2">
+                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-whistle/20 text-xs font-black text-whistle">
                         {i + 1}
                       </span>
                       <p className="text-sm leading-snug text-zinc-300">
@@ -345,14 +322,14 @@ export function OnboardingTour() {
             type="button"
             onClick={() => setShowSkipConfirm(true)}
             aria-label={t("skip")}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+            className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
 
           <ProgressDots current={3} />
 
-          <h2 className="mb-1 text-center text-xl font-black text-white">
+          <h2 className="mb-1 text-center text-xl font-bold text-white">
             {t("step3Title")}
           </h2>
           <p className="mb-5 text-center text-sm text-zinc-400">
@@ -434,10 +411,10 @@ export function OnboardingTour() {
           ) : (
             <div className="text-center">
               <CheckCircle2
-                className="mx-auto mb-4 h-16 w-16 text-green-400"
+                className="mx-auto mb-4 size-16 text-green-400"
                 aria-hidden="true"
               />
-              <h3 className="text-2xl font-black text-white">
+              <h3 className="text-2xl font-bold text-white">
                 {t("step3SuccessTitle")}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-zinc-400">
@@ -466,111 +443,23 @@ export function OnboardingTour() {
         </div>
       )}
 
-      {/* ── Step 4 — Choix du thème ─────────────────────────────────────── */}
+      {/* ── Step 4 — Notifications ──────────────────────────────────────── */}
       {step === 4 && (
-        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
-          <button
-            type="button"
-            onClick={() => setShowSkipConfirm(true)}
-            aria-label={t("skip")}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          <ProgressDots current={4} />
-
-          <h2 className="mb-1 text-center text-xl font-black text-white">
-            {t("step4Title")}
-          </h2>
-          <p className="mb-5 text-center text-sm text-zinc-400">
-            {t("step4Subtitle")}
-          </p>
-
-          {/* Dark / Light preview cards */}
-          <div className="mb-3 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleThemeSelect("dark")}
-              aria-pressed={selectedTheme === "dark"}
-              className={`rounded-2xl border-2 p-4 text-left transition ${
-                selectedTheme === "dark"
-                  ? "border-whistle bg-whistle/10"
-                  : "border-white/10 bg-zinc-800/60"
-              }`}
-            >
-              <div className="mb-3 flex h-16 items-center justify-center rounded-xl border border-white/5 bg-zinc-950">
-                <Moon className="h-6 w-6 text-zinc-400" aria-hidden="true" />
-              </div>
-              <p className="text-sm font-black text-white">{t("step4Dark")}</p>
-              <p className="text-[11px] text-zinc-500">{t("step4DarkDesc")}</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleThemeSelect("light")}
-              aria-pressed={selectedTheme === "light"}
-              className={`rounded-2xl border-2 p-4 text-left transition ${
-                selectedTheme === "light"
-                  ? "border-whistle bg-whistle/10"
-                  : "border-white/10 bg-zinc-800/60"
-              }`}
-            >
-              <div className="mb-3 flex h-16 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-100">
-                <Sun className="h-6 w-6 text-zinc-500" aria-hidden="true" />
-              </div>
-              <p className="text-sm font-black text-white">{t("step4Light")}</p>
-              <p className="text-[11px] text-zinc-500">{t("step4LightDesc")}</p>
-            </button>
-          </div>
-
-          {/* System option */}
-          <button
-            type="button"
-            onClick={() => handleThemeSelect("system")}
-            aria-pressed={selectedTheme === "system"}
-            className={`mb-4 flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 transition ${
-              selectedTheme === "system"
-                ? "border-whistle bg-whistle/10"
-                : "border-white/10 bg-zinc-800/60"
-            }`}
-          >
-            <Monitor
-              className="h-4 w-4 shrink-0 text-zinc-400"
-              aria-hidden="true"
-            />
-            <span className="text-sm font-bold text-white">
-              {t("step4System")}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => saveStep(5)}
-            className="h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
-          >
-            {t("step4Next")}
-          </button>
-        </div>
-      )}
-
-      {/* ── Step 5 — Notifications ──────────────────────────────────────── */}
-      {step === 5 && (
         <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
           <div className="flex flex-col items-center p-8 text-center">
-            <ProgressDots current={5} />
+            <ProgressDots current={4} />
 
-            <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-full border-4 border-whistle/20 bg-whistle/10 text-whistle">
-              <Siren className="h-10 w-10" aria-hidden="true" />
+            <div className="relative mb-5 flex size-20 items-center justify-center rounded-full border-4 border-whistle/20 bg-whistle/10 text-whistle">
+              <Siren className="size-10" aria-hidden="true" />
               <div
                 aria-hidden="true"
-                className="absolute -right-1 -top-1 flex h-6 w-6 animate-bounce items-center justify-center rounded-full bg-red-500"
+                className="absolute -right-1 -top-1 flex size-6 animate-bounce items-center justify-center rounded-full bg-red-500"
               >
                 <span className="text-[10px] font-black text-white">1</span>
               </div>
             </div>
 
-            <h2 className="text-2xl font-black uppercase tracking-tight text-white">
+            <h2 className="text-2xl font-bold uppercase tracking-tight text-white">
               {t("step5Title")}
             </h2>
             <p className="mx-auto mt-3 max-w-[280px] text-sm leading-relaxed text-zinc-400">
@@ -587,7 +476,7 @@ export function OnboardingTour() {
               }}
               className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white font-black uppercase tracking-wide text-zinc-950 shadow-lg transition hover:bg-zinc-100 active:scale-[0.98]"
             >
-              <BellRing className="h-5 w-5" aria-hidden="true" />
+              <BellRing className="size-5" aria-hidden="true" />
               {t("step5Allow")}
             </button>
             <button
