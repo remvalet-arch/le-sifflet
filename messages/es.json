@@ -377,7 +377,8 @@
     "filterAvailable": "Disponible",
     "filterOwned": "Poseído",
     "myItemsEmpty": "Nada en esta categoría aún.",
-    "noEquipment": "Sin equipamiento activo"
+    "noEquipment": "Sin equipamiento activo",
+    "myItemsEmptyCta": "Ir a la tienda →"
   },
   "Notifications": {
     "breadcrumbSettings": "Ajustes",

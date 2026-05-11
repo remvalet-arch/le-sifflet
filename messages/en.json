@@ -369,7 +369,8 @@
     "filterAvailable": "Available",
     "filterOwned": "Owned",
     "myItemsEmpty": "Nothing in this category yet.",
-    "noEquipment": "No active equipment"
+    "noEquipment": "No active equipment",
+    "myItemsEmptyCta": "Browse the shop →"
   },
   "Notifications": {
     "breadcrumbSettings": "Settings",

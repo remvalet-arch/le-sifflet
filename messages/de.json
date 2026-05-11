@@ -379,7 +379,8 @@
     "filterAvailable": "Verfügbar",
     "filterOwned": "Besessen",
     "myItemsEmpty": "Noch nichts in dieser Kategorie.",
-    "noEquipment": "Keine aktive Ausrüstung"
+    "noEquipment": "Keine aktive Ausrüstung",
+    "myItemsEmptyCta": "Shop entdecken →"
   },
   "Notifications": {
     "breadcrumbSettings": "Einstellungen",

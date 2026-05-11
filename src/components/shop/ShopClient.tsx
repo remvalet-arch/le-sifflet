@@ -375,9 +375,19 @@ export function ShopClient({
                             : t("tabBoosters")}
                     </h3>
                     {!hasItems ? (
-                      <p className="rounded-xl border border-white/8 bg-zinc-900 px-4 py-3 text-xs text-zinc-600">
-                        {t("myItemsEmpty")}
-                      </p>
+                      <EmptyState
+                        variant="no-data"
+                        title={t("myItemsEmpty")}
+                        cta={
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab(cat as Tab)}
+                            className="rounded-xl bg-whistle px-4 py-2 text-xs font-black text-zinc-950 transition hover:opacity-90 active:scale-95"
+                          >
+                            {t("myItemsEmptyCta")}
+                          </button>
+                        }
+                      />
                     ) : cat === "boosters" ? (
                       <div className="flex flex-col gap-2">
                         {ownedBoosters.map((booster) => {

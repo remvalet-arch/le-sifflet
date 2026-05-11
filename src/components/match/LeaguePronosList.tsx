@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, User } from "lucide-react";
 import Link from "next/link";
 import type { SquadProno } from "./LiveRoom";
 import type { MatchStatus } from "@/types/database";
@@ -22,7 +22,6 @@ export function LeaguePronosList({
   squadPronos,
   hasSquad = true,
 }: Props) {
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   const hasStarted =
@@ -114,11 +113,11 @@ export function LeaguePronosList({
     );
   }
 
-  const VISIBLE_COUNT = 3;
+  const VISIBLE_COUNT = 20;
   const visible = showAll
     ? userPronosList
     : userPronosList.slice(0, VISIBLE_COUNT);
-  const remaining = userPronosList.length - VISIBLE_COUNT;
+  const hasMore = !showAll && userPronosList.length > VISIBLE_COUNT;
 
   return (
     <div className="mt-4 flex flex-col gap-1.5 px-4">
@@ -126,88 +125,41 @@ export function LeaguePronosList({
         Les pronos de tes ligues
       </p>
 
-      {visible.map((user, i) => {
-        const isExpanded = expandedIdx === i;
-        const hasScorers =
-          user.scorers != null &&
-          (user.scorers.home.length > 0 || user.scorers.away.length > 0);
-
-        return (
-          <div key={i}>
-            <button
-              type="button"
-              onClick={() =>
-                hasScorers ? setExpandedIdx(isExpanded ? null : i) : undefined
-              }
-              className={`flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3 text-left transition hover:bg-zinc-800/80 active:scale-[0.99] ${isExpanded ? "rounded-b-none border-b-transparent" : ""}`}
-            >
-              {user.avatar_url ? (
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg shadow">
-                  {user.avatar_url}
-                </div>
-              ) : (
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
-                  <User className="h-4 w-4" />
-                </div>
-              )}
-
-              <span className="min-w-0 flex-1 truncate font-bold text-white">
-                {user.username}
-              </span>
-
-              {user.score && (
-                <span className="font-mono text-sm font-black tabular-nums text-amber-400">
-                  {user.score}
-                </span>
-              )}
-
-              {user.points_earned > 0 && (
-                <span className="shrink-0 rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-black text-green-400">
-                  +{user.points_earned}
-                </span>
-              )}
-
-              {hasScorers &&
-                (isExpanded ? (
-                  <ChevronUp className="h-4 w-4 shrink-0 text-zinc-600" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 shrink-0 text-zinc-600" />
-                ))}
-            </button>
-
-            {isExpanded && hasScorers && (
-              <div className="rounded-b-2xl border border-t-0 border-white/10 bg-zinc-950/60 px-4 py-3">
-                <span className="mb-2 block text-[10px] font-bold uppercase text-zinc-600">
-                  Buteurs
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    ...(user.scorers!.home ?? []),
-                    ...(user.scorers!.away ?? []),
-                  ].map((s, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 text-[11px] font-medium text-zinc-300"
-                    >
-                      {s.name === "CSC" ? "🔙" : "⚽"}{" "}
-                      {s.name === "CSC" ? "CSC" : s.name}{" "}
-                      {s.goals > 1 ? `(×${s.goals})` : ""}
-                    </span>
-                  ))}
-                </div>
-              </div>
+      {visible.map((user, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-2.5 rounded-xl px-3 py-2 transition hover:bg-zinc-900/60"
+        >
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800 text-sm">
+            {user.avatar_url ? (
+              <span aria-hidden="true">{user.avatar_url}</span>
+            ) : (
+              <User className="h-3 w-3 text-zinc-500" aria-hidden="true" />
             )}
           </div>
-        );
-      })}
+          <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">
+            {user.username}
+          </span>
+          {user.score && (
+            <span className="shrink-0 font-mono text-sm font-black tabular-nums text-amber-400">
+              {user.score}
+            </span>
+          )}
+          {user.points_earned > 0 && (
+            <span className="shrink-0 text-[11px] text-zinc-500">
+              +{user.points_earned}
+            </span>
+          )}
+        </div>
+      ))}
 
-      {!showAll && remaining > 0 && (
+      {hasMore && (
         <button
           type="button"
           onClick={() => setShowAll(true)}
           className="mt-1 w-full py-2 text-xs font-bold text-zinc-500 transition hover:text-zinc-300"
         >
-          Voir {remaining} autre{remaining > 1 ? "s" : ""}
+          Voir tous
         </button>
       )}
     </div>
