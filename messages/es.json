@@ -21,7 +21,8 @@
     "profil": "Perfil",
     "regles": "Reglas",
     "messages": "Messages",
-    "ariaCallVar": "Llamar al VAR"
+    "ariaCallVar": "Llamar al VAR",
+    "ariaGoToLobby": "Encontrar un partido en vivo"
   },
   "TopBar": {
     "connected": "Conectado",

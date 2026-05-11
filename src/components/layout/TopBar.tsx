@@ -9,7 +9,6 @@ import {
   BookOpen,
   Settings,
   LogOut,
-  Scale,
   Trophy,
   ShoppingBag,
   MessageCircle,
@@ -313,13 +312,6 @@ export function TopBar({
             icon={<BookOpen className="h-4 w-4" />}
             label={t("rules")}
             onClick={() => setOpen(false)}
-          />
-          <SheetLink
-            href="/laws"
-            icon={<Scale className="h-4 w-4" />}
-            label={t("laws")}
-            onClick={() => setOpen(false)}
-            badge="IFAB"
           />
           <SheetLink
             href="/settings"

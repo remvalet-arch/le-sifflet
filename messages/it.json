@@ -20,7 +20,8 @@
     "profil": "Profilo",
     "regles": "Regole",
     "messages": "Messages",
-    "ariaCallVar": "Chiama il VAR"
+    "ariaCallVar": "Chiama il VAR",
+    "ariaGoToLobby": "Trova una partita in diretta"
   },
   "TopBar": {
     "connected": "Connesso",

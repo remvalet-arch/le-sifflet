@@ -12,7 +12,8 @@
     "profil": "Profil",
     "regles": "Règles",
     "messages": "Messages",
-    "ariaCallVar": "Appeler la VAR"
+    "ariaCallVar": "Appeler la VAR",
+    "ariaGoToLobby": "Trouver un match en direct"
   },
   "TopBar": {
     "connected": "Connecté",

@@ -13,7 +13,8 @@
     "profil": "Profile",
     "regles": "Rules",
     "messages": "Messages",
-    "ariaCallVar": "Call the VAR"
+    "ariaCallVar": "Call the VAR",
+    "ariaGoToLobby": "Find a live match"
   },
   "TopBar": {
     "connected": "Connected",

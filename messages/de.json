@@ -23,7 +23,8 @@
     "profil": "Profil",
     "regles": "Regeln",
     "messages": "Messages",
-    "ariaCallVar": "VAR rufen"
+    "ariaCallVar": "VAR rufen",
+    "ariaGoToLobby": "Live-Spiel finden"
   },
   "TopBar": {
     "connected": "Verbunden",
