@@ -33,13 +33,16 @@ CREATE INDEX IF NOT EXISTS idx_reactions_message ON message_reactions (message_i
 
 ALTER TABLE message_reactions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "reactions_select" ON message_reactions
+DROP POLICY IF EXISTS "reactions_select" ON message_reactions;
+CREATE POLICY "reactions_select" ON message_reactions
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "reactions_insert" ON message_reactions
+DROP POLICY IF EXISTS "reactions_insert" ON message_reactions;
+CREATE POLICY "reactions_insert" ON message_reactions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "reactions_delete" ON message_reactions
+DROP POLICY IF EXISTS "reactions_delete" ON message_reactions;
+CREATE POLICY "reactions_delete" ON message_reactions
   FOR DELETE USING (auth.uid() = user_id);
 
 ALTER TABLE message_reactions REPLICA IDENTITY FULL;
