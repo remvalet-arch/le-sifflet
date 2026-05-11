@@ -75,6 +75,7 @@ export interface Database {
           equipped_effect_id: string | null;
           role: "user" | "moderator" | "founder";
           username_last_changed_at: string | null;
+          last_seen_at: string | null;
         };
         Insert: {
           id: string;
@@ -114,6 +115,7 @@ export interface Database {
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
           username_last_changed_at?: string | null;
+          last_seen_at?: string | null;
         };
         Update: {
           id?: string;
@@ -153,6 +155,7 @@ export interface Database {
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
           username_last_changed_at?: string | null;
+          last_seen_at?: string | null;
         };
         Relationships: [];
       };
@@ -229,6 +232,8 @@ export interface Database {
           sender_id: string;
           content: string;
           sent_at: string;
+          content_type: "text" | "image" | "gif";
+          media_url: string | null;
         };
         Insert: {
           id?: string;
@@ -236,6 +241,8 @@ export interface Database {
           sender_id: string;
           content: string;
           sent_at?: string;
+          content_type?: "text" | "image" | "gif";
+          media_url?: string | null;
         };
         Update: {
           id?: string;
@@ -243,6 +250,32 @@ export interface Database {
           sender_id?: string;
           content?: string;
           sent_at?: string;
+          content_type?: "text" | "image" | "gif";
+          media_url?: string | null;
+        };
+        Relationships: [];
+      };
+      message_reactions: {
+        Row: {
+          id: string;
+          message_id: string;
+          user_id: string;
+          emoji: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          user_id: string;
+          emoji: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          message_id?: string;
+          user_id?: string;
+          emoji?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -1907,6 +1940,8 @@ export type DirectMessageThreadRow =
   Database["public"]["Tables"]["direct_message_threads"]["Row"];
 export type DirectMessageRow =
   Database["public"]["Tables"]["direct_messages"]["Row"];
+export type MessageReactionRow =
+  Database["public"]["Tables"]["message_reactions"]["Row"];
 export type RateLimitLogRow =
   Database["public"]["Tables"]["rate_limit_log"]["Row"];
 export type RateLimitLogInsert =

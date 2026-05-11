@@ -30,10 +30,10 @@ export default async function ConversationPage({
 
   const admin = createAdminClient();
 
-  // Infos de l'autre utilisateur
+  // Infos de l'autre utilisateur (incl. presence)
   const { data: other } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url")
+    .select("id, username, avatar_url, last_seen_at")
     .eq("id", otherId)
     .maybeSingle();
 
@@ -101,13 +101,19 @@ export default async function ConversationPage({
     }
   }
 
-  // Chargement initial des messages (50 derniers)
-  const { data: messages } = await supabase
+  // Chargement initial des messages (30 derniers, dans l'ordre chronologique)
+  const { data: rawMessages } = await supabase
     .from("direct_messages")
     .select("*")
     .eq("thread_id", threadId)
-    .order("sent_at", { ascending: true })
-    .limit(50);
+    .order("sent_at", { ascending: false })
+    .limit(30);
+  const messages = (rawMessages ?? []).slice().reverse();
+
+  const isOtherOnline =
+    other.last_seen_at != null &&
+    new Date().getTime() - new Date(other.last_seen_at).getTime() <
+      5 * 60 * 1000;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col">
@@ -134,7 +140,17 @@ export default async function ConversationPage({
         </div>
         <Link href={`/profile/${otherId}`} className="min-w-0">
           <p className="font-black text-white">{other.username}</p>
-          <p className="text-[10px] text-zinc-600">{t("friendStatus")}</p>
+          {isOtherOnline ? (
+            <p className="flex items-center gap-1 text-[10px] font-semibold text-green-400">
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full bg-green-400"
+                aria-hidden="true"
+              />
+              {t("online")}
+            </p>
+          ) : (
+            <p className="text-[10px] text-zinc-600">{t("friendStatus")}</p>
+          )}
         </Link>
       </div>
 

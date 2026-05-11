@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Check, CheckCheck } from "lucide-react";
+import { Send, Check, CheckCheck, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import type {
   DirectMessageRow,
   DirectMessageThreadRow,
+  MessageReactionRow,
 } from "@/types/database";
 import { track } from "@/lib/analytics";
 
@@ -16,6 +17,13 @@ const MAX_CHARS = 500;
 const RATE_LIMIT_MS = 2000;
 const TYPING_DEBOUNCE_MS = 1500;
 const TYPING_TTL_MS = 2500;
+const PAGE_SIZE = 30;
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "🔥", "👎"] as const;
+
+type ReactionMap = Map<
+  string,
+  { emoji: string; count: number; myReaction: boolean }[]
+>;
 
 export function MessagesConversation({
   threadId,
@@ -41,6 +49,10 @@ export function MessagesConversation({
   const [lastSentAt, setLastSentAt] = useState(0);
   const [liveOtherReadAt, setLiveOtherReadAt] = useState(otherReadAt);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [hasMore, setHasMore] = useState(initialMessages.length >= PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [reactions, setReactions] = useState<ReactionMap>(new Map());
+  const [pickerMsgId, setPickerMsgId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const channelRef = useRef<{
     send: (msg: object) => Promise<"ok" | "error" | "timed out">;
@@ -48,6 +60,12 @@ export function MessagesConversation({
   const isSubscribedRef = useRef(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingBroadcastRef = useRef(0);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Update presence on mount
+  useEffect(() => {
+    void fetch("/api/profile/presence", { method: "POST" });
+  }, []);
 
   // Mark thread as read on mount
   useEffect(() => {
@@ -55,7 +73,41 @@ export function MessagesConversation({
     void supabase.rpc("mark_dm_thread_read", { p_thread_id: threadId });
   }, [threadId]);
 
-  // Realtime — messages + thread read_at + typing broadcast
+  // Load reactions for visible messages
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const supabase = createClient();
+    const ids = messages.map((m) => m.id);
+    void supabase
+      .from("message_reactions")
+      .select("*")
+      .in("message_id", ids)
+      .then(({ data }) => {
+        if (!data) return;
+        const map = new Map<
+          string,
+          { emoji: string; count: number; myReaction: boolean }[]
+        >();
+        for (const r of data) {
+          const existing = map.get(r.message_id) ?? [];
+          const bucket = existing.find((b) => b.emoji === r.emoji);
+          if (bucket) {
+            bucket.count++;
+            if (r.user_id === currentUserId) bucket.myReaction = true;
+          } else {
+            existing.push({
+              emoji: r.emoji,
+              count: 1,
+              myReaction: r.user_id === currentUserId,
+            });
+          }
+          map.set(r.message_id, existing);
+        }
+        setReactions(map);
+      });
+  }, [messages, currentUserId]);
+
+  // Realtime — messages + thread read_at + typing + reactions
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -74,7 +126,6 @@ export function MessagesConversation({
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
-          // Mark thread as read when receiving a message
           const readNow = new Date().toISOString();
           if (currentUserId < otherId) {
             void supabase
@@ -99,7 +150,6 @@ export function MessagesConversation({
         },
         (payload) => {
           const updated = payload.new as DirectMessageThreadRow;
-          // The OTHER user's read_at tells us they've read our messages
           const newOtherReadAt =
             updated.user_a_id === otherId
               ? updated.user_a_read_at
@@ -107,6 +157,51 @@ export function MessagesConversation({
           if (newOtherReadAt) {
             setTimeout(() => setLiveOtherReadAt(newOtherReadAt), 0);
           }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "message_reactions",
+        },
+        (payload) => {
+          const r = (payload.new ?? payload.old) as MessageReactionRow;
+          if (!r?.message_id) return;
+          setReactions((prev) => {
+            const map = new Map(prev);
+            void supabase
+              .from("message_reactions")
+              .select("*")
+              .eq("message_id", r.message_id)
+              .then(({ data }) => {
+                const buckets: {
+                  emoji: string;
+                  count: number;
+                  myReaction: boolean;
+                }[] = [];
+                for (const row of data ?? []) {
+                  const b = buckets.find((x) => x.emoji === row.emoji);
+                  if (b) {
+                    b.count++;
+                    if (row.user_id === currentUserId) b.myReaction = true;
+                  } else {
+                    buckets.push({
+                      emoji: row.emoji,
+                      count: 1,
+                      myReaction: row.user_id === currentUserId,
+                    });
+                  }
+                }
+                setReactions((m) => {
+                  const next = new Map(m);
+                  next.set(r.message_id, buckets);
+                  return next;
+                });
+              });
+            return map;
+          });
         },
       )
       .on(
@@ -144,6 +239,36 @@ export function MessagesConversation({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Close reaction picker on outside tap
+  useEffect(() => {
+    if (!pickerMsgId) return;
+    function handleClick() {
+      setTimeout(() => setPickerMsgId(null), 0);
+    }
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [pickerMsgId]);
+
+  async function loadMore() {
+    if (loadingMore || !hasMore || messages.length === 0) return;
+    setLoadingMore(true);
+    const oldest = messages[0]!.sent_at;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("direct_messages")
+      .select("*")
+      .eq("thread_id", threadId)
+      .lt("sent_at", oldest)
+      .order("sent_at", { ascending: false })
+      .limit(PAGE_SIZE);
+    setLoadingMore(false);
+    const older = (data ?? []).slice().reverse();
+    if (older.length < PAGE_SIZE) setTimeout(() => setHasMore(false), 0);
+    if (older.length > 0) {
+      setMessages((prev) => [...older, ...prev]);
+    }
+  }
 
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
@@ -204,10 +329,42 @@ export function MessagesConversation({
     }
   }
 
+  function handleLongPressStart(msgId: string) {
+    longPressTimerRef.current = setTimeout(() => {
+      setPickerMsgId(msgId);
+    }, 500);
+  }
+
+  function handleLongPressEnd() {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+  }
+
+  async function toggleReaction(msgId: string, emoji: string) {
+    setPickerMsgId(null);
+    await fetch("/api/messages/reactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message_id: msgId, emoji }),
+    });
+  }
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Messages */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
+        {/* Load more */}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}
+            className="mx-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-[11px] font-bold text-zinc-400 transition hover:bg-zinc-800 disabled:opacity-50"
+          >
+            <ChevronUp className="h-3 w-3" />
+            {loadingMore ? "Chargement…" : "Voir plus"}
+          </button>
+        )}
+
         {messages.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-center">
             <span className="text-3xl" aria-hidden="true">
@@ -221,6 +378,7 @@ export function MessagesConversation({
             </p>
           </div>
         )}
+
         {messages.map((msg, i) => {
           const isMe = msg.sender_id === currentUserId;
           const prev = messages[i - 1];
@@ -231,12 +389,13 @@ export function MessagesConversation({
             hour: "2-digit",
             minute: "2-digit",
           });
-          // Last message sent by the current user — show read receipt
           const isLastMine =
             isMe &&
             !messages.slice(i + 1).some((m) => m.sender_id === currentUserId);
           const isRead =
             liveOtherReadAt !== null && msg.sent_at <= liveOtherReadAt;
+          const msgReactions = reactions.get(msg.id) ?? [];
+          const isPickerOpen = pickerMsgId === msg.id;
 
           return (
             <div
@@ -244,7 +403,7 @@ export function MessagesConversation({
               className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${isFirst && i > 0 ? "mt-2" : "mt-0.5"}`}
             >
               <div
-                className={`flex items-end gap-1.5 max-w-[78%] ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                className={`relative flex items-end gap-1.5 max-w-[78%] ${isMe ? "flex-row-reverse" : "flex-row"}`}
               >
                 {!isMe && (
                   <div className="mb-0.5 shrink-0">
@@ -267,16 +426,98 @@ export function MessagesConversation({
                     )}
                   </div>
                 )}
+
+                {/* Message bubble with long-press for reactions */}
                 <div
-                  className={`px-3.5 py-2 text-sm leading-snug ${
-                    isMe
-                      ? `bg-whistle/20 text-white ${isFirst ? "rounded-t-2xl" : "rounded-t-lg"} ${isLast ? "rounded-bl-2xl rounded-br-sm" : "rounded-b-lg"}`
-                      : `bg-zinc-800 text-zinc-100 ${isFirst ? "rounded-t-2xl" : "rounded-t-lg"} ${isLast ? "rounded-br-2xl rounded-bl-sm" : "rounded-b-lg"}`
-                  }`}
+                  onTouchStart={() => handleLongPressStart(msg.id)}
+                  onTouchEnd={handleLongPressEnd}
+                  onTouchMove={handleLongPressEnd}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setPickerMsgId(msg.id);
+                  }}
                 >
-                  {msg.content}
+                  {msg.content_type === "image" && msg.media_url ? (
+                    <div
+                      className={`overflow-hidden rounded-2xl ${isFirst ? "" : ""} ${isLast ? "" : ""}`}
+                    >
+                      <Image
+                        src={msg.media_url}
+                        alt="Image"
+                        width={240}
+                        height={180}
+                        className="max-w-[240px] rounded-2xl object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : msg.content_type === "gif" && msg.media_url ? (
+                    <img
+                      src={msg.media_url}
+                      alt="GIF"
+                      className="max-w-[240px] rounded-2xl"
+                    />
+                  ) : (
+                    <div
+                      className={`px-3.5 py-2 text-sm leading-snug ${
+                        isMe
+                          ? `bg-whistle/20 text-white ${isFirst ? "rounded-t-2xl" : "rounded-t-lg"} ${isLast ? "rounded-bl-2xl rounded-br-sm" : "rounded-b-lg"}`
+                          : `bg-zinc-800 text-zinc-100 ${isFirst ? "rounded-t-2xl" : "rounded-t-lg"} ${isLast ? "rounded-br-2xl rounded-bl-sm" : "rounded-b-lg"}`
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                  )}
+
+                  {/* Reaction picker */}
+                  {isPickerOpen && (
+                    <div
+                      className={`absolute bottom-full mb-1 z-20 flex gap-1 rounded-2xl border border-white/10 bg-zinc-900 p-1.5 shadow-xl ${isMe ? "right-0" : "left-0"}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {REACTION_EMOJIS.map((em) => {
+                        const myR = msgReactions.find(
+                          (r) => r.emoji === em && r.myReaction,
+                        );
+                        return (
+                          <button
+                            key={em}
+                            type="button"
+                            onClick={() => void toggleReaction(msg.id, em)}
+                            className={`flex h-8 w-8 items-center justify-center rounded-xl text-lg transition active:scale-90 ${myR ? "bg-whistle/20" : "hover:bg-white/5"}`}
+                            aria-label={`Réagir avec ${em}`}
+                          >
+                            {em}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Reactions display */}
+              {msgReactions.length > 0 && (
+                <div
+                  className={`mt-0.5 flex flex-wrap gap-1 ${isMe ? "justify-end" : "justify-start"} ${isMe ? "" : "ml-8"}`}
+                >
+                  {msgReactions.map((r) => (
+                    <button
+                      key={r.emoji}
+                      type="button"
+                      onClick={() => void toggleReaction(msg.id, r.emoji)}
+                      className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] transition active:scale-95 ${
+                        r.myReaction
+                          ? "border border-whistle/50 bg-whistle/15 text-whistle"
+                          : "border border-white/10 bg-zinc-800 text-zinc-300"
+                      }`}
+                    >
+                      <span>{r.emoji}</span>
+                      <span className="font-bold tabular-nums">{r.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {isLast && (
                 <div
                   className={`mt-0.5 flex items-center gap-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}
