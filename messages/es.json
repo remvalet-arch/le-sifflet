@@ -371,7 +371,13 @@
     "unequip": "Quitar",
     "equip": "Equipar ✓",
     "virtualCurrencyNote": "Todo se compra con Sifflets, la moneda del juego. Ninguna ganancia se convierte en dinero real — no arriesgas nada.",
-    "shopEmptyTab": "No hay artículos disponibles en esta categoría."
+    "shopEmptyTab": "No hay artículos disponibles en esta categoría.",
+    "tabMyItems": "Mis items",
+    "filterAll": "Todo",
+    "filterAvailable": "Disponible",
+    "filterOwned": "Poseído",
+    "myItemsEmpty": "Nada en esta categoría aún.",
+    "noEquipment": "Sin equipamiento activo"
   },
   "Notifications": {
     "breadcrumbSettings": "Ajustes",

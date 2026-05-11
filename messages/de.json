@@ -373,7 +373,13 @@
     "unequip": "Entfernen",
     "equip": "Tragen ✓",
     "virtualCurrencyNote": "Alles wird mit Sifflets bezahlt, der Spielwährung. Kein Gewinn wird in echtes Geld umgewandelt — du riskierst nichts.",
-    "shopEmptyTab": "Keine Artikel in dieser Kategorie verfügbar."
+    "shopEmptyTab": "Keine Artikel in dieser Kategorie verfügbar.",
+    "tabMyItems": "Meine Items",
+    "filterAll": "Alle",
+    "filterAvailable": "Verfügbar",
+    "filterOwned": "Besessen",
+    "myItemsEmpty": "Noch nichts in dieser Kategorie.",
+    "noEquipment": "Keine aktive Ausrüstung"
   },
   "Notifications": {
     "breadcrumbSettings": "Einstellungen",

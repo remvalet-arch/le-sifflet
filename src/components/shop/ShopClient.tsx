@@ -10,7 +10,8 @@ import Link from "next/link";
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
 import { track } from "@/lib/analytics";
 
-type Tab = "avatar" | "border" | "effect" | "boosters";
+type Tab = "avatar" | "border" | "effect" | "boosters" | "mes-items";
+type ItemFilter = "all" | "available" | "owned";
 
 const BORDER_STYLES: Record<string, string> = {
   gold: "ring-4 ring-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.6)]",
@@ -57,14 +58,23 @@ export function ShopClient({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [boosterCounts, setBoosterCounts] = useState(initialBoosterCounts);
 
+  const [itemFilter, setItemFilter] = useState<ItemFilter>("all");
+
   const tabs: { key: Tab; label: string; emoji: string }[] = [
     { key: "avatar", label: t("tabAvatars"), emoji: "🎽" },
     { key: "border", label: t("tabBorders"), emoji: "✨" },
     { key: "effect", label: t("tabEffects"), emoji: "⚡" },
-    { key: "boosters", label: t("tabBoosters"), emoji: "⚡" },
+    { key: "boosters", label: t("tabBoosters"), emoji: "🧪" },
+    { key: "mes-items", label: t("tabMyItems"), emoji: "🏆" },
   ];
 
-  const displayed = items.filter((i) => i.category === activeTab);
+  const displayed = items
+    .filter((i) => i.category === activeTab)
+    .filter((i) => {
+      if (itemFilter === "owned") return ownedIds.has(i.id);
+      if (itemFilter === "available") return !ownedIds.has(i.id);
+      return true;
+    });
 
   function getEquipped(item: ShopItemRow) {
     if (item.category === "avatar") return equippedAvatar === item.id;
@@ -219,6 +229,14 @@ export function ShopClient({
         items.find((i) => i.id === equippedBorder)?.asset_url ?? "",
       )
     : "ring-2 ring-white/20";
+  const previewEffect = equippedEffect
+    ? items.find((i) => i.id === equippedEffect)
+    : null;
+  const EFFECT_OVERLAYS: Record<string, string> = {
+    lightning: "⚡",
+    fire: "🔥",
+    crown: "👑",
+  };
 
   return (
     <div className="flex min-h-full flex-col">
@@ -248,28 +266,47 @@ export function ShopClient({
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         {/* Live preview */}
-        <div className="flex items-center gap-4 rounded-2xl border border-white/8 bg-zinc-900 p-4">
-          <div
-            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-2xl ${previewBorderClass}`}
-          >
-            {previewAvatar}
+        <button
+          type="button"
+          onClick={() => setActiveTab("mes-items")}
+          className="flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-zinc-900 p-4 text-left transition hover:border-white/15 active:scale-[0.99]"
+        >
+          <div className="relative shrink-0">
+            <div
+              className={`flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-2xl ${previewBorderClass}`}
+            >
+              {previewAvatar}
+            </div>
+            {previewEffect && (
+              <span className="absolute -bottom-1 -right-1 text-lg leading-none">
+                {EFFECT_OVERLAYS[previewEffect.asset_url] ?? "✨"}
+              </span>
+            )}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
               {t("preview")}
             </p>
-            <p className="mt-0.5 text-sm text-white">
+            <p className="mt-0.5 text-sm font-semibold text-white">
               {equippedAvatar
                 ? (items.find((i) => i.id === equippedAvatar)?.name ?? "—")
                 : t("defaultAvatar")}
             </p>
-            {equippedBorder && (
-              <p className="text-[11px] text-zinc-500">
-                + {items.find((i) => i.id === equippedBorder)?.name}
-              </p>
-            )}
+            <p className="mt-0.5 text-[11px] text-zinc-500">
+              {[
+                equippedBorder
+                  ? items.find((i) => i.id === equippedBorder)?.name
+                  : null,
+                previewEffect?.name,
+              ]
+                .filter(Boolean)
+                .join(" · ") || t("noEquipment")}
+            </p>
           </div>
-        </div>
+          <span className="text-[10px] font-black text-zinc-500">
+            {t("tabMyItems")} →
+          </span>
+        </button>
 
         {/* Tabs */}
         <div className="flex gap-2">
@@ -288,6 +325,169 @@ export function ShopClient({
             </button>
           ))}
         </div>
+
+        {/* Quick filter (shop tabs only) */}
+        {activeTab !== "boosters" && activeTab !== "mes-items" && (
+          <div className="flex gap-1.5">
+            {(["all", "available", "owned"] as ItemFilter[]).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setItemFilter(f)}
+                className={`rounded-xl px-3 py-1.5 text-[10px] font-black transition ${
+                  itemFilter === f
+                    ? "bg-zinc-700 text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                {f === "all"
+                  ? t("filterAll")
+                  : f === "available"
+                    ? t("filterAvailable")
+                    : t("filterOwned")}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mes items tab */}
+        {activeTab === "mes-items" && (
+          <div className="flex flex-col gap-5">
+            {(["avatar", "border", "effect", "boosters"] as const).map(
+              (cat) => {
+                const catItems =
+                  cat === "boosters"
+                    ? []
+                    : items.filter(
+                        (i) => i.category === cat && ownedIds.has(i.id),
+                      );
+                const ownedBoosters =
+                  cat === "boosters"
+                    ? boosters.filter((b) => (boosterCounts[b.id] ?? 0) > 0)
+                    : [];
+
+                const hasItems =
+                  cat === "boosters"
+                    ? ownedBoosters.length > 0
+                    : catItems.length > 0;
+
+                return (
+                  <div key={cat}>
+                    <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      {cat === "avatar"
+                        ? t("tabAvatars")
+                        : cat === "border"
+                          ? t("tabBorders")
+                          : cat === "effect"
+                            ? t("tabEffects")
+                            : t("tabBoosters")}
+                    </h3>
+                    {!hasItems ? (
+                      <p className="rounded-xl border border-white/8 bg-zinc-900 px-4 py-3 text-xs text-zinc-600">
+                        {t("myItemsEmpty")}
+                      </p>
+                    ) : cat === "boosters" ? (
+                      <div className="flex flex-col gap-2">
+                        {ownedBoosters.map((booster) => {
+                          const count = boosterCounts[booster.id] ?? 0;
+                          const BOOSTER_EMOJIS: Record<string, string> = {
+                            double_xp: "💎",
+                            cote_plus: "📈",
+                            safety_net: "🛡️",
+                            vision: "👁️",
+                          };
+                          return (
+                            <div
+                              key={booster.id}
+                              className="flex items-center gap-3 rounded-xl border border-white/8 bg-zinc-900 px-3 py-2.5"
+                            >
+                              <span className="text-2xl">
+                                {BOOSTER_EMOJIS[booster.effect_type] ?? "⚡"}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-black text-white">
+                                  {booster.name}
+                                </p>
+                              </div>
+                              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-400">
+                                ×{count}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {catItems.map((item) => {
+                          const equipped = getEquipped(item);
+                          const loading = loadingId === item.id;
+                          return (
+                            <div
+                              key={item.id}
+                              className={`relative flex flex-col gap-2 rounded-2xl border p-3 transition ${
+                                equipped
+                                  ? "border-whistle/40 bg-whistle/8"
+                                  : "border-green-500/20 bg-zinc-900"
+                              }`}
+                            >
+                              {equipped && (
+                                <span className="absolute right-2 top-2 rounded-full bg-whistle px-1.5 py-0.5 text-[9px] font-black text-zinc-950">
+                                  {t("equipped")}
+                                </span>
+                              )}
+                              <div className="flex h-12 items-center justify-center">
+                                {item.category === "avatar" ? (
+                                  <span className="text-3xl">
+                                    {item.asset_url}
+                                  </span>
+                                ) : item.category === "border" ? (
+                                  <div
+                                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-base ${getBorderClass(item.asset_url)}`}
+                                  >
+                                    🎽
+                                  </div>
+                                ) : (
+                                  <span className="text-3xl">
+                                    {item.asset_url === "lightning"
+                                      ? "⚡"
+                                      : item.asset_url === "fire"
+                                        ? "🔥"
+                                        : "👑"}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-center text-[11px] font-black leading-tight text-white">
+                                {item.name}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => void handleEquip(item)}
+                                disabled={loading}
+                                className={`w-full rounded-xl py-1.5 text-[11px] font-black transition ${
+                                  loading
+                                    ? "bg-zinc-700 text-zinc-500"
+                                    : equipped
+                                      ? "border border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                                      : "border border-whistle/40 bg-whistle/10 text-whistle hover:bg-whistle/20"
+                                }`}
+                              >
+                                {loading
+                                  ? "…"
+                                  : equipped
+                                    ? t("unequip")
+                                    : t("equip")}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              },
+            )}
+          </div>
+        )}
 
         {/* Boosters grid (separate tab) */}
         {activeTab === "boosters" && (
@@ -344,134 +544,149 @@ export function ShopClient({
         )}
 
         {/* Items grid */}
-        {activeTab !== "boosters" && displayed.length === 0 && (
-          <EmptyState variant="no-data" emoji="🛒" title={t("shopEmptyTab")} />
-        )}
-        {activeTab !== "boosters" && displayed.length > 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            {displayed.map((item) => {
-              const owned = ownedIds.has(item.id);
-              const equipped = getEquipped(item);
-              const price = getEffectivePrice(item);
-              const rankUnlocked = isRankUnlocked(item);
-              const canAfford = price <= balance;
-              const loading = loadingId === item.id;
+        {activeTab !== "boosters" &&
+          activeTab !== "mes-items" &&
+          displayed.length === 0 && (
+            <EmptyState
+              variant="no-data"
+              emoji="🛒"
+              title={t("shopEmptyTab")}
+            />
+          )}
+        {activeTab !== "boosters" &&
+          activeTab !== "mes-items" &&
+          displayed.length > 0 && (
+            <div className="grid grid-cols-2 gap-3">
+              {displayed.map((item) => {
+                const owned = ownedIds.has(item.id);
+                const equipped = getEquipped(item);
+                const price = getEffectivePrice(item);
+                const rankUnlocked = isRankUnlocked(item);
+                const canAfford = price <= balance;
+                const loading = loadingId === item.id;
 
-              return (
-                <div
-                  key={item.id}
-                  className={`relative flex flex-col gap-3 rounded-2xl border p-4 transition ${
-                    equipped
-                      ? "border-whistle/40 bg-whistle/8"
-                      : "border-white/8 bg-zinc-900"
-                  }`}
-                >
-                  {equipped && (
-                    <span className="absolute top-2 right-2 rounded-full bg-whistle px-1.5 py-0.5 text-[9px] font-black text-zinc-950">
-                      {t("equipped")}
-                    </span>
-                  )}
-
-                  {/* Item visual */}
-                  <div className="flex h-14 items-center justify-center">
-                    {item.category === "avatar" ? (
-                      <span className="text-4xl">{item.asset_url}</span>
-                    ) : item.category === "border" ? (
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-lg ${getBorderClass(item.asset_url)}`}
-                      >
-                        🎽
-                      </div>
-                    ) : (
-                      <span className="text-4xl">
-                        {item.asset_url === "lightning"
-                          ? "⚡"
-                          : item.asset_url === "fire"
-                            ? "🔥"
-                            : "👑"}
+                return (
+                  <div
+                    key={item.id}
+                    className={`relative flex flex-col gap-3 rounded-2xl border p-4 transition ${
+                      equipped
+                        ? "border-whistle/40 bg-whistle/8"
+                        : owned
+                          ? "border-green-500/20 bg-zinc-900"
+                          : "border-white/8 bg-zinc-900"
+                    }`}
+                  >
+                    {equipped && (
+                      <span className="absolute right-2 top-2 rounded-full bg-whistle px-1.5 py-0.5 text-[9px] font-black text-zinc-950">
+                        {t("equipped")}
                       </span>
                     )}
-                  </div>
+                    {owned && !equipped && (
+                      <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20 text-[10px] font-black text-green-400">
+                        ✓
+                      </span>
+                    )}
 
-                  <div>
-                    <p className="text-sm font-black leading-tight text-white">
-                      {item.name}
-                    </p>
-                    <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">
-                      {item.description}
-                    </p>
-                    {rankUnlocked && !owned && (
-                      <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-green-400">
-                        {t("rankUnlocked")}
+                    {/* Item visual */}
+                    <div className="flex h-14 items-center justify-center">
+                      {item.category === "avatar" ? (
+                        <span className="text-4xl">{item.asset_url}</span>
+                      ) : item.category === "border" ? (
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-lg ${getBorderClass(item.asset_url)}`}
+                        >
+                          🎽
+                        </div>
+                      ) : (
+                        <span className="text-4xl">
+                          {item.asset_url === "lightning"
+                            ? "⚡"
+                            : item.asset_url === "fire"
+                              ? "🔥"
+                              : "👑"}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-black leading-tight text-white">
+                        {item.name}
                       </p>
-                    )}
-                    {item.unlock_rank && !rankUnlocked && !owned && (
-                      <p className="mt-1 text-[9px] text-zinc-600">
-                        {t("freeAtRank", { rank: item.unlock_rank })}
+                      <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">
+                        {item.description}
                       </p>
-                    )}
-                    <p
-                      className={`mt-1.5 text-[11px] font-black tabular-nums ${
-                        owned
-                          ? "text-zinc-600"
+                      {rankUnlocked && !owned && (
+                        <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-green-400">
+                          {t("rankUnlocked")}
+                        </p>
+                      )}
+                      {item.unlock_rank && !rankUnlocked && !owned && (
+                        <p className="mt-1 text-[9px] text-zinc-600">
+                          {t("freeAtRank", { rank: item.unlock_rank })}
+                        </p>
+                      )}
+                      <p
+                        className={`mt-1.5 text-[11px] font-black tabular-nums ${
+                          owned
+                            ? "text-zinc-600"
+                            : rankUnlocked
+                              ? "text-green-400"
+                              : canAfford
+                                ? "text-amber-400"
+                                : "text-red-400/80"
+                        }`}
+                      >
+                        {owned
+                          ? t("owned")
                           : rankUnlocked
-                            ? "text-green-400"
-                            : canAfford
-                              ? "text-amber-400"
-                              : "text-red-400/80"
-                      }`}
-                    >
-                      {owned
-                        ? t("owned")
-                        : rankUnlocked
-                          ? t("claimFree")
-                          : `${price.toLocaleString(bcp47)} 🪙`}
-                    </p>
-                  </div>
-
-                  {/* Price + action */}
-                  {!owned ? (
-                    <button
-                      type="button"
-                      onClick={() => void handlePurchase(item)}
-                      disabled={loading || (!canAfford && !rankUnlocked)}
-                      className={`mt-auto w-full rounded-xl py-2 text-[11px] font-black transition ${
-                        loading
-                          ? "bg-zinc-700 text-zinc-500"
-                          : canAfford || rankUnlocked
-                            ? "bg-whistle text-zinc-950 hover:opacity-90 active:scale-95"
-                            : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                      }`}
-                    >
-                      {loading
-                        ? "…"
-                        : rankUnlocked
-                          ? t("claimFree")
-                          : canAfford
-                            ? t("buy", { price: price.toLocaleString(bcp47) })
+                            ? t("claimFree")
                             : `${price.toLocaleString(bcp47)} 🪙`}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => void handleEquip(item)}
-                      disabled={loading}
-                      className={`mt-auto w-full rounded-xl py-2 text-[11px] font-black transition ${
-                        loading
-                          ? "bg-zinc-700 text-zinc-500"
-                          : equipped
-                            ? "border border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                            : "border border-whistle/40 bg-whistle/10 text-whistle hover:bg-whistle/20"
-                      }`}
-                    >
-                      {loading ? "…" : equipped ? t("unequip") : t("equip")}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                      </p>
+                    </div>
+
+                    {/* Price + action */}
+                    {!owned ? (
+                      <button
+                        type="button"
+                        onClick={() => void handlePurchase(item)}
+                        disabled={loading || (!canAfford && !rankUnlocked)}
+                        className={`mt-auto w-full rounded-xl py-2 text-[11px] font-black transition ${
+                          loading
+                            ? "bg-zinc-700 text-zinc-500"
+                            : canAfford || rankUnlocked
+                              ? "bg-whistle text-zinc-950 hover:opacity-90 active:scale-95"
+                              : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        }`}
+                      >
+                        {loading
+                          ? "…"
+                          : rankUnlocked
+                            ? t("claimFree")
+                            : canAfford
+                              ? t("buy", { price: price.toLocaleString(bcp47) })
+                              : `${price.toLocaleString(bcp47)} 🪙`}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void handleEquip(item)}
+                        disabled={loading}
+                        className={`mt-auto w-full rounded-xl py-2 text-[11px] font-black transition ${
+                          loading
+                            ? "bg-zinc-700 text-zinc-500"
+                            : equipped
+                              ? "border border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                              : "border border-whistle/40 bg-whistle/10 text-whistle hover:bg-whistle/20"
+                        }`}
+                      >
+                        {loading ? "…" : equipped ? t("unequip") : t("equip")}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
         {/* Apple compliance note */}
         <p className="pb-4 text-center text-[10px] text-zinc-600">

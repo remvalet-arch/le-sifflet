@@ -363,7 +363,13 @@
     "unequip": "Unequip",
     "equip": "Equip ✓",
     "virtualCurrencyNote": "Everything is bought with Sifflets, the in-game currency. No winnings convert into real money — you're never at risk.",
-    "shopEmptyTab": "No items available in this category."
+    "shopEmptyTab": "No items available in this category.",
+    "tabMyItems": "My items",
+    "filterAll": "All",
+    "filterAvailable": "Available",
+    "filterOwned": "Owned",
+    "myItemsEmpty": "Nothing in this category yet.",
+    "noEquipment": "No active equipment"
   },
   "Notifications": {
     "breadcrumbSettings": "Settings",
