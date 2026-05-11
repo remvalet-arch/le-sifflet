@@ -155,6 +155,7 @@ export function UsernameSetupModal({
         <div className="relative mb-1">
           <input
             type="text"
+            aria-label="Ton pseudo"
             value={value}
             onChange={(e) => setValue(e.target.value.slice(0, 20))}
             placeholder="MonPseudo"
