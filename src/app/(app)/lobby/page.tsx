@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MatchListSkeleton } from "@/components/lobby/MatchCardSkeleton";
 import { MatchLobby } from "@/components/lobby/MatchLobby";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { UsernameSetupPrompt } from "@/components/onboarding/UsernameSetupPrompt";
 import { parseLobbyRoundParams } from "@/lib/lobby-queries";
 import {
   getCachedLobbyDayMatches,
@@ -104,12 +105,15 @@ export default async function LobbyPage({ searchParams }: PageProps) {
   } = await supabase.auth.getUser();
 
   let preferredLeagueApiIds: number[] = [];
+  let profileUsername: string | null = null;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("preferred_competitions")
+      .select("preferred_competitions, username")
       .eq("id", user.id)
       .single();
+
+    profileUsername = profile?.username ?? null;
 
     if (profile?.preferred_competitions?.length) {
       const { data: comps } = await supabase
@@ -144,6 +148,12 @@ export default async function LobbyPage({ searchParams }: PageProps) {
       </main>
 
       <OnboardingTour />
+      {user && profileUsername && (
+        <UsernameSetupPrompt
+          username={profileUsername}
+          userEmail={user.email ?? ""}
+        />
+      )}
     </>
   );
 }

@@ -2,11 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { successResponse, errorResponse } from "@/lib/api-response";
 import type { Database } from "@/types/database";
+import { USERNAME_RE, isReservedUsername } from "@/lib/username";
 
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
-const USERNAME_RE = /^[a-zA-Z0-9_]{3,25}$/;
 const AVATAR_MAX_LEN = 8;
+const USERNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
@@ -38,11 +39,39 @@ export async function PATCH(req: Request) {
   if (username !== undefined) {
     if (typeof username !== "string" || !USERNAME_RE.test(username)) {
       return errorResponse(
-        "Pseudo invalide (3-25 caractères, lettres/chiffres/_)",
+        "Pseudo invalide (3-20 caractères, lettres/chiffres/_/-)",
         400,
       );
     }
+    if (isReservedUsername(username)) {
+      return errorResponse("Ce pseudo est réservé", 400);
+    }
+
+    const admin = createAdminClient();
+    const { data: currentProfile } = await admin
+      .from("profiles")
+      .select("username_last_changed_at")
+      .eq("id", user.id)
+      .single();
+
+    if (currentProfile?.username_last_changed_at) {
+      const elapsed =
+        Date.now() -
+        new Date(currentProfile.username_last_changed_at).getTime();
+      if (elapsed < USERNAME_COOLDOWN_MS) {
+        const nextChange = new Date(
+          new Date(currentProfile.username_last_changed_at).getTime() +
+            USERNAME_COOLDOWN_MS,
+        );
+        return errorResponse(
+          `Tu pourras changer ton pseudo le ${nextChange.toLocaleDateString("fr-FR")}`,
+          429,
+        );
+      }
+    }
+
     update.username = username;
+    update.username_last_changed_at = new Date().toISOString();
   }
 
   // ── Validation avatar_url (emoji ou null) ──────────────────────────────────

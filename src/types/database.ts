@@ -72,6 +72,7 @@ export interface Database {
           equipped_border_id: string | null;
           equipped_effect_id: string | null;
           role: "user" | "moderator" | "founder";
+          username_last_changed_at: string | null;
         };
         Insert: {
           id: string;
@@ -108,6 +109,7 @@ export interface Database {
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
+          username_last_changed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -144,6 +146,7 @@ export interface Database {
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
+          username_last_changed_at?: string | null;
         };
         Relationships: [];
       };
