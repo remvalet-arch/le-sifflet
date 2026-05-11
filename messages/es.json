@@ -373,6 +373,7 @@
     "shopEmptyTab": "No hay artículos disponibles en esta categoría."
   },
   "Notifications": {
+    "breadcrumbSettings": "Ajustes",
     "title": "Notificaciones",
     "subtitle": "Elige qué te despierta.",
     "deviceRegistered": "Recibirás bien las notifs en este dispositivo.",

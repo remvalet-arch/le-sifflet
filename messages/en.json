@@ -365,6 +365,7 @@
     "shopEmptyTab": "No items available in this category."
   },
   "Notifications": {
+    "breadcrumbSettings": "Settings",
     "title": "Notifications",
     "subtitle": "Pick what wakes you up.",
     "deviceRegistered": "You're set to receive notifs on this device.",

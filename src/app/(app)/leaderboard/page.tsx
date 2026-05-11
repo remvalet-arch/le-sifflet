@@ -129,7 +129,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             href="/leaderboard"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
               !isHallOfFame && !isSquad && !isClub
-                ? "bg-amber-500 text-black"
+                ? "bg-whistle text-zinc-950"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -139,7 +139,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             href="/leaderboard?mode=alltime"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
               isHallOfFame
-                ? "bg-amber-500 text-black"
+                ? "bg-whistle text-zinc-950"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -149,7 +149,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             href="/leaderboard?mode=squad"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
               isSquad
-                ? "bg-amber-500 text-black"
+                ? "bg-whistle text-zinc-950"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -159,7 +159,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             href="/leaderboard?mode=club"
             className={`rounded-lg px-3 py-1.5 text-[11px] font-black transition ${
               isClub
-                ? "bg-amber-500 text-black"
+                ? "bg-whistle text-zinc-950"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -292,7 +292,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
           <p className="text-xs text-zinc-500">{t("noSquadMembers")}</p>
           <Link
             href="/ligues"
-            className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
+            className="mt-1 rounded-xl bg-whistle px-5 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-950 transition hover:bg-whistle/90 active:scale-95"
           >
             Rejoindre une ligue →
           </Link>
@@ -305,7 +305,7 @@ export default async function LeaderboardPage({ searchParams }: Props) {
           <p className="text-xs text-zinc-500">{t("noClubSet")}</p>
           <Link
             href="/profile?section=club"
-            className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
+            className="mt-1 rounded-xl bg-whistle px-5 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-950 transition hover:bg-whistle/90 active:scale-95"
           >
             {t("setFavoriteTeam")} →
           </Link>

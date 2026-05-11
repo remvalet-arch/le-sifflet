@@ -79,7 +79,9 @@ export default async function MessagesPage() {
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 py-5">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-black text-white">{t("title")}</h1>
+        <h1 className="text-xl font-black uppercase tracking-wide text-white">
+          {t("title")}
+        </h1>
         {friendsWithoutThread.length > 0 && (
           <details className="relative">
             <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white active:scale-95">

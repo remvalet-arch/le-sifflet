@@ -233,13 +233,6 @@ export function TopBar({
         {/* Nav links */}
         <nav className="flex flex-col gap-1 p-3">
           <SheetLink
-            href="/messages"
-            icon={<MessageCircle className="h-4 w-4" />}
-            label="Messages"
-            onClick={() => setOpen(false)}
-            badge={hasUnreadDm ? "●" : undefined}
-          />
-          <SheetLink
             href="/leaderboard"
             icon={<Trophy className="h-4 w-4" />}
             label={t("leaderboard")}
@@ -341,7 +334,7 @@ function SheetLink({
       {icon}
       <span className="flex-1">{label}</span>
       {badge && (
-        <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400">
+        <span className="rounded-md border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-whistle">
           {badge}
         </span>
       )}
