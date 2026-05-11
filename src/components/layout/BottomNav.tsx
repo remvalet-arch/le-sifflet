@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLiveRoom } from "@/contexts/LiveRoomContext";
@@ -17,7 +17,6 @@ function useLikelyLiveHour(): boolean {
 
 export function BottomNav({ userId }: { userId?: string }) {
   const pathname = usePathname();
-  const router = useRouter();
   const t = useTranslations("Navigation");
   const { drawerAvailable, openDrawer } = useLiveRoom();
   const likelyLive = useLikelyLiveHour();
@@ -184,7 +183,7 @@ export function BottomNav({ userId }: { userId?: string }) {
       className="relative z-10 w-full shrink-0 border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="relative grid h-16 grid-cols-5">
+      <div className="relative grid h-16 grid-cols-4">
         <TabLink
           href="/lobby"
           Icon={Landmark}
@@ -198,23 +197,6 @@ export function BottomNav({ userId }: { userId?: string }) {
           label={t("pronos")}
           pathname={pathname}
         />
-
-        {/* FAB VAR — visible hors match live, pointe vers le lobby */}
-        <div className="relative flex -mt-5 items-start justify-center">
-          <button
-            type="button"
-            onClick={() => router.push("/lobby")}
-            aria-label={t("ariaGoToLobby")}
-            data-testid="fab-var-button"
-            className="flex size-14 items-center justify-center rounded-full border-4 border-zinc-950 bg-zinc-800 opacity-60 shadow-lg transition hover:opacity-80 active:scale-95"
-          >
-            <MonitorPlay
-              className="ml-0.5 size-6 text-zinc-500"
-              aria-hidden="true"
-            />
-          </button>
-        </div>
-
         <TabLink
           href="/ligues"
           Icon={Users}
