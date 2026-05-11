@@ -630,7 +630,7 @@ export function MatchPronoCard({
                   const isN = scoresValid && homeInt === awayInt;
                   const is2 = scoresValid && homeInt < awayInt;
                   const isFirstProno =
-                    (match.community_stats?.total_pronos ?? 0) < 10;
+                    (match.community_stats?.total_pronos ?? 0) === 0;
 
                   return (
                     <>

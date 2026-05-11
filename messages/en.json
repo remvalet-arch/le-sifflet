@@ -615,7 +615,11 @@
     "wizardCelebCopyBtn": "Copy invite",
     "wizardCelebCopied": "Copied!",
     "wizardGoToLeague": "Go to my league",
-    "myLeaguesBackLink": "My leagues"
+    "myLeaguesBackLink": "My leagues",
+    "wizardAbandonTitle": "Abandon creation?",
+    "wizardAbandonDesc": "Your progress will be lost.",
+    "wizardAbandonContinue": "Continue",
+    "wizardAbandonConfirm": "Abandon"
   },
   "Pronos": {
     "pageTitle": "Predictions",
@@ -700,7 +704,8 @@
     "pointsSuffix": "Points",
     "customizeUsername": "Customize your username",
     "tabClub": "My Club",
-    "noClubMembers": "No players with the same favorite club. Set yours in your profile!",
+    "noClubMembers": "No players with the same favorite club yet. Recruit your friends!",
+    "noClubSet": "You haven't set a favorite club yet.",
     "setFavoriteTeam": "Set my club"
   },
   "Messages": {

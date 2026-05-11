@@ -625,7 +625,11 @@
     "wizardCelebCopyBtn": "Einladung kopieren",
     "wizardCelebCopied": "Kopiert!",
     "wizardGoToLeague": "Zu meiner Liga",
-    "myLeaguesBackLink": "Meine Ligen"
+    "myLeaguesBackLink": "Meine Ligen",
+    "wizardAbandonTitle": "Erstellung abbrechen?",
+    "wizardAbandonDesc": "Dein Fortschritt geht verloren.",
+    "wizardAbandonContinue": "Weiter",
+    "wizardAbandonConfirm": "Abbrechen"
   },
   "Pronos": {
     "pageTitle": "Tipps",
@@ -710,7 +714,8 @@
     "pointsSuffix": "Punkte",
     "customizeUsername": "Benutzername anpassen",
     "tabClub": "Mein Klub",
-    "noClubMembers": "Keine Spieler mit demselben Lieblingsclub. Setze deinen in deinem Profil!",
+    "noClubMembers": "Noch keine Spieler mit demselben Lieblingsclub. Lade deine Freunde ein!",
+    "noClubSet": "Du hast noch keinen Lieblingsclub eingestellt.",
     "setFavoriteTeam": "Meinen Klub wählen"
   },
   "Messages": {

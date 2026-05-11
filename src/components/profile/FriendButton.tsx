@@ -20,27 +20,31 @@ export function FriendButton({
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient();
-
   useEffect(() => {
     async function loadStatus() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
-        .from("friend_requests")
-        .select("id, status")
-        .or(
-          `and(sender_id.eq.${currentUserId},receiver_id.eq.${profileId}),and(sender_id.eq.${profileId},receiver_id.eq.${currentUserId})`,
-        )
-        .maybeSingle();
+      try {
+        const supabase = createClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase as any)
+          .from("friend_requests")
+          .select("id, status")
+          .or(
+            `and(sender_id.eq.${currentUserId},receiver_id.eq.${profileId}),and(sender_id.eq.${profileId},receiver_id.eq.${currentUserId})`,
+          )
+          .maybeSingle();
 
-      if (data) {
-        setStatus(data.status as "pending" | "accepted");
-        setRequestId(data.id);
+        if (data) {
+          setStatus(data.status as "pending" | "accepted");
+          setRequestId(data.id);
+        }
+      } catch (err) {
+        log.error("FriendButton", "loadStatus error", { error: String(err) });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     void loadStatus();
-  }, [profileId, currentUserId, supabase]);
+  }, [profileId, currentUserId]);
 
   async function handleAdd() {
     setLoading(true);
