@@ -32,6 +32,7 @@
     "sectionClassement": "CLASSEMENT",
     "sectionBoutique": "BOUTIQUE",
     "ariaMessages": "Messages privés",
+    "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Ouvrir le menu",
     "ariaCloseMenu": "Fermer le menu",
     "backStade": "← Stade",
@@ -360,9 +361,17 @@
     "owned": "Possédé",
     "unequip": "Déséquiper",
     "equip": "Équiper ✓",
-    "virtualCurrencyNote": "Tout s'achète en Sifflets, la monnaie du jeu. Aucun gain ne se convertit en argent réel — tu ne risques rien."
+    "virtualCurrencyNote": "Tout s'achète en Sifflets, la monnaie du jeu. Aucun gain ne se convertit en argent réel — tu ne risques rien.",
+    "shopEmptyTab": "Aucun article disponible dans cette catégorie.",
+    "tabMyItems": "Mes items",
+    "filterAll": "Tout",
+    "filterAvailable": "Disponible",
+    "filterOwned": "Possédé",
+    "myItemsEmpty": "Rien encore dans cette catégorie.",
+    "noEquipment": "Aucun équipement actif"
   },
   "Notifications": {
+    "breadcrumbSettings": "Paramètres",
     "title": "Notifications",
     "subtitle": "Choisis ce qui te réveille.",
     "deviceRegistered": "Tu reçois bien les notifs sur cet appareil.",
@@ -398,7 +407,19 @@
     "errorSubscribeFailed": "Sur iPhone, ouvre l'app depuis l'écran d'accueil (pas via Safari directement).",
     "saveFailed": "Impossible de sauvegarder.",
     "toggleOn": "Notification activée !",
-    "toggleOff": "Notification désactivée."
+    "toggleOff": "Notification désactivée.",
+    "groupFriendsTitle": "Amis & Messages",
+    "friendRequestLabel": "Demande d'ami reçue",
+    "friendRequestDesc": "Quand quelqu'un t'envoie une demande d'ami.",
+    "dmLabel": "Messages privés",
+    "dmDesc": "Quand tu reçois un message privé.",
+    "groupKopTitle": "Expérience KOP",
+    "funKopLabel": "Commentaires fun dans le KOP",
+    "funKopDesc": "Affiche des commentaires éditoriaux sous chaque événement de la timeline."
+  },
+  "NotifCenter": {
+    "pageTitle": "Notifications",
+    "emptyState": "Aucune notification pour l'instant."
   },
   "Rules": {
     "title": "Règles du jeu",
@@ -507,7 +528,8 @@
     "errorTitle": "Carton Rouge",
     "errorHeading": "Quelque chose a merdé",
     "errorDesc": "L'arbitre a perdu le fil. Réessaie ou retourne au lobby.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "offlineMessage": "Pas de connexion — certaines fonctionnalités sont indisponibles."
   },
   "Ligues": {
     "pageTitle": "Ligues",
@@ -525,6 +547,9 @@
     "shareTextBody": "Hey ! ⚽ {from} t'invite à rejoindre sa ligue \"{name}\" sur VAR TIME.",
     "shareJoinTitle": "Rejoins {name} sur VAR TIME",
     "shareCopied": "Lien copié !",
+    "shareViaCopy": "Copier le lien",
+    "shareViaWhatsApp": "WhatsApp",
+    "shareViaSms": "SMS",
     "nudgeSentPlural": "Nudge envoyé à {count} joueurs ! 🎯",
     "nudgeSentOne": "Nudge envoyé à {count} joueur ! 🎯",
     "nudgeAllDone": "Tout le monde a déjà pronostiqué !",
@@ -715,7 +740,12 @@
     "newConversation": "Nouvelle conversation",
     "notFriends": "Tu dois être ami avec ce joueur pour lui envoyer des messages.",
     "friendStatus": "Ami",
-    "newConversationLabel": "Nouvelle conversation"
+    "newConversationLabel": "Nouvelle conversation",
+    "searchPlaceholder": "Rechercher…",
+    "noResults": "Aucune conversation trouvée",
+    "typing": "{name} écrit…",
+    "ariaRead": "Lu",
+    "ariaSent": "Envoyé"
   },
   "Verdict": {
     "suspense": "Le verdict tombe…",
@@ -756,7 +786,14 @@
     "streakFreezeBought": "🛡️ Streak Freeze acheté ! Tu en as maintenant {count}.",
     "saveBetSuccess": "Mise rapide fixée à {amount} 🪙 !",
     "saveBetError": "Impossible de sauvegarder les paramètres.",
-    "connectionLost": "Connexion perdue"
+    "connectionLost": "Connexion perdue",
+    "themeTitle": "Apparence",
+    "themeDark": "Sombre",
+    "themeLight": "Clair",
+    "themeHighContrast": "Fort contraste",
+    "themeChanged": "Thème mis à jour !",
+    "onboardingReplay": "Revoir l'intro",
+    "onboardingReplayDesc": "Relance le tutoriel de départ depuis le lobby"
   },
   "Banner": {
     "migrationBold": "VAR TIME a son vrai domaine :",
@@ -895,5 +932,18 @@
     "siffletsReset": "Tes Sifflets ont été réduits à 10% pour rééquilibrer.",
     "pointsReset": "Tes Points de saison sont remis à zéro.",
     "cta": "C'est reparti !"
+  },
+  "PredictionDistribution": {
+    "title": "Répartition des pronos",
+    "scopeLeagues": "Mes ligues",
+    "scopeGlobal": "Tous",
+    "empty": "Aucun joueur n'a encore pronostiqué — sois le premier !",
+    "avgScore": "Score moyen pronostiqué :",
+    "pronos": "pronos",
+    "prono": "prono"
+  },
+  "HeadToHead": {
+    "title": "Face à face",
+    "source": "via TheSportsDB"
   }
 }

@@ -32,7 +32,7 @@ export default async function JoinPage({
           </p>
           <Link
             href="/ligues"
-            className="mt-8 inline-flex h-12 items-center justify-center rounded-2xl bg-yellow-400 px-8 font-black text-zinc-900 transition hover:bg-yellow-300 active:scale-95"
+            className="mt-8 inline-flex h-12 items-center justify-center rounded-2xl bg-whistle px-8 font-black text-zinc-900 transition hover:bg-whistle/90 active:scale-95"
           >
             Voir mes ligues
           </Link>
@@ -56,15 +56,13 @@ export default async function JoinPage({
               Tu es invité !
             </h1>
             <p className="mt-2 text-sm text-zinc-400">Rejoins la ligue</p>
-            <p className="mt-1 text-xl font-black text-yellow-400">
-              {squad.name}
-            </p>
+            <p className="mt-1 text-xl font-black text-whistle">{squad.name}</p>
             <p className="mt-4 text-xs text-zinc-500">
               Connecte-toi pour rejoindre automatiquement la ligue.
             </p>
             <Link
               href={`/login?redirect=/join/${code}`}
-              className="mt-6 flex h-12 items-center justify-center rounded-2xl bg-yellow-400 font-black text-zinc-900 transition hover:bg-yellow-300 active:scale-95"
+              className="mt-6 flex h-12 items-center justify-center rounded-2xl bg-whistle font-black text-zinc-900 transition hover:bg-whistle/90 active:scale-95"
             >
               Se connecter → Rejoindre
             </Link>
@@ -84,6 +82,12 @@ export default async function JoinPage({
     .eq("squad_id", squad.id)
     .eq("user_id", user.id)
     .maybeSingle();
+
+  // Count current members
+  const { count: memberCount } = await supabase
+    .from("squad_members")
+    .select("*", { count: "exact", head: true })
+    .eq("squad_id", squad.id);
 
   if (existing) {
     redirect(`/ligues/${squad.id}`);
@@ -114,6 +118,12 @@ export default async function JoinPage({
             </span>{" "}
             — rejoins ce vestiaire pour affronter tes potes !
           </p>
+          {memberCount !== null && memberCount > 0 && (
+            <p className="mt-2 text-xs text-zinc-500">
+              {memberCount} joueur{memberCount > 1 ? "s" : ""} déjà dans la
+              ligue
+            </p>
+          )}
           <JoinSquadButton
             inviteCode={code.toUpperCase()}
             squadId={squad.id}

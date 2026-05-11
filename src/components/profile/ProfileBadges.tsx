@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { TrophyWall } from "./TrophyWall";
-import { EmptyState } from "./ProfileHistorique";
+import { EmptyState } from "@/components/shared/EmptyState";
 import type { BadgeRow } from "@/types/database";
 
 type Props = {
@@ -27,7 +27,7 @@ export function ProfileBadges({ allBadges, unlockedBadgeIds }: Props) {
         </span>
       </div>
       {allBadges.length === 0 ? (
-        <EmptyState emoji="🏅" text={t("badgesComingSoon")} />
+        <EmptyState emoji="🏅" title={t("badgesComingSoon")} />
       ) : (
         <TrophyWall badges={allBadges} unlockedBadgeIds={unlockedBadgeIds} />
       )}

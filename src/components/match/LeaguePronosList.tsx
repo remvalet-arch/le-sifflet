@@ -98,7 +98,7 @@ export function LeaguePronosList({
           </div>
           <Link
             href="/ligues"
-            className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
+            className="mt-1 rounded-xl bg-whistle px-5 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-950 transition hover:bg-whistle/90 active:scale-95"
           >
             Rejoindre une ligue →
           </Link>

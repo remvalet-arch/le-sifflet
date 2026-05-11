@@ -43,6 +43,7 @@ type Props = {
   headerStreakFreezesOwned?: number;
   headerEquippedAvatarAsset?: string | null;
   headerEquippedBorderAsset?: string | null;
+  headerUserEmail?: string;
   seasonArchives?: SeasonArchiveRow[];
   currentSeason?: { label: string; endsAt: string } | null;
 };
@@ -77,6 +78,7 @@ export function ProfileClient({
   headerStreakFreezesOwned,
   headerEquippedAvatarAsset,
   headerEquippedBorderAsset,
+  headerUserEmail,
   seasonArchives = [],
   currentSeason,
 }: Props) {
@@ -127,6 +129,7 @@ export function ProfileClient({
             streakFreezesOwned={headerStreakFreezesOwned}
             equippedAvatarAsset={headerEquippedAvatarAsset}
             equippedBorderAsset={headerEquippedBorderAsset}
+            userEmail={headerUserEmail}
           />
         )}
 

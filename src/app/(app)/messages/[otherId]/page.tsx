@@ -67,6 +67,7 @@ export default async function ConversationPage({
     .maybeSingle();
 
   let threadId: string;
+  let otherReadAt: string | null = null;
 
   if (!existingThread) {
     const { data: newThread } = await admin
@@ -79,7 +80,13 @@ export default async function ConversationPage({
   } else {
     threadId = existingThread.id;
 
-    // Marquer comme lu (met à jour le champ read_at du current user)
+    // The other user's read_at tells the current user if their messages have been read
+    otherReadAt =
+      existingThread.user_a_id === otherId
+        ? existingThread.user_a_read_at
+        : existingThread.user_b_read_at;
+
+    // Mark thread as read for current user
     const readNow = new Date().toISOString();
     if (existingThread.user_a_id === user.id) {
       await admin
@@ -137,6 +144,7 @@ export default async function ConversationPage({
         otherId={otherId}
         otherUsername={other.username}
         otherAvatarUrl={other.avatar_url}
+        otherReadAt={otherReadAt}
         initialMessages={messages ?? []}
       />
     </main>

@@ -50,3 +50,15 @@ export async function getTeamRoster(teamId: string): Promise<TsdbPlayer[]> {
   );
   return data.player ?? [];
 }
+
+/** Derniers 15 événements d'une équipe (eventslast.php). */
+export async function getTeamLastEvents(teamId: string): Promise<TsdbEvent[]> {
+  try {
+    const data = await apiFetch<{ results: TsdbEvent[] | null }>(
+      `eventslast.php?id=${teamId}`,
+    );
+    return data.results ?? [];
+  } catch {
+    return [];
+  }
+}

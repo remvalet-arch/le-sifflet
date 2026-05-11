@@ -1,15 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, CheckCheck } from "lucide-react";
+import { Send, Check, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import type { DirectMessageRow } from "@/types/database";
+import type {
+  DirectMessageRow,
+  DirectMessageThreadRow,
+} from "@/types/database";
 import { track } from "@/lib/analytics";
 
 const MAX_CHARS = 500;
 const RATE_LIMIT_MS = 2000;
+const TYPING_DEBOUNCE_MS = 1500;
+const TYPING_TTL_MS = 2500;
 
 export function MessagesConversation({
   threadId,
@@ -17,6 +23,7 @@ export function MessagesConversation({
   otherId,
   otherUsername,
   otherAvatarUrl,
+  otherReadAt,
   initialMessages,
 }: {
   threadId: string;
@@ -24,21 +31,31 @@ export function MessagesConversation({
   otherId: string;
   otherUsername: string;
   otherAvatarUrl?: string | null;
+  otherReadAt: string | null;
   initialMessages: DirectMessageRow[];
 }) {
+  const t = useTranslations("Messages");
   const [messages, setMessages] = useState<DirectMessageRow[]>(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [lastSentAt, setLastSentAt] = useState(0);
+  const [liveOtherReadAt, setLiveOtherReadAt] = useState(otherReadAt);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const channelRef = useRef<{
+    send: (msg: object) => Promise<"ok" | "error" | "timed out">;
+  } | null>(null);
+  const isSubscribedRef = useRef(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingBroadcastRef = useRef(0);
 
-  // Marquer le thread comme lu au mount — NOW() côté serveur (drift-safe)
+  // Mark thread as read on mount
   useEffect(() => {
     const supabase = createClient();
     void supabase.rpc("mark_dm_thread_read", { p_thread_id: threadId });
   }, [threadId]);
 
-  // Realtime subscription
+  // Realtime — messages + thread read_at + typing broadcast
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -54,11 +71,10 @@ export function MessagesConversation({
         (payload) => {
           const newMsg = payload.new as DirectMessageRow;
           setMessages((prev) => {
-            // Éviter les doublons (message optimiste déjà ajouté)
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
-          // Marque comme lu côté client
+          // Mark thread as read when receiving a message
           const readNow = new Date().toISOString();
           if (currentUserId < otherId) {
             void supabase
@@ -73,9 +89,53 @@ export function MessagesConversation({
           }
         },
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "direct_message_threads",
+          filter: `id=eq.${threadId}`,
+        },
+        (payload) => {
+          const updated = payload.new as DirectMessageThreadRow;
+          // The OTHER user's read_at tells us they've read our messages
+          const newOtherReadAt =
+            updated.user_a_id === otherId
+              ? updated.user_a_read_at
+              : updated.user_b_read_at;
+          if (newOtherReadAt) {
+            setTimeout(() => setLiveOtherReadAt(newOtherReadAt), 0);
+          }
+        },
+      )
+      .on(
+        "broadcast",
+        { event: "typing" },
+        (payload: { payload?: { user_id?: string } }) => {
+          if (payload.payload?.user_id === otherId) {
+            if (typingTimeoutRef.current)
+              clearTimeout(typingTimeoutRef.current);
+            setTimeout(() => setIsOtherTyping(true), 0);
+            typingTimeoutRef.current = setTimeout(
+              () => setIsOtherTyping(false),
+              TYPING_TTL_MS,
+            );
+          }
+        },
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") isSubscribedRef.current = true;
+      });
+
+    channelRef.current = channel as unknown as {
+      send: (msg: object) => Promise<"ok" | "error" | "timed out">;
+    };
 
     return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      isSubscribedRef.current = false;
+      channelRef.current = null;
       void supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,7 +168,7 @@ export function MessagesConversation({
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         toast.error(data.error ?? "Message non envoyé");
-        setText(trimmed); // Restaure le texte
+        setText(trimmed);
       } else {
         track("dm_sent", { is_first_message_in_thread: false });
       }
@@ -127,13 +187,32 @@ export function MessagesConversation({
     }
   }
 
+  function handleTextChange(val: string) {
+    setText(val.slice(0, MAX_CHARS));
+    const now = Date.now();
+    if (
+      channelRef.current &&
+      isSubscribedRef.current &&
+      now - lastTypingBroadcastRef.current > TYPING_DEBOUNCE_MS
+    ) {
+      lastTypingBroadcastRef.current = now;
+      void channelRef.current.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { user_id: currentUserId },
+      });
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Messages */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
         {messages.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <span className="text-3xl">👋</span>
+            <span className="text-3xl" aria-hidden="true">
+              👋
+            </span>
             <p className="text-sm font-black text-zinc-400">
               Démarre la conversation !
             </p>
@@ -152,7 +231,12 @@ export function MessagesConversation({
             hour: "2-digit",
             minute: "2-digit",
           });
-          const isLastOverall = i === messages.length - 1;
+          // Last message sent by the current user — show read receipt
+          const isLastMine =
+            isMe &&
+            !messages.slice(i + 1).some((m) => m.sender_id === currentUserId);
+          const isRead =
+            liveOtherReadAt !== null && msg.sent_at <= liveOtherReadAt;
 
           return (
             <div
@@ -198,14 +282,68 @@ export function MessagesConversation({
                   className={`mt-0.5 flex items-center gap-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}
                 >
                   <span className="text-[9px] text-zinc-600">{time}</span>
-                  {isMe && isLastOverall && (
-                    <CheckCheck className="h-3 w-3 text-whistle/60" />
-                  )}
+                  {isMe &&
+                    isLastMine &&
+                    (isRead ? (
+                      <CheckCheck
+                        className="h-3 w-3 text-whistle"
+                        aria-label={t("ariaRead")}
+                      />
+                    ) : (
+                      <Check
+                        className="h-3 w-3 text-zinc-500"
+                        aria-label={t("ariaSent")}
+                      />
+                    ))}
                 </div>
               )}
             </div>
           );
         })}
+
+        {/* Typing indicator */}
+        {isOtherTyping && (
+          <div className="mt-1 flex items-end gap-1.5">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[9px] font-black text-zinc-300">
+              {otherAvatarUrl ? (
+                <Image
+                  src={otherAvatarUrl}
+                  alt={otherUsername}
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 object-cover"
+                />
+              ) : (
+                (otherUsername[0] ?? "?").toUpperCase()
+              )}
+            </div>
+            <div
+              className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-zinc-800 px-3.5 py-2"
+              aria-live="polite"
+              aria-label={t("typing", { name: otherUsername })}
+            >
+              <span
+                className="animate-bounce text-zinc-400"
+                style={{ animationDelay: "0ms" }}
+              >
+                •
+              </span>
+              <span
+                className="animate-bounce text-zinc-400"
+                style={{ animationDelay: "150ms" }}
+              >
+                •
+              </span>
+              <span
+                className="animate-bounce text-zinc-400"
+                style={{ animationDelay: "300ms" }}
+              >
+                •
+              </span>
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -215,13 +353,14 @@ export function MessagesConversation({
           type="text"
           aria-label="Écrire un message"
           value={text}
-          onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
+          onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Écris un message…"
           className="min-h-[36px] flex-1 bg-transparent text-sm text-white placeholder:text-zinc-600 outline-none"
         />
         <span
           className={`text-[9px] font-bold ${text.length > MAX_CHARS - 50 ? "text-orange-400" : "text-zinc-700"}`}
+          aria-hidden="true"
         >
           {text.length}/{MAX_CHARS}
         </span>

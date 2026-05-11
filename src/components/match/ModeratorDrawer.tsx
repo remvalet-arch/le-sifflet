@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { TimelineEventType, LineupRow } from "@/types/database";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 const EVENT_LABELS: Record<Exclude<TimelineEventType, "info">, string> = {
   goal: "⚽ But",
@@ -31,6 +33,10 @@ export function ModeratorDrawer({
   teamHome,
   teamAway,
 }: Props) {
+  const drawerRef = useFocusTrap(open, onClose);
+  useScrollLock(open);
+  const titleId = "moderator-drawer-title";
+
   const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [eventType, setEventType] = useState<TimelineEventType>("goal");
   const [minute, setMinute] = useState("");
@@ -122,6 +128,7 @@ export function ModeratorDrawer({
       {/* Backdrop */}
       <div
         onClick={onClose}
+        aria-hidden="true"
         className={`fixed inset-0 z-[90] bg-black/60 transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
@@ -129,14 +136,24 @@ export function ModeratorDrawer({
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={`fixed bottom-0 left-0 right-0 z-[100] rounded-t-3xl border-t border-white/10 bg-zinc-900 px-4 pt-4 transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-zinc-700" />
+        <div
+          className="mx-auto mb-5 h-1 w-10 rounded-full bg-zinc-700"
+          aria-hidden="true"
+        />
 
-        <p className="mb-5 text-center text-xs font-black uppercase tracking-widest text-zinc-500">
+        <p
+          id={titleId}
+          className="mb-5 text-center text-xs font-black uppercase tracking-widest text-zinc-400"
+        >
           Espace Officiel
         </p>
 

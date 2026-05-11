@@ -43,6 +43,7 @@
     "sectionClassement": "RANGLISTE",
     "sectionBoutique": "SHOP",
     "ariaMessages": "Direktnachrichten",
+    "ariaNotifications": "Benachrichtigungen",
     "ariaOpenMenu": "Menü öffnen",
     "ariaCloseMenu": "Menü schließen",
     "backStade": "← Stadion",
@@ -371,9 +372,17 @@
     "owned": "Besessen",
     "unequip": "Entfernen",
     "equip": "Tragen ✓",
-    "virtualCurrencyNote": "Alles wird mit Sifflets bezahlt, der Spielwährung. Kein Gewinn wird in echtes Geld umgewandelt — du riskierst nichts."
+    "virtualCurrencyNote": "Alles wird mit Sifflets bezahlt, der Spielwährung. Kein Gewinn wird in echtes Geld umgewandelt — du riskierst nichts.",
+    "shopEmptyTab": "Keine Artikel in dieser Kategorie verfügbar.",
+    "tabMyItems": "Meine Items",
+    "filterAll": "Alle",
+    "filterAvailable": "Verfügbar",
+    "filterOwned": "Besessen",
+    "myItemsEmpty": "Noch nichts in dieser Kategorie.",
+    "noEquipment": "Keine aktive Ausrüstung"
   },
   "Notifications": {
+    "breadcrumbSettings": "Einstellungen",
     "title": "Benachrichtigungen",
     "subtitle": "Wähle, was dich aufweckt.",
     "deviceRegistered": "Du bekommst die Notifs auf diesem Gerät.",
@@ -409,7 +418,19 @@
     "errorSubscribeFailed": "Auf iPhone, öffne die App vom Startbildschirm aus (nicht direkt über Safari).",
     "saveFailed": "Speichern fehlgeschlagen.",
     "toggleOn": "Benachrichtigung aktiviert!",
-    "toggleOff": "Benachrichtigung deaktiviert."
+    "toggleOff": "Benachrichtigung deaktiviert.",
+    "groupFriendsTitle": "Freunde & Nachrichten",
+    "friendRequestLabel": "Freundschaftsanfrage",
+    "friendRequestDesc": "Wenn jemand dir eine Freundschaftsanfrage schickt.",
+    "dmLabel": "Direktnachrichten",
+    "dmDesc": "Wenn du eine Direktnachricht erhältst.",
+    "groupKopTitle": "KOP-Erlebnis",
+    "funKopLabel": "Witzige Kommentare im KOP",
+    "funKopDesc": "Zeigt redaktionelle Kommentare unter jedem Timeline-Event an."
+  },
+  "NotifCenter": {
+    "pageTitle": "Benachrichtigungen",
+    "emptyState": "Noch keine Benachrichtigungen."
   },
   "Rules": {
     "title": "Spielregeln",
@@ -518,7 +539,8 @@
     "errorTitle": "Rote Karte",
     "errorHeading": "Etwas ist schiefgelaufen",
     "errorDesc": "Der Schiri hat den Faden verloren. Versuch's nochmal oder geh zurück zur Lobby.",
-    "retry": "Nochmal versuchen"
+    "retry": "Nochmal versuchen",
+    "offlineMessage": "Keine Verbindung — einige Funktionen sind nicht verfügbar."
   },
   "Ligues": {
     "pageTitle": "Ligen",
@@ -536,6 +558,9 @@
     "shareTextBody": "Hey! ⚽ {from} lädt dich ein, der Liga \"{name}\" auf VAR TIME beizutreten.",
     "shareJoinTitle": "Tritt {name} auf VAR TIME bei",
     "shareCopied": "Link kopiert!",
+    "shareViaCopy": "Link kopieren",
+    "shareViaWhatsApp": "WhatsApp",
+    "shareViaSms": "SMS",
     "nudgeSentPlural": "Erinnerung an {count} Spieler gesendet! 🎯",
     "nudgeSentOne": "Erinnerung an {count} Spieler gesendet! 🎯",
     "nudgeAllDone": "Alle haben schon getippt!",
@@ -726,7 +751,12 @@
     "newConversation": "Neue Unterhaltung",
     "notFriends": "Du musst mit diesem Spieler befreundet sein, um ihm Nachrichten zu senden.",
     "friendStatus": "Freund",
-    "newConversationLabel": "Neue Konversation"
+    "newConversationLabel": "Neue Konversation",
+    "searchPlaceholder": "Suchen…",
+    "noResults": "Keine Unterhaltung gefunden",
+    "typing": "{name} schreibt…",
+    "ariaRead": "Gelesen",
+    "ariaSent": "Gesendet"
   },
   "Verdict": {
     "suspense": "Das Urteil kommt…",
@@ -767,7 +797,14 @@
     "streakFreezeBought": "🛡️ Streak Freeze gekauft! Du hast jetzt {count}.",
     "saveBetSuccess": "Schnelltipp auf {amount} 🪙 gesetzt!",
     "saveBetError": "Einstellungen konnten nicht gespeichert werden.",
-    "connectionLost": "Verbindung unterbrochen"
+    "connectionLost": "Verbindung unterbrochen",
+    "themeTitle": "Darstellung",
+    "themeDark": "Dunkel",
+    "themeLight": "Hell",
+    "themeHighContrast": "Hoher Kontrast",
+    "themeChanged": "Design geändert!",
+    "onboardingReplay": "Intro wiederholen",
+    "onboardingReplayDesc": "Starte das Einführungs-Tutorial erneut"
   },
   "Banner": {
     "migrationBold": "VAR TIME hat seine echte Domain:",
@@ -906,5 +943,18 @@
     "siffletsReset": "Deine Sifflets wurden auf 10% reduziert.",
     "pointsReset": "Deine Saisonpunkte wurden auf null zurückgesetzt.",
     "cta": "Los geht's!"
+  },
+  "PredictionDistribution": {
+    "title": "Tipp-Verteilung",
+    "scopeLeagues": "Meine Ligen",
+    "scopeGlobal": "Alle",
+    "empty": "Noch keine Tipps — sei der Erste!",
+    "avgScore": "Ø vorhergesagtes Ergebnis:",
+    "pronos": "Tipps",
+    "prono": "Tipp"
+  },
+  "HeadToHead": {
+    "title": "Direktvergleich",
+    "source": "via TheSportsDB"
   }
 }

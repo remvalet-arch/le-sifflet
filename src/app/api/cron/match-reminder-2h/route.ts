@@ -108,6 +108,7 @@ export async function GET(request: Request) {
       title: `⚽ ${match.team_home} – ${match.team_away} dans 2h !`,
       body: "Fais ton prono maintenant avant le coup d'envoi →",
       url: `/match/${match.id}`,
+      tag: `pre-match-2h-${match.id}`,
     });
 
     if (sent > 0) {

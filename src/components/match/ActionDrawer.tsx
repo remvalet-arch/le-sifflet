@@ -394,6 +394,21 @@ export function ActionDrawer({
 
         {isModerator ? (
           <>
+            {/* Bannière migration — sera retiré dans 2 semaines */}
+            <div className="mx-4 mb-3 flex items-start gap-2 rounded-xl border border-whistle/20 bg-whistle/5 px-3 py-2.5">
+              <span className="text-sm leading-none">📍</span>
+              <p className="text-xs text-zinc-400">
+                Ces outils déménagent vers{" "}
+                <a
+                  href={`/admin/match/${matchId}`}
+                  className="font-bold text-whistle underline underline-offset-2"
+                >
+                  /admin/match
+                </a>{" "}
+                — bientôt retiré d&apos;ici.
+              </p>
+            </div>
+
             {/* Onglets modérateur — 3 colonnes */}
             <div className="mx-4 mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-zinc-800/60 p-1">
               {(["alert", "match", "control"] as const).map((tab) => (
@@ -793,19 +808,26 @@ function AlertGrid({
             key={type}
             onClick={() => onAlert(type)}
             disabled={disabled}
+            aria-label={isSignaled ? `${label} — ${t("waiting")}` : label}
+            aria-pressed={isSignaled}
+            data-testid={`alert-btn-${type}`}
             className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
               isSignaled
                 ? "border-yellow-400/40 bg-yellow-400/10"
                 : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
             }`}
           >
-            <span className="text-3xl leading-none">
+            <span className="text-3xl leading-none" aria-hidden="true">
               {isPending ? "" : isSignaled ? "⏳" : emoji}
             </span>
             {isPending ? (
-              <LoaderCircle className="h-4 w-4 animate-spin text-zinc-400" />
+              <LoaderCircle
+                className="h-4 w-4 animate-spin text-zinc-400"
+                aria-hidden="true"
+              />
             ) : (
               <span
+                aria-hidden="true"
                 className={`px-2 text-center text-[11px] font-black uppercase leading-tight ${
                   isSignaled ? "text-yellow-400" : "text-zinc-300"
                 }`}

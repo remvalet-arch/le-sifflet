@@ -13,6 +13,7 @@ import {
   Trophy,
   ShoppingBag,
   MessageCircle,
+  Bell,
   ArrowLeft,
 } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
@@ -74,6 +75,7 @@ type Props = {
   rank: string;
   xp: number;
   hasUnreadDm?: boolean;
+  unreadNotifCount?: number;
 };
 
 export function TopBar({
@@ -82,10 +84,12 @@ export function TopBar({
   rank,
   xp: initialXp,
   hasUnreadDm = false,
+  unreadNotifCount = 0,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [liveRank, setLiveRank] = useState(rank);
   const [liveXp, setLiveXp] = useState(initialXp);
+  const [localUnreadNotif, setLocalUnreadNotif] = useState(unreadNotifCount);
   const locale = useLocale() as Locale;
   const t = useTranslations("TopBar");
   const bcp47 =
@@ -100,6 +104,13 @@ export function TopBar({
   const pathname = usePathname();
   const isMatchPage = /^\/match\//.test(pathname);
   const centreLabel = isMatchPage && matchTitle ? matchTitle : sectionLabel;
+
+  // Sync badge count when navigating to/from /notifications
+  useEffect(() => {
+    if (pathname === "/notifications") {
+      setTimeout(() => setLocalUnreadNotif(0), 0);
+    }
+  }, [pathname]);
 
   // Realtime : met à jour rang/XP dès qu'un pari est résolu
   useEffect(() => {
@@ -118,6 +129,30 @@ export function TopBar({
           const updated = payload.new as ProfileRow;
           setLiveRank(updated.rank);
           if (typeof updated.xp === "number") setLiveXp(updated.xp);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  // Realtime : badge notifications — s'incrémente à chaque nouvelle notif
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`topbar-notifs-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          setTimeout(() => setLocalUnreadNotif((n) => n + 1), 0);
         },
       )
       .subscribe();
@@ -164,6 +199,23 @@ export function TopBar({
           )}
 
           <div className="flex items-center gap-2">
+            {/* Notifications bell */}
+            <Link
+              href="/notifications"
+              aria-label={t("ariaNotifications")}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
+            >
+              <Bell className="h-5 w-5" aria-hidden="true" />
+              {localUnreadNotif > 0 && (
+                <span
+                  className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-whistle text-[9px] font-black text-zinc-950 ring-2 ring-zinc-950"
+                  aria-hidden="true"
+                >
+                  {localUnreadNotif > 9 ? "9+" : localUnreadNotif}
+                </span>
+              )}
+            </Link>
+
             {/* Messages privés */}
             <Link
               href="/messages"
@@ -232,13 +284,6 @@ export function TopBar({
 
         {/* Nav links */}
         <nav className="flex flex-col gap-1 p-3">
-          <SheetLink
-            href="/messages"
-            icon={<MessageCircle className="h-4 w-4" />}
-            label="Messages"
-            onClick={() => setOpen(false)}
-            badge={hasUnreadDm ? "●" : undefined}
-          />
           <SheetLink
             href="/leaderboard"
             icon={<Trophy className="h-4 w-4" />}
@@ -341,7 +386,7 @@ function SheetLink({
       {icon}
       <span className="flex-1">{label}</span>
       {badge && (
-        <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400">
+        <span className="rounded-md border border-whistle/30 bg-whistle/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-whistle">
           {badge}
         </span>
       )}

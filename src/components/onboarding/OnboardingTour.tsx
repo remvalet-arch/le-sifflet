@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { trySubscribePush } from "@/components/pwa/PushOptIn";
-import { Target, Trophy, Siren, BellRing } from "lucide-react";
+import { Target, Trophy, Siren, BellRing, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LOBBY_TRACKED_LEAGUE_API_IDS } from "@/lib/constants/top-leagues";
 
@@ -91,6 +91,15 @@ export function OnboardingTour() {
 
       {step === 1 && (
         <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Passer l'intro"
+            data-testid="onboarding-skip"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-green-500/20 text-green-400">
             <Target className="h-7 w-7" />
           </div>
@@ -111,6 +120,15 @@ export function OnboardingTour() {
 
       {step === 2 && (
         <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Passer l'intro"
+            data-testid="onboarding-skip"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <h2 className="text-center text-xl font-black uppercase tracking-tight text-white">
             Choisis tes ligues
           </h2>
@@ -160,6 +178,15 @@ export function OnboardingTour() {
 
       {step === 3 && (
         <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Passer l'intro"
+            data-testid="onboarding-skip"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
             <Trophy className="h-7 w-7" />
           </div>
@@ -171,7 +198,7 @@ export function OnboardingTour() {
           </p>
           <button
             onClick={() => setStep(4)}
-            className="mt-8 h-14 w-full rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.3)] transition hover:bg-amber-400 active:scale-[0.98]"
+            className="mt-8 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
           >
             Suivant
           </button>
@@ -180,6 +207,15 @@ export function OnboardingTour() {
 
       {step === 4 && (
         <div className="relative z-10 w-full h-full sm:h-auto sm:max-w-sm sm:rounded-3xl border-t border-white/10 sm:border bg-zinc-900 flex flex-col animate-in fade-in slide-in-from-bottom-8">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Passer l'intro"
+            data-testid="onboarding-skip"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-red-500/20 bg-red-500/10 text-red-500 relative">
               <Siren className="h-10 w-10" />

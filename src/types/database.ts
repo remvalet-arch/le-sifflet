@@ -66,12 +66,15 @@ export interface Database {
           notif_pre_match_2h: boolean;
           notif_squad_chat: boolean;
           notif_dm: boolean;
+          notif_friend_request: boolean;
+          notif_fun_kop: boolean;
           streak_freezes_owned: number;
           streak_freezes_used_count: number;
           equipped_avatar_id: string | null;
           equipped_border_id: string | null;
           equipped_effect_id: string | null;
           role: "user" | "moderator" | "founder";
+          username_last_changed_at: string | null;
         };
         Insert: {
           id: string;
@@ -102,12 +105,15 @@ export interface Database {
           notif_pre_match_2h?: boolean;
           notif_squad_chat?: boolean;
           notif_dm?: boolean;
+          notif_friend_request?: boolean;
+          notif_fun_kop?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
+          username_last_changed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -138,12 +144,48 @@ export interface Database {
           notif_pre_match_2h?: boolean;
           notif_squad_chat?: boolean;
           notif_dm?: boolean;
+          notif_friend_request?: boolean;
+          notif_fun_kop?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
           equipped_border_id?: string | null;
           equipped_effect_id?: string | null;
           role?: "user" | "moderator" | "founder";
+          username_last_changed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          url: string | null;
+          read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          url?: string | null;
+          read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          body?: string;
+          url?: string | null;
+          read?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -201,6 +243,42 @@ export interface Database {
           sender_id?: string;
           content?: string;
           sent_at?: string;
+        };
+        Relationships: [];
+      };
+      event_flavor_texts: {
+        Row: {
+          id: string;
+          event_type: string;
+          locale: string;
+          text: string;
+          tone: "neutre" | "chambrage" | "dramatique" | "ironique";
+          weight: number;
+          active: boolean;
+          seasonal: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_type: string;
+          locale?: string;
+          text: string;
+          tone?: "neutre" | "chambrage" | "dramatique" | "ironique";
+          weight?: number;
+          active?: boolean;
+          seasonal?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_type?: string;
+          locale?: string;
+          text?: string;
+          tone?: "neutre" | "chambrage" | "dramatique" | "ironique";
+          weight?: number;
+          active?: boolean;
+          seasonal?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -854,6 +932,7 @@ export interface Database {
           type:
             | "var_alert"
             | "pre_match"
+            | "pre_match_30min"
             | "pre_match_2h"
             | "resolution"
             | "digest"
@@ -867,6 +946,7 @@ export interface Database {
           type:
             | "var_alert"
             | "pre_match"
+            | "pre_match_30min"
             | "pre_match_2h"
             | "resolution"
             | "digest"
@@ -880,6 +960,7 @@ export interface Database {
           type?:
             | "var_alert"
             | "pre_match"
+            | "pre_match_30min"
             | "pre_match_2h"
             | "resolution"
             | "digest"
@@ -1832,3 +1913,9 @@ export type RateLimitLogInsert =
   Database["public"]["Tables"]["rate_limit_log"]["Insert"];
 
 export type PlayerOddsRow = Database["public"]["Tables"]["player_odds"]["Row"];
+export type NotificationRow =
+  Database["public"]["Tables"]["notifications"]["Row"];
+export type NotificationInsert =
+  Database["public"]["Tables"]["notifications"]["Insert"];
+export type EventFlavorTextRow =
+  Database["public"]["Tables"]["event_flavor_texts"]["Row"];

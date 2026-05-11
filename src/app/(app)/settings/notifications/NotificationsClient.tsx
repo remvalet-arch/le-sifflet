@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import {
   Bell,
-  ChevronLeft,
   Zap,
   Trophy,
   BookOpen,
@@ -14,8 +13,10 @@ import {
   AlertCircle,
   Loader2,
   Users,
+  MessageCircle,
+  Tv2,
 } from "lucide-react";
-import Link from "next/link";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
 import { trySubscribePush, isPushSubscribed } from "@/components/pwa/PushOptIn";
 
@@ -25,7 +26,10 @@ type ToggleKey =
   | "notif_var_results"
   | "notif_prono_results"
   | "notif_daily_digest"
-  | "notif_squad_chat";
+  | "notif_squad_chat"
+  | "notif_dm"
+  | "notif_friend_request"
+  | "notif_fun_kop";
 
 export default function NotificationsClient({
   userId,
@@ -35,6 +39,9 @@ export default function NotificationsClient({
   initialPronoResults,
   initialDailyDigest,
   initialSquadChat,
+  initialDm,
+  initialFriendRequest,
+  initialFunKop,
 }: {
   userId: string;
   initialPreMatch5: boolean;
@@ -43,6 +50,9 @@ export default function NotificationsClient({
   initialPronoResults: boolean;
   initialDailyDigest: boolean;
   initialSquadChat: boolean;
+  initialDm: boolean;
+  initialFriendRequest: boolean;
+  initialFunKop: boolean;
 }) {
   const t = useTranslations("Notifications");
 
@@ -107,6 +117,33 @@ export default function NotificationsClient({
         },
       ],
     },
+    {
+      title: t("groupFriendsTitle"),
+      icon: MessageCircle,
+      items: [
+        {
+          key: "notif_friend_request" as ToggleKey,
+          label: t("friendRequestLabel"),
+          desc: t("friendRequestDesc"),
+        },
+        {
+          key: "notif_dm" as ToggleKey,
+          label: t("dmLabel"),
+          desc: t("dmDesc"),
+        },
+      ],
+    },
+    {
+      title: t("groupKopTitle"),
+      icon: Tv2,
+      items: [
+        {
+          key: "notif_fun_kop" as ToggleKey,
+          label: t("funKopLabel"),
+          desc: t("funKopDesc"),
+        },
+      ],
+    },
   ];
 
   const [values, setValues] = useState<Record<ToggleKey, boolean>>({
@@ -116,6 +153,9 @@ export default function NotificationsClient({
     notif_prono_results: initialPronoResults,
     notif_daily_digest: initialDailyDigest,
     notif_squad_chat: initialSquadChat,
+    notif_dm: initialDm,
+    notif_friend_request: initialFriendRequest,
+    notif_fun_kop: initialFunKop,
   });
   const [isPending, startTransition] = useTransition();
   const [subStatus, setSubStatus] = useState<
@@ -171,19 +211,18 @@ export default function NotificationsClient({
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-      <div className="mb-6 flex items-center gap-3">
-        <Link
-          href="/settings"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400 transition hover:text-white"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-            {t("title")}
-          </h1>
-          <p className="text-sm text-zinc-400">{t("subtitle")}</p>
-        </div>
+      <div className="mb-6">
+        <Breadcrumb
+          className="mb-3"
+          items={[
+            { label: t("breadcrumbSettings"), href: "/settings" },
+            { label: t("title") },
+          ]}
+        />
+        <h1 className="text-xl font-black uppercase tracking-wide text-white">
+          {t("title")}
+        </h1>
+        <p className="mt-1 text-sm text-zinc-400">{t("subtitle")}</p>
       </div>
 
       {/* Push subscription status */}

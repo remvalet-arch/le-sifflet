@@ -363,6 +363,7 @@ export default async function ProfilePage() {
         headerStreakFreezesOwned={profile?.streak_freezes_owned ?? 0}
         headerEquippedAvatarAsset={equippedAvatarAsset}
         headerEquippedBorderAsset={equippedBorderAsset}
+        headerUserEmail={user.email ?? undefined}
         seasonArchives={seasonArchives}
         currentSeason={
           currentSeason

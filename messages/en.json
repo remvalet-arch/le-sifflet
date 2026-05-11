@@ -33,6 +33,7 @@
     "sectionClassement": "LEADERBOARD",
     "sectionBoutique": "SHOP",
     "ariaMessages": "Private messages",
+    "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Open menu",
     "ariaCloseMenu": "Close menu",
     "backStade": "← Stadium",
@@ -361,9 +362,17 @@
     "owned": "Owned",
     "unequip": "Unequip",
     "equip": "Equip ✓",
-    "virtualCurrencyNote": "Everything is bought with Sifflets, the in-game currency. No winnings convert into real money — you're never at risk."
+    "virtualCurrencyNote": "Everything is bought with Sifflets, the in-game currency. No winnings convert into real money — you're never at risk.",
+    "shopEmptyTab": "No items available in this category.",
+    "tabMyItems": "My items",
+    "filterAll": "All",
+    "filterAvailable": "Available",
+    "filterOwned": "Owned",
+    "myItemsEmpty": "Nothing in this category yet.",
+    "noEquipment": "No active equipment"
   },
   "Notifications": {
+    "breadcrumbSettings": "Settings",
     "title": "Notifications",
     "subtitle": "Pick what wakes you up.",
     "deviceRegistered": "You're set to receive notifs on this device.",
@@ -399,7 +408,19 @@
     "errorSubscribeFailed": "On iPhone, open the app from the home screen (not directly via Safari).",
     "saveFailed": "Unable to save.",
     "toggleOn": "Notification enabled!",
-    "toggleOff": "Notification disabled."
+    "toggleOff": "Notification disabled.",
+    "groupFriendsTitle": "Friends & Messages",
+    "friendRequestLabel": "Friend request received",
+    "friendRequestDesc": "When someone sends you a friend request.",
+    "dmLabel": "Private messages",
+    "dmDesc": "When you receive a private message.",
+    "groupKopTitle": "KOP Experience",
+    "funKopLabel": "Fun commentary in the KOP",
+    "funKopDesc": "Show editorial comments below each timeline event."
+  },
+  "NotifCenter": {
+    "pageTitle": "Notifications",
+    "emptyState": "No notifications yet."
   },
   "Rules": {
     "title": "Game rules",
@@ -508,7 +529,8 @@
     "errorTitle": "Red Card",
     "errorHeading": "Something went wrong",
     "errorDesc": "The ref lost the plot. Try again or head back to the lobby.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "offlineMessage": "No connection — some features are unavailable."
   },
   "Ligues": {
     "pageTitle": "Leagues",
@@ -526,6 +548,9 @@
     "shareTextBody": "Hey! ⚽ {from} invites you to join the league \"{name}\" on VAR TIME.",
     "shareJoinTitle": "Join {name} on VAR TIME",
     "shareCopied": "Link copied!",
+    "shareViaCopy": "Copy link",
+    "shareViaWhatsApp": "WhatsApp",
+    "shareViaSms": "SMS",
     "nudgeSentPlural": "Nudge sent to {count} players! 🎯",
     "nudgeSentOne": "Nudge sent to {count} player! 🎯",
     "nudgeAllDone": "Everyone has already made their prediction!",
@@ -716,7 +741,12 @@
     "newConversation": "New conversation",
     "notFriends": "You need to be friends with this player to send messages.",
     "friendStatus": "Friend",
-    "newConversationLabel": "New conversation"
+    "newConversationLabel": "New conversation",
+    "searchPlaceholder": "Search…",
+    "noResults": "No conversations found",
+    "typing": "{name} is typing…",
+    "ariaRead": "Read",
+    "ariaSent": "Sent"
   },
   "Verdict": {
     "suspense": "Verdict incoming…",
@@ -757,7 +787,14 @@
     "streakFreezeBought": "🛡️ Streak Freeze bought! You now have {count}.",
     "saveBetSuccess": "Quick bet set to {amount} 🪙!",
     "saveBetError": "Unable to save settings.",
-    "connectionLost": "Connection lost"
+    "connectionLost": "Connection lost",
+    "themeTitle": "Appearance",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "themeHighContrast": "High contrast",
+    "themeChanged": "Theme updated!",
+    "onboardingReplay": "Replay intro",
+    "onboardingReplayDesc": "Restart the welcome tutorial from the lobby"
   },
   "Banner": {
     "migrationBold": "VAR TIME has its real domain:",
@@ -896,5 +933,18 @@
     "siffletsReset": "Your Sifflets have been reduced to 10% to rebalance the game.",
     "pointsReset": "Your season Points are reset to zero.",
     "cta": "Let's go!"
+  },
+  "PredictionDistribution": {
+    "title": "Prediction breakdown",
+    "scopeLeagues": "My leagues",
+    "scopeGlobal": "All",
+    "empty": "No predictions yet — be the first!",
+    "avgScore": "Avg predicted score:",
+    "pronos": "predictions",
+    "prono": "prediction"
+  },
+  "HeadToHead": {
+    "title": "Head to Head",
+    "source": "via TheSportsDB"
   }
 }

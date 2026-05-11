@@ -83,7 +83,7 @@ export function NewSeasonOverlay() {
         <button
           type="button"
           onClick={dismiss}
-          className="mt-6 w-full rounded-2xl bg-amber-500 py-3.5 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-amber-400 active:scale-[0.97]"
+          className="mt-6 w-full rounded-2xl bg-whistle py-3.5 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-whistle/90 active:scale-[0.97]"
         >
           {t("cta")}
         </button>
