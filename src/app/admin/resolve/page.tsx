@@ -63,6 +63,12 @@ export default async function AdminResolvePage() {
           </h1>
           <div className="flex gap-2">
             <Link
+              href="/admin/match"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-white/10"
+            >
+              🛡️ Matchs
+            </Link>
+            <Link
               href="/admin/push-test"
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-white/10"
             >

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LiveRoom } from "@/components/match/LiveRoom";
 import { getTranslations } from "next-intl/server";
-import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
+import { MODERATOR_THRESHOLD, isAdminRole } from "@/lib/constants/permissions";
 import { log } from "@/lib/logger";
 
 type Props = { params: Promise<{ id: string }> };
@@ -56,7 +56,7 @@ export default async function MatchPage({ params }: Props) {
   const [{ data: profile }, { data: pairs }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("sifflets_balance, trust_score, username")
+      .select("sifflets_balance, trust_score, username, role")
       .eq("id", user.id)
       .single(),
     supabase.rpc("squad_members_for_my_squads"),
@@ -64,6 +64,7 @@ export default async function MatchPage({ params }: Props) {
 
   const siffletsBalance = profile?.sifflets_balance ?? 0;
   const isModerator = (profile?.trust_score ?? 0) >= MODERATOR_THRESHOLD;
+  const isAdmin = isAdminRole(profile?.role ?? "user");
   const username = profile?.username ?? undefined;
 
   // On inclut AUSSI l'utilisateur courant pour qu'il puisse voir son propre prono dans le vestiaire !
@@ -115,12 +116,22 @@ export default async function MatchPage({ params }: Props) {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
-      <Link
-        href="/lobby"
-        className="inline-flex items-center gap-1.5 text-sm font-bold text-whistle transition-opacity hover:opacity-70"
-      >
-        {tLobby("backToMatches")}
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/lobby"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-whistle transition-opacity hover:opacity-70"
+        >
+          {tLobby("backToMatches")}
+        </Link>
+        {isAdmin && (
+          <Link
+            href={`/admin/match/${id}`}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 px-3 py-1.5 text-xs font-black text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
+          >
+            🛡️ Admin
+          </Link>
+        )}
+      </div>
 
       <LiveRoom
         match={match}

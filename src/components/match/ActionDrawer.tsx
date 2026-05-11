@@ -394,6 +394,21 @@ export function ActionDrawer({
 
         {isModerator ? (
           <>
+            {/* Bannière migration — sera retiré dans 2 semaines */}
+            <div className="mx-4 mb-3 flex items-start gap-2 rounded-xl border border-whistle/20 bg-whistle/5 px-3 py-2.5">
+              <span className="text-sm leading-none">📍</span>
+              <p className="text-xs text-zinc-400">
+                Ces outils déménagent vers{" "}
+                <a
+                  href={`/admin/match/${matchId}`}
+                  className="font-bold text-whistle underline underline-offset-2"
+                >
+                  /admin/match
+                </a>{" "}
+                — bientôt retiré d&apos;ici.
+              </p>
+            </div>
+
             {/* Onglets modérateur — 3 colonnes */}
             <div className="mx-4 mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-zinc-800/60 p-1">
               {(["alert", "match", "control"] as const).map((tab) => (

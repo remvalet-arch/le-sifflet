@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { MarketEventRow } from "@/types/database";
@@ -87,7 +88,12 @@ export function AdminEventCard({ event, matchName, ageMin }: Props) {
           <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
             {TYPE_LABELS[event.type] ?? event.type}
           </span>
-          <p className="font-black text-white">{matchName}</p>
+          <Link
+            href={`/admin/match/${event.match_id}`}
+            className="font-black text-white hover:text-yellow-400 hover:underline"
+          >
+            {matchName}
+          </Link>
           <p className="text-xs text-white/40">
             il y a {ageMin} min · {event.id.slice(0, 8)}…
           </p>
