@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -131,6 +132,13 @@ export function ProfileHeader({
   const bcp47 = useBcp47();
 
   const [editOpen, setEditOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("section") === "club") {
+      setTimeout(() => setEditOpen(true), 0);
+    }
+  }, [searchParams]);
   const [username, setUsername] = useState(initialUsername);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [team, setTeam] = useState<TeamInfo>(initialTeam);

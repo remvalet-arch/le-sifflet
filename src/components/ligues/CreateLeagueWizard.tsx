@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Target, Shuffle, Users, Copy, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  Target,
+  Shuffle,
+  Users,
+  Copy,
+  Check,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/analytics";
@@ -29,8 +37,17 @@ export function CreateLeagueWizard({
     invite_code: string;
   } | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const supabase = createClient();
+
+  function handleCloseAttempt() {
+    if (step <= 1 || step === 4) {
+      onClose();
+    } else {
+      setConfirmClose(true);
+    }
+  }
 
   const LOGOS = [
     "🏆",
@@ -112,7 +129,7 @@ export function CreateLeagueWizard({
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-zinc-950 sm:items-center sm:justify-center sm:bg-black/80 sm:backdrop-blur-sm">
-      <div className="flex h-full w-full flex-col sm:h-auto sm:max-w-md sm:rounded-3xl sm:border sm:border-white/10 sm:bg-zinc-950 sm:shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
+      <div className="relative flex h-full w-full flex-col sm:h-auto sm:max-w-md sm:rounded-3xl sm:border sm:border-white/10 sm:bg-zinc-950 sm:shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
         {/* Progress Bar */}
         <div className="h-1.5 w-full bg-zinc-800">
           <div
@@ -136,10 +153,43 @@ export function CreateLeagueWizard({
           ) : (
             <div className="w-10" />
           )}
-          <span className="flex-1 text-center font-black uppercase tracking-widest text-zinc-500 text-[10px] mr-10">
+          <span className="flex-1 text-center font-black uppercase tracking-widest text-zinc-500 text-[10px]">
             {step < 4 ? t("wizardStep", { step }) : "🎉"}
           </span>
+          <button
+            onClick={handleCloseAttempt}
+            className="p-2 text-zinc-400 hover:text-white transition"
+            aria-label={tCommon("close")}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
+
+        {/* Confirmation abandon */}
+        {confirmClose && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="mx-6 flex flex-col gap-4 rounded-3xl border border-white/10 bg-zinc-900 p-6 text-center">
+              <p className="text-lg font-black text-white">
+                {t("wizardAbandonTitle")}
+              </p>
+              <p className="text-sm text-zinc-400">{t("wizardAbandonDesc")}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmClose(false)}
+                  className="flex-1 rounded-2xl border border-white/10 bg-zinc-800 py-3 text-sm font-bold text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
+                >
+                  {t("wizardAbandonContinue")}
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 rounded-2xl bg-red-500/20 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/30 active:scale-95"
+                >
+                  {t("wizardAbandonConfirm")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Body */}
         <div className="flex-1 flex flex-col p-6 sm:px-8 sm:pb-8 justify-between">

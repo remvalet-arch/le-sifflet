@@ -315,7 +315,7 @@ export function PronosticsHubClient({
                     {lobbyHref ? (
                       <Link
                         href={lobbyHref}
-                        className="flex min-w-0 flex-1 items-center gap-2.5 transition active:opacity-70"
+                        className="flex min-w-0 items-center gap-2.5 transition active:opacity-70"
                       >
                         {comp?.badge_url?.startsWith("http") ? (
                           <Image
@@ -333,7 +333,7 @@ export function PronosticsHubClient({
                         </span>
                       </Link>
                     ) : (
-                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                      <div className="flex min-w-0 items-center gap-2.5">
                         <span className="shrink-0 text-sm">🏆</span>
                         <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300">
                           {comp?.name ?? t("competitionFallback")}
@@ -343,7 +343,7 @@ export function PronosticsHubClient({
                     <button
                       type="button"
                       onClick={() => toggleSection(sectionKey)}
-                      className="flex shrink-0 items-center gap-1.5 py-1 pl-2 transition active:opacity-70"
+                      className="ml-auto flex flex-1 items-center justify-end gap-1.5 py-1 pl-2 transition active:opacity-70"
                     >
                       <span
                         className={`text-[11px] font-bold tabular-nums ${

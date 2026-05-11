@@ -622,7 +622,11 @@
     "wizardCelebCopyBtn": "Copia invito",
     "wizardCelebCopied": "Copiato!",
     "wizardGoToLeague": "Vai alla mia lega",
-    "myLeaguesBackLink": "Le mie leghe"
+    "myLeaguesBackLink": "Le mie leghe",
+    "wizardAbandonTitle": "Abbandonare la creazione?",
+    "wizardAbandonDesc": "Il tuo progresso andrà perso.",
+    "wizardAbandonContinue": "Continua",
+    "wizardAbandonConfirm": "Abbandona"
   },
   "Pronos": {
     "pageTitle": "Pronostici",
@@ -707,7 +711,8 @@
     "pointsSuffix": "Punti",
     "customizeUsername": "Personalizza il nome",
     "tabClub": "Il Mio Club",
-    "noClubMembers": "Nessun giocatore con lo stesso club preferito. Aggiungilo nel tuo profilo!",
+    "noClubMembers": "Ancora nessun giocatore con lo stesso club preferito. Recluta amici!",
+    "noClubSet": "Non hai ancora impostato un club preferito.",
     "setFavoriteTeam": "Scegli il mio club"
   },
   "Messages": {

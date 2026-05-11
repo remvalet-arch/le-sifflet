@@ -298,17 +298,24 @@ export default async function LeaderboardPage({ searchParams }: Props) {
           </Link>
         </div>
       )}
-      {players.length === 0 && isClub && !isSquad && (
+      {players.length === 0 && isClub && !isSquad && !userFavoriteTeamId && (
         <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-zinc-700 px-5 py-12 text-center">
           <span className="text-3xl">⚽</span>
           <p className="text-sm font-black text-white">{t("tabClub")}</p>
-          <p className="text-xs text-zinc-500">{t("noClubMembers")}</p>
+          <p className="text-xs text-zinc-500">{t("noClubSet")}</p>
           <Link
-            href="/profile"
+            href="/profile?section=club"
             className="mt-1 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:bg-amber-400 active:scale-95"
           >
             {t("setFavoriteTeam")} →
           </Link>
+        </div>
+      )}
+      {players.length === 0 && isClub && !isSquad && !!userFavoriteTeamId && (
+        <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-zinc-700 px-5 py-12 text-center">
+          <span className="text-3xl">🏟️</span>
+          <p className="text-sm font-black text-white">{t("tabClub")}</p>
+          <p className="text-xs text-zinc-500">{t("noClubMembers")}</p>
         </div>
       )}
       {players.length === 0 && !isSquad && !isClub && (

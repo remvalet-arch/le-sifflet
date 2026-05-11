@@ -614,7 +614,11 @@
     "wizardCelebCopyBtn": "Copier l'invitation",
     "wizardCelebCopied": "Copié !",
     "wizardGoToLeague": "Aller dans ma ligue",
-    "myLeaguesBackLink": "Mes ligues"
+    "myLeaguesBackLink": "Mes ligues",
+    "wizardAbandonTitle": "Abandonner la création ?",
+    "wizardAbandonDesc": "Ta progression sera perdue.",
+    "wizardAbandonContinue": "Continuer",
+    "wizardAbandonConfirm": "Abandonner"
   },
   "Pronos": {
     "pageTitle": "Pronos",
@@ -699,7 +703,8 @@
     "pointsSuffix": "Points",
     "customizeUsername": "Personnalise ton pseudo",
     "tabClub": "Mon Club",
-    "noClubMembers": "Aucun joueur avec le même club de cœur. Ajoute le tien dans ton profil !",
+    "noClubMembers": "Aucun joueur avec le même club de cœur. Recrute tes amis !",
+    "noClubSet": "Tu n'as pas encore de club de cœur.",
     "setFavoriteTeam": "Choisir mon club"
   },
   "Messages": {
