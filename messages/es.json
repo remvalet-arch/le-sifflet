@@ -44,10 +44,10 @@
     "ariaNotifications": "Notificaciones",
     "ariaOpenMenu": "Abrir menú",
     "ariaCloseMenu": "Cerrar menú",
-    "backStade": "← Estadio",
-    "backMessages": "← Mensajes",
-    "backSettings": "← Ajustes",
-    "backLigues": "← Ligas"
+    "backStade": "Estadio",
+    "backMessages": "Mensajes",
+    "backSettings": "Ajustes",
+    "backLigues": "Ligas"
   },
   "Match": {
     "live": "En Directo",
@@ -75,7 +75,7 @@
     "title": "Los Partidos",
     "errorLoadMatches": "Error al cargar los partidos ({message}).",
     "noMatchesForRound": "Ningún partido para la jornada {round} (liga {leagueId}).",
-    "backToMatches": "← Partidos",
+    "backToMatches": "Partidos",
     "noMatches": "Nada que llevarse a la boca",
     "today": "Hoy",
     "noDirectMatches": "Sin partido en directo. Aprovecha para colocar tus pronósticos.",
@@ -89,7 +89,7 @@
     "todayRest": "Hoy: día de descanso",
     "nextMatchesOn": "Próximos partidos el",
     "matchday": "Jornada",
-    "backToMatchDay": "← Día de partidos"
+    "backToMatchDay": "Día de partidos"
   },
   "Voting": {
     "decision": "El árbitro duda...",

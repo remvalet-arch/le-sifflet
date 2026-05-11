@@ -35,10 +35,10 @@
     "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Ouvrir le menu",
     "ariaCloseMenu": "Fermer le menu",
-    "backStade": "← Stade",
-    "backMessages": "← Messages",
-    "backSettings": "← Paramètres",
-    "backLigues": "← Ligues"
+    "backStade": "Stade",
+    "backMessages": "Messages",
+    "backSettings": "Paramètres",
+    "backLigues": "Ligues"
   },
   "Match": {
     "live": "En Direct",
@@ -66,7 +66,7 @@
     "title": "Les Matchs",
     "errorLoadMatches": "Impossible de charger les matchs ({message}).",
     "noMatchesForRound": "Aucun match pour la journée {round} (ligue {leagueId}).",
-    "backToMatches": "← Matchs",
+    "backToMatches": "Matchs",
     "noMatches": "Rien à se mettre sous la dent",
     "today": "Aujourd'hui",
     "noDirectMatches": "Pas de match en direct. Profites-en pour placer tes pronos.",
@@ -80,7 +80,7 @@
     "todayRest": "Aujourd'hui : repos",
     "nextMatchesOn": "Prochains matchs le",
     "matchday": "Journée",
-    "backToMatchDay": "← Jour de matchs"
+    "backToMatchDay": "Jour de matchs"
   },
   "Voting": {
     "decision": "L'arbitre hésite...",

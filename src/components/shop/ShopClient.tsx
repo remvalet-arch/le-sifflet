@@ -4,9 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
-import { ShoppingBag, ChevronLeft } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
-import Link from "next/link";
+
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
 import { track } from "@/lib/analytics";
 
@@ -240,19 +239,9 @@ export function ShopClient({
 
   return (
     <div className="flex min-h-full flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-white/8 bg-zinc-950/95 px-4 pb-3 pt-3 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/profile"
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 hover:text-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-          <div className="flex flex-1 items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-whistle" />
-            <h1 className="text-lg font-black text-white">{t("title")}</h1>
-          </div>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {/* Solde — affiché en haut du contenu */}
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5">
             <span className="text-sm font-black tabular-nums text-green-400">
               {balance.toLocaleString(bcp47)}
@@ -262,9 +251,6 @@ export function ShopClient({
             </span>
           </div>
         </div>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-4 p-4">
         {/* Live preview */}
         <button
           type="button"

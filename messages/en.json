@@ -36,10 +36,10 @@
     "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Open menu",
     "ariaCloseMenu": "Close menu",
-    "backStade": "← Stadium",
-    "backMessages": "← Messages",
-    "backSettings": "← Settings",
-    "backLigues": "← Leagues"
+    "backStade": "Stadium",
+    "backMessages": "Messages",
+    "backSettings": "Settings",
+    "backLigues": "Leagues"
   },
   "Match": {
     "live": "Live",
@@ -67,7 +67,7 @@
     "title": "The Matches",
     "errorLoadMatches": "Failed to load matches ({message}).",
     "noMatchesForRound": "No matches for round {round} (league {leagueId}).",
-    "backToMatches": "← Matches",
+    "backToMatches": "Matches",
     "noMatches": "Nothing on the menu",
     "today": "Today",
     "noDirectMatches": "No live match. Good time to lock in your predictions.",
@@ -81,7 +81,7 @@
     "todayRest": "Today: rest day",
     "nextMatchesOn": "Next matches on",
     "matchday": "Matchday",
-    "backToMatchDay": "← Match day"
+    "backToMatchDay": "Match day"
   },
   "Voting": {
     "decision": "The ref is hesitating...",

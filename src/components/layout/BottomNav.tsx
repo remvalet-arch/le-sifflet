@@ -235,9 +235,15 @@ function TabLink({
             : label
       }
       className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors active:scale-95 ${
-        isActive ? "text-green-500" : "text-zinc-400 hover:text-zinc-200"
+        isActive ? "text-whistle" : "text-zinc-400 hover:text-zinc-200"
       }`}
     >
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-[20%] top-0 h-0.5 rounded-b-full bg-whistle"
+        />
+      )}
       <span className="relative inline-flex">
         <Icon className="h-5 w-5" aria-hidden="true" />
         {liveIndicator && (

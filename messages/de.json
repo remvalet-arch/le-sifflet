@@ -46,10 +46,10 @@
     "ariaNotifications": "Benachrichtigungen",
     "ariaOpenMenu": "Menü öffnen",
     "ariaCloseMenu": "Menü schließen",
-    "backStade": "← Stadion",
-    "backMessages": "← Nachrichten",
-    "backSettings": "← Einstellungen",
-    "backLigues": "← Ligen"
+    "backStade": "Stadion",
+    "backMessages": "Nachrichten",
+    "backSettings": "Einstellungen",
+    "backLigues": "Ligen"
   },
   "Match": {
     "live": "Live",
@@ -77,7 +77,7 @@
     "title": "Die Spiele",
     "errorLoadMatches": "Spiele konnten nicht geladen werden ({message}).",
     "noMatchesForRound": "Keine Spiele für Spieltag {round} (Liga {leagueId}).",
-    "backToMatches": "← Spiele",
+    "backToMatches": "Spiele",
     "noMatches": "Heute nichts zu holen",
     "today": "Heute",
     "noDirectMatches": "Kein Live-Spiel. Nutze die Zeit, um deine Tipps zu setzen.",
@@ -91,7 +91,7 @@
     "todayRest": "Heute: spielfrei",
     "nextMatchesOn": "Nächste Spiele am",
     "matchday": "Spieltag",
-    "backToMatchDay": "← Spieltag"
+    "backToMatchDay": "Spieltag"
   },
   "Voting": {
     "decision": "Der Schiri zögert...",
