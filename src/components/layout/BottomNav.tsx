@@ -49,6 +49,7 @@ export function BottomNav({ userId }: { userId?: string }) {
     if (visitedLiguesRef.current) return;
 
     let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout>;
     const supabase = createClient();
 
     void supabase
@@ -57,7 +58,7 @@ export function BottomNav({ userId }: { userId?: string }) {
       .eq("user_id", userId)
       .then(async ({ data: memberships }) => {
         if (cancelled || !memberships || memberships.length === 0) {
-          setTimeout(() => setHasUnread(false), 0);
+          timerId = setTimeout(() => setHasUnread(false), 0);
           return;
         }
         squadIdsRef.current = memberships.map((m) => m.squad_id);
@@ -73,11 +74,13 @@ export function BottomNav({ userId }: { userId?: string }) {
             return (count ?? 0) > 0;
           }),
         );
-        if (!cancelled) setTimeout(() => setHasUnread(checks.some(Boolean)), 0);
+        if (!cancelled)
+          timerId = setTimeout(() => setHasUnread(checks.some(Boolean)), 0);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(timerId);
     };
   }, [userId, isOnLigues]);
 
@@ -85,6 +88,7 @@ export function BottomNav({ userId }: { userId?: string }) {
   useEffect(() => {
     if (!userId) return;
     const supabase = createClient();
+    let timerId: ReturnType<typeof setTimeout>;
     const channel = supabase
       .channel(`bottomnav-unread-${userId}`)
       .on(
@@ -103,12 +107,14 @@ export function BottomNav({ userId }: { userId?: string }) {
             !msg.is_system_message &&
             !isOnLiguesRef.current
           ) {
-            setTimeout(() => setHasUnread(true), 0);
+            clearTimeout(timerId);
+            timerId = setTimeout(() => setHasUnread(true), 0);
           }
         },
       )
       .subscribe();
     return () => {
+      clearTimeout(timerId);
       void supabase.removeChannel(channel);
     };
   }, [userId]);
@@ -117,13 +123,61 @@ export function BottomNav({ userId }: { userId?: string }) {
     if (!fabActive) return;
     if (typeof window === "undefined") return;
     if (localStorage.getItem("var_btn_tooltip_shown")) return;
-    setTimeout(() => setShowVarTooltip(true), 800);
+    const show = setTimeout(() => setShowVarTooltip(true), 800);
     const hide = setTimeout(() => {
       setShowVarTooltip(false);
       localStorage.setItem("var_btn_tooltip_shown", "1");
     }, 4800);
-    return () => clearTimeout(hide);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
   }, [fabActive]);
+
+  // Sur un match live : bottom nav réduite au seul bouton VAR
+  if (fabActive) {
+    return (
+      <nav
+        className="relative z-10 w-full shrink-0 border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="relative flex h-16 items-start justify-center">
+          {showVarTooltip && (
+            <div
+              className="pointer-events-none absolute bottom-full mb-2 z-20 animate-in fade-in slide-in-from-bottom-1 duration-200"
+              aria-hidden
+            >
+              <div className="rounded-xl border border-green-500/30 bg-zinc-900 px-3 py-2 text-center shadow-xl">
+                <p className="text-[11px] font-black text-green-400">
+                  ⚡ Appuie ici quand tu
+                </p>
+                <p className="text-[11px] font-black text-green-400">
+                  repères une action VAR !
+                </p>
+              </div>
+              <div className="mx-auto mt-[-4px] size-2 rotate-45 border-b border-r border-green-500/30 bg-zinc-900" />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setShowVarTooltip(false);
+              localStorage.setItem("var_btn_tooltip_shown", "1");
+              openDrawer();
+            }}
+            aria-label={t("ariaCallVar")}
+            data-testid="fab-var-button"
+            className="-mt-5 flex size-14 items-center justify-center rounded-full border-4 border-zinc-950 bg-green-500 shadow-lg shadow-[0_0_15px_rgba(34,197,94,0.5)] transition hover:bg-green-400 active:scale-95"
+          >
+            <MonitorPlay
+              className="ml-0.5 size-6 text-zinc-950"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav
@@ -145,45 +199,17 @@ export function BottomNav({ userId }: { userId?: string }) {
           pathname={pathname}
         />
 
-        {/* FAB VAR — toujours visible, comportement contextuel */}
+        {/* FAB VAR — visible hors match live, pointe vers le lobby */}
         <div className="relative flex -mt-5 items-start justify-center">
-          {showVarTooltip && (
-            <div
-              className="pointer-events-none absolute bottom-full mb-2 z-20 animate-in fade-in slide-in-from-bottom-1 duration-200"
-              aria-hidden
-            >
-              <div className="rounded-xl border border-green-500/30 bg-zinc-900 px-3 py-2 text-center shadow-xl">
-                <p className="text-[11px] font-black text-green-400">
-                  ⚡ Appuie ici quand tu
-                </p>
-                <p className="text-[11px] font-black text-green-400">
-                  repères une action VAR !
-                </p>
-              </div>
-              <div className="mx-auto mt-[-4px] h-2 w-2 rotate-45 border-b border-r border-green-500/30 bg-zinc-900" />
-            </div>
-          )}
           <button
             type="button"
-            onClick={() => {
-              if (fabActive) {
-                setShowVarTooltip(false);
-                localStorage.setItem("var_btn_tooltip_shown", "1");
-                openDrawer();
-              } else {
-                router.push("/lobby");
-              }
-            }}
-            aria-label={fabActive ? t("ariaCallVar") : t("ariaGoToLobby")}
+            onClick={() => router.push("/lobby")}
+            aria-label={t("ariaGoToLobby")}
             data-testid="fab-var-button"
-            className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
-              fabActive
-                ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400"
-                : "bg-zinc-800 opacity-60 hover:opacity-80"
-            }`}
+            className="flex size-14 items-center justify-center rounded-full border-4 border-zinc-950 bg-zinc-800 opacity-60 shadow-lg transition hover:opacity-80 active:scale-95"
           >
             <MonitorPlay
-              className={`ml-0.5 h-6 w-6 ${fabActive ? "text-zinc-950" : "text-zinc-500"}`}
+              className="ml-0.5 size-6 text-zinc-500"
               aria-hidden="true"
             />
           </button>
@@ -245,23 +271,23 @@ function TabLink({
         />
       )}
       <span className="relative inline-flex">
-        <Icon className="h-5 w-5" aria-hidden="true" />
+        <Icon className="size-5" aria-hidden="true" />
         {liveIndicator && (
           <span
-            className="absolute -right-1 -top-1 flex h-2.5 w-2.5"
+            className="absolute -right-1 -top-1 flex size-2.5"
             aria-hidden="true"
           >
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
           </span>
         )}
         {badge && !liveIndicator && (
           <span
-            className="absolute -right-1 -top-1 flex h-2.5 w-2.5"
+            className="absolute -right-1 -top-1 flex size-2.5"
             aria-hidden="true"
           >
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-whistle opacity-60" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-whistle" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-whistle" />
           </span>
         )}
       </span>
