@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { FilterPill } from "@/components/ui/FilterPill";
 
 type CompetitionItem = {
   id: string;
@@ -67,18 +68,9 @@ export function CompetitionFilter({
         aria-hidden
       />
       <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
-        {/* TOUTES chip */}
-        <button
-          type="button"
-          onClick={toggleAll}
-          className={`flex-none snap-start rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition ${
-            allSelected
-              ? "border-whistle bg-whistle/20 text-whistle"
-              : "border-white/10 bg-zinc-800/90 text-zinc-400 hover:text-zinc-200"
-          }`}
-        >
+        <FilterPill active={allSelected} onClick={toggleAll}>
           {t("filterAll")}
-        </button>
+        </FilterPill>
 
         {competitions.map((comp) => {
           const isActive = !allSelected && selectedIds.includes(comp.id);
@@ -90,21 +82,17 @@ export function CompetitionFilter({
           const count = showCounts?.[comp.id];
 
           return (
-            <button
+            <FilterPill
               key={comp.id}
-              type="button"
+              active={isActive}
               onClick={() => toggleCompetition(comp.id)}
-              className={`flex-none snap-start rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition whitespace-nowrap ${
-                isActive
-                  ? "border-whistle bg-whistle/20 text-whistle"
-                  : "border-white/10 bg-zinc-800/90 text-zinc-400 hover:text-zinc-200"
-              }`}
+              className="whitespace-nowrap"
             >
               {flag} {short}
               {count != null && count > 0 && (
                 <span className="ml-1 opacity-70">({count})</span>
               )}
-            </button>
+            </FilterPill>
           );
         })}
       </div>

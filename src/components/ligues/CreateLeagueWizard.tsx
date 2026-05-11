@@ -133,7 +133,7 @@ export function CreateLeagueWizard({
         {/* Progress Bar */}
         <div className="h-1.5 w-full bg-zinc-800">
           <div
-            className="h-full bg-amber-500 transition-all duration-300"
+            className="h-full bg-whistle transition-all duration-300"
             style={{ width: step >= 4 ? "100%" : `${(step / 3) * 100}%` }}
           />
         </div>
@@ -208,12 +208,12 @@ export function CreateLeagueWizard({
                 }
                 placeholder={t("wizardStep1Placeholder")}
                 maxLength={30}
-                className="w-full text-center text-3xl font-black bg-transparent border-b-2 border-zinc-700 py-2 focus:outline-none focus:border-amber-500 text-amber-400 placeholder-zinc-700 transition"
+                className="w-full text-center text-3xl font-black bg-transparent border-b-2 border-zinc-700 py-2 focus:outline-none focus:border-whistle text-whistle placeholder-zinc-700 transition"
               />
               <button
                 onClick={() => setStep(2)}
                 disabled={!name.trim()}
-                className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black disabled:opacity-40 transition active:scale-95"
+                className="w-full h-14 rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 disabled:opacity-40 transition active:scale-95"
               >
                 {tCommon("next")}
               </button>
@@ -232,7 +232,7 @@ export function CreateLeagueWizard({
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="h-24 w-24 rounded-full bg-zinc-800 border-2 border-amber-500 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(245,158,11,0.2)] mb-8 transition-transform">
+                <div className="h-24 w-24 rounded-full bg-zinc-800 border-2 border-whistle flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(250,204,21,0.2)] mb-8 transition-transform">
                   {logo}
                 </div>
 
@@ -241,7 +241,7 @@ export function CreateLeagueWizard({
                     <button
                       key={l}
                       onClick={() => setLogo(l)}
-                      className={`aspect-square rounded-2xl flex items-center justify-center text-3xl transition active:scale-95 ${logo === l ? "bg-amber-500/20 border-2 border-amber-500" : "bg-zinc-800/50 border border-white/5 hover:bg-zinc-800"}`}
+                      className={`aspect-square rounded-2xl flex items-center justify-center text-3xl transition active:scale-95 ${logo === l ? "bg-whistle/20 border-2 border-whistle" : "bg-zinc-800/50 border border-white/5 hover:bg-zinc-800"}`}
                     >
                       {l}
                     </button>
@@ -251,7 +251,7 @@ export function CreateLeagueWizard({
 
               <button
                 onClick={() => setStep(3)}
-                className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black transition active:scale-95 mt-auto"
+                className="w-full h-14 rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 transition active:scale-95 mt-auto"
               >
                 {tCommon("continue")}
               </button>
@@ -270,11 +270,11 @@ export function CreateLeagueWizard({
                 </p>
               </div>
 
-              <div className="w-full rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/70 mb-3">
+              <div className="w-full rounded-2xl border border-whistle/30 bg-whistle/5 p-5 text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-whistle/70 mb-3">
                   {t("wizardCelebInviteHint")}
                 </p>
-                <p className="font-mono text-4xl font-black tracking-[0.3em] text-amber-400">
+                <p className="font-mono text-4xl font-black tracking-[0.3em] text-whistle">
                   {createdSquad.invite_code}
                 </p>
               </div>
@@ -304,7 +304,7 @@ export function CreateLeagueWizard({
               <button
                 type="button"
                 onClick={() => onCreated(createdSquad.id, createdSquad.name)}
-                className="w-full h-14 rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-black transition active:scale-95"
+                className="w-full h-14 rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 transition active:scale-95"
               >
                 {t("wizardGoToLeague")} →
               </button>
@@ -322,16 +322,16 @@ export function CreateLeagueWizard({
               <div className="flex-1 flex flex-col gap-4 justify-center">
                 <button
                   onClick={() => setMode("classic")}
-                  className={`flex items-start gap-4 p-5 rounded-3xl border-2 text-left transition active:scale-95 ${mode === "classic" ? "border-amber-500 bg-amber-500/10 shadow-[0_0_30px_rgba(245,158,11,0.1)]" : "border-zinc-800 bg-zinc-900"}`}
+                  className={`flex items-start gap-4 p-5 rounded-3xl border-2 text-left transition active:scale-95 ${mode === "classic" ? "border-whistle bg-whistle/10 shadow-[0_0_30px_rgba(250,204,21,0.1)]" : "border-zinc-800 bg-zinc-900"}`}
                 >
                   <div
-                    className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${mode === "classic" ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-500"}`}
+                    className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${mode === "classic" ? "bg-whistle text-zinc-950" : "bg-zinc-800 text-zinc-500"}`}
                   >
                     <Target className="h-5 w-5" />
                   </div>
                   <div>
                     <h3
-                      className={`font-black text-lg ${mode === "classic" ? "text-amber-400" : "text-white"}`}
+                      className={`font-black text-lg ${mode === "classic" ? "text-whistle" : "text-white"}`}
                     >
                       {t("wizardModeClassicName")}
                     </h3>

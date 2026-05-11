@@ -172,7 +172,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
         <button
           type="button"
           onClick={() => setWizardOpen(true)}
-          className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 py-3 text-sm font-black text-amber-300 transition active:scale-[0.98] hover:bg-amber-500/20"
+          className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-whistle py-3 text-sm font-black text-zinc-950 transition active:scale-[0.98] hover:bg-whistle/90"
         >
           <Plus className="h-4 w-4" />
           {t("createButton")}
@@ -205,7 +205,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
                 {/* Main info row — pointer-events-none so the Link below captures clicks */}
                 <div className="pointer-events-none relative flex items-center gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-amber-500/80">
+                    <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-whistle/70">
                       {s.is_private ? t("privateLabel") : t("publicLabel")}
                     </p>
                     <p className="text-xl font-black tracking-tight text-white">
@@ -297,7 +297,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
             <button
               type="button"
               onClick={() => setWizardOpen(true)}
-              className="mx-auto flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-black text-black transition hover:bg-amber-400 active:scale-[0.98]"
+              className="mx-auto flex items-center gap-2 rounded-xl bg-whistle px-5 py-2.5 text-sm font-black text-zinc-950 transition hover:bg-whistle/90 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
               {t("emptyCreateButton")}
@@ -305,7 +305,7 @@ export function LiguesPageClient({ userId }: { userId: string }) {
             <button
               type="button"
               onClick={() => setJoinOpen(true)}
-              className="mx-auto text-sm font-bold text-amber-400 hover:underline"
+              className="mx-auto text-sm font-bold text-whistle hover:underline"
             >
               {t("emptyJoinButton")}
             </button>
@@ -363,13 +363,13 @@ export function LiguesPageClient({ userId }: { userId: string }) {
               maxLength={6}
               placeholder="XK3A9Q"
               autoFocus
-              className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-4 py-3.5 font-mono text-2xl font-black tracking-[0.3em] text-amber-400 placeholder-zinc-700 outline-none focus:border-amber-500/50"
+              className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-4 py-3.5 font-mono text-2xl font-black tracking-[0.3em] text-whistle placeholder-zinc-700 outline-none focus:border-whistle/50"
             />
             <button
               type="button"
               onClick={() => void handleJoin()}
               disabled={code.length < 4 || submitting}
-              className="mt-4 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-sm font-black text-black transition hover:bg-amber-400 active:scale-[0.98] disabled:opacity-40"
+              className="mt-4 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-whistle py-4 text-sm font-black text-zinc-950 transition hover:bg-whistle/90 active:scale-[0.98] disabled:opacity-40"
             >
               {submitting ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />

@@ -125,6 +125,14 @@
   --color-chalk: #f8fafc;
   --color-whistle: #facc15;
   --color-whistle-dark: #ca8a04;
+
+  /* Radius scale */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+  --radius-pill: 9999px;
 }
 
 body {

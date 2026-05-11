@@ -171,7 +171,7 @@ export function OnboardingTour() {
           </p>
           <button
             onClick={() => setStep(4)}
-            className="mt-8 h-14 w-full rounded-2xl bg-amber-500 font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.3)] transition hover:bg-amber-400 active:scale-[0.98]"
+            className="mt-8 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
           >
             Suivant
           </button>
