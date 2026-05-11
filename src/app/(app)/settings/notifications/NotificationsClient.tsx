@@ -14,6 +14,7 @@ import {
   Loader2,
   Users,
   MessageCircle,
+  Tv2,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
@@ -27,7 +28,8 @@ type ToggleKey =
   | "notif_daily_digest"
   | "notif_squad_chat"
   | "notif_dm"
-  | "notif_friend_request";
+  | "notif_friend_request"
+  | "notif_fun_kop";
 
 export default function NotificationsClient({
   userId,
@@ -39,6 +41,7 @@ export default function NotificationsClient({
   initialSquadChat,
   initialDm,
   initialFriendRequest,
+  initialFunKop,
 }: {
   userId: string;
   initialPreMatch5: boolean;
@@ -49,6 +52,7 @@ export default function NotificationsClient({
   initialSquadChat: boolean;
   initialDm: boolean;
   initialFriendRequest: boolean;
+  initialFunKop: boolean;
 }) {
   const t = useTranslations("Notifications");
 
@@ -129,6 +133,17 @@ export default function NotificationsClient({
         },
       ],
     },
+    {
+      title: t("groupKopTitle"),
+      icon: Tv2,
+      items: [
+        {
+          key: "notif_fun_kop" as ToggleKey,
+          label: t("funKopLabel"),
+          desc: t("funKopDesc"),
+        },
+      ],
+    },
   ];
 
   const [values, setValues] = useState<Record<ToggleKey, boolean>>({
@@ -140,6 +155,7 @@ export default function NotificationsClient({
     notif_squad_chat: initialSquadChat,
     notif_dm: initialDm,
     notif_friend_request: initialFriendRequest,
+    notif_fun_kop: initialFunKop,
   });
   const [isPending, startTransition] = useTransition();
   const [subStatus, setSubStatus] = useState<

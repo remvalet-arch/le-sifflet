@@ -18,6 +18,26 @@ import type {
   TimelineEventType,
 } from "@/types/database";
 
+/** Stable per-event flavor text selection (deterministic, not random each render). */
+function pickFlavorText(texts: string[], eventId: string): string {
+  if (texts.length === 0) return "";
+  let hash = 0;
+  for (let i = 0; i < eventId.length; i++) {
+    hash = (hash * 31 + eventId.charCodeAt(i)) >>> 0;
+  }
+  return texts[hash % texts.length]!;
+}
+
+/** Interpolate {player} and {minute} variables in a flavor text. */
+function interpolate(
+  text: string,
+  vars: { player?: string; minute?: number },
+): string {
+  return text
+    .replace(/\{player\}/g, vars.player ?? "")
+    .replace(/\{minute\}/g, vars.minute != null ? String(vars.minute) : "");
+}
+
 const ICONS: Record<TimelineEventType, string> = {
   goal: "⚽",
   yellow_card: "🟨",
@@ -54,12 +74,14 @@ function EventCard({
   isModerator,
   onEdit,
   onDelete,
+  flavorText,
 }: {
   ev: MatchTimelineEventRow;
   side: "home" | "away";
   isModerator: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  flavorText?: string;
 }) {
   const icon = ICONS[ev.event_type];
   const isGoal = ev.event_type === "goal";
@@ -121,6 +143,14 @@ function EventCard({
         </div>
       </div>
 
+      {flavorText && (
+        <p
+          className={`animate-fade-in max-w-[150px] text-[10px] italic leading-snug text-zinc-500 ${isRight ? "self-end text-right" : ""}`}
+        >
+          {flavorText}
+        </p>
+      )}
+
       {isModerator && (
         <div className={`flex gap-1 ${isRight ? "justify-end" : ""}`}>
           <button
@@ -147,6 +177,9 @@ type Props = {
   matchStatus: MatchStatus;
   matchStartTime?: string;
   onSwitchToCompo?: () => void;
+  teamHome?: string;
+  teamAway?: string;
+  showFlavorTexts?: boolean;
 };
 
 export const MatchTimeline = memo(function MatchTimeline({
@@ -155,6 +188,9 @@ export const MatchTimeline = memo(function MatchTimeline({
   matchStatus,
   matchStartTime,
   onSwitchToCompo,
+  teamHome,
+  teamAway,
+  showFlavorTexts = true,
 }: Props) {
   const tAction = useTranslations("ActionDrawer");
   const tLive = useTranslations("LiveRoom");
@@ -176,6 +212,7 @@ export const MatchTimeline = memo(function MatchTimeline({
     is_own_goal: false,
   });
   const [saving, setSaving] = useState(false);
+  const [flavorMap, setFlavorMap] = useState<Map<string, string[]>>(new Map());
 
   useEffect(() => {
     const supabase = createClient();
@@ -244,6 +281,33 @@ export const MatchTimeline = memo(function MatchTimeline({
       void supabase.removeChannel(channel);
     };
   }, [matchId]);
+
+  useEffect(() => {
+    if (!showFlavorTexts) return;
+    const supabase = createClient();
+    // Check user preference then load texts
+    void supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data: pref } = await supabase
+        .from("profiles")
+        .select("notif_fun_kop")
+        .eq("id", user.id)
+        .single();
+      if (pref?.notif_fun_kop === false) return;
+      const { data } = await supabase
+        .from("event_flavor_texts")
+        .select("event_type, text")
+        .eq("locale", "fr")
+        .eq("active", true);
+      const map = new Map<string, string[]>();
+      for (const row of data ?? []) {
+        const arr = map.get(row.event_type) ?? [];
+        arr.push(row.text);
+        map.set(row.event_type, arr);
+      }
+      setFlavorMap(map);
+    });
+  }, [showFlavorTexts]);
 
   function startEdit(ev: MatchTimelineEventRow) {
     if (ev.event_type === "info") return;
@@ -409,6 +473,24 @@ export const MatchTimeline = memo(function MatchTimeline({
           const isHome = ev.team_side === "home";
           const isEditing = editingId === ev.id;
 
+          const rawFlavorTexts =
+            showFlavorTexts && !isInfo
+              ? (flavorMap.get(ev.is_own_goal ? "own_goal" : ev.event_type) ??
+                flavorMap.get(ev.event_type) ??
+                [])
+              : [];
+          const teamName = isHome ? teamHome : teamAway;
+          const rawFlavor =
+            rawFlavorTexts.length > 0
+              ? pickFlavorText(rawFlavorTexts, ev.id)
+              : undefined;
+          const flavorText = rawFlavor
+            ? interpolate(rawFlavor, {
+                player: ev.player_name,
+                minute: ev.minute,
+              }).replace(/\{team\}/g, teamName ?? "")
+            : undefined;
+
           // ── Événement info : bulle centrée ──────────────────────────────────
           if (isInfo) {
             return (
@@ -440,6 +522,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                       onDelete={() => {
                         void handleDelete(ev.id);
                       }}
+                      flavorText={flavorText}
                     />
                   )}
                 </div>
@@ -458,6 +541,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                       onDelete={() => {
                         void handleDelete(ev.id);
                       }}
+                      flavorText={flavorText}
                     />
                   )}
                 </div>

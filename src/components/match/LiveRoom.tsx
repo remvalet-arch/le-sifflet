@@ -29,6 +29,7 @@ import { LeaguePronosList } from "./LeaguePronosList";
 import { LiveRoomTutorial } from "./LiveRoomTutorial";
 import { useActiveSquad } from "@/hooks/useActiveSquad";
 import { FriendPronoHints } from "./FriendPronoHints";
+import { PredictionDistribution } from "./PredictionDistribution";
 
 export type SquadProno = {
   user_id: string;
@@ -741,6 +742,8 @@ export function LiveRoom({
             matchStatus={liveMatch.status}
             matchStartTime={liveMatch.start_time ?? undefined}
             onSwitchToCompo={() => setActiveTab("compo")}
+            teamHome={liveMatch.team_home}
+            teamAway={liveMatch.team_away}
           />
           {/* Sirène VAR — panic button ligue */}
           {isLive && (
@@ -803,6 +806,11 @@ export function LiveRoom({
       )}
       {displayedTab === "vestiaire" && (
         <>
+          <PredictionDistribution
+            matchId={liveMatch.id}
+            teamHome={liveMatch.team_home}
+            teamAway={liveMatch.team_away}
+          />
           <FriendPronoHints
             matchId={liveMatch.id}
             userId={userId}

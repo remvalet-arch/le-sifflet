@@ -417,7 +417,10 @@
     "friendRequestLabel": "Freundschaftsanfrage",
     "friendRequestDesc": "Wenn jemand dir eine Freundschaftsanfrage schickt.",
     "dmLabel": "Direktnachrichten",
-    "dmDesc": "Wenn du eine Direktnachricht erhältst."
+    "dmDesc": "Wenn du eine Direktnachricht erhältst.",
+    "groupKopTitle": "KOP-Erlebnis",
+    "funKopLabel": "Witzige Kommentare im KOP",
+    "funKopDesc": "Zeigt redaktionelle Kommentare unter jedem Timeline-Event an."
   },
   "NotifCenter": {
     "pageTitle": "Benachrichtigungen",
@@ -922,5 +925,14 @@
     "siffletsReset": "Deine Sifflets wurden auf 10% reduziert.",
     "pointsReset": "Deine Saisonpunkte wurden auf null zurückgesetzt.",
     "cta": "Los geht's!"
+  },
+  "PredictionDistribution": {
+    "title": "Tipp-Verteilung",
+    "scopeLeagues": "Meine Ligen",
+    "scopeGlobal": "Alle",
+    "empty": "Noch keine Tipps — sei der Erste!",
+    "avgScore": "Ø vorhergesagtes Ergebnis:",
+    "pronos": "Tipps",
+    "prono": "Tipp"
   }
 }

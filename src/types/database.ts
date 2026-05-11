@@ -67,6 +67,7 @@ export interface Database {
           notif_squad_chat: boolean;
           notif_dm: boolean;
           notif_friend_request: boolean;
+          notif_fun_kop: boolean;
           streak_freezes_owned: number;
           streak_freezes_used_count: number;
           equipped_avatar_id: string | null;
@@ -105,6 +106,7 @@ export interface Database {
           notif_squad_chat?: boolean;
           notif_dm?: boolean;
           notif_friend_request?: boolean;
+          notif_fun_kop?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
@@ -143,6 +145,7 @@ export interface Database {
           notif_squad_chat?: boolean;
           notif_dm?: boolean;
           notif_friend_request?: boolean;
+          notif_fun_kop?: boolean;
           streak_freezes_owned?: number;
           streak_freezes_used_count?: number;
           equipped_avatar_id?: string | null;
@@ -240,6 +243,42 @@ export interface Database {
           sender_id?: string;
           content?: string;
           sent_at?: string;
+        };
+        Relationships: [];
+      };
+      event_flavor_texts: {
+        Row: {
+          id: string;
+          event_type: string;
+          locale: string;
+          text: string;
+          tone: "neutre" | "chambrage" | "dramatique" | "ironique";
+          weight: number;
+          active: boolean;
+          seasonal: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_type: string;
+          locale?: string;
+          text: string;
+          tone?: "neutre" | "chambrage" | "dramatique" | "ironique";
+          weight?: number;
+          active?: boolean;
+          seasonal?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_type?: string;
+          locale?: string;
+          text?: string;
+          tone?: "neutre" | "chambrage" | "dramatique" | "ironique";
+          weight?: number;
+          active?: boolean;
+          seasonal?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -1878,3 +1917,5 @@ export type NotificationRow =
   Database["public"]["Tables"]["notifications"]["Row"];
 export type NotificationInsert =
   Database["public"]["Tables"]["notifications"]["Insert"];
+export type EventFlavorTextRow =
+  Database["public"]["Tables"]["event_flavor_texts"]["Row"];

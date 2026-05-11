@@ -414,7 +414,10 @@
     "friendRequestLabel": "Richiesta di amicizia ricevuta",
     "friendRequestDesc": "Quando qualcuno ti invia una richiesta di amicizia.",
     "dmLabel": "Messaggi privati",
-    "dmDesc": "Quando ricevi un messaggio privato."
+    "dmDesc": "Quando ricevi un messaggio privato.",
+    "groupKopTitle": "Esperienza KOP",
+    "funKopLabel": "Commenti divertenti nel KOP",
+    "funKopDesc": "Mostra commenti editoriali sotto ogni evento della cronologia."
   },
   "NotifCenter": {
     "pageTitle": "Notifiche",
@@ -919,5 +922,14 @@
     "siffletsReset": "I tuoi Sifflets sono stati ridotti al 10% per riequilibrare.",
     "pointsReset": "I tuoi Punti stagionali sono stati azzerati.",
     "cta": "Si riparte!"
+  },
+  "PredictionDistribution": {
+    "title": "Distribuzione pronostici",
+    "scopeLeagues": "Le mie leghe",
+    "scopeGlobal": "Tutti",
+    "empty": "Nessun pronostico ancora — sii il primo!",
+    "avgScore": "Punteggio medio pronosticato:",
+    "pronos": "pronostici",
+    "prono": "pronostico"
   }
 }

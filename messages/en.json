@@ -407,7 +407,10 @@
     "friendRequestLabel": "Friend request received",
     "friendRequestDesc": "When someone sends you a friend request.",
     "dmLabel": "Private messages",
-    "dmDesc": "When you receive a private message."
+    "dmDesc": "When you receive a private message.",
+    "groupKopTitle": "KOP Experience",
+    "funKopLabel": "Fun commentary in the KOP",
+    "funKopDesc": "Show editorial comments below each timeline event."
   },
   "NotifCenter": {
     "pageTitle": "Notifications",
@@ -912,5 +915,14 @@
     "siffletsReset": "Your Sifflets have been reduced to 10% to rebalance the game.",
     "pointsReset": "Your season Points are reset to zero.",
     "cta": "Let's go!"
+  },
+  "PredictionDistribution": {
+    "title": "Prediction breakdown",
+    "scopeLeagues": "My leagues",
+    "scopeGlobal": "All",
+    "empty": "No predictions yet — be the first!",
+    "avgScore": "Avg predicted score:",
+    "pronos": "predictions",
+    "prono": "prediction"
   }
 }

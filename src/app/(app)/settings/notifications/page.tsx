@@ -18,7 +18,7 @@ export default async function NotificationsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "notif_pre_match_5min, notif_pre_match_2h, notif_var_results, notif_prono_results, notif_daily_digest, notif_squad_chat, notif_dm, notif_friend_request",
+      "notif_pre_match_5min, notif_pre_match_2h, notif_var_results, notif_prono_results, notif_daily_digest, notif_squad_chat, notif_dm, notif_friend_request, notif_fun_kop",
     )
     .eq("id", user.id)
     .single();
@@ -34,6 +34,7 @@ export default async function NotificationsPage() {
       initialSquadChat={profile?.notif_squad_chat ?? true}
       initialDm={profile?.notif_dm ?? true}
       initialFriendRequest={profile?.notif_friend_request ?? true}
+      initialFunKop={profile?.notif_fun_kop ?? true}
     />
   );
 }
