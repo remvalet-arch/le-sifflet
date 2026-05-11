@@ -740,7 +740,12 @@
     "newConversation": "Nouvelle conversation",
     "notFriends": "Tu dois être ami avec ce joueur pour lui envoyer des messages.",
     "friendStatus": "Ami",
-    "newConversationLabel": "Nouvelle conversation"
+    "newConversationLabel": "Nouvelle conversation",
+    "searchPlaceholder": "Rechercher…",
+    "noResults": "Aucune conversation trouvée",
+    "typing": "{name} écrit…",
+    "ariaRead": "Lu",
+    "ariaSent": "Envoyé"
   },
   "Verdict": {
     "suspense": "Le verdict tombe…",

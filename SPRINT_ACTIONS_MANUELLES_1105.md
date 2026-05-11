@@ -89,6 +89,29 @@ Résultat attendu :
 
 ---
 
+## 🔔 Sprint 11 — Realtime à activer dans Supabase
+
+Pour que les read receipts (Sprint 11.1) et le badge notif live (Sprint 11.4) fonctionnent en temps réel, deux tables doivent être ajoutées à la publication Realtime.
+
+**SQL à exécuter dans Supabase SQL Editor :**
+
+```sql
+-- Sprint 11.1 : read receipts live (mise à jour du champ user_a/b_read_at)
+ALTER TABLE direct_message_threads REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE direct_message_threads;
+
+-- Sprint 11.4 : badge notifications en temps réel
+ALTER TABLE notifications REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+```
+
+> Sans ces lignes, les features se dégradent gracieusement (pas de crash) :
+>
+> - Read receipts : affichés au chargement de page mais sans mise à jour live
+> - Badge notif : ne s'incrémente pas sans rechargement
+
+---
+
 ## 🚫 Rien à faire côté Vercel
 
 Aucune nouvelle variable d'environnement n'est requise pour ces sprints.

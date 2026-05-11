@@ -751,7 +751,12 @@
     "newConversation": "Neue Unterhaltung",
     "notFriends": "Du musst mit diesem Spieler befreundet sein, um ihm Nachrichten zu senden.",
     "friendStatus": "Freund",
-    "newConversationLabel": "Neue Konversation"
+    "newConversationLabel": "Neue Konversation",
+    "searchPlaceholder": "Suchen…",
+    "noResults": "Keine Unterhaltung gefunden",
+    "typing": "{name} schreibt…",
+    "ariaRead": "Gelesen",
+    "ariaSent": "Gesendet"
   },
   "Verdict": {
     "suspense": "Das Urteil kommt…",

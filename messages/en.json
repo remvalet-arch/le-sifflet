@@ -741,7 +741,12 @@
     "newConversation": "New conversation",
     "notFriends": "You need to be friends with this player to send messages.",
     "friendStatus": "Friend",
-    "newConversationLabel": "New conversation"
+    "newConversationLabel": "New conversation",
+    "searchPlaceholder": "Search…",
+    "noResults": "No conversations found",
+    "typing": "{name} is typing…",
+    "ariaRead": "Read",
+    "ariaSent": "Sent"
   },
   "Verdict": {
     "suspense": "Verdict incoming…",
