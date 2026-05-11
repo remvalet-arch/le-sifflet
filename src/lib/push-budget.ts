@@ -67,6 +67,7 @@ export async function logPushSent(
         | "var_alert"
         | "pre_match"
         | "pre_match_2h"
+        | "pre_match_30min"
         | "resolution"
         | "digest"
         | "nudge",

@@ -473,6 +473,33 @@ export function LiveRoom({
     return () => setDrawerAvailable(false);
   }, [isLive, setDrawerAvailable]);
 
+  // Wake Lock — empêche le téléphone de se verrouiller pendant le match en direct
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+  useEffect(() => {
+    if (!isLive) return;
+    if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
+    let sentinel: WakeLockSentinel | null = null;
+    void (
+      navigator as {
+        wakeLock: { request: (type: string) => Promise<WakeLockSentinel> };
+      }
+    ).wakeLock
+      .request("screen")
+      .then((s) => {
+        sentinel = s;
+        setWakeLockActive(true);
+        sentinel.addEventListener("release", () =>
+          setTimeout(() => setWakeLockActive(false), 0),
+        );
+      })
+      .catch(() => {
+        /* non-supporté ou refusé — silencieux */
+      });
+    return () => {
+      if (sentinel) void sentinel.release();
+    };
+  }, [isLive]);
+
   useEffect(() => {
     const shorten = (name: string) =>
       name.length > 12 ? name.slice(0, 3).toUpperCase() : name;
@@ -603,6 +630,16 @@ export function LiveRoom({
       <div className="sticky top-0 z-40 -mx-4 bg-zinc-950/95 backdrop-blur-md">
         <div className="relative px-6 pt-2">
           <div className="absolute right-4 top-2 z-10 flex items-center gap-2">
+            {/* Wake Lock indicator */}
+            {wakeLockActive && (
+              <span
+                title="Écran maintenu actif pendant le match"
+                className="text-[10px] text-zinc-600"
+                aria-label="Écran maintenu actif"
+              >
+                🔓
+              </span>
+            )}
             {/* Badge audience (Sprint Q) */}
             {audienceCount > 0 && (
               <span

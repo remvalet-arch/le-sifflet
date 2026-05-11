@@ -893,6 +893,7 @@ export interface Database {
           type:
             | "var_alert"
             | "pre_match"
+            | "pre_match_30min"
             | "pre_match_2h"
             | "resolution"
             | "digest"
@@ -906,6 +907,7 @@ export interface Database {
           type:
             | "var_alert"
             | "pre_match"
+            | "pre_match_30min"
             | "pre_match_2h"
             | "resolution"
             | "digest"
@@ -919,6 +921,7 @@ export interface Database {
           type?:
             | "var_alert"
             | "pre_match"
+            | "pre_match_30min"
             | "pre_match_2h"
             | "resolution"
             | "digest"
