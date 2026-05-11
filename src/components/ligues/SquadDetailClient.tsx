@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { BellRing, LoaderCircle, Wallet, ChevronLeft } from "lucide-react";
-import { ShareButton } from "@/components/ui/ShareButton";
 import { useTranslations } from "next-intl";
+import { InviteSheet } from "./InviteSheet";
 import { useBcp47 } from "@/lib/use-bcp47";
 import type { SquadRow } from "@/types/database";
 import { SquadChat } from "./SquadChat";
@@ -106,6 +106,7 @@ export function SquadDetailClient({
   const [period, setPeriod] = useState<"general" | "week" | "month">("general");
   const [reloadKey, setReloadKey] = useState(0);
   const [vestiaireSeen, setVestiaireSeen] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -193,15 +194,15 @@ export function SquadDetailClient({
 
   const isAdmin = squad.owner_id === currentUserId;
 
-  const myUsername = leaderboard.find(
-    (m) => m.user_id === currentUserId,
-  )?.username;
-  const shareFrom = myUsername ?? t("shareTextFrom");
-  const shareUrl = `https://vartime.app/join/${squad.invite_code}`;
-  const shareText = t("shareTextBody", { from: shareFrom, name: squad.name });
-
   return (
     <div className="space-y-6 pb-8 relative min-h-screen">
+      {showInvite && squad.invite_code && (
+        <InviteSheet
+          inviteCode={squad.invite_code}
+          squadName={squad.name}
+          onClose={() => setShowInvite(false)}
+        />
+      )}
       <Link
         href="/ligues"
         className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
@@ -244,16 +245,13 @@ export function SquadDetailClient({
               {t("nudgeButton")}
             </button>
             {squad.invite_code && (
-              <ShareButton
-                title={t("shareJoinTitle", { name: squad.name })}
-                text={shareText}
-                url={shareUrl}
-                label={t("inviteButton")}
-                labelCopy={t("shareViaCopy")}
-                labelCopied={t("shareCopied")}
-                labelWhatsApp={t("shareViaWhatsApp")}
-                labelSms={t("shareViaSms")}
-              />
+              <button
+                type="button"
+                onClick={() => setShowInvite(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-whistle/20 px-3 py-2 text-xs font-black text-whistle transition hover:bg-whistle/30 border border-whistle/20 active:scale-95"
+              >
+                🔗 {t("inviteButton")}
+              </button>
             )}
           </div>
         </div>

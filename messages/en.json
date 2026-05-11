@@ -13,7 +13,8 @@
     "profil": "Profile",
     "regles": "Rules",
     "messages": "Messages",
-    "ariaCallVar": "Call the VAR"
+    "ariaCallVar": "Call the VAR",
+    "ariaGoToLobby": "Find a live match"
   },
   "TopBar": {
     "connected": "Connected",
@@ -36,10 +37,10 @@
     "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Open menu",
     "ariaCloseMenu": "Close menu",
-    "backStade": "← Stadium",
-    "backMessages": "← Messages",
-    "backSettings": "← Settings",
-    "backLigues": "← Leagues"
+    "backStade": "Stadium",
+    "backMessages": "Messages",
+    "backSettings": "Settings",
+    "backLigues": "Leagues"
   },
   "Match": {
     "live": "Live",
@@ -67,7 +68,7 @@
     "title": "The Matches",
     "errorLoadMatches": "Failed to load matches ({message}).",
     "noMatchesForRound": "No matches for round {round} (league {leagueId}).",
-    "backToMatches": "← Matches",
+    "backToMatches": "Matches",
     "noMatches": "Nothing on the menu",
     "today": "Today",
     "noDirectMatches": "No live match. Good time to lock in your predictions.",
@@ -81,7 +82,7 @@
     "todayRest": "Today: rest day",
     "nextMatchesOn": "Next matches on",
     "matchday": "Matchday",
-    "backToMatchDay": "← Match day"
+    "backToMatchDay": "Match day"
   },
   "Voting": {
     "decision": "The ref is hesitating...",
@@ -369,7 +370,8 @@
     "filterAvailable": "Available",
     "filterOwned": "Owned",
     "myItemsEmpty": "Nothing in this category yet.",
-    "noEquipment": "No active equipment"
+    "noEquipment": "No active equipment",
+    "myItemsEmptyCta": "Browse the shop →"
   },
   "Notifications": {
     "breadcrumbSettings": "Settings",
@@ -741,6 +743,7 @@
     "newConversation": "New conversation",
     "notFriends": "You need to be friends with this player to send messages.",
     "friendStatus": "Friend",
+    "online": "Online",
     "newConversationLabel": "New conversation",
     "searchPlaceholder": "Search…",
     "noResults": "No conversations found",
@@ -946,5 +949,57 @@
   "HeadToHead": {
     "title": "Head to Head",
     "source": "via TheSportsDB"
+  },
+  "Onboarding": {
+    "skip": "Skip",
+    "skipConfirm": "Skip the intro?",
+    "skipConfirmDesc": "You can replay it anytime from Settings.",
+    "skipYes": "Yes, skip",
+    "skipNo": "Keep going",
+    "step1Tagline": "Be the referee",
+    "step1Body": "Judge every disputed action live and win Sifflets by being right before everyone else.",
+    "step1Cta": "Let's go →",
+    "step2Title": "Try a VAR bet",
+    "step2Subtitle": "Simulation",
+    "step2FakeMatch": "PSG vs Real Madrid · 68'",
+    "step2Question": "Mbappé, handball in the box?",
+    "step2Stake": "Fake stake: 200 🪙",
+    "step2Timer": "Closes in {s}s",
+    "step2Yes": "YES",
+    "step2No": "NO",
+    "step2WinTitle": "Nice call!",
+    "step2WinBody": "+200 Sifflets earned.",
+    "step2LoseTitle": "Wrong call!",
+    "step2LoseBody": "But you get the idea.",
+    "step2TimeUpTitle": "Too slow!",
+    "step2TimeUpBody": "In real matches, vote before the time runs out.",
+    "step2RulesTitle": "How does it work?",
+    "step2Rule1": "A disputed action occurs → a VAR bet opens for 90 seconds.",
+    "step2Rule2": "You vote YES or NO — the more players agree with you, the higher your odds.",
+    "step2Rule3": "VAR rules → winners get their stake back plus their winnings.",
+    "step2Next": "Next →",
+    "step3Title": "Your first prediction",
+    "step3Subtitle": "Predict the match score",
+    "step3FakeMatch": "PSG vs Real Madrid",
+    "step3FakeDate": "Tomorrow · 9:00 PM",
+    "step3HomeLabel": "PSG score",
+    "step3AwayLabel": "Real Madrid score",
+    "step3Hint": "Enter your predicted score here",
+    "step3Cta": "Submit my prediction",
+    "step3SuccessTitle": "First prediction saved!",
+    "step3SuccessBody": "You'll earn Points based on how accurate your prediction is. Come back after the match.",
+    "step3Next": "Continue →",
+    "step4Title": "Choose your theme",
+    "step4Subtitle": "You can change it anytime in Settings.",
+    "step4Dark": "Dark",
+    "step4DarkDesc": "Intense, built for live.",
+    "step4Light": "Light",
+    "step4LightDesc": "For the bright lights.",
+    "step4System": "Follow system",
+    "step4Next": "Confirm",
+    "step5Title": "Enable VAR alerts",
+    "step5Body": "Never miss a live VAR. We only notify you for important actions — no spam.",
+    "step5Allow": "Enable notifications",
+    "step5Later": "Not now"
   }
 }

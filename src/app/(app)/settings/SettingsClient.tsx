@@ -85,6 +85,7 @@ export default function SettingsClient({
 
   function handleReplayOnboarding() {
     localStorage.removeItem("hasCompletedOnboarding");
+    localStorage.removeItem("onboardingStep");
     window.location.href = "/lobby";
   }
 

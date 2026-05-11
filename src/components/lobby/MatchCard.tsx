@@ -197,12 +197,12 @@ export function MatchCard({
     );
 
   const metaRowMpg = isLive ? null : isFinished ? (
-    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
       {tScoreboard("finished")}
     </span>
   ) : lineupsFlag ? (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-medium tabular-nums text-zinc-500">
+      <span className="text-xs font-medium tabular-nums text-zinc-400">
         {when}
       </span>
       <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-400">
@@ -210,7 +210,7 @@ export function MatchCard({
       </span>
     </div>
   ) : (
-    <span className="text-xs font-medium tabular-nums tracking-wide text-zinc-500">
+    <span className="text-xs font-medium tabular-nums tracking-wide text-zinc-400">
       {when}
     </span>
   );
@@ -220,11 +220,11 @@ export function MatchCard({
       {isLive ? (
         <LiveBadge status={match.status} />
       ) : isFinished ? (
-        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
           {tScoreboard("finished")}
         </span>
       ) : (
-        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
           {when}
         </span>
       )}

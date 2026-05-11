@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { LoaderCircle } from "lucide-react";
 import type { AlertActionType } from "@/types/database";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -45,6 +46,30 @@ export function AlertDrawer({
 }: Props) {
   const drawerRef = useFocusTrap(open, onClose);
   useScrollLock(open);
+  const [confirmType, setConfirmType] = useState<AlertActionType | null>(null);
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setTimeout(() => setConfirmType(null), 0);
+    }
+  }, [open]);
+
+  function handleAlertTap(type: AlertActionType) {
+    if (confirmType === type) {
+      // Second tap — confirm and fire
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setConfirmType(null);
+      onAlert(type);
+      onClose();
+    } else {
+      // First tap — enter confirm state with 2s auto-cancel
+      setConfirmType(type);
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      confirmTimerRef.current = setTimeout(() => setConfirmType(null), 2000);
+    }
+  }
 
   return (
     <>
@@ -95,35 +120,49 @@ export function AlertDrawer({
             {ALERTS.map(({ type, emoji, label, featured }) => {
               const isPending = pendingType === type;
               const isSignaled = signaledTypes.has(type);
+              const isConfirming = confirmType === type;
               const disabled = !!pendingType || isSignaled;
 
               if (featured) {
                 return (
                   <button
                     key={type}
-                    onClick={() => {
-                      onAlert(type);
-                      onClose();
-                    }}
+                    onClick={() => !disabled && handleAlertTap(type)}
                     disabled={disabled}
                     className={`col-span-2 flex h-20 items-center justify-center gap-3 rounded-2xl border-2 bg-zinc-800 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                       isSignaled
                         ? "border-yellow-400/50 bg-yellow-400/10"
-                        : "border-green-500/50 hover:bg-zinc-700"
+                        : isConfirming
+                          ? "border-green-400 bg-green-500/20 shadow-[0_0_12px_rgba(74,222,128,0.4)]"
+                          : "border-green-500/50 hover:bg-zinc-700"
                     }`}
                   >
                     <span className="text-3xl leading-none">
-                      {isPending ? "" : isSignaled ? "⏳" : emoji}
+                      {isPending
+                        ? ""
+                        : isSignaled
+                          ? "⏳"
+                          : isConfirming
+                            ? "✅"
+                            : emoji}
                     </span>
                     {isPending ? (
                       <LoaderCircle className="h-5 w-5 animate-spin text-zinc-400" />
                     ) : (
                       <span
                         className={`text-base font-black uppercase tracking-wide ${
-                          isSignaled ? "text-yellow-400" : "text-white"
+                          isSignaled
+                            ? "text-yellow-400"
+                            : isConfirming
+                              ? "text-green-300"
+                              : "text-white"
                         }`}
                       >
-                        {isSignaled ? "Signal envoyé…" : label}
+                        {isSignaled
+                          ? "Signal envoyé…"
+                          : isConfirming
+                            ? "Confirmer ?"
+                            : label}
                       </span>
                     )}
                   </button>
@@ -133,29 +172,42 @@ export function AlertDrawer({
               return (
                 <button
                   key={type}
-                  onClick={() => {
-                    onAlert(type);
-                    onClose();
-                  }}
+                  onClick={() => !disabled && handleAlertTap(type)}
                   disabled={disabled}
                   className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border bg-zinc-800 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                     isSignaled
                       ? "border-yellow-400/40 bg-yellow-400/10"
-                      : "border-zinc-700 hover:bg-zinc-700"
+                      : isConfirming
+                        ? "border-green-400/60 bg-green-500/15"
+                        : "border-zinc-700 hover:bg-zinc-700"
                   }`}
                 >
                   <span className="text-3xl leading-none">
-                    {isPending ? "" : isSignaled ? "⏳" : emoji}
+                    {isPending
+                      ? ""
+                      : isSignaled
+                        ? "⏳"
+                        : isConfirming
+                          ? "✅"
+                          : emoji}
                   </span>
                   {isPending ? (
                     <LoaderCircle className="h-4 w-4 animate-spin text-zinc-400" />
                   ) : (
                     <span
                       className={`px-2 text-center text-[11px] font-black uppercase leading-tight ${
-                        isSignaled ? "text-yellow-400" : "text-zinc-300"
+                        isSignaled
+                          ? "text-yellow-400"
+                          : isConfirming
+                            ? "text-green-300"
+                            : "text-zinc-300"
                       }`}
                     >
-                      {isSignaled ? "En attente…" : label}
+                      {isSignaled
+                        ? "En attente…"
+                        : isConfirming
+                          ? "Confirmer ?"
+                          : label}
                     </span>
                   )}
                 </button>

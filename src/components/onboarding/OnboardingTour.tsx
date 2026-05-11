@@ -1,257 +1,601 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trySubscribePush } from "@/components/pwa/PushOptIn";
-import { Target, Trophy, Siren, BellRing, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { LOBBY_TRACKED_LEAGUE_API_IDS } from "@/lib/constants/top-leagues";
+import {
+  X,
+  BellRing,
+  Siren,
+  Moon,
+  Sun,
+  Monitor,
+  CheckCircle2,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
 
-const COMPETITION_FLAGS: Record<number, string> = {
-  61: "🇫🇷",
-  39: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-  140: "🇪🇸",
-  135: "🇮🇹",
-  78: "🇩🇪",
-  2: "🏆",
-  3: "🥈",
-};
+const TOTAL_STEPS = 5;
+type VarVote = "oui" | "non" | "timeout" | null;
 
-type CompStub = {
-  id: string;
-  name: string;
-  api_football_league_id: number | null;
-};
+function ProgressDots({ current }: { current: number }) {
+  return (
+    <div className="flex items-center justify-center gap-1.5 mb-6">
+      {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+        <div
+          key={i}
+          className={`rounded-full transition-all duration-300 ${
+            i + 1 === current
+              ? "h-2 w-6 bg-whistle"
+              : i + 1 < current
+                ? "h-2 w-2 bg-whistle/60"
+                : "h-2 w-2 bg-white/15"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function OnboardingTour() {
+  const t = useTranslations("Onboarding");
   const [step, setStep] = useState<number | null>(null);
-  const [availableComps, setAvailableComps] = useState<CompStub[]>([]);
-  const [selectedCompIds, setSelectedCompIds] = useState<string[]>([]);
-  const [savingComps, setSavingComps] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+
+  // Step 2 — VAR simulation
+  const [varVote, setVarVote] = useState<VarVote>(null);
+  const [varTimer, setVarTimer] = useState(30);
+  const [showVarResult, setShowVarResult] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Step 3 — guided prono
+  const [homeScore, setHomeScore] = useState("");
+  const [awayScore, setAwayScore] = useState("");
+  const [pronoSubmitted, setPronoSubmitted] = useState(false);
+
+  // Step 4 — theme
+  const [selectedTheme, setSelectedTheme] = useState<
+    "dark" | "light" | "system"
+  >("dark");
 
   useEffect(() => {
-    // Ne s'affiche qu'une seule fois
-    if (!localStorage.getItem("hasCompletedOnboarding")) {
-      setTimeout(() => setStep(1), 0);
-    }
+    if (localStorage.getItem("hasCompletedOnboarding")) return;
+    const saved = localStorage.getItem("onboardingStep");
+    const startStep = saved ? parseInt(saved, 10) : 1;
+    setTimeout(() => setStep(startStep), 0);
   }, []);
 
-  // Load available competitions when step 2 is shown
+  // Step 2 countdown timer — varTimer already initialized to 30 via useState
   useEffect(() => {
-    if (step !== 2 || availableComps.length > 0) return;
-    const supabase = createClient();
-    void supabase
-      .from("competitions")
-      .select("id, name, api_football_league_id")
-      .in("api_football_league_id", LOBBY_TRACKED_LEAGUE_API_IDS as number[])
-      .then(({ data }) => {
-        const sorted = (data ?? []).sort((a, b) => {
-          const orderA = LOBBY_TRACKED_LEAGUE_API_IDS.indexOf(
-            a.api_football_league_id ?? -1,
-          );
-          const orderB = LOBBY_TRACKED_LEAGUE_API_IDS.indexOf(
-            b.api_football_league_id ?? -1,
-          );
-          return orderA - orderB;
-        });
-        setAvailableComps(sorted);
-        // Pre-select all by default
-        setSelectedCompIds(sorted.map((c) => c.id));
+    if (step !== 2 || varVote !== null || showVarResult) return;
+    timerRef.current = setInterval(() => {
+      setVarTimer((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setTimeout(() => {
+            setVarVote("timeout");
+            setShowVarResult(true);
+          }, 0);
+          return 0;
+        }
+        return prev - 1;
       });
-  }, [step, availableComps.length]);
+    }, 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [step, varVote, showVarResult]);
 
   if (step === null) return null;
 
-  async function saveLeaguePrefs() {
-    if (savingComps) return;
-    setSavingComps(true);
-    try {
-      await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferred_competitions: selectedCompIds }),
-      });
-    } catch {
-      // Silent fail — user can edit in profile later
-    } finally {
-      setSavingComps(false);
-    }
+  function saveStep(s: number) {
+    localStorage.setItem("onboardingStep", String(s));
+    setStep(s);
   }
 
   function close() {
     localStorage.setItem("hasCompletedOnboarding", "true");
+    localStorage.removeItem("onboardingStep");
     setStep(null);
   }
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center sm:items-end sm:pb-8">
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-[2px]"
-        onClick={close}
-      />
+  function handleVote(vote: "oui" | "non") {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setVarVote(vote);
+    setTimeout(() => setShowVarResult(true), 350);
+  }
 
+  function handleThemeSelect(theme: "dark" | "light" | "system") {
+    setSelectedTheme(theme);
+    if (theme === "light") {
+      localStorage.setItem("theme", "light");
+      document.documentElement.dataset.theme = "light";
+    } else {
+      localStorage.removeItem("theme");
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }
+
+  // Skip confirmation overlay
+  if (showSkipConfirm) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px]" />
+        <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in zoom-in-95">
+          <h2 className="text-center text-xl font-black text-white">
+            {t("skipConfirm")}
+          </h2>
+          <p className="mt-2 text-center text-sm text-zinc-400">
+            {t("skipConfirmDesc")}
+          </p>
+          <div className="mt-6 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={close}
+              className="h-12 w-full rounded-2xl border border-red-500/30 bg-red-500/10 font-black text-red-400 transition hover:bg-red-500/20 active:scale-[0.98]"
+            >
+              {t("skipYes")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSkipConfirm(false)}
+              className="h-12 w-full rounded-2xl font-bold text-zinc-400 transition hover:bg-white/5 active:scale-[0.98]"
+            >
+              {t("skipNo")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:pb-8">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px]" />
+
+      {/* ── Step 1 — Bienvenue ──────────────────────────────────────────── */}
       {step === 1 && (
         <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
           <button
             type="button"
-            onClick={close}
-            aria-label="Passer l'intro"
-            data-testid="onboarding-skip"
+            onClick={() => setShowSkipConfirm(true)}
+            aria-label={t("skip")}
             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
           >
             <X className="h-4 w-4" />
           </button>
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-green-500/20 text-green-400">
-            <Target className="h-7 w-7" />
-          </div>
-          <h2 className="text-center text-2xl font-black uppercase tracking-tight text-white">
-            FAIS TES PRONOS
-          </h2>
-          <p className="mt-3 text-center text-base leading-relaxed text-zinc-400">
-            Saisis tes pronos et découvre ton classement après chaque match 🤩
-          </p>
-          <button
-            onClick={() => setStep(2)}
-            className="mt-8 h-14 w-full rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition hover:bg-green-400 active:scale-[0.98]"
-          >
-            J&apos;ai compris
-          </button>
-        </div>
-      )}
 
-      {step === 2 && (
-        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Passer l'intro"
-            data-testid="onboarding-skip"
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <h2 className="text-center text-xl font-black uppercase tracking-tight text-white">
-            Choisis tes ligues
-          </h2>
-          <p className="mt-2 text-center text-sm leading-relaxed text-zinc-400">
-            Tes pronos et notifs seront filtrés sur ces compétitions.
-          </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {availableComps.map((comp) => {
-              const isSelected = selectedCompIds.includes(comp.id);
-              const flag = comp.api_football_league_id
-                ? (COMPETITION_FLAGS[comp.api_football_league_id] ?? "⚽")
-                : "⚽";
-              return (
-                <button
-                  key={comp.id}
-                  type="button"
-                  onClick={() =>
-                    setSelectedCompIds((prev) =>
-                      isSelected
-                        ? prev.filter((id) => id !== comp.id)
-                        : [...prev, comp.id],
-                    )
-                  }
-                  className={`rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-wide transition ${
-                    isSelected
-                      ? "border-whistle bg-whistle/20 text-whistle"
-                      : "border-white/10 bg-zinc-800 text-zinc-400"
-                  }`}
-                >
-                  {flag} {comp.name}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            onClick={async () => {
-              await saveLeaguePrefs();
-              setStep(3);
-            }}
-            disabled={savingComps}
-            className="mt-6 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-pitch-900 shadow-[0_0_20px_rgba(245,158,11,0.3)] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-          >
-            C&apos;est parti !
-          </button>
-        </div>
-      )}
+          <ProgressDots current={1} />
 
-      {step === 3 && (
-        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Passer l'intro"
-            data-testid="onboarding-skip"
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-            <Trophy className="h-7 w-7" />
-          </div>
-          <h2 className="text-center text-2xl font-black uppercase tracking-tight text-white">
-            REJOINS LES LIGUES AVEC TES POTES
-          </h2>
-          <p className="mt-3 text-center text-base leading-relaxed text-zinc-400">
-            Défie tes amis, rejoins une ligue, et braque la VAR !
-          </p>
-          <button
-            onClick={() => setStep(4)}
-            className="mt-8 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
-          >
-            Suivant
-          </button>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="relative z-10 w-full h-full sm:h-auto sm:max-w-sm sm:rounded-3xl border-t border-white/10 sm:border bg-zinc-900 flex flex-col animate-in fade-in slide-in-from-bottom-8">
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Passer l'intro"
-            data-testid="onboarding-skip"
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-red-500/20 bg-red-500/10 text-red-500 relative">
-              <Siren className="h-10 w-10" />
-              <div className="absolute -right-1 -top-1 rounded-full bg-red-500 w-6 h-6 flex items-center justify-center animate-bounce">
-                <span className="text-[10px] font-black text-white">1</span>
-              </div>
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-whistle/20">
+              <span className="text-3xl" aria-hidden="true">
+                🏆
+              </span>
             </div>
             <h2 className="text-3xl font-black uppercase tracking-tight text-white">
-              ACTIVE TES NOTIFS !
+              VAR TIME
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-zinc-400">
-              Pour ne rater aucune VAR ni les résultats de tes potes.
+            <p className="mt-1 text-xs font-black uppercase tracking-widest text-whistle">
+              {t("step1Tagline")}
             </p>
           </div>
 
-          <div
-            className="p-6 pt-0 sm:pb-6 flex flex-col gap-3"
-            style={{
-              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2.5rem)",
-            }}
+          <p className="text-center text-sm leading-relaxed text-zinc-300">
+            {t("step1Body")}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => saveStep(2)}
+            className="mt-8 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
           >
+            {t("step1Cta")}
+          </button>
+        </div>
+      )}
+
+      {/* ── Step 2 — Simulation pari VAR ───────────────────────────────── */}
+      {step === 2 && (
+        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl animate-in fade-in slide-in-from-bottom-8 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowSkipConfirm(true)}
+            aria-label={t("skip")}
+            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {!showVarResult ? (
+            <div className="p-6">
+              <ProgressDots current={2} />
+
+              <p className="mb-1 text-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                {t("step2Subtitle")}
+              </p>
+              <h2 className="mb-5 text-center text-xl font-black text-white">
+                {t("step2Title")}
+              </h2>
+
+              {/* Fake live match */}
+              <div className="mb-4 rounded-2xl bg-zinc-800/60 p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-black text-zinc-400">
+                    {t("step2FakeMatch")}
+                  </span>
+                  <span className="text-xs font-black text-red-400 animate-pulse">
+                    ● LIVE
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-6">
+                  <p className="text-sm font-black text-white">PSG</p>
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-white">1 — 1</p>
+                    <p className="text-[10px] text-zinc-500">68&apos;</p>
+                  </div>
+                  <p className="text-sm font-black text-white">Real</p>
+                </div>
+              </div>
+
+              {/* VAR question card */}
+              <div className="mb-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                <p className="mb-1 text-xs font-black uppercase tracking-widest text-amber-400">
+                  ⚡ VAR
+                </p>
+                <p className="text-base font-black text-white">
+                  {t("step2Question")}
+                </p>
+                <p className="mt-2 text-xs text-zinc-400">{t("step2Stake")}</p>
+              </div>
+
+              {/* Timer */}
+              <p className="mb-4 text-center text-sm font-black text-zinc-400">
+                {t("step2Timer", { s: varTimer })}
+              </p>
+
+              {/* OUI / NON */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleVote("oui")}
+                  className="h-16 rounded-2xl border-2 border-green-500/40 bg-green-500/20 text-xl font-black text-green-400 transition hover:border-green-400 hover:bg-green-500/30 active:scale-[0.97]"
+                >
+                  {t("step2Yes")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleVote("non")}
+                  className="h-16 rounded-2xl border-2 border-red-500/40 bg-red-500/20 text-xl font-black text-red-400 transition hover:border-red-400 hover:bg-red-500/30 active:scale-[0.97]"
+                >
+                  {t("step2No")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-6">
+              <ProgressDots current={2} />
+
+              {/* Result badge */}
+              <div
+                className={`mb-5 rounded-2xl border p-4 text-center ${
+                  varVote === "oui"
+                    ? "border-green-500/20 bg-green-500/10"
+                    : varVote === "timeout"
+                      ? "border-zinc-700/40 bg-zinc-800/60"
+                      : "border-zinc-700/40 bg-zinc-800/60"
+                }`}
+              >
+                <p className="mb-2 text-3xl" aria-hidden="true">
+                  {varVote === "oui"
+                    ? "🎉"
+                    : varVote === "timeout"
+                      ? "⏱️"
+                      : "😤"}
+                </p>
+                <p className="text-xl font-black text-white">
+                  {varVote === "oui"
+                    ? t("step2WinTitle")
+                    : varVote === "timeout"
+                      ? t("step2TimeUpTitle")
+                      : t("step2LoseTitle")}
+                </p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  {varVote === "oui"
+                    ? t("step2WinBody")
+                    : varVote === "timeout"
+                      ? t("step2TimeUpBody")
+                      : t("step2LoseBody")}
+                </p>
+              </div>
+
+              {/* Rules */}
+              <h3 className="mb-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                {t("step2RulesTitle")}
+              </h3>
+              <ul className="mb-5 space-y-2">
+                {[t("step2Rule1"), t("step2Rule2"), t("step2Rule3")].map(
+                  (rule, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-whistle/20 text-xs font-black text-whistle">
+                        {i + 1}
+                      </span>
+                      <p className="text-sm leading-snug text-zinc-300">
+                        {rule}
+                      </p>
+                    </li>
+                  ),
+                )}
+              </ul>
+
+              <button
+                type="button"
+                onClick={() => saveStep(3)}
+                className="h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
+              >
+                {t("step2Next")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Step 3 — Premier prono guidé ───────────────────────────────── */}
+      {step === 3 && (
+        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+          <button
+            type="button"
+            onClick={() => setShowSkipConfirm(true)}
+            aria-label={t("skip")}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <ProgressDots current={3} />
+
+          <h2 className="mb-1 text-center text-xl font-black text-white">
+            {t("step3Title")}
+          </h2>
+          <p className="mb-5 text-center text-sm text-zinc-400">
+            {t("step3Subtitle")}
+          </p>
+
+          {!pronoSubmitted ? (
+            <>
+              {/* Fictive match */}
+              <div className="mb-4 rounded-2xl bg-zinc-800/60 p-4 text-center">
+                <p className="mb-1 text-[11px] text-zinc-500">
+                  {t("step3FakeDate")}
+                </p>
+                <p className="text-base font-black text-white">
+                  {t("step3FakeMatch")}
+                </p>
+              </div>
+
+              {/* Hint arrow */}
+              <p className="mb-2 text-center text-xs font-black uppercase tracking-widest text-whistle">
+                ↓ {t("step3Hint")}
+              </p>
+
+              {/* Score inputs */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 text-center">
+                  <label className="mb-1 block text-xs font-black text-zinc-500">
+                    PSG
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={20}
+                    value={homeScore}
+                    onChange={(e) => setHomeScore(e.target.value)}
+                    placeholder="0"
+                    aria-label={t("step3HomeLabel")}
+                    className="w-full rounded-2xl border-2 border-whistle bg-whistle/10 py-3 text-center text-2xl font-black text-white placeholder-zinc-600 focus:outline-none"
+                  />
+                </div>
+                <span
+                  className="text-xl font-black text-zinc-500"
+                  aria-hidden="true"
+                >
+                  —
+                </span>
+                <div className="flex-1 text-center">
+                  <label className="mb-1 block text-xs font-black text-zinc-500">
+                    Real
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={20}
+                    value={awayScore}
+                    onChange={(e) => setAwayScore(e.target.value)}
+                    placeholder="0"
+                    aria-label={t("step3AwayLabel")}
+                    className="w-full rounded-2xl border-2 border-whistle bg-whistle/10 py-3 text-center text-2xl font-black text-white placeholder-zinc-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (homeScore !== "" && awayScore !== "") {
+                    setPronoSubmitted(true);
+                  }
+                }}
+                disabled={homeScore === "" || awayScore === ""}
+                className="mt-5 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t("step3Cta")}
+              </button>
+            </>
+          ) : (
+            <div className="text-center">
+              <CheckCircle2
+                className="mx-auto mb-4 h-16 w-16 text-green-400"
+                aria-hidden="true"
+              />
+              <h3 className="text-2xl font-black text-white">
+                {t("step3SuccessTitle")}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+                {t("step3SuccessBody")}
+              </p>
+              <div className="mt-4 inline-block rounded-2xl bg-zinc-800/60 px-6 py-3">
+                <p
+                  className="text-2xl font-black text-white"
+                  aria-label={`${homeScore} à ${awayScore}`}
+                >
+                  {homeScore} — {awayScore}
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  PSG vs Real Madrid
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => saveStep(4)}
+                className="mt-6 h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
+              >
+                {t("step3Next")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Step 4 — Choix du thème ─────────────────────────────────────── */}
+      {step === 4 && (
+        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+          <button
+            type="button"
+            onClick={() => setShowSkipConfirm(true)}
+            aria-label={t("skip")}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <ProgressDots current={4} />
+
+          <h2 className="mb-1 text-center text-xl font-black text-white">
+            {t("step4Title")}
+          </h2>
+          <p className="mb-5 text-center text-sm text-zinc-400">
+            {t("step4Subtitle")}
+          </p>
+
+          {/* Dark / Light preview cards */}
+          <div className="mb-3 grid grid-cols-2 gap-3">
             <button
+              type="button"
+              onClick={() => handleThemeSelect("dark")}
+              aria-pressed={selectedTheme === "dark"}
+              className={`rounded-2xl border-2 p-4 text-left transition ${
+                selectedTheme === "dark"
+                  ? "border-whistle bg-whistle/10"
+                  : "border-white/10 bg-zinc-800/60"
+              }`}
+            >
+              <div className="mb-3 flex h-16 items-center justify-center rounded-xl border border-white/5 bg-zinc-950">
+                <Moon className="h-6 w-6 text-zinc-400" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-black text-white">{t("step4Dark")}</p>
+              <p className="text-[11px] text-zinc-500">{t("step4DarkDesc")}</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleThemeSelect("light")}
+              aria-pressed={selectedTheme === "light"}
+              className={`rounded-2xl border-2 p-4 text-left transition ${
+                selectedTheme === "light"
+                  ? "border-whistle bg-whistle/10"
+                  : "border-white/10 bg-zinc-800/60"
+              }`}
+            >
+              <div className="mb-3 flex h-16 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-100">
+                <Sun className="h-6 w-6 text-zinc-500" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-black text-white">{t("step4Light")}</p>
+              <p className="text-[11px] text-zinc-500">{t("step4LightDesc")}</p>
+            </button>
+          </div>
+
+          {/* System option */}
+          <button
+            type="button"
+            onClick={() => handleThemeSelect("system")}
+            aria-pressed={selectedTheme === "system"}
+            className={`mb-4 flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 transition ${
+              selectedTheme === "system"
+                ? "border-whistle bg-whistle/10"
+                : "border-white/10 bg-zinc-800/60"
+            }`}
+          >
+            <Monitor
+              className="h-4 w-4 shrink-0 text-zinc-400"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-bold text-white">
+              {t("step4System")}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => saveStep(5)}
+            className="h-14 w-full rounded-2xl bg-whistle font-black uppercase tracking-wide text-zinc-950 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition hover:bg-whistle/90 active:scale-[0.98]"
+          >
+            {t("step4Next")}
+          </button>
+        </div>
+      )}
+
+      {/* ── Step 5 — Notifications ──────────────────────────────────────── */}
+      {step === 5 && (
+        <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
+          <div className="flex flex-col items-center p-8 text-center">
+            <ProgressDots current={5} />
+
+            <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-full border-4 border-whistle/20 bg-whistle/10 text-whistle">
+              <Siren className="h-10 w-10" aria-hidden="true" />
+              <div
+                aria-hidden="true"
+                className="absolute -right-1 -top-1 flex h-6 w-6 animate-bounce items-center justify-center rounded-full bg-red-500"
+              >
+                <span className="text-[10px] font-black text-white">1</span>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white">
+              {t("step5Title")}
+            </h2>
+            <p className="mx-auto mt-3 max-w-[280px] text-sm leading-relaxed text-zinc-400">
+              {t("step5Body")}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 px-6 pb-8">
+            <button
+              type="button"
               onClick={async () => {
                 await trySubscribePush();
                 close();
               }}
-              className="h-14 w-full rounded-2xl flex items-center justify-center gap-2 bg-white font-black uppercase tracking-wide text-zinc-950 shadow-lg transition hover:bg-zinc-200 active:scale-[0.98]"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white font-black uppercase tracking-wide text-zinc-950 shadow-lg transition hover:bg-zinc-100 active:scale-[0.98]"
             >
-              <BellRing className="h-5 w-5" />
-              Activer les notifs
+              <BellRing className="h-5 w-5" aria-hidden="true" />
+              {t("step5Allow")}
             </button>
             <button
+              type="button"
               onClick={close}
-              className="h-14 w-full rounded-2xl font-bold tracking-wide text-zinc-500 transition hover:bg-white/5 active:scale-[0.98]"
+              className="h-12 w-full rounded-2xl font-bold text-zinc-500 transition hover:bg-white/5 active:scale-[0.98]"
             >
-              Plus tard
+              {t("step5Later")}
             </button>
           </div>
         </div>

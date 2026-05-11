@@ -9,7 +9,6 @@ import {
   BookOpen,
   Settings,
   LogOut,
-  Scale,
   Trophy,
   ShoppingBag,
   MessageCircle,
@@ -38,10 +37,18 @@ function getSectionLabels(t: ReturnType<typeof useTranslations<"TopBar">>) {
   ];
 }
 
+const PRIMARY_PATHS = [/^\/lobby/, /^\/pronos/, /^\/ligues/, /^\/profile/];
+
 function useSectionLabel(
   t: ReturnType<typeof useTranslations<"TopBar">>,
 ): string | null {
   const pathname = usePathname();
+  // Primary nav pages and conversation pages use in-page titles — no topbar centre label
+  if (
+    PRIMARY_PATHS.some((p) => p.test(pathname)) ||
+    /^\/messages\/.+/.test(pathname)
+  )
+    return null;
   return (
     getSectionLabels(t).find(({ pattern }) => pattern.test(pathname))?.label ??
     null
@@ -171,16 +178,20 @@ export function TopBar({
         <div className="flex h-14 items-center justify-between px-4">
           {/* Logo / Back button */}
           {backRoute ? (
-            <Link
-              href={backRoute.href}
-              className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 text-zinc-400 transition hover:text-white"
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) router.back();
+                else router.push(backRoute.href);
+              }}
+              className="flex min-h-[44px] min-w-[44px] items-center gap-1.5 text-zinc-400 transition hover:text-white active:scale-95"
               aria-label={backRoute.label}
             >
               <ArrowLeft className="h-4 w-4 shrink-0" />
               <span className="text-[11px] font-black uppercase tracking-wide">
                 {backRoute.label}
               </span>
-            </Link>
+            </button>
           ) : (
             <Link href="/lobby" className="flex items-center">
               <span className="inline-flex items-center rounded border border-white/25 px-2 py-0.5 text-[11px] font-black tracking-widest text-white">
@@ -232,6 +243,8 @@ export function TopBar({
             <button
               onClick={() => setOpen(true)}
               aria-label={t("ariaOpenMenu")}
+              aria-expanded={open}
+              aria-haspopup="true"
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 active:scale-95"
             >
               <Menu className="h-5 w-5" />
@@ -301,13 +314,6 @@ export function TopBar({
             icon={<BookOpen className="h-4 w-4" />}
             label={t("rules")}
             onClick={() => setOpen(false)}
-          />
-          <SheetLink
-            href="/laws"
-            icon={<Scale className="h-4 w-4" />}
-            label={t("laws")}
-            onClick={() => setOpen(false)}
-            badge="IFAB"
           />
           <SheetLink
             href="/settings"

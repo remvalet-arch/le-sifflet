@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Landmark, User, Users, Target, MonitorPlay } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLiveRoom } from "@/contexts/LiveRoomContext";
@@ -17,6 +17,7 @@ function useLikelyLiveHour(): boolean {
 
 export function BottomNav({ userId }: { userId?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations("Navigation");
   const { drawerAvailable, openDrawer } = useLiveRoom();
   const likelyLive = useLikelyLiveHour();
@@ -129,9 +130,7 @@ export function BottomNav({ userId }: { userId?: string }) {
       className="relative z-10 w-full shrink-0 border-t border-white/8 bg-zinc-950/95 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div
-        className={`relative grid h-16 ${isMatchPage ? "grid-cols-5" : "grid-cols-4"}`}
-      >
+      <div className="relative grid h-16 grid-cols-5">
         <TabLink
           href="/lobby"
           Icon={Landmark}
@@ -146,48 +145,49 @@ export function BottomNav({ userId }: { userId?: string }) {
           pathname={pathname}
         />
 
-        {isMatchPage && (
-          <div className="relative flex -mt-5 items-start justify-center">
-            {showVarTooltip && (
-              <div
-                className="pointer-events-none absolute bottom-full mb-2 z-20 animate-in fade-in slide-in-from-bottom-1 duration-200"
-                aria-hidden
-              >
-                <div className="rounded-xl border border-green-500/30 bg-zinc-900 px-3 py-2 text-center shadow-xl">
-                  <p className="text-[11px] font-black text-green-400">
-                    ⚡ Appuie ici quand tu
-                  </p>
-                  <p className="text-[11px] font-black text-green-400">
-                    repères une action VAR !
-                  </p>
-                </div>
-                <div className="mx-auto mt-[-4px] h-2 w-2 rotate-45 border-b border-r border-green-500/30 bg-zinc-900" />
+        {/* FAB VAR — toujours visible, comportement contextuel */}
+        <div className="relative flex -mt-5 items-start justify-center">
+          {showVarTooltip && (
+            <div
+              className="pointer-events-none absolute bottom-full mb-2 z-20 animate-in fade-in slide-in-from-bottom-1 duration-200"
+              aria-hidden
+            >
+              <div className="rounded-xl border border-green-500/30 bg-zinc-900 px-3 py-2 text-center shadow-xl">
+                <p className="text-[11px] font-black text-green-400">
+                  ⚡ Appuie ici quand tu
+                </p>
+                <p className="text-[11px] font-black text-green-400">
+                  repères une action VAR !
+                </p>
               </div>
-            )}
-            <button
-              type="button"
-              disabled={!fabActive}
-              onClick={() => {
-                if (!fabActive) return;
+              <div className="mx-auto mt-[-4px] h-2 w-2 rotate-45 border-b border-r border-green-500/30 bg-zinc-900" />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (fabActive) {
                 setShowVarTooltip(false);
                 localStorage.setItem("var_btn_tooltip_shown", "1");
                 openDrawer();
-              }}
-              aria-label={t("ariaCallVar")}
-              data-testid="fab-var-button"
-              className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
-                fabActive
-                  ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400"
-                  : "cursor-default bg-zinc-700 opacity-50"
-              }`}
-            >
-              <MonitorPlay
-                className={`ml-0.5 h-6 w-6 ${fabActive ? "text-zinc-950" : "text-zinc-400"}`}
-                aria-hidden="true"
-              />
-            </button>
-          </div>
-        )}
+              } else {
+                router.push("/lobby");
+              }
+            }}
+            aria-label={fabActive ? t("ariaCallVar") : t("ariaGoToLobby")}
+            data-testid="fab-var-button"
+            className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-zinc-950 shadow-lg transition active:scale-95 ${
+              fabActive
+                ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400"
+                : "bg-zinc-800 opacity-60 hover:opacity-80"
+            }`}
+          >
+            <MonitorPlay
+              className={`ml-0.5 h-6 w-6 ${fabActive ? "text-zinc-950" : "text-zinc-500"}`}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
 
         <TabLink
           href="/ligues"
@@ -235,9 +235,15 @@ function TabLink({
             : label
       }
       className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors active:scale-95 ${
-        isActive ? "text-green-500" : "text-zinc-400 hover:text-zinc-200"
+        isActive ? "text-whistle" : "text-zinc-400 hover:text-zinc-200"
       }`}
     >
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-[20%] top-0 h-0.5 rounded-b-full bg-whistle"
+        />
+      )}
       <span className="relative inline-flex">
         <Icon className="h-5 w-5" aria-hidden="true" />
         {liveIndicator && (

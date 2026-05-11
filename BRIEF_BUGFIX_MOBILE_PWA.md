@@ -47,6 +47,7 @@ Application des fixes validés par le founder.
 ### Bug 1 — Toasts/notifications IN APP tronqués par la notch (iOS PWA)
 
 **Symptôme observé** :
+
 - Tous les types : confirmations, erreurs, achievements, notifs Tatie, etc.
 - Apparaissent par le haut de l'écran
 - Sont **partiellement visibles** : on devine qu'il y a un toast mais le texte est masqué par la notch/Dynamic Island
@@ -73,6 +74,7 @@ grep -rn "Toaster\|toast\b\|sonner\|hot-toast" src/ package.json
 **Note critique** : les fixes précédents ont peut-être ajouté du `padding-top` en dur (40px, 50px). C'est faux. Il faut `env(safe-area-inset-top)` qui s'adapte à chaque appareil. Vérifier qu'aucun `top: 40px` ou similaire ne pollue le composant Toast.
 
 **Test final attendu après fix** :
+
 - En PWA iOS installée (pas Safari classique), un toast déclenché reste **entièrement visible** sous la notch
 - Le texte est lisible sur iPhone avec notch (iPhone 12+) ET sur iPhone sans notch (SE) ET sur iPhone avec Dynamic Island (15 Pro+)
 
@@ -81,6 +83,7 @@ grep -rn "Toaster\|toast\b\|sonner\|hot-toast" src/ package.json
 ### Bug 1.bis — Modales Paris VAR trop proches de la notch
 
 **Symptôme observé** :
+
 - **Plusieurs modales** concernées (VotingModal, ActionDrawer, modale de confirmation alerte)
 - La modale ne déborde pas sous la notch comme le toast, mais son contenu est **collé au bord supérieur** alors qu'il y a de l'espace inutilisé plus bas
 - Donne une impression de mauvaise hiérarchie visuelle et risque tronquage selon device
@@ -88,6 +91,7 @@ grep -rn "Toaster\|toast\b\|sonner\|hot-toast" src/ package.json
 **Diagnostic attendu (à confirmer)** :
 
 Probablement la même cause que le bug 1, mais sur les composants modales :
+
 - Soit les modales utilisent `top: 0` sans tenir compte de `env(safe-area-inset-top)`
 - Soit les modales ont un padding interne fixe qui n'est pas safe-area-aware
 - Soit le contenu de la modale est en `position: absolute` à `top: 0` du wrapper
@@ -99,16 +103,19 @@ grep -rn "VotingModal\|ActionDrawer\|AlertConfirmation\|AlertDrawer" src/compone
 ```
 
 Pour chaque modale identifiée, regarder :
+
 - Le wrapper de la modale (probablement Radix UI Dialog, Sheet, ou custom)
 - Le `style` ou les classes Tailwind appliquées au container
 - Si la modale est full-screen (`h-screen`) ou centred
 
 **Plan de fix probable** :
+
 - Si les modales utilisent un Radix Dialog : ajouter `paddingTop: 'env(safe-area-inset-top)'` sur le `<Dialog.Content>` ou via une classe utilitaire
 - Sur les drawers bottom-anchored : pas de problème en haut, mais vérifier que le contenu ne déborde pas si fullscreen
 - Créer une utility class Tailwind `pt-safe` qui mappe sur `padding-top: env(safe-area-inset-top)` pour réutilisation
 
 **Test final attendu** :
+
 - VotingModal : titre/header visible avec marge confortable sous la notch
 - ActionDrawer : même test
 - Confirmation d'alerte : même test
@@ -119,6 +126,7 @@ Pour chaque modale identifiée, regarder :
 ### Bug 2 — BottomNav qui remonte (pas systématique, "selon les pages")
 
 **Symptôme observé** :
+
 - BottomNav remonte parfois, prend trop de place, oblige à scroller pour la remettre en bas
 - **Pas reproductible systématiquement** — le founder n'arrive pas à isoler le scénario exact
 - "Selon la navigation"
@@ -126,6 +134,7 @@ Pour chaque modale identifiée, regarder :
 **Diagnostic attendu (à confirmer)** :
 
 Hypothèse principale : la BottomNav est en **`position: sticky` ou `position: relative`** au lieu de `position: fixed`. Conséquence :
+
 - Sur les pages où le contenu fait **moins que la hauteur viewport** (`min-h-screen` non appliqué), la BottomNav suit le flow du contenu et remonte
 - Sur les pages où le contenu est long, elle reste visuellement en bas par scroll naturel
 - D'où l'aspect "aléatoire" — c'est en fait corrélé à la longueur du contenu de chaque page
@@ -141,17 +150,20 @@ grep -rn "100vh\|min-h-screen\|h-screen" src/app/
 ```
 
 Inspecter le composant `BottomNav` :
+
 - Position CSS appliquée (fixed/sticky/relative)
 - Où il est mounté dans la hiérarchie de layout (layout root ou par page ?)
 - Si layout root : pourquoi remonte-t-il selon les pages ?
 
 **Plan de fix probable** :
+
 1. Faire de la `BottomNav` un composant **`position: fixed`** ancré en bas du viewport, ajouté au **layout root authenticated** (pas dans chaque page)
 2. Ajouter `bottom: env(safe-area-inset-bottom)` pour iPhone avec home indicator
 3. Ajouter un `padding-bottom` équivalent à la hauteur de la BottomNav + safe-area-inset-bottom sur le **wrapper de contenu** (`main`) pour que le contenu de chaque page ne soit pas caché derrière la nav
 4. Remplacer `100vh` par `100dvh` partout où ça concerne le layout root mobile
 
 **Test final attendu** :
+
 - Naviguer sur 10 pages différentes (Lobby, Match, Profil court, Profil long, Ligues, Shop, etc.) : la BottomNav reste **toujours** en bas du viewport
 - Le contenu de chaque page n'est jamais caché derrière la BottomNav
 - Pas de "scroll pour remettre la nav en bas" nécessaire
@@ -162,6 +174,7 @@ Inspecter le composant `BottomNav` :
 ### Bug 3 — Pastilles non lues qui reviennent immédiatement (chat ligue + DM)
 
 **Symptôme observé** :
+
 - Type de pastilles : **chat de ligue** + **DM**
 - User ouvre l'onglet → la pastille disparaît
 - User quitte puis revient dans l'onglet → la pastille **réapparaît immédiatement**
@@ -172,6 +185,7 @@ Inspecter le composant `BottomNav` :
 C'est **certainement un bug de persistance serveur** : le marquage "lu" côté DB ne se fait pas, ou se fait sur un mauvais filtre, ou échoue silencieusement.
 
 **Scénario probable** :
+
 1. User ouvre `/ligues/[squadId]` ou `/messages/[otherId]`
 2. Le composant affiche la pastille à `0` (state local optimiste, OK)
 3. Le composant essaie d'UPDATE quelque part en DB :
@@ -185,6 +199,7 @@ C'est **certainement un bug de persistance serveur** : le marquage "lu" côté D
 8. La pastille re-apparaît
 
 **Hypothèse alternative** : il existe **deux systèmes de comptage parallèles**
+
 - Un sur la table source (`messages`, `squad_messages`)
 - Un sur une table dérivée (`notifications`, `unread_counts`, `user_badges`)
 - Quand l'user lit, un seul des deux est mis à jour
@@ -231,6 +246,7 @@ Probablement parce que Claude Code a corrigé le **state client** ("force la pas
 **Plan de fix probable** :
 
 Le fix exact dépend de ce que le diagnostic révèle, mais probablement :
+
 1. Identifier le vrai mécanisme attendu (UPDATE `read_at` ou autre)
 2. Confirmer que l'appel API/RPC est bien fait au mount du composant de chat/DM
 3. Confirmer qu'il **réussit** (pas swallowed)
@@ -239,6 +255,7 @@ Le fix exact dépend de ce que le diagnostic révèle, mais probablement :
 6. Tester en provoquant le scénario complet (ouvrir, quitter, revenir, vérifier que la pastille reste à zéro)
 
 **Test final attendu** :
+
 - User reçoit un message dans un chat ligue → pastille à 1
 - User ouvre le chat → pastille disparaît
 - User navigue ailleurs → pastille reste à zéro
@@ -256,32 +273,40 @@ Le document `docs/BUGFIX_MOBILE_DIAGNOSTIC.md` doit contenir, pour chaque bug :
 ## Bug N — [Nom]
 
 ### Symptôme
+
 [1 ligne de rappel]
 
 ### Cause racine identifiée
+
 [2-5 phrases techniques précises]
 
 ### Chaîne complète du problème
+
 1. [Étape 1 dans le code]
 2. [Étape 2]
 3. ...
 
 ### Fichiers concernés
+
 - `src/path/to/file1.tsx` (lignes X-Y)
 - `src/path/to/file2.ts` (lignes X-Y)
 - `supabase/migrations/00XX.sql` (lignes X-Y)
 - ...
 
 ### Ce que les fixes précédents ont probablement essayé
+
 [Hypothèses sur les tentatives ratées : padding-top fixe, state client uniquement, etc.]
 
 ### Plan de fix proposé
+
 [Liste numérotée d'actions, avec ESTIMATION DU CHANGEMENT en lignes de code modifiées]
 
 ### Risques du fix
+
 [Régressions possibles, parties touchées qui pourraient casser]
 
 ### Tests de non-régression nécessaires
+
 [Liste de scénarios à valider manuellement après le fix]
 ```
 
@@ -321,21 +346,25 @@ Créer une checklist `docs/BUGFIX_MOBILE_TESTS.md` :
 ## Tests manuels post-fix
 
 ### Setup
+
 - [ ] Installer la PWA sur iPhone (Ajouter à l'écran d'accueil depuis Safari)
 - [ ] Lancer l'app depuis l'écran d'accueil (pas depuis Safari)
 
 ### Bug 1 — Toasts
+
 - [ ] Toast de succès (ex: pari placé) → entièrement visible sous la notch
 - [ ] Toast d'erreur (ex: solde insuffisant) → idem
 - [ ] Toast achievement → idem
 - [ ] Sur iPhone avec Dynamic Island → marge correcte
 
 ### Bug 1.bis — Modales
+
 - [ ] VotingModal ouverte → header visible avec marge sous notch
 - [ ] ActionDrawer → idem
 - [ ] Modale de confirmation alerte → idem
 
 ### Bug 2 — BottomNav
+
 - [ ] Page Lobby → BottomNav en bas, contenu lisible
 - [ ] Page Match → idem
 - [ ] Page Profil (court) → idem
@@ -346,6 +375,7 @@ Créer une checklist `docs/BUGFIX_MOBILE_TESTS.md` :
 - [ ] Aucune page ne nécessite de scroller pour remettre la nav en bas
 
 ### Bug 3 — Pastilles
+
 - [ ] Recevoir un message en DM → pastille à 1
 - [ ] Ouvrir le DM → pastille disparaît
 - [ ] Naviguer vers Lobby → pastille reste à zéro

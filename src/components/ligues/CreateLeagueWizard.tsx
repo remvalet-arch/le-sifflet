@@ -201,6 +201,7 @@ export function CreateLeagueWizard({
               </h2>
               <input
                 type="text"
+                aria-label={t("wizardStep1Title")}
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}

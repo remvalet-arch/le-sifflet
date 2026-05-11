@@ -4,9 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
-import { ShoppingBag, ChevronLeft } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
-import Link from "next/link";
+
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
 import { track } from "@/lib/analytics";
 
@@ -240,19 +239,9 @@ export function ShopClient({
 
   return (
     <div className="flex min-h-full flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-white/8 bg-zinc-950/95 px-4 pb-3 pt-3 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/profile"
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 hover:text-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-          <div className="flex flex-1 items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-whistle" />
-            <h1 className="text-lg font-black text-white">{t("title")}</h1>
-          </div>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {/* Solde — affiché en haut du contenu */}
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5">
             <span className="text-sm font-black tabular-nums text-green-400">
               {balance.toLocaleString(bcp47)}
@@ -262,9 +251,6 @@ export function ShopClient({
             </span>
           </div>
         </div>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-4 p-4">
         {/* Live preview */}
         <button
           type="button"
@@ -308,22 +294,28 @@ export function ShopClient({
           </span>
         </button>
 
-        {/* Tabs */}
-        <div className="flex gap-2">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setActiveTab(t.key)}
-              className={`flex-1 rounded-xl py-2 text-[11px] font-black transition ${
-                activeTab === t.key
-                  ? "bg-whistle text-zinc-950"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
-            >
-              {t.emoji} {t.label}
-            </button>
-          ))}
+        {/* Tabs — scroll horizontal sur mobile */}
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setActiveTab(t.key)}
+                className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-black transition ${
+                  activeTab === t.key
+                    ? "bg-whistle text-zinc-950"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                }`}
+              >
+                {t.emoji} {t.label}
+              </button>
+            ))}
+          </div>
+          <div
+            className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950 to-transparent"
+            aria-hidden
+          />
         </div>
 
         {/* Quick filter (shop tabs only) */}
@@ -383,9 +375,19 @@ export function ShopClient({
                             : t("tabBoosters")}
                     </h3>
                     {!hasItems ? (
-                      <p className="rounded-xl border border-white/8 bg-zinc-900 px-4 py-3 text-xs text-zinc-600">
-                        {t("myItemsEmpty")}
-                      </p>
+                      <EmptyState
+                        variant="no-data"
+                        title={t("myItemsEmpty")}
+                        cta={
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab(cat as Tab)}
+                            className="rounded-xl bg-whistle px-4 py-2 text-xs font-black text-zinc-950 transition hover:opacity-90 active:scale-95"
+                          >
+                            {t("myItemsEmptyCta")}
+                          </button>
+                        }
+                      />
                     ) : cat === "boosters" ? (
                       <div className="flex flex-col gap-2">
                         {ownedBoosters.map((booster) => {

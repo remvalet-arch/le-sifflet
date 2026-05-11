@@ -12,7 +12,8 @@
     "profil": "Profil",
     "regles": "Règles",
     "messages": "Messages",
-    "ariaCallVar": "Appeler la VAR"
+    "ariaCallVar": "Appeler la VAR",
+    "ariaGoToLobby": "Trouver un match en direct"
   },
   "TopBar": {
     "connected": "Connecté",
@@ -35,10 +36,10 @@
     "ariaNotifications": "Notifications",
     "ariaOpenMenu": "Ouvrir le menu",
     "ariaCloseMenu": "Fermer le menu",
-    "backStade": "← Stade",
-    "backMessages": "← Messages",
-    "backSettings": "← Paramètres",
-    "backLigues": "← Ligues"
+    "backStade": "Stade",
+    "backMessages": "Messages",
+    "backSettings": "Paramètres",
+    "backLigues": "Ligues"
   },
   "Match": {
     "live": "En Direct",
@@ -66,7 +67,7 @@
     "title": "Les Matchs",
     "errorLoadMatches": "Impossible de charger les matchs ({message}).",
     "noMatchesForRound": "Aucun match pour la journée {round} (ligue {leagueId}).",
-    "backToMatches": "← Matchs",
+    "backToMatches": "Matchs",
     "noMatches": "Rien à se mettre sous la dent",
     "today": "Aujourd'hui",
     "noDirectMatches": "Pas de match en direct. Profites-en pour placer tes pronos.",
@@ -80,7 +81,7 @@
     "todayRest": "Aujourd'hui : repos",
     "nextMatchesOn": "Prochains matchs le",
     "matchday": "Journée",
-    "backToMatchDay": "← Jour de matchs"
+    "backToMatchDay": "Jour de matchs"
   },
   "Voting": {
     "decision": "L'arbitre hésite...",
@@ -368,7 +369,8 @@
     "filterAvailable": "Disponible",
     "filterOwned": "Possédé",
     "myItemsEmpty": "Rien encore dans cette catégorie.",
-    "noEquipment": "Aucun équipement actif"
+    "noEquipment": "Aucun équipement actif",
+    "myItemsEmptyCta": "Découvrir la boutique →"
   },
   "Notifications": {
     "breadcrumbSettings": "Paramètres",
@@ -740,6 +742,7 @@
     "newConversation": "Nouvelle conversation",
     "notFriends": "Tu dois être ami avec ce joueur pour lui envoyer des messages.",
     "friendStatus": "Ami",
+    "online": "En ligne",
     "newConversationLabel": "Nouvelle conversation",
     "searchPlaceholder": "Rechercher…",
     "noResults": "Aucune conversation trouvée",
@@ -945,5 +948,57 @@
   "HeadToHead": {
     "title": "Face à face",
     "source": "via TheSportsDB"
+  },
+  "Onboarding": {
+    "skip": "Passer",
+    "skipConfirm": "Tu veux vraiment passer ?",
+    "skipConfirmDesc": "Tu pourras revoir l'intro depuis les Paramètres.",
+    "skipYes": "Oui, passer",
+    "skipNo": "Continuer l'intro",
+    "step1Tagline": "Sois l'arbitre",
+    "step1Body": "Juge chaque action contestée en direct et gagne des Sifflets en ayant raison avant les autres.",
+    "step1Cta": "C'est parti →",
+    "step2Title": "Essaie un pari VAR",
+    "step2Subtitle": "Simulation",
+    "step2FakeMatch": "PSG vs Real Madrid · 68'",
+    "step2Question": "Mbappé, main dans la surface ?",
+    "step2Stake": "Mise fictive : 200 🪙",
+    "step2Timer": "Fermeture dans {s}s",
+    "step2Yes": "OUI",
+    "step2No": "NON",
+    "step2WinTitle": "Braquage réussi !",
+    "step2WinBody": "+200 Sifflets gagnés.",
+    "step2LoseTitle": "Raté cette fois !",
+    "step2LoseBody": "Mais t'as compris le principe.",
+    "step2TimeUpTitle": "Trop lent !",
+    "step2TimeUpBody": "En vrai, vote avant que le temps s'écoule.",
+    "step2RulesTitle": "Comment ça marche ?",
+    "step2Rule1": "Une action contestée survient → une mise en jeu VAR s'ouvre pour 90 secondes.",
+    "step2Rule2": "Tu votes OUI ou NON — plus de joueurs votent avec toi, plus tes cotes augmentent.",
+    "step2Rule3": "La VAR statue → les gagnants récupèrent leur mise plus leurs gains.",
+    "step2Next": "Suivant →",
+    "step3Title": "Ton premier prono",
+    "step3Subtitle": "Prédit le score du match",
+    "step3FakeMatch": "PSG vs Real Madrid",
+    "step3FakeDate": "Demain · 21h00",
+    "step3HomeLabel": "Score PSG",
+    "step3AwayLabel": "Score Real Madrid",
+    "step3Hint": "Entre ton score prédit ici",
+    "step3Cta": "Valider mon prono",
+    "step3SuccessTitle": "Premier prono enregistré !",
+    "step3SuccessBody": "Tu gagneras des Points selon la précision de ton prono. Reviens après le match pour voir le résultat.",
+    "step3Next": "Continuer →",
+    "step4Title": "Choisis ton thème",
+    "step4Subtitle": "Tu peux en changer à tout moment dans les Paramètres.",
+    "step4Dark": "Sombre",
+    "step4DarkDesc": "Intense, fait pour le direct.",
+    "step4Light": "Clair",
+    "step4LightDesc": "Pour les grandes lumières.",
+    "step4System": "Suivre le système",
+    "step4Next": "Confirmer",
+    "step5Title": "Active les alertes VAR",
+    "step5Body": "Ne rate aucune VAR en direct. On te notifie uniquement pour les actions importantes — pas de spam.",
+    "step5Allow": "Activer les notifications",
+    "step5Later": "Plus tard"
   }
 }

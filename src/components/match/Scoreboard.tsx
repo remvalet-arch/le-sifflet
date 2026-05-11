@@ -141,7 +141,7 @@ export function Scoreboard({ match }: { match: MatchRow }) {
                 ? "text-yellow-400"
                 : "text-red-400"
               : match.status === "finished"
-                ? "text-zinc-500"
+                ? "text-zinc-400"
                 : "text-zinc-400"
           }`}
         >
