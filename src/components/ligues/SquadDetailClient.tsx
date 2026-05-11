@@ -3,13 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {
-  BellRing,
-  LoaderCircle,
-  Wallet,
-  ChevronLeft,
-  UserPlus,
-} from "lucide-react";
+import { BellRing, LoaderCircle, Wallet, ChevronLeft } from "lucide-react";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
 import type { SquadRow } from "@/types/database";
@@ -150,7 +145,7 @@ export function SquadDetailClient({
     return (
       <p className="py-12 text-center text-sm text-zinc-500">
         {t("errorLoadingLeague")}{" "}
-        <Link href="/ligues" className="font-bold text-amber-400 underline">
+        <Link href="/ligues" className="font-bold text-whistle underline">
           {t("errorLoadingLeagueBack")}
         </Link>
       </p>
@@ -196,34 +191,14 @@ export function SquadDetailClient({
     }
   }
 
-  function handleShare() {
-    if (!squad.invite_code) return;
-
-    const myUsername = leaderboard.find(
-      (m) => m.user_id === currentUserId,
-    )?.username;
-    const from = myUsername ?? t("shareTextFrom");
-    const joinUrl = `https://vartime.app/join/${squad.invite_code}`;
-    const text = t("shareTextBody", { from, name: squad.name });
-
-    if (navigator.share) {
-      navigator
-        .share({
-          title: t("shareJoinTitle", { name: squad.name }),
-          text,
-          url: joinUrl,
-        })
-        .catch(() => {
-          void navigator.clipboard.writeText(`${text}\n\n${joinUrl}`);
-          toast.success(t("shareCopied"));
-        });
-    } else {
-      void navigator.clipboard.writeText(`${text}\n\n${joinUrl}`);
-      toast.success(t("shareCopied"));
-    }
-  }
-
   const isAdmin = squad.owner_id === currentUserId;
+
+  const myUsername = leaderboard.find(
+    (m) => m.user_id === currentUserId,
+  )?.username;
+  const shareFrom = myUsername ?? t("shareTextFrom");
+  const shareUrl = `https://vartime.app/join/${squad.invite_code}`;
+  const shareText = t("shareTextBody", { from: shareFrom, name: squad.name });
 
   return (
     <div className="space-y-6 pb-8 relative min-h-screen">
@@ -236,9 +211,9 @@ export function SquadDetailClient({
       </Link>
 
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-xl mt-4">
-        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-amber-500/20 blur-3xl" />
+        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-whistle/20 blur-3xl" />
 
-        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80 relative z-10">
+        <p className="text-[10px] font-black uppercase tracking-widest text-whistle/80 relative z-10">
           {squad.is_private ? t("privateLabel") : t("publicLabel")}
         </p>
         <h1 className="text-3xl font-black tracking-tight text-white relative z-10 mt-1 mb-4">
@@ -268,15 +243,17 @@ export function SquadDetailClient({
               )}
               {t("nudgeButton")}
             </button>
-            {isAdmin && squad.invite_code && (
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800/80 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 border border-white/5 backdrop-blur-md"
-              >
-                <UserPlus className="h-3.5 w-3.5 text-amber-400" />
-                {t("inviteButton")}
-              </button>
+            {squad.invite_code && (
+              <ShareButton
+                title={t("shareJoinTitle", { name: squad.name })}
+                text={shareText}
+                url={shareUrl}
+                label={t("inviteButton")}
+                labelCopy={t("shareViaCopy")}
+                labelCopied={t("shareCopied")}
+                labelWhatsApp={t("shareViaWhatsApp")}
+                labelSms={t("shareViaSms")}
+              />
             )}
           </div>
         </div>

@@ -11,6 +11,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { ShareButton } from "@/components/ui/ShareButton";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/analytics";
@@ -261,13 +262,18 @@ export function CreateLeagueWizard({
           {step === 4 && createdSquad && (
             <div className="flex flex-col flex-1 items-center space-y-6 animate-in fade-in">
               <div className="flex flex-col items-center text-center gap-3">
-                <div className="text-6xl">🎉</div>
+                <div className="text-6xl">{logo}</div>
                 <h2 className="text-2xl font-black text-white">
                   {t("wizardCelebTitle")}
                 </h2>
                 <p className="text-sm text-zinc-400">
                   {t("wizardCelebSubtitle", { name: createdSquad.name })}
                 </p>
+                <span className="rounded-full border border-white/10 bg-zinc-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                  {mode === "classic"
+                    ? t("wizardModeClassicName")
+                    : t("wizardMode1vs1Name")}
+                </span>
               </div>
 
               <div className="w-full rounded-2xl border border-whistle/30 bg-whistle/5 p-5 text-center">
@@ -300,6 +306,21 @@ export function CreateLeagueWizard({
                   </>
                 )}
               </button>
+
+              <ShareButton
+                title={t("shareJoinTitle", { name: createdSquad.name })}
+                text={t("shareTextBody", {
+                  from: t("shareTextFrom"),
+                  name: createdSquad.name,
+                })}
+                url={`https://vartime.app/join/${createdSquad.invite_code}`}
+                label={t("inviteButton")}
+                labelCopy={t("shareViaCopy")}
+                labelCopied={t("shareCopied")}
+                labelWhatsApp={t("shareViaWhatsApp")}
+                labelSms={t("shareViaSms")}
+                className="w-full [&>button]:w-full [&>button]:justify-center [&>button]:h-12 [&>button]:rounded-2xl [&>button]:text-sm"
+              />
 
               <button
                 type="button"
