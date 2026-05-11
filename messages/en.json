@@ -361,7 +361,8 @@
     "owned": "Owned",
     "unequip": "Unequip",
     "equip": "Equip ✓",
-    "virtualCurrencyNote": "Everything is bought with Sifflets, the in-game currency. No winnings convert into real money — you're never at risk."
+    "virtualCurrencyNote": "Everything is bought with Sifflets, the in-game currency. No winnings convert into real money — you're never at risk.",
+    "shopEmptyTab": "No items available in this category."
   },
   "Notifications": {
     "title": "Notifications",
@@ -508,7 +509,8 @@
     "errorTitle": "Red Card",
     "errorHeading": "Something went wrong",
     "errorDesc": "The ref lost the plot. Try again or head back to the lobby.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "offlineMessage": "No connection — some features are unavailable."
   },
   "Ligues": {
     "pageTitle": "Leagues",

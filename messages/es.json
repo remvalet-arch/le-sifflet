@@ -369,7 +369,8 @@
     "owned": "Poseído",
     "unequip": "Quitar",
     "equip": "Equipar ✓",
-    "virtualCurrencyNote": "Todo se compra con Sifflets, la moneda del juego. Ninguna ganancia se convierte en dinero real — no arriesgas nada."
+    "virtualCurrencyNote": "Todo se compra con Sifflets, la moneda del juego. Ninguna ganancia se convierte en dinero real — no arriesgas nada.",
+    "shopEmptyTab": "No hay artículos disponibles en esta categoría."
   },
   "Notifications": {
     "title": "Notificaciones",
@@ -516,7 +517,8 @@
     "errorTitle": "Tarjeta Roja",
     "errorHeading": "Algo salió mal",
     "errorDesc": "El árbitro se perdió. Inténtalo de nuevo o vuelve al lobby.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "offlineMessage": "Sin conexión — algunas funciones no están disponibles."
   },
   "Ligues": {
     "pageTitle": "Ligas",

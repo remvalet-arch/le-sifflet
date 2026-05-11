@@ -371,7 +371,8 @@
     "owned": "Besessen",
     "unequip": "Entfernen",
     "equip": "Tragen ✓",
-    "virtualCurrencyNote": "Alles wird mit Sifflets bezahlt, der Spielwährung. Kein Gewinn wird in echtes Geld umgewandelt — du riskierst nichts."
+    "virtualCurrencyNote": "Alles wird mit Sifflets bezahlt, der Spielwährung. Kein Gewinn wird in echtes Geld umgewandelt — du riskierst nichts.",
+    "shopEmptyTab": "Keine Artikel in dieser Kategorie verfügbar."
   },
   "Notifications": {
     "title": "Benachrichtigungen",
@@ -518,7 +519,8 @@
     "errorTitle": "Rote Karte",
     "errorHeading": "Etwas ist schiefgelaufen",
     "errorDesc": "Der Schiri hat den Faden verloren. Versuch's nochmal oder geh zurück zur Lobby.",
-    "retry": "Nochmal versuchen"
+    "retry": "Nochmal versuchen",
+    "offlineMessage": "Keine Verbindung — einige Funktionen sind nicht verfügbar."
   },
   "Ligues": {
     "pageTitle": "Ligen",

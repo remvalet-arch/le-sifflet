@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
 import { ShoppingBag, ChevronLeft } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
 import Link from "next/link";
 import type { ShopItemRow, BoosterCatalogRow } from "@/types/database";
 import { track } from "@/lib/analytics";
@@ -343,7 +344,10 @@ export function ShopClient({
         )}
 
         {/* Items grid */}
-        {activeTab !== "boosters" && (
+        {activeTab !== "boosters" && displayed.length === 0 && (
+          <EmptyState variant="no-data" emoji="🛒" title={t("shopEmptyTab")} />
+        )}
+        {activeTab !== "boosters" && displayed.length > 0 && (
           <div className="grid grid-cols-2 gap-3">
             {displayed.map((item) => {
               const owned = ownedIds.has(item.id);

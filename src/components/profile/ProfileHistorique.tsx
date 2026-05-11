@@ -4,6 +4,7 @@ import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
 import type { BetStatus, MarketEventType } from "@/types/database";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export type ShortBetEntry = {
   id: string;
@@ -152,15 +153,6 @@ function buildMatchGroups(
   });
 
   return groups;
-}
-
-export function EmptyState({ emoji, text }: { emoji: string; text: string }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-10">
-      <span className="text-3xl">{emoji}</span>
-      <p className="text-center text-sm font-semibold text-zinc-400">{text}</p>
-    </div>
-  );
 }
 
 function PronoRow({ prono: p }: { prono: PronoEntry }) {
@@ -328,7 +320,7 @@ export function HistoriqueTab({
   );
 
   if (groups.length === 0) {
-    return <EmptyState emoji="📊" text={t("empty")} />;
+    return <EmptyState emoji="📊" title={t("empty")} />;
   }
 
   return (

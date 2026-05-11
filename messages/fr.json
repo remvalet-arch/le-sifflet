@@ -360,7 +360,8 @@
     "owned": "Possédé",
     "unequip": "Déséquiper",
     "equip": "Équiper ✓",
-    "virtualCurrencyNote": "Tout s'achète en Sifflets, la monnaie du jeu. Aucun gain ne se convertit en argent réel — tu ne risques rien."
+    "virtualCurrencyNote": "Tout s'achète en Sifflets, la monnaie du jeu. Aucun gain ne se convertit en argent réel — tu ne risques rien.",
+    "shopEmptyTab": "Aucun article disponible dans cette catégorie."
   },
   "Notifications": {
     "title": "Notifications",
@@ -507,7 +508,8 @@
     "errorTitle": "Carton Rouge",
     "errorHeading": "Quelque chose a merdé",
     "errorDesc": "L'arbitre a perdu le fil. Réessaie ou retourne au lobby.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "offlineMessage": "Pas de connexion — certaines fonctionnalités sont indisponibles."
   },
   "Ligues": {
     "pageTitle": "Ligues",

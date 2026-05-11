@@ -9,6 +9,7 @@ import { DailyRecapChecker } from "@/components/layout/DailyRecapChecker";
 import { NewSeasonOverlay } from "@/components/layout/NewSeasonOverlay";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PostHogIdentify } from "@/components/consent/PostHogIdentify";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
 
 async function trackLoginStreak(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -120,6 +121,7 @@ export default async function AppLayout({
         />
 
         <main className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden text-white">
+          <OfflineBanner />
           <MigrationBanner />
           {children}
           {/* Réserve l'espace de la BottomNav pour que le contenu ne passe pas dessous */}
