@@ -68,6 +68,76 @@ export async function POST(request: NextRequest) {
 
   if (updateErr) return errorResponse(updateErr.message);
 
+  // ── 1b. Remboursement des paris VAR encore ouverts ─────────────────────────
+  // Les events open/closed au moment du FT ne peuvent plus être résolus →
+  // on rembourse chaque parieur (amount_staked) et on clôture l'event.
+  void (async () => {
+    const { data: openEvents } = await admin
+      .from("market_events")
+      .select("id")
+      .eq("match_id", match_id)
+      .in("status", ["open", "closed"]);
+
+    if (!openEvents?.length) return;
+
+    const eventIds = openEvents.map((e) => e.id);
+    const { data: pendingBets } = await admin
+      .from("bets")
+      .select("id, user_id, amount_staked")
+      .in("event_id", eventIds)
+      .eq("status", "pending");
+
+    if (pendingBets?.length) {
+      // Agrège le remboursement par utilisateur
+      const refundByUser = new Map<string, number>();
+      for (const b of pendingBets) {
+        refundByUser.set(
+          b.user_id,
+          (refundByUser.get(b.user_id) ?? 0) + b.amount_staked,
+        );
+      }
+
+      // Rembourse chaque utilisateur (read-modify-write, comme claim-rsa)
+      await Promise.all(
+        [...refundByUser.entries()].map(async ([userId, refundAmount]) => {
+          const { data: prof } = await admin
+            .from("profiles")
+            .select("sifflets_balance")
+            .eq("id", userId)
+            .single();
+          if (!prof) return;
+          await admin
+            .from("profiles")
+            .update({ sifflets_balance: prof.sifflets_balance + refundAmount })
+            .eq("id", userId);
+        }),
+      );
+
+      // Marque les paris comme remboursés (won = mise récupérée sans bénéfice)
+      await Promise.all(
+        pendingBets.map((b) =>
+          admin
+            .from("bets")
+            .update({ status: "won", potential_reward: b.amount_staked })
+            .eq("id", b.id),
+        ),
+      );
+    }
+
+    // Clôture les events orphelins
+    const { error: evErr } = await admin
+      .from("market_events")
+      .update({ status: "resolved" })
+      .in("id", eventIds);
+
+    log.info("admin-finish-match", "VAR events refunded on FT", {
+      matchId: match_id,
+      eventsCount: openEvents.length,
+      betsRefunded: pendingBets?.length ?? 0,
+      error: evErr?.message,
+    });
+  })();
+
   // ── 2. Événement timeline 'info' ───────────────────────────────────────────
   void admin.from("match_timeline_events").insert({
     match_id,

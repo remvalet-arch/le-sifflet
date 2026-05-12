@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Trophy, Flame, LoaderCircle, PlayCircle } from "lucide-react";
+import { Trophy, Flame, LoaderCircle, PlayCircle, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
 
@@ -99,6 +99,33 @@ export function SquadLeaderboard({
     } finally {
       setLaunchingChamp(false);
     }
+  }
+
+  // État vide : seul membre dans la ligue
+  if (leaderboard.length <= 1) {
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/60 px-6 py-10 text-center">
+        <span className="text-4xl" aria-hidden="true">
+          👥
+        </span>
+        <div>
+          <p className="text-sm font-black text-white">
+            Tu es seul dans ta ligue
+          </p>
+          <p className="mt-1.5 text-sm text-zinc-400">
+            Invite tes potes avec le code dans l&apos;onglet pour démarrer la
+            compétition.
+          </p>
+        </div>
+        <Link
+          href={`/ligues/${squadId}`}
+          className="flex items-center gap-2 rounded-xl bg-whistle px-5 py-2.5 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:bg-whistle/90 active:scale-95"
+        >
+          <Share2 className="size-4" />
+          Inviter mes potes
+        </Link>
+      </div>
+    );
   }
 
   return (

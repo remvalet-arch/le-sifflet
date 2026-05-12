@@ -2,6 +2,7 @@ import { Target, TrendingUp, Trophy, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { AmisContent } from "@/components/profile/AmisContent";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getLocale, getTranslations } from "next-intl/server";
 import { BCP47_MAP } from "@/lib/use-bcp47";
 import { ProfileClient } from "@/components/profile/ProfileClient";
@@ -96,7 +97,11 @@ export default async function PublicProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [supabase, locale] = await Promise.all([createClient(), getLocale()]);
+  const [supabase, admin, locale] = await Promise.all([
+    createClient(),
+    Promise.resolve(createAdminClient()),
+    getLocale(),
+  ]);
   const bcp47 = BCP47_MAP[locale] ?? "fr-FR";
 
   const {
@@ -109,16 +114,17 @@ export default async function PublicProfilePage({
     redirect("/profile");
   }
 
-  const { data: profile } = await supabase
+  // Données publiques : pas de sifflets_balance (info privée)
+  const { data: profile } = await admin
     .from("profiles")
-    .select(
-      "id, username, avatar_url, xp, sifflets_balance, rank, trust_score, favorite_team_id",
-    )
+    .select("id, username, avatar_url, xp, rank, trust_score, favorite_team_id")
     .eq("id", id)
     .maybeSingle();
 
   if (!profile) notFound();
 
+  // Bets & pronos d'un autre utilisateur : RLS bloque le client normal,
+  // utiliser l'admin pour récupérer les stats publiques agrégées.
   const [
     { data: rawShortBets },
     { data: rawPronos },
@@ -126,20 +132,20 @@ export default async function PublicProfilePage({
     { data: userBadgesData },
     { data: friendship },
   ] = await Promise.all([
-    supabase
+    admin
       .from("bets")
       .select("*")
       .eq("user_id", id)
       .order("placed_at", { ascending: false })
       .limit(30),
-    supabase
+    admin
       .from("pronos")
       .select("*")
       .eq("user_id", id)
       .order("placed_at", { ascending: false })
       .limit(30),
-    supabase.from("badges").select("*").order("created_at"),
-    supabase.from("user_badges").select("badge_id").eq("user_id", id),
+    admin.from("badges").select("*").order("created_at"),
+    admin.from("user_badges").select("badge_id").eq("user_id", id),
     supabase
       .from("friend_requests")
       .select("id")
@@ -313,7 +319,6 @@ export default async function PublicProfilePage({
   const karma = getKarmaBadge(trustScore, tp);
   const rank = rankDisplayFromDb(profile.rank ?? "", tp);
   const xpTotal = profile.xp ?? 0;
-  const balance = profile.sifflets_balance ?? 0;
   const avatar = profile.avatar_url ?? "🎽";
   const unlockedBadgeIds = (userBadgesData ?? []).map((ub) => ub.badge_id);
 
@@ -378,12 +383,12 @@ export default async function PublicProfilePage({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-2 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-              <span className="text-2xl font-black tabular-nums text-green-400">
-                {balance.toLocaleString(bcp47)}
+            <div className="flex items-center gap-2 rounded-2xl border border-whistle/30 bg-whistle/10 px-3 py-2">
+              <span className="text-lg font-black tabular-nums text-whistle">
+                {winRate}%
               </span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-green-500/60">
-                Sifflets
+              <span className="text-[10px] font-black uppercase tracking-widest text-whistle/60">
+                Réussite
               </span>
             </div>
           </div>

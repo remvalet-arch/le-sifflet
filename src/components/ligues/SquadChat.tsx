@@ -7,6 +7,14 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { SquadMessageRow } from "@/types/database";
 import { track } from "@/lib/analytics";
+import { useRotatingPlaceholder } from "@/components/ui/RotatingPlaceholder";
+
+const CHAT_PLACEHOLDERS = [
+  "Brague tes potes 😏",
+  "Balance ton prono de la semaine 🎯",
+  "Ton avis sur le match d'hier ?",
+  "Ça va finir comment ce soir ?",
+];
 
 type MessageWithProfile = SquadMessageRow & {
   profiles: { username: string; avatar_url: string | null } | null;
@@ -36,6 +44,11 @@ export function SquadChat({
   const [lastSentAt, setLastSentAt] = useState(0);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const supabase = createClient();
+
+  const placeholder = useRotatingPlaceholder({
+    messages: CHAT_PLACEHOLDERS,
+    defaultMessage: t("chatPlaceholder"),
+  });
 
   // Marquer comme lu à chaque visite — NOW() côté serveur pour éviter le drift horloge client
   useEffect(() => {
@@ -239,7 +252,7 @@ export function SquadChat({
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
           onKeyDown={handleKeyDown}
-          placeholder={t("chatPlaceholder")}
+          placeholder={placeholder}
           className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-600 outline-none min-h-[36px]"
         />
         <span
