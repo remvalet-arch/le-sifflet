@@ -231,6 +231,7 @@
     "xpLevelBronze": "Bronze",
     "xpLevelArgent": "Silber",
     "xpLevelBoss": "Boss",
+    "xpNextRankHint": "Nur noch {xpRemaining} XP bis Rang {nextRank}",
     "trustGradeElite": "Elite-Schiedsrichter",
     "trustGradeOfficial": "Offizieller Schiedsrichter",
     "trustGradeAlert": "Hinweisgeber",

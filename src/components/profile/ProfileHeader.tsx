@@ -44,24 +44,39 @@ function getXpProgress(
   level: string;
   pct: number;
   next: number;
+  nextLabel: string | null;
+  xpRemaining: number;
 } {
-  if (xp >= 5000) return { level: labels.boss, pct: 100, next: 5000 };
+  if (xp >= 5000)
+    return {
+      level: labels.boss,
+      pct: 100,
+      next: 5000,
+      nextLabel: null,
+      xpRemaining: 0,
+    };
   if (xp >= 2000)
     return {
       level: labels.argent,
       pct: Math.round(((xp - 2000) / 3000) * 100),
       next: 5000,
+      nextLabel: labels.boss,
+      xpRemaining: 5000 - xp,
     };
   if (xp >= 500)
     return {
       level: labels.bronze,
       pct: Math.round(((xp - 500) / 1500) * 100),
       next: 2000,
+      nextLabel: labels.argent,
+      xpRemaining: 2000 - xp,
     };
   return {
     level: labels.district,
     pct: Math.round((xp / 500) * 100),
     next: 500,
+    nextLabel: labels.bronze,
+    xpRemaining: 500 - xp,
   };
 }
 
@@ -231,7 +246,7 @@ export function ProfileHeader({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-black text-white">{username}</p>
-          <p className="text-[10px] font-bold text-zinc-500">
+          <p className="text-[10px] font-bold text-zinc-400">
             {rank.emoji} {rank.label}
           </p>
         </div>
@@ -387,6 +402,14 @@ export function ProfileHeader({
                 style={{ width: `${xpInfo.pct}%` }}
               />
             </div>
+            {xpInfo.nextLabel && (
+              <p className="mt-1.5 text-[10px] text-white/35">
+                {tp("xpNextRankHint", {
+                  xpRemaining: xpInfo.xpRemaining.toLocaleString(bcp47),
+                  nextRank: xpInfo.nextLabel,
+                })}
+              </p>
+            )}
           </div>
 
           <div className="mt-4 flex items-center gap-2 flex-wrap">

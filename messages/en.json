@@ -221,6 +221,7 @@
     "xpLevelBronze": "Bronze",
     "xpLevelArgent": "Silver",
     "xpLevelBoss": "Boss",
+    "xpNextRankHint": "Only {xpRemaining} XP left to reach {nextRank} rank",
     "trustGradeElite": "Elite Referee",
     "trustGradeOfficial": "Official Referee",
     "trustGradeAlert": "Whistleblower",

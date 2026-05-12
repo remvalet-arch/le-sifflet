@@ -228,6 +228,7 @@
     "xpLevelBronze": "Bronzo",
     "xpLevelArgent": "Argento",
     "xpLevelBoss": "Boss",
+    "xpNextRankHint": "Solo {xpRemaining} XP per il rango {nextRank}",
     "trustGradeElite": "Arbitro Elite",
     "trustGradeOfficial": "Arbitro Ufficiale",
     "trustGradeAlert": "Segnalatore",
