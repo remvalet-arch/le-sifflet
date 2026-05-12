@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { MODERATOR_THRESHOLD } from "@/lib/constants/permissions";
 import { SeasonBadge } from "@/components/shared/SeasonBadge";
 import { BCP47_MAP } from "@/lib/use-bcp47";
-import { UserName } from "@/components/ui/UserName";
 
 export async function generateMetadata() {
   const { getTranslations } = await import("next-intl/server");
@@ -188,11 +187,11 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                 >
                   <span className="text-2xl">{MEDALS[rank]}</span>
                   <p
-                    className={`max-w-full text-center text-xs font-black ${
+                    className={`max-w-full truncate text-center text-xs font-black ${
                       isMe ? "text-green-400" : "text-white"
                     }`}
                   >
-                    <UserName fullName={player.username} maxLength={10} />
+                    {player.username}
                     {player.trust_score >= MODERATOR_THRESHOLD && " 🛡️"}
                   </p>
                   <p className="text-[10px] font-bold text-zinc-400">
@@ -227,11 +226,11 @@ export default async function LeaderboardPage({ searchParams }: Props) {
                   #{rank}
                 </span>
                 <p
-                  className={`flex-1 text-sm font-bold ${
+                  className={`flex-1 truncate text-sm font-bold ${
                     isMe ? "text-green-400" : "text-white"
                   }`}
                 >
-                  <UserName fullName={player.username} />
+                  {player.username}
                   {player.trust_score >= MODERATOR_THRESHOLD && (
                     <span className="ml-1">🛡️</span>
                   )}
@@ -268,8 +267,8 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             <span className="text-lg font-black text-green-400">
               #{myRank + 1}
             </span>
-            <p className="flex-1 min-w-0 font-bold text-white">
-              <UserName fullName={me.username} />
+            <p className="flex-1 min-w-0 truncate font-bold text-white">
+              {me.username}
               {isAutoUsername(me.username) && (
                 <Link
                   href="/profile"
