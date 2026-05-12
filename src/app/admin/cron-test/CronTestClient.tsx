@@ -181,7 +181,7 @@ export function CronTestClient() {
     <div className="space-y-8">
       {/* Cron triggers */}
       <section>
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
           Déclencher un cron (utilisateurs réels)
         </h2>
         <div className="space-y-3">
@@ -218,13 +218,13 @@ export function CronTestClient() {
                 </div>
                 <div className="shrink-0">
                   {status === "loading" ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                    <Loader2 className="size-4 animate-spin text-zinc-400" />
                   ) : status === "ok" ? (
-                    <CheckCircle className="h-4 w-4 text-green-400" />
+                    <CheckCircle className="size-4 text-green-400" />
                   ) : status === "error" ? (
-                    <XCircle className="h-4 w-4 text-red-400" />
+                    <XCircle className="size-4 text-red-400" />
                   ) : (
-                    <Play className="h-4 w-4 text-zinc-500" />
+                    <Play className="size-4 text-zinc-500" />
                   )}
                 </div>
               </button>
@@ -232,7 +232,7 @@ export function CronTestClient() {
           })}
 
           <p className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-400">
-            ⚠️ Ces boutons exécutent les crons pour vrai — des emails et push
+            ⚠️ Ces boutons exécutent les crons pour vrai : des emails et push
             réels seront envoyés aux users éligibles.
           </p>
         </div>
@@ -240,7 +240,7 @@ export function CronTestClient() {
 
       {/* Email previews */}
       <section>
-        <h2 className="mb-1 text-xs font-bold uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-zinc-500">
           Prévisualiser un email (envoyé à toi)
         </h2>
         <p className="mb-3 text-xs text-zinc-600">
@@ -278,13 +278,13 @@ export function CronTestClient() {
                 </p>
                 <div className="shrink-0">
                   {status === "loading" ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                    <Loader2 className="size-4 animate-spin text-zinc-400" />
                   ) : status === "ok" ? (
-                    <CheckCircle className="h-4 w-4 text-green-400" />
+                    <CheckCircle className="size-4 text-green-400" />
                   ) : status === "error" ? (
-                    <XCircle className="h-4 w-4 text-red-400" />
+                    <XCircle className="size-4 text-red-400" />
                   ) : (
-                    <Mail className="h-4 w-4 text-zinc-500" />
+                    <Mail className="size-4 text-zinc-500" />
                   )}
                 </div>
               </button>

@@ -89,14 +89,14 @@ export function PostMatchRecap({
             <span className="w-4 text-center text-[11px] font-black text-zinc-600">
               {idx + 1}
             </span>
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs">
               {entry.avatar_url?.startsWith("http") ? (
                 <Image
                   src={entry.avatar_url}
                   alt={entry.username}
                   width={28}
                   height={28}
-                  className="h-7 w-7 rounded-full object-cover"
+                  className="size-7 rounded-full object-cover"
                   unoptimized
                 />
               ) : (

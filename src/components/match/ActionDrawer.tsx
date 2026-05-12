@@ -315,7 +315,7 @@ export function ActionDrawer({
       }
       toast.success(
         newStatus === "finished"
-          ? "Match terminé — Paris long terme résolus !"
+          ? "Match terminé : Paris long terme résolus !"
           : `État → ${STATUS_LABELS[newStatus]}`,
       );
       onClose();
@@ -335,7 +335,7 @@ export function ActionDrawer({
       try {
         const data = await syncMatchData(syncEventId);
         toast.success(
-          `Match synchronisé : ${data.team_home} — ${data.team_away}`,
+          `Match synchronisé : ${data.team_home} vs ${data.team_away}`,
         );
         setSyncEventId("");
         router.refresh();
@@ -405,7 +405,7 @@ export function ActionDrawer({
                 >
                   /admin/match
                 </a>{" "}
-                — bientôt retiré d&apos;ici.
+                (bientôt retiré d&apos;ici).
               </p>
             </div>
 
@@ -594,7 +594,7 @@ export function ActionDrawer({
                         type="checkbox"
                         checked={isOwnGoal}
                         onChange={(e) => setIsOwnGoal(e.target.checked)}
-                        className="h-4 w-4 rounded accent-orange-500"
+                        className="size-4 rounded accent-orange-500"
                       />
                       <span className="font-semibold">{t("ownGoal")}</span>
                     </label>
@@ -606,7 +606,7 @@ export function ActionDrawer({
                     className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {submitting ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
+                      <LoaderCircle className="size-5 animate-spin" />
                     ) : isSub ? (
                       t("validateSubstitution")
                     ) : (
@@ -659,9 +659,9 @@ export function ActionDrawer({
                         {t("syncDatabase")}
                       </span>
                       {syncDbOpen ? (
-                        <ChevronUp className="h-4 w-4 text-zinc-500" />
+                        <ChevronUp className="size-4 text-zinc-500" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-zinc-500" />
+                        <ChevronDown className="size-4 text-zinc-500" />
                       )}
                     </button>
 
@@ -687,7 +687,7 @@ export function ActionDrawer({
                           >
                             {isSyncingMatch ? (
                               <>
-                                <LoaderCircle className="h-4 w-4 animate-spin" />{" "}
+                                <LoaderCircle className="size-4 animate-spin" />{" "}
                                 {t("syncingMatch")}
                               </>
                             ) : (
@@ -721,7 +721,7 @@ export function ActionDrawer({
                           >
                             {isSyncingRoster ? (
                               <>
-                                <LoaderCircle className="h-4 w-4 animate-spin" />{" "}
+                                <LoaderCircle className="size-4 animate-spin" />{" "}
                                 {t("syncingRoster")}
                               </>
                             ) : (
@@ -782,7 +782,7 @@ function AlertGrid({
   if (isOnCooldown) {
     return (
       <div className="mx-4 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-6 py-8 text-center">
-        <LoaderCircle className="h-8 w-8 animate-spin text-yellow-400" />
+        <LoaderCircle className="size-8 animate-spin text-yellow-400" />
         <p className="font-black uppercase tracking-wide text-white">
           {t("varConsulting")}
         </p>
@@ -822,7 +822,7 @@ function AlertGrid({
             </span>
             {isPending ? (
               <LoaderCircle
-                className="h-4 w-4 animate-spin text-zinc-400"
+                className="size-4 animate-spin text-zinc-400"
                 aria-hidden="true"
               />
             ) : (

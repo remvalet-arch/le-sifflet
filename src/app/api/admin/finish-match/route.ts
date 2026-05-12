@@ -13,6 +13,10 @@ import { checkAndUnlockBadges } from "@/app/actions/badges";
 import { postSystemMessageToUserSquads } from "@/lib/squad-messages";
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as { match_id?: string };
+  const { match_id } = body;
+  if (!match_id) return errorResponse("match_id manquant", 400);
+
   // ── Guard modérateur ────────────────────────────────────────────────────────
   const supabase = await createClient();
   const {
@@ -41,10 +45,6 @@ export async function POST(request: NextRequest) {
       429,
     );
   }
-
-  const body = (await request.json()) as { match_id?: string };
-  const { match_id } = body;
-  if (!match_id) return errorResponse("match_id manquant", 400);
 
   const admin = createAdminClient();
 
@@ -126,26 +126,30 @@ export async function POST(request: NextRequest) {
       .select("id, notif_prono_results")
       .in("id", pronoUserIds);
     const optedOut = new Set(
-      (prefs ?? []).filter((p) => !p.notif_prono_results).map((p) => p.id),
+      (prefs ?? []).reduce<string[]>((acc, p) => {
+        if (!p.notif_prono_results) acc.push(p.id);
+        return acc;
+      }, []),
     );
 
     // Personalized pushes for prono users
-    await Promise.all(
-      pronoUserIds
-        .filter((uid) => !optedOut.has(uid))
-        .map((uid) => {
-          const earned = userEarned.get(uid) ?? 0;
-          const bodyText =
-            earned > 0
-              ? `${match.team_home} ${scoreStr} ${match.team_away} — Tu as gagné +${earned} Points ! 🎯`
-              : `${match.team_home} ${scoreStr} ${match.team_away} — Pas de chance. Retente sur le prochain !`;
-          return sendPushToUsers([uid], {
-            title: "⏱ Match terminé !",
-            body: bodyText,
-            url: `/match/${match_id}`,
-          });
+    const pronoJobs: Promise<number>[] = [];
+    for (const uid of pronoUserIds) {
+      if (optedOut.has(uid)) continue;
+      const earned = userEarned.get(uid) ?? 0;
+      const bodyText =
+        earned > 0
+          ? `${match.team_home} ${scoreStr} ${match.team_away} : Tu as gagné +${earned} Points ! 🎯`
+          : `${match.team_home} ${scoreStr} ${match.team_away} : Pas de chance. Retente sur le prochain !`;
+      pronoJobs.push(
+        sendPushToUsers([uid], {
+          title: "⏱ Match terminé !",
+          body: bodyText,
+          url: `/match/${match_id}`,
         }),
-    );
+      );
+    }
+    await Promise.all(pronoJobs);
 
     // Generic push for match subscribers who didn't prono
     if (pronoUserIds.length === 0) {

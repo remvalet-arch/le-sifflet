@@ -396,7 +396,7 @@ export async function lookupTeamById(idTeam: string): Promise<TsdbTeam> {
 
 // ── Fonctions publiques ───────────────────────────────────────────────────────
 
-export type Ligue1SyncResult = {
+type Ligue1SyncResult = {
   competitionId: string;
   teamsUpserted: number;
 };
@@ -446,7 +446,7 @@ export async function fetchAndUpsertLigue1(): Promise<Ligue1SyncResult> {
   return { competitionId, teamsUpserted };
 }
 
-export type VipTeamSyncResult = {
+type VipTeamSyncResult = {
   searchTerm: string;
   thesportsdbTeamId: string;
   strTeam: string;
@@ -504,7 +504,7 @@ export async function fetchAndUpsertVIPTeams(): Promise<VipTeamSyncResult[]> {
   return results;
 }
 
-export type RosterSyncResult = {
+type RosterSyncResult = {
   thesportsdbTeamId: string;
   supabaseTeamId: string;
   playersUpserted: number;
@@ -600,18 +600,26 @@ async function fetchTeamsMap(
   if (unique.length === 0) return map;
 
   const chunkSize = 100;
+  const slices: string[][] = [];
   for (let i = 0; i < unique.length; i += chunkSize) {
-    const slice = unique.slice(i, i + chunkSize);
-    const { data, error } = await admin
-      .from("teams")
-      .select(
-        "id, thesportsdb_team_id, name, competition_id, logo_url, color_primary",
-      )
-      .in("thesportsdb_team_id", slice);
-    if (error) {
-      throw new Error(`teams map: ${error.message}`);
-    }
-    for (const row of data ?? []) {
+    slices.push(unique.slice(i, i + chunkSize));
+  }
+  const results = await Promise.all(
+    slices.map(async (slice) => {
+      const { data, error } = await admin
+        .from("teams")
+        .select(
+          "id, thesportsdb_team_id, name, competition_id, logo_url, color_primary",
+        )
+        .in("thesportsdb_team_id", slice);
+      if (error) {
+        throw new Error(`teams map: ${error.message}`);
+      }
+      return data ?? [];
+    }),
+  );
+  for (const rows of results) {
+    for (const row of rows) {
       if (row.thesportsdb_team_id) {
         map.set(row.thesportsdb_team_id, row);
       }
@@ -662,7 +670,7 @@ function dedupeEventsById(events: TsdbMatchEvent[]): TsdbMatchEvent[] {
   return [...map.values()];
 }
 
-export type SyncUpcomingMatchesResult = {
+type SyncUpcomingMatchesResult = {
   /** Événements TSDB retenus après fusion L1 + VIP (dédupliqués par idEvent) */
   eventsConsidered: number;
   /** Lignes effectivement upsert dans `matches` */
@@ -711,17 +719,21 @@ export async function syncUpcomingMatches(): Promise<SyncUpcomingMatchesResult> 
   }
 
   const chunkSize = 25;
-  let matchesUpserted = 0;
+  const matchChunks: (typeof rows)[] = [];
   for (let i = 0; i < rows.length; i += chunkSize) {
-    const chunk = rows.slice(i, i + chunkSize);
-    const { error } = await admin
-      .from("matches")
-      .upsert(chunk, { onConflict: "thesportsdb_event_id" });
-    if (error) {
-      throw new Error(`matches upsert: ${error.message}`);
-    }
-    matchesUpserted += chunk.length;
+    matchChunks.push(rows.slice(i, i + chunkSize));
   }
+  await Promise.all(
+    matchChunks.map(async (chunk) => {
+      const { error } = await admin
+        .from("matches")
+        .upsert(chunk, { onConflict: "thesportsdb_event_id" });
+      if (error) {
+        throw new Error(`matches upsert: ${error.message}`);
+      }
+    }),
+  );
+  const matchesUpserted = rows.length;
 
   return {
     eventsConsidered: merged.length,
@@ -759,21 +771,29 @@ async function fetchTeamsApiFootballByUuid(
   const unique = [...new Set(teamUuids.filter(Boolean))];
   if (unique.length === 0) return map;
   const chunkSize = 100;
+  const slices: string[][] = [];
   for (let i = 0; i < unique.length; i += chunkSize) {
-    const slice = unique.slice(i, i + chunkSize);
-    const { data, error } = await admin
-      .from("teams")
-      .select("id, api_football_id")
-      .in("id", slice);
-    if (error) throw new Error(`teams api_football_id: ${error.message}`);
-    for (const row of data ?? []) {
+    slices.push(unique.slice(i, i + chunkSize));
+  }
+  const results = await Promise.all(
+    slices.map(async (slice) => {
+      const { data, error } = await admin
+        .from("teams")
+        .select("id, api_football_id")
+        .in("id", slice);
+      if (error) throw new Error(`teams api_football_id: ${error.message}`);
+      return data ?? [];
+    }),
+  );
+  for (const rows of results) {
+    for (const row of rows) {
       map.set(row.id, row.api_football_id);
     }
   }
   return map;
 }
 
-export type SyncLiveMatchesResult = {
+type SyncLiveMatchesResult = {
   /** Nombre de matchs candidats (en jeu + à venir ≤ 5 min), avant filtre API-Football équipes. */
   activeMatchesLoaded: number;
   /** Toujours 0 (champ conservé pour compat réponses JSON / monitoring). */
@@ -892,7 +912,7 @@ export async function syncLiveMatches(): Promise<SyncLiveMatchesResult> {
   };
 }
 
-export type SyncSpecificMatchLineupsResult = {
+type SyncSpecificMatchLineupsResult = {
   matchId: string;
   /** Conservé pour compat ; le live utilise `apiFootballFixtureId`. */
   thesportsdb_event_id: string | null;

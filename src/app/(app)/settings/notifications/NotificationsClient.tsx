@@ -219,7 +219,7 @@ export default function NotificationsClient({
             { label: t("title") },
           ]}
         />
-        <h1 className="text-xl font-black uppercase tracking-wide text-white">
+        <h1 className="text-xl font-semibold uppercase tracking-wide text-white">
           {t("title")}
         </h1>
         <p className="mt-1 text-sm text-zinc-400">{t("subtitle")}</p>
@@ -228,7 +228,7 @@ export default function NotificationsClient({
       {/* Push subscription status */}
       {subStatus === "subscribed" ? (
         <div className="mb-4 flex items-center gap-3 rounded-2xl border border-green-500/20 bg-green-500/8 px-4 py-3">
-          <CheckCircle className="h-4 w-4 shrink-0 text-green-400" />
+          <CheckCircle className="size-4 shrink-0 text-green-400" />
           <p className="text-sm font-semibold text-green-300">
             {t("deviceRegistered")}
           </p>
@@ -236,7 +236,7 @@ export default function NotificationsClient({
       ) : subStatus === "not_subscribed" ? (
         <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/8 p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+            <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-400" />
             <div className="flex-1">
               <p className="text-sm font-bold text-red-300">
                 {t("deviceNotRegistered")}
@@ -253,9 +253,9 @@ export default function NotificationsClient({
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-zinc-900 transition active:scale-[0.98] disabled:opacity-60"
           >
             {subscribing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Bell className="h-4 w-4" />
+              <Bell className="size-4" />
             )}
             {subscribing ? t("activating") : t("activatePush")}
           </button>
@@ -264,12 +264,12 @@ export default function NotificationsClient({
 
       {/* Always-on notice */}
       <div className="mb-6 flex items-start gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/8 p-4">
-        <Bell className="mt-0.5 h-4 w-4 shrink-0 text-yellow-400" />
+        <Bell className="mt-0.5 size-4 shrink-0 text-yellow-400" />
         <p className="text-xs leading-relaxed text-zinc-300">
           <span className="font-bold text-yellow-400">
             {t("alwaysOnTitle")}
           </span>{" "}
-          — {t("alwaysOnNote")}
+          · {t("alwaysOnNote")}
         </p>
       </div>
 
@@ -278,8 +278,8 @@ export default function NotificationsClient({
           const Icon = group.icon;
           return (
             <section key={group.title}>
-              <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                <Icon className="h-3 w-3" />
+              <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                <Icon className="size-3" />
                 {group.title}
               </h2>
               <div className="rounded-2xl border border-white/8 bg-zinc-900">
@@ -310,7 +310,7 @@ export default function NotificationsClient({
                       }`}
                     >
                       <span
-                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                        className={`absolute top-1 size-5 rounded-full bg-white shadow transition-transform duration-200 ${
                           values[item.key] ? "translate-x-6" : "translate-x-1"
                         }`}
                       />

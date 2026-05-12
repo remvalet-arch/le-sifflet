@@ -73,21 +73,21 @@ export function ProfileOverview({
       <div className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900">
         <div className="flex divide-x divide-white/8">
           <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
-            <Trophy className="h-4 w-4 text-zinc-500" />
+            <Trophy className="size-4 text-zinc-500" />
             <p className="text-base font-black text-white">{totalBets}</p>
             <p className="text-center text-[10px] font-semibold text-zinc-500">
               {t("overviewBets")}
             </p>
           </div>
           <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
-            <Zap className="h-4 w-4 text-zinc-500" />
+            <Zap className="size-4 text-zinc-500" />
             <p className="text-base font-black text-white">{bestStreak}</p>
             <p className="text-center text-[10px] font-semibold text-zinc-500">
               {t("overviewMaxStreak")}
             </p>
           </div>
           <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
-            <Target className="h-4 w-4 text-zinc-500" />
+            <Target className="size-4 text-zinc-500" />
             <p className="text-base font-black text-white">
               {totalMatchesPronoed}
             </p>
@@ -107,7 +107,7 @@ export function ProfileOverview({
           </div>
           <div className="flex divide-x divide-white/5">
             <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
-              <Target className="h-4 w-4 text-zinc-500" />
+              <Target className="size-4 text-zinc-500" />
               <p className="text-base font-black text-white">
                 {scoreAccuracy}%
               </p>
@@ -116,7 +116,7 @@ export function ProfileOverview({
               </p>
             </div>
             <div className="flex flex-1 flex-col items-center gap-1 px-3 py-4">
-              <TrendingUp className="h-4 w-4 text-zinc-500" />
+              <TrendingUp className="size-4 text-zinc-500" />
               <p className="text-base font-black text-white">{bestStreak}</p>
               <p className="text-center text-[10px] font-semibold text-zinc-500">
                 {t("bestStreak2")}
@@ -178,7 +178,10 @@ export function ProfileOverview({
                       {t("points")}
                     </p>
                   </div>
-                  <p className="text-[10px] text-zinc-600">
+                  <p
+                    className="text-[10px] text-zinc-600"
+                    suppressHydrationWarning
+                  >
                     {new Date(sa.archived_at).toLocaleDateString(undefined, {
                       month: "short",
                       year: "numeric",
@@ -193,7 +196,7 @@ export function ProfileOverview({
 
       {isModerateur && (
         <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
-          <Shield className="h-4 w-4 shrink-0 text-yellow-400" />
+          <Shield className="size-4 shrink-0 text-yellow-400" />
           <p className="text-xs font-bold text-yellow-400">
             {t("moderatorAccess")}
           </p>

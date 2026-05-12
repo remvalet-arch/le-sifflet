@@ -21,8 +21,8 @@ function LobbyTeamLogo({
   const trimmed = (url ?? "").trim();
   const dim = mpgLayout ? 40 : 32;
   const common = mpgLayout
-    ? "h-10 w-10 min-h-[40px] min-w-[40px] shrink-0 rounded-lg border border-white/10 bg-zinc-900/80 object-contain p-0.5"
-    : "h-8 w-8 shrink-0 rounded-md border border-white/10 bg-zinc-900/80 object-contain p-0.5";
+    ? "size-10 min-h-[40px] min-w-[40px] shrink-0 rounded-lg border border-white/10 bg-zinc-900/80 object-contain p-0.5"
+    : "size-8 shrink-0 rounded-md border border-white/10 bg-zinc-900/80 object-contain p-0.5";
 
   if (trimmed.startsWith("http") && isNextImageRemoteLogoUrl(trimmed)) {
     return (
@@ -50,7 +50,7 @@ function LobbyTeamLogo({
   }
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-md border border-white/10 bg-zinc-800/90 text-[10px] text-zinc-500 ${mpgLayout ? "h-10 w-10 min-h-[40px] min-w-[40px]" : "h-8 w-8"}`}
+      className={`flex shrink-0 items-center justify-center rounded-md border border-white/10 bg-zinc-800/90 text-[10px] text-zinc-500 ${mpgLayout ? "size-10 min-h-[40px] min-w-[40px]" : "size-8"}`}
       aria-hidden
     >
       ⚽
@@ -145,7 +145,9 @@ export function MatchCard({
         }`}
       >
         <span className="text-lg font-black tabular-nums text-white sm:text-xl">
-          {match.home_score} — {match.away_score}
+          {match.home_score}
+          {"—"}
+          {match.away_score}
         </span>
       </div>
       {isLive && match.match_minute !== null && (
@@ -165,7 +167,9 @@ export function MatchCard({
             : "bg-zinc-800"
         }`}
       >
-        {match.home_score} — {match.away_score}
+        {match.home_score}
+        {"—"}
+        {match.away_score}
       </span>
       {isLive && match.match_minute !== null && (
         <span
@@ -256,7 +260,7 @@ export function MatchCard({
         <div className="flex min-w-0 flex-col items-center justify-center gap-1.5 text-center">
           <div
             className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-900/80 shadow-sm ${
-              mpgLayout ? "h-12 w-12" : "h-10 w-10"
+              mpgLayout ? "size-12" : "size-10"
             }`}
           >
             <LobbyTeamLogo url={match.home_team_logo} mpgLayout={mpgLayout} />
@@ -271,7 +275,7 @@ export function MatchCard({
         <div className="flex min-w-0 flex-col items-center justify-center gap-1.5 text-center">
           <div
             className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-zinc-900/80 shadow-sm ${
-              mpgLayout ? "h-12 w-12" : "h-10 w-10"
+              mpgLayout ? "size-12" : "size-10"
             }`}
           >
             <LobbyTeamLogo url={match.away_team_logo} mpgLayout={mpgLayout} />

@@ -15,7 +15,7 @@ export default function LiguesLoading() {
       <div className="mt-4 flex flex-col gap-3">
         {[0, 1].map((i) => (
           <div
-            key={i}
+            key={`skeleton-`}
             className="rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4"
           >
             {/* Name + meta */}
@@ -28,12 +28,12 @@ export default function LiguesLoading() {
                   <Skel h="h-3" w="w-24" />
                 </div>
               </div>
-              <div className="h-5 w-5 rounded-full bg-zinc-800" />
+              <div className="size-5 rounded-full bg-zinc-800" />
             </div>
             {/* Sub-actions */}
             <div className="mt-3 flex items-center gap-2 border-t border-white/5 pt-3">
               <div className="h-7 w-24 rounded-lg bg-zinc-800" />
-              <div className="ml-auto h-8 w-8 rounded-lg bg-zinc-800" />
+              <div className="ml-auto size-8 rounded-lg bg-zinc-800" />
             </div>
           </div>
         ))}

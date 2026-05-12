@@ -231,7 +231,7 @@ export function MessagesConversation({
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       isSubscribedRef.current = false;
       channelRef.current = null;
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId]);
@@ -360,7 +360,7 @@ export function MessagesConversation({
             disabled={loadingMore}
             className="mx-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-[11px] font-bold text-zinc-400 transition hover:bg-zinc-800 disabled:opacity-50"
           >
-            <ChevronUp className="h-3 w-3" />
+            <ChevronUp className="size-3" />
             {loadingMore ? "Chargement…" : "Voir plus"}
           </button>
         )}
@@ -408,21 +408,21 @@ export function MessagesConversation({
                 {!isMe && (
                   <div className="mb-0.5 shrink-0">
                     {isLast ? (
-                      <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[9px] font-black text-zinc-300">
+                      <div className="flex size-6 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[9px] font-black text-zinc-300">
                         {otherAvatarUrl ? (
                           <Image
                             src={otherAvatarUrl}
                             alt={otherUsername}
                             width={24}
                             height={24}
-                            className="h-6 w-6 object-cover"
+                            className="size-6 object-cover"
                           />
                         ) : (
                           (otherUsername[0] ?? "?").toUpperCase()
                         )}
                       </div>
                     ) : (
-                      <div className="h-6 w-6" />
+                      <div className="size-6" />
                     )}
                   </div>
                 )}
@@ -483,7 +483,7 @@ export function MessagesConversation({
                             key={em}
                             type="button"
                             onClick={() => void toggleReaction(msg.id, em)}
-                            className={`flex h-8 w-8 items-center justify-center rounded-xl text-lg transition active:scale-90 ${myR ? "bg-whistle/20" : "hover:bg-white/5"}`}
+                            className={`flex size-8 items-center justify-center rounded-xl text-lg transition active:scale-90 ${myR ? "bg-whistle/20" : "hover:bg-white/5"}`}
                             aria-label={`Réagir avec ${em}`}
                           >
                             {em}
@@ -522,17 +522,22 @@ export function MessagesConversation({
                 <div
                   className={`mt-0.5 flex items-center gap-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  <span className="text-[9px] text-zinc-600">{time}</span>
+                  <span
+                    className="text-[9px] text-zinc-600"
+                    suppressHydrationWarning
+                  >
+                    {time}
+                  </span>
                   {isMe &&
                     isLastMine &&
                     (isRead ? (
                       <CheckCheck
-                        className="h-3 w-3 text-whistle"
+                        className="size-3 text-whistle"
                         aria-label={t("ariaRead")}
                       />
                     ) : (
                       <Check
-                        className="h-3 w-3 text-zinc-500"
+                        className="size-3 text-zinc-500"
                         aria-label={t("ariaSent")}
                       />
                     ))}
@@ -545,14 +550,14 @@ export function MessagesConversation({
         {/* Typing indicator */}
         {isOtherTyping && (
           <div className="mt-1 flex items-end gap-1.5">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[9px] font-black text-zinc-300">
+            <div className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[9px] font-black text-zinc-300">
               {otherAvatarUrl ? (
                 <Image
                   src={otherAvatarUrl}
                   alt={otherUsername}
                   width={24}
                   height={24}
-                  className="h-6 w-6 object-cover"
+                  className="size-6 object-cover"
                 />
               ) : (
                 (otherUsername[0] ?? "?").toUpperCase()
@@ -612,10 +617,10 @@ export function MessagesConversation({
           type="button"
           onClick={() => void handleSend()}
           disabled={!text.trim() || sending}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-whistle/20 text-whistle transition hover:bg-whistle/30 disabled:opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-whistle/20 text-whistle transition hover:bg-whistle/30 disabled:opacity-40"
           aria-label="Envoyer"
         >
-          <Send className="h-3.5 w-3.5" />
+          <Send className="size-3.5" />
         </button>
       </div>
     </div>

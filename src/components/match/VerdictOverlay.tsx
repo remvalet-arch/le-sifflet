@@ -116,7 +116,7 @@ export function VerdictOverlay({
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               {PARTICLES.map((p, i) => (
                 <span
-                  key={i}
+                  key={`particle-${i}`}
                   className="absolute text-3xl"
                   style={{
                     left: `${15 + i * 18}%`,

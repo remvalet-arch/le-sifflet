@@ -14,7 +14,7 @@ export default function MentionsLegalesPage() {
           href="/"
           className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
           Accueil
         </Link>
 
@@ -22,14 +22,14 @@ export default function MentionsLegalesPage() {
           <p className="text-[10px] font-black uppercase tracking-widest text-green-400 mb-1">
             Légal
           </p>
-          <h1 className="text-2xl font-black">Mentions Légales</h1>
+          <h1 className="text-2xl font-semibold">Mentions Légales</h1>
           <p className="mt-2 text-xs text-zinc-500">
             Dernière mise à jour : mai 2026
           </p>
         </div>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">Éditeur</h2>
+          <h2 className="text-base font-semibold text-white">Éditeur</h2>
           <p>
             VAR Time est édité par Rémi Valet, auto-entrepreneur.
             <br />
@@ -38,7 +38,7 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">Hébergement</h2>
+          <h2 className="text-base font-semibold text-white">Hébergement</h2>
           <p>
             Le service est hébergé par Vercel Inc., 440 N Barranca Ave #4133,
             Covina, CA 91723, États-Unis.
@@ -48,7 +48,7 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             Propriété intellectuelle
           </h2>
           <p>
@@ -59,7 +59,7 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             Données personnelles
           </h2>
           <p>

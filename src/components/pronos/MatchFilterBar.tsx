@@ -164,7 +164,7 @@ export function MatchFilterBar({
                     </span>
                   )}
                   <span
-                    className={`mt-1 h-1 w-1 rounded-full transition-colors ${
+                    className={`mt-1 size-1 rounded-full transition-colors ${
                       allDone
                         ? isSelected
                           ? "bg-pitch-900/50"

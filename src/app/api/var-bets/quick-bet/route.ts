@@ -12,6 +12,16 @@ const QUICK_BET_RATE_LIMIT = 15;
 const QUICK_BET_WINDOW_SECS = 60;
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as {
+    marketEventId?: string;
+    vote?: string;
+  };
+  const { marketEventId, vote } = body;
+
+  if (!marketEventId || !vote || !["oui", "non"].includes(vote)) {
+    return errorResponse("Paramètres invalides", 400);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,16 +39,6 @@ export async function POST(request: NextRequest) {
     .gte("created_at", since);
   if ((count ?? 0) >= QUICK_BET_RATE_LIMIT)
     return rateLimitResponse(QUICK_BET_WINDOW_SECS);
-
-  const body = (await request.json()) as {
-    marketEventId?: string;
-    vote?: string;
-  };
-  const { marketEventId, vote } = body;
-
-  if (!marketEventId || !vote || !["oui", "non"].includes(vote)) {
-    return errorResponse("Paramètres invalides", 400);
-  }
 
   // Fetch profile for balance + default bet amount
   const { data: profile } = await supabase

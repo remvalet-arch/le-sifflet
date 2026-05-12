@@ -35,11 +35,11 @@ export default async function PushTestPage() {
         href="/admin/resolve"
         className="mb-6 flex items-center gap-1 text-sm text-zinc-500 hover:text-white"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="size-4" />
         Admin
       </Link>
 
-      <h1 className="mb-1 text-xl font-black text-white">Test Push</h1>
+      <h1 className="mb-1 text-xl font-semibold text-white">Test Push</h1>
       <p className="mb-6 text-sm text-zinc-500">
         Envoie un push à ton propre appareil pour valider chaque scénario.
       </p>

@@ -75,7 +75,7 @@ export function VarMechanicLoop() {
           <div className="flex gap-1">
             {[3, 2, 1].map((i) => (
               <div
-                key={i}
+                key={`anim-`}
                 className={`rounded-sm bg-zinc-${i === 1 ? "500" : i === 2 ? "600" : "700"}`}
                 style={{ width: 3, height: 4 + i * 1.5 }}
               />
@@ -87,7 +87,7 @@ export function VarMechanicLoop() {
         <div className="mx-3 mt-1 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-2">
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center gap-0.5">
-              <div className="h-5 w-5 rounded-full bg-blue-800/60" />
+              <div className="size-5 rounded-full bg-blue-800/60" />
               <span className="text-[8px] font-black text-zinc-400">ENG</span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
@@ -102,7 +102,7 @@ export function VarMechanicLoop() {
               </div>
               <div className="flex items-center gap-1">
                 <span
-                  className="vm-dot h-1.5 w-1.5 rounded-full"
+                  className="vm-dot size-1.5 rounded-full"
                   style={{
                     animation: "vm-dot 5s linear infinite",
                     background: "#f59e0b",
@@ -115,7 +115,7 @@ export function VarMechanicLoop() {
               </div>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <div className="h-5 w-5 rounded-full bg-blue-600/60" />
+              <div className="size-5 rounded-full bg-blue-600/60" />
               <span className="text-[8px] font-black text-zinc-400">FRA</span>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function VarMechanicLoop() {
             ["w-4/5", "zinc-800/40"],
             ["w-3/5", "zinc-800/30"],
           ].map(([w, bg], i) => (
-            <div key={i} className={`h-6 rounded-xl ${w} bg-${bg}`} />
+            <div key={`anim-`} className={`h-6 rounded-xl ${w} bg-${bg}`} />
           ))}
         </div>
 
@@ -143,7 +143,7 @@ export function VarMechanicLoop() {
             type="button"
             tabIndex={-1}
             aria-hidden
-            className="vm-siren relative flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-lg shadow-[0_0_20px_rgba(251,191,36,.5)] transition-none"
+            className="vm-siren relative flex size-11 items-center justify-center rounded-full bg-amber-500 text-lg shadow-[0_0_20px_rgba(251,191,36,.5)] transition-none"
             style={{
               animation: "vm-siren 5s ease-in-out infinite",
               opacity: 0,
@@ -211,7 +211,7 @@ export function VarMechanicLoop() {
             />
           </div>
           <p className="mt-1 text-[7px] text-zinc-700">
-            Cote · ×2.00 — Gain potentiel +400 🪙
+            Cote · ×2.00 · Gain potentiel +400 🪙
           </p>
         </div>
 

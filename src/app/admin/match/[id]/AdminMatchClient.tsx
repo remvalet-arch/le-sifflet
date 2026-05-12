@@ -133,7 +133,7 @@ export function AdminMatchClient({ match, eventsWithAge }: Props) {
             href="/admin/resolve"
             className="flex items-center gap-1 text-sm text-zinc-400 transition hover:text-white"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="size-4" />
             Tous les matchs
           </Link>
           <span className="rounded-lg bg-zinc-800 px-3 py-1 text-xs font-black uppercase tracking-widest text-whistle">
@@ -145,7 +145,7 @@ export function AdminMatchClient({ match, eventsWithAge }: Props) {
           <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
             Panneau modérateur
           </p>
-          <h1 className="mt-1 text-2xl font-black text-white">
+          <h1 className="mt-1 text-2xl font-semibold text-white">
             {match.team_home} <span className="text-zinc-600">vs</span>{" "}
             {match.team_away}
           </h1>
@@ -584,7 +584,7 @@ function FeuilleTab({
             type="checkbox"
             checked={isOwnGoal}
             onChange={(e) => setIsOwnGoal(e.target.checked)}
-            className="h-4 w-4 rounded accent-orange-500"
+            className="size-4 rounded accent-orange-500"
           />
           <span className="font-semibold">But contre son camp (CSC)</span>
         </label>
@@ -596,7 +596,7 @@ function FeuilleTab({
         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:opacity-50"
       >
         {submitting ? (
-          <LoaderCircle className="h-5 w-5 animate-spin" />
+          <LoaderCircle className="size-5 animate-spin" />
         ) : (
           "Valider l'événement"
         )}
@@ -730,9 +730,9 @@ function ControleTab({
             Sync base de données
           </span>
           {syncDbOpen ? (
-            <ChevronUp className="h-4 w-4 text-zinc-500" />
+            <ChevronUp className="size-4 text-zinc-500" />
           ) : (
-            <ChevronDown className="h-4 w-4 text-zinc-500" />
+            <ChevronDown className="size-4 text-zinc-500" />
           )}
         </button>
 
@@ -758,7 +758,7 @@ function ControleTab({
               >
                 {isSyncingMatch ? (
                   <>
-                    <LoaderCircle className="h-4 w-4 animate-spin" /> Sync…
+                    <LoaderCircle className="size-4 animate-spin" /> Sync…
                   </>
                 ) : (
                   "Synchroniser le match"
@@ -791,7 +791,7 @@ function ControleTab({
               >
                 {isSyncingRoster ? (
                   <>
-                    <LoaderCircle className="h-4 w-4 animate-spin" /> Sync…
+                    <LoaderCircle className="size-4 animate-spin" /> Sync…
                   </>
                 ) : (
                   "Importer l'effectif"

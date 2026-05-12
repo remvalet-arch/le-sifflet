@@ -25,7 +25,7 @@ export function parisCivilDayYmdFromInstant(instant: Date): string {
  * **Football day** : on retire 4h à l’instant puis on lit la date civile à Paris.
  * (Ex. 00h30 le 4 mai → encore le 3 mai ; le « 4 mai » commence à 04h00.)
  */
-export function footballDayYmdParis(instant: Date): string {
+function footballDayYmdParis(instant: Date): string {
   return parisCivilDayYmdFromInstant(
     new Date(instant.getTime() - FOOTBALL_DAY_OFFSET_MS),
   );

@@ -9,22 +9,6 @@ import { syncApiFootballFixturesByRound } from "@/services/api-football-fixtures
  * Import API-Football d’une journée complète (`round`) pour une ligue — modérateurs uniquement.
  */
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return errorResponse("Non authentifié", 401);
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || !isAdminRole(profile.role)) {
-    return errorResponse("Accès réservé aux administrateurs", 403);
-  }
-
   const apiKey = process.env.API_FOOTBALL_KEY?.trim();
   if (apiKey === undefined || apiKey === "" || apiKey === "undefined") {
     return errorResponse("API_FOOTBALL_KEY manquante ou vide", 500);
@@ -51,6 +35,22 @@ export async function GET(request: Request) {
       "Paramètre roundName obligatoire (libellé API-Football), ex. ?roundName=Regular Season - 34",
       400,
     );
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return errorResponse("Non authentifié", 401);
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || !isAdminRole(profile.role)) {
+    return errorResponse("Accès réservé aux administrateurs", 403);
   }
 
   try {

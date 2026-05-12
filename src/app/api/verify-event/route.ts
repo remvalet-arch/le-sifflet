@@ -9,14 +9,14 @@ import { notifyVarBetResults } from "@/lib/var-notifications";
 const MIN_AGE_SECONDS = 6 * 60;
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as { event_id?: string };
+  if (!body.event_id) return errorResponse("event_id requis", 400);
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
-
-  const body = (await request.json()) as { event_id?: string };
-  if (!body.event_id) return errorResponse("event_id requis", 400);
 
   const { data: event } = await supabase
     .from("market_events")

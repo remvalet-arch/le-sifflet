@@ -287,7 +287,7 @@ export default async function PublicProfilePage({
       ? Math.round((exactWon / exactResolved.length) * 100)
       : null;
 
-  const sortedPronos = [...pronos].sort(
+  const sortedPronos = pronos.toSorted(
     (a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime(),
   );
   let bestStreak = 0;
@@ -301,9 +301,11 @@ export default async function PublicProfilePage({
     }
   }
 
-  const totalMatchesPronoed = new Set(
-    pronos.filter((p) => p.prono_type === "exact_score").map((p) => p.match_id),
-  ).size;
+  const exactScoreMatchIds = new Set<string>();
+  for (const p of pronos) {
+    if (p.prono_type === "exact_score") exactScoreMatchIds.add(p.match_id);
+  }
+  const totalMatchesPronoed = exactScoreMatchIds.size;
 
   const trustScore = profile.trust_score ?? 100;
   const tp = await getTranslations("Profile");
@@ -324,19 +326,19 @@ export default async function PublicProfilePage({
         }}
       >
         <div
-          className="pointer-events-none absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
+          className="pointer-events-none absolute -top-10 -left-10 size-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
           aria-hidden
         />
-        <div className="relative px-5 py-5">
+        <div className="relative p-5">
           <div className="flex items-start gap-4">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ring-2 ring-white/20">
+            <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ring-2 ring-white/20">
               {avatar.startsWith("http") ? (
                 <Image
                   src={avatar}
                   alt={profile.username}
                   width={80}
                   height={80}
-                  className="h-20 w-20 rounded-full object-cover"
+                  className="size-20 rounded-full object-cover"
                 />
               ) : (
                 avatar
@@ -365,7 +367,7 @@ export default async function PublicProfilePage({
                       alt={favoriteTeam.name}
                       width={16}
                       height={16}
-                      className="h-4 w-4 object-contain"
+                      className="size-4 object-contain"
                     />
                   ) : (
                     <span className="text-xs">⚽</span>
@@ -426,7 +428,7 @@ export default async function PublicProfilePage({
             href={`/messages/${id}`}
             className="flex items-center gap-2 rounded-xl border border-whistle/30 bg-whistle/10 px-4 py-2.5 text-sm font-bold text-whistle transition hover:bg-whistle/20 active:scale-[0.97]"
           >
-            <MessageCircle className="h-4 w-4" />
+            <MessageCircle className="size-4" />
             Message
           </Link>
         )}
@@ -463,8 +465,8 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl border border-white/8 bg-zinc-900 px-3 py-3.5">
-      <Icon className="h-4 w-4 text-zinc-500" />
+    <div className="flex flex-col items-center gap-1 rounded-2xl border border-white/8 bg-zinc-900 p-3.5">
+      <Icon className="size-4 text-zinc-500" />
       <p className="text-base font-black text-white">{value}</p>
       <p className="text-center text-[10px] font-semibold text-zinc-500">
         {label}

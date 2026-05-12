@@ -77,8 +77,7 @@ export function ForceResolvePastMatchesButton() {
           {lastResult.openVarEventsOnFinishedMatches > 0 && (
             <p className="text-yellow-400">
               ⚠ {lastResult.openVarEventsOnFinishedMatches} event(s) VAR encore
-              ouverts sur des matchs terminés — à résoudre manuellement
-              ci-dessus
+              ouverts sur des matchs terminés, à résoudre manuellement ci-dessus
             </p>
           )}
           {lastResult.errors.length > 0 && (
@@ -88,7 +87,7 @@ export function ForceResolvePastMatchesButton() {
               </summary>
               <ul className="mt-1 space-y-0.5 text-red-300">
                 {lastResult.errors.map((e, i) => (
-                  <li key={i}>{e}</li>
+                  <li key={`err-${i}`}>{e}</li>
                 ))}
               </ul>
             </details>

@@ -65,13 +65,13 @@ export default async function RulesPage() {
         <Link
           href="/lobby"
           aria-label={t("backToLobby")}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white active:scale-90"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white active:scale-90"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 shrink-0 text-green-500" />
-          <h1 className="text-xl font-black uppercase tracking-tight text-white">
+          <BookOpen className="size-5 shrink-0 text-green-500" />
+          <h1 className="text-xl font-semibold uppercase tracking-tight text-white">
             {t("title")}
           </h1>
         </div>
@@ -109,7 +109,7 @@ export default async function RulesPage() {
 
       {/* Section Pronos */}
       <section id="pronos" className="mb-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           <span>🎯</span> {t("sectionPronos")}
         </h2>
         <div className="flex flex-col gap-3">
@@ -123,7 +123,7 @@ export default async function RulesPage() {
                   {rule.emoji}
                 </span>
                 <div>
-                  <h3 className="font-black text-white">{rule.title}</h3>
+                  <h3 className="font-semibold text-white">{rule.title}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-zinc-400">
                     {rule.body}
                   </p>
@@ -136,7 +136,7 @@ export default async function RulesPage() {
 
       {/* Section LiveRoom */}
       <section id="live" className="mb-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           <span>🚨</span> {t("sectionLiveRoom")}
         </h2>
         <div className="flex flex-col gap-3">
@@ -150,7 +150,7 @@ export default async function RulesPage() {
                   {rule.emoji}
                 </span>
                 <div>
-                  <h3 className="font-black text-white">{rule.title}</h3>
+                  <h3 className="font-semibold text-white">{rule.title}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-zinc-400">
                     {rule.body}
                   </p>
@@ -163,7 +163,7 @@ export default async function RulesPage() {
 
       {/* Section Saisons */}
       <section id="saisons" className="mb-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           <span>🗓️</span> {t("sectionSeasons")}
         </h2>
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
@@ -173,7 +173,7 @@ export default async function RulesPage() {
                 🔄
               </span>
               <div>
-                <h3 className="font-black text-white">
+                <h3 className="font-semibold text-white">
                   {t("seasonNewStartTitle")}
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-zinc-400">
@@ -186,7 +186,7 @@ export default async function RulesPage() {
                 🏆
               </span>
               <div>
-                <h3 className="font-black text-white">
+                <h3 className="font-semibold text-white">
                   {t("seasonHallOfFameTitle")}
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-zinc-400">
@@ -199,7 +199,7 @@ export default async function RulesPage() {
                 🎖️
               </span>
               <div>
-                <h3 className="font-black text-white">
+                <h3 className="font-semibold text-white">
                   {t("seasonRanksTitle")}
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-zinc-400">
@@ -213,7 +213,7 @@ export default async function RulesPage() {
 
       {/* Section Championnat 1v1 */}
       <section id="champ">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           <span>⚔️</span> {t("sectionChampionship")}
         </h2>
         <div className="flex flex-col gap-3">
@@ -227,7 +227,7 @@ export default async function RulesPage() {
                   {rule.emoji}
                 </span>
                 <div>
-                  <h3 className="font-black text-white">{rule.title}</h3>
+                  <h3 className="font-semibold text-white">{rule.title}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-zinc-400">
                     {rule.body}
                   </p>
@@ -239,7 +239,7 @@ export default async function RulesPage() {
       </section>
 
       <section id="boosters" className="mb-6">
-        <h2 className="mb-3 flex items-center gap-2 text-base font-black text-white">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-white">
           <span>⚡</span>
           <span>{t("sectionBoosters")}</span>
         </h2>
@@ -292,7 +292,7 @@ export default async function RulesPage() {
       </section>
 
       <section id="mises" className="mb-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           <span>🎚️</span> {t("sectionMinBets")}
         </h2>
         <div className="rounded-2xl border border-white/8 bg-zinc-900 p-4">
@@ -333,7 +333,7 @@ export default async function RulesPage() {
       </section>
 
       <section id="shop" className="mb-6">
-        <h2 className="mb-3 flex items-center gap-2 text-base font-black text-white">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-white">
           <span>🛒</span>
           <span>{t("sectionShop")}</span>
         </h2>

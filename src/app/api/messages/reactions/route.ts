@@ -5,12 +5,6 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 const ALLOWED_EMOJIS = new Set(["👍", "❤️", "😂", "😮", "🔥", "👎"]);
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return errorResponse("Non authentifié", 401);
-
   const body = (await request.json()) as {
     message_id?: unknown;
     emoji?: unknown;
@@ -21,6 +15,12 @@ export async function POST(request: NextRequest) {
 
   if (!messageId || !emoji) return errorResponse("Paramètres manquants", 400);
   if (!ALLOWED_EMOJIS.has(emoji)) return errorResponse("Emoji invalide", 400);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return errorResponse("Non authentifié", 401);
 
   // Toggle: insert or delete
   const { data: existing } = await supabase

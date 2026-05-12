@@ -12,6 +12,10 @@ import { isAdminRole } from "@/lib/constants/permissions";
  * them in `player_odds`. Requires api_football_id on the match row.
  */
 export async function POST(request: Request) {
+  const body = (await request.json()) as { match_id?: string };
+  const { match_id } = body;
+  if (!match_id) return errorResponse("match_id requis", 400);
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,10 +30,6 @@ export async function POST(request: Request) {
   if (!profile || !isAdminRole(profile.role)) {
     return errorResponse("Accès réservé aux administrateurs", 403);
   }
-
-  const body = (await request.json()) as { match_id?: string };
-  const { match_id } = body;
-  if (!match_id) return errorResponse("match_id requis", 400);
 
   const admin = createAdminClient();
   const { data: match } = await admin

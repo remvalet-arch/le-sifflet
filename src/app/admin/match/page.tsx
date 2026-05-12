@@ -60,7 +60,7 @@ export default async function AdminMatchIndexPage() {
             >
               ← Admin
             </Link>
-            <h1 className="mt-1 text-2xl font-black uppercase tracking-widest text-whistle">
+            <h1 className="mt-1 text-2xl font-semibold uppercase tracking-widest text-whistle">
               Matchs
             </h1>
           </div>
@@ -76,7 +76,7 @@ export default async function AdminMatchIndexPage() {
               <Link
                 key={m.id}
                 href={`/admin/match/${m.id}`}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-900 px-4 py-4 transition hover:bg-zinc-800 active:scale-[0.99]"
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-900 p-4 transition hover:bg-zinc-800 active:scale-[0.99]"
               >
                 <div>
                   <p className="font-black text-white">
@@ -84,7 +84,10 @@ export default async function AdminMatchIndexPage() {
                     <span className="font-normal text-zinc-600">vs</span>{" "}
                     {m.team_away}
                   </p>
-                  <p className="mt-0.5 text-xs text-zinc-600">
+                  <p
+                    className="mt-0.5 text-xs text-zinc-600"
+                    suppressHydrationWarning
+                  >
                     {m.start_time
                       ? new Date(m.start_time).toLocaleString("fr-FR", {
                           day: "2-digit",

@@ -113,7 +113,7 @@ function EventCard({
                   className={`flex items-start gap-1 font-semibold text-emerald-400 ${isRight ? "flex-row-reverse" : ""}`}
                 >
                   <ArrowUpRight
-                    className="mt-0.5 h-3 w-3 shrink-0 opacity-90"
+                    className="mt-0.5 size-3 shrink-0 opacity-90"
                     aria-hidden
                   />
                   <span className="min-w-0 break-words">{subPlayerIn}</span>
@@ -125,7 +125,7 @@ function EventCard({
                 }`}
               >
                 <ArrowDownRight
-                  className="mt-0.5 h-3 w-3 shrink-0 opacity-90"
+                  className="mt-0.5 size-3 shrink-0 opacity-90"
                   aria-hidden
                 />
                 <span className="min-w-0 break-words">{ev.player_name}</span>
@@ -156,15 +156,15 @@ function EventCard({
         <div className={`flex gap-1 ${isRight ? "justify-end" : ""}`}>
           <button
             onClick={onEdit}
-            className="flex h-5 w-5 items-center justify-center rounded bg-zinc-700 text-zinc-400 transition hover:bg-zinc-600 hover:text-white"
+            className="flex size-5 items-center justify-center rounded bg-zinc-700 text-zinc-400 transition hover:bg-zinc-600 hover:text-white"
           >
-            <Pencil className="h-2.5 w-2.5" />
+            <Pencil className="size-2.5" />
           </button>
           <button
             onClick={onDelete}
-            className="flex h-5 w-5 items-center justify-center rounded bg-zinc-700 text-zinc-400 transition hover:bg-red-900 hover:text-red-300"
+            className="flex size-5 items-center justify-center rounded bg-zinc-700 text-zinc-400 transition hover:bg-red-900 hover:text-red-300"
           >
-            <Trash2 className="h-2.5 w-2.5" />
+            <Trash2 className="size-2.5" />
           </button>
         </div>
       )}
@@ -280,7 +280,7 @@ export const MatchTimeline = memo(function MatchTimeline({
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [matchId]);
 
@@ -404,13 +404,13 @@ export const MatchTimeline = memo(function MatchTimeline({
               { side: "away", w: "w-20" },
             ] as { side: "home" | "away"; w: string }[]
           ).map((item, i) => (
-            <div key={i} className="relative flex items-start">
+            <div key={`tl-skeleton-${i}`} className="relative flex items-start">
               <div className="flex flex-1 justify-end pr-4">
                 {item.side === "home" && (
                   <div className={`h-12 ${item.w} rounded-xl bg-zinc-800`} />
                 )}
               </div>
-              <div className="z-10 mt-4 h-3 w-3 shrink-0 rounded-full bg-zinc-700 ring-2 ring-zinc-950" />
+              <div className="z-10 mt-4 size-3 shrink-0 rounded-full bg-zinc-700 ring-2 ring-zinc-950" />
               <div className="flex flex-1 justify-start pl-4">
                 {item.side === "away" && (
                   <div className={`h-12 ${item.w} rounded-xl bg-zinc-800`} />
@@ -556,7 +556,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                 </div>
 
                 {/* Point central */}
-                <div className="z-10 mt-3 h-3 w-3 shrink-0 rounded-full bg-zinc-600 ring-2 ring-zinc-950" />
+                <div className="z-10 mt-3 size-3 shrink-0 rounded-full bg-zinc-600 ring-2 ring-zinc-950" />
 
                 {/* Côté extérieur */}
                 <div className="flex flex-1 justify-start pl-4">
@@ -586,7 +586,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                       onClick={() => setEditingId(null)}
                       className="text-zinc-500 hover:text-white"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="size-3.5" />
                     </button>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -668,7 +668,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                               is_own_goal: e.target.checked,
                             }))
                           }
-                          className="h-3.5 w-3.5 rounded accent-orange-500"
+                          className="size-3.5 rounded accent-orange-500"
                         />
                         {tAction("ownGoal")}
                       </label>
@@ -680,7 +680,7 @@ export const MatchTimeline = memo(function MatchTimeline({
                       disabled={saving}
                       className="flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-green-600 text-xs font-black text-white transition hover:bg-green-500 disabled:opacity-50"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="size-3.5" />
                       {tAction("save")}
                     </button>
                   </div>

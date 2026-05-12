@@ -67,13 +67,12 @@ export function ShopClient({
     { key: "mes-items", label: t("tabMyItems"), emoji: "🏆" },
   ];
 
-  const displayed = items
-    .filter((i) => i.category === activeTab)
-    .filter((i) => {
-      if (itemFilter === "owned") return ownedIds.has(i.id);
-      if (itemFilter === "available") return !ownedIds.has(i.id);
-      return true;
-    });
+  const displayed = items.filter((i) => {
+    if (i.category !== activeTab) return false;
+    if (itemFilter === "owned") return ownedIds.has(i.id);
+    if (itemFilter === "available") return !ownedIds.has(i.id);
+    return true;
+  });
 
   function getEquipped(item: ShopItemRow) {
     if (item.category === "avatar") return equippedAvatar === item.id;
@@ -259,7 +258,7 @@ export function ShopClient({
         >
           <div className="relative shrink-0">
             <div
-              className={`flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-2xl ${previewBorderClass}`}
+              className={`flex size-16 items-center justify-center rounded-full bg-zinc-800 text-2xl ${previewBorderClass}`}
             >
               {previewAvatar}
             </div>
@@ -365,7 +364,7 @@ export function ShopClient({
 
                 return (
                   <div key={cat}>
-                    <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                       {cat === "avatar"
                         ? t("tabAvatars")
                         : cat === "border"
@@ -444,7 +443,7 @@ export function ShopClient({
                                   </span>
                                 ) : item.category === "border" ? (
                                   <div
-                                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-base ${getBorderClass(item.asset_url)}`}
+                                    className={`flex size-9 items-center justify-center rounded-full bg-zinc-800 text-base ${getBorderClass(item.asset_url)}`}
                                   >
                                     🎽
                                   </div>
@@ -584,7 +583,7 @@ export function ShopClient({
                       </span>
                     )}
                     {owned && !equipped && (
-                      <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20 text-[10px] font-black text-green-400">
+                      <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-green-500/20 text-[10px] font-black text-green-400">
                         ✓
                       </span>
                     )}
@@ -595,7 +594,7 @@ export function ShopClient({
                         <span className="text-4xl">{item.asset_url}</span>
                       ) : item.category === "border" ? (
                         <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-lg ${getBorderClass(item.asset_url)}`}
+                          className={`flex size-10 items-center justify-center rounded-full bg-zinc-800 text-lg ${getBorderClass(item.asset_url)}`}
                         >
                           🎽
                         </div>

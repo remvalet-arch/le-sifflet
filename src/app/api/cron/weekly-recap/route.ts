@@ -94,9 +94,10 @@ export async function GET(request: Request) {
     .select("id, username, notif_daily_digest")
     .in("id", allUserIds);
 
-  const optedIn = new Set(
-    (profiles ?? []).filter((p) => p.notif_daily_digest).map((p) => p.id),
-  );
+  const optedIn = new Set<string>();
+  for (const p of profiles ?? []) {
+    if (p.notif_daily_digest) optedIn.add(p.id);
+  }
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
 

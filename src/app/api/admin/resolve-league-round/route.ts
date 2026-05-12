@@ -16,6 +16,12 @@ export const dynamic = "force-dynamic";
  * ou mode auto: { auto: true } → résout tous les rounds actifs dont week_start <= hier.
  */
 export async function POST(request: Request) {
+  const body = (await request.json()) as {
+    season_id?: string;
+    round_number?: number;
+    auto?: boolean;
+  };
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,12 +37,6 @@ export async function POST(request: Request) {
   if (!profile || !isAdminRole(profile.role)) {
     return errorResponse("Accès réservé aux administrateurs", 403);
   }
-
-  const body = (await request.json()) as {
-    season_id?: string;
-    round_number?: number;
-    auto?: boolean;
-  };
 
   const admin = createAdminClient();
 

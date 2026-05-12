@@ -18,7 +18,7 @@ const MAX_CHARS = 200;
 function renderBold(text: string): React.ReactNode {
   const parts = text.split(/\*\*(.+?)\*\*/g);
   return parts.map((part, i) =>
-    i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
+    i % 2 === 1 ? <strong key={`bold-${i}`}>{part}</strong> : part,
   );
 }
 
@@ -56,9 +56,10 @@ export function SquadChat({
 
       const userIds = [
         ...new Set(
-          rawMsgs
-            .map((m) => m.user_id)
-            .filter((id): id is string => id !== null),
+          rawMsgs.reduce<string[]>((acc, m) => {
+            if (m.user_id !== null) acc.push(m.user_id);
+            return acc;
+          }, []),
         ),
       ];
       const { data: profilesData } = await supabase
@@ -111,7 +112,7 @@ export function SquadChat({
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [squadId]);
@@ -202,7 +203,7 @@ export function SquadChat({
                 key={msg.id}
                 className={`flex gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
               >
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-black text-zinc-400 mt-0.5">
+                <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-black text-zinc-400 mt-0.5">
                   {msg.profiles?.username?.[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div
@@ -250,10 +251,10 @@ export function SquadChat({
           type="button"
           onClick={() => void handleSend()}
           disabled={!text.trim() || sending}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-whistle/20 text-whistle transition hover:bg-whistle/30 disabled:opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-whistle/20 text-whistle transition hover:bg-whistle/30 disabled:opacity-40"
           aria-label={t("chatSendAriaLabel")}
         >
-          <Send className="h-3.5 w-3.5" />
+          <Send className="size-3.5" />
         </button>
       </div>
     </div>

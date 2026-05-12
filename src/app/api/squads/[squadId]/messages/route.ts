@@ -14,6 +14,13 @@ export async function POST(
 ) {
   const { squadId } = await params;
 
+  const body = (await request.json()) as { content?: string };
+  const content = body.content?.trim();
+  if (!content || content.length === 0)
+    return errorResponse("Message vide", 400);
+  if (content.length > MAX_CHARS)
+    return errorResponse("Message trop long", 400);
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,13 +37,6 @@ export async function POST(
       `Trop de requêtes — réessaie dans ${retryAfter}s`,
       429,
     );
-
-  const body = (await request.json()) as { content?: string };
-  const content = body.content?.trim();
-  if (!content || content.length === 0)
-    return errorResponse("Message vide", 400);
-  if (content.length > MAX_CHARS)
-    return errorResponse("Message trop long", 400);
 
   const admin = createAdminClient();
 
@@ -91,9 +91,10 @@ export async function POST(
       admin.from("profiles").select("username").eq("id", user.id).single(),
     ]);
 
-    const eligibleIds = (profilesRes.data ?? [])
-      .filter((p) => p.notif_squad_chat)
-      .map((p) => p.id);
+    const eligibleIds: string[] = [];
+    for (const p of profilesRes.data ?? []) {
+      if (p.notif_squad_chat) eligibleIds.push(p.id);
+    }
 
     if (eligibleIds.length === 0) return;
 

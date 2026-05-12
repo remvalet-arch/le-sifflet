@@ -1,10 +1,10 @@
 import posthog from "posthog-js";
 
 export type MatchTier = "top" | "mid" | "low";
-export type SignupMethod = "google" | "apple" | "email";
-export type ItemCategory = "cosmetic" | "booster";
+type SignupMethod = "google" | "apple" | "email";
+type ItemCategory = "cosmetic" | "booster";
 export type BoosterSlug = "double_xp" | "cote_plus" | "safety_net" | "vision";
-export type PronoType = "exact_score" | "scorer_allocation";
+type PronoType = "exact_score" | "scorer_allocation";
 export type MarketEventType =
   | "penalty_check"
   | "penalty_outcome"
@@ -14,7 +14,7 @@ export type MarketEventType =
   | "corner"
   | "stoppage_ht"
   | "stoppage_ft";
-export type OpeningSource = "community" | "auto";
+type OpeningSource = "community" | "auto";
 export type NotifType =
   | "match_starting"
   | "pre_match"
@@ -25,7 +25,7 @@ export type NotifType =
   | "nudge"
   | "squad_chat"
   | "dm";
-export type AdminActionType =
+type AdminActionType =
   | "resolve_event"
   | "force_finish_match"
   | "sync_matches"

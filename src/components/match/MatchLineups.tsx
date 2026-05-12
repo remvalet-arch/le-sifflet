@@ -31,7 +31,7 @@ function TeamLogo({
 }) {
   const trimmed = (url ?? "").trim();
   const box =
-    "h-7 w-7 shrink-0 rounded-md border border-white/10 bg-zinc-900/80 object-contain p-0.5";
+    "size-7 shrink-0 rounded-md border border-white/10 bg-zinc-900/80 object-contain p-0.5";
 
   if (trimmed.startsWith("http") && isNextImageRemoteLogo(trimmed)) {
     return (
@@ -61,7 +61,7 @@ function TeamLogo({
   }
   return (
     <div
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-white/10 bg-zinc-800 text-[10px] text-zinc-500"
+      className="flex size-7 shrink-0 items-center justify-center rounded-md border border-white/10 bg-zinc-800 text-[10px] text-zinc-500"
       aria-hidden
     >
       ⚽
@@ -72,7 +72,7 @@ function TeamLogo({
 function sortByPosition<
   T extends { position: string | null; player_name: string },
 >(rows: T[]): T[] {
-  return [...rows].sort((a, b) => {
+  return rows.toSorted((a, b) => {
     const pa = POS_ORDER[a.position ?? ""] ?? 9;
     const pb = POS_ORDER[b.position ?? ""] ?? 9;
     if (pa !== pb) return pa - pb;
@@ -84,8 +84,10 @@ function initialsFromName(fullName: string): string {
   return fullName
     .trim()
     .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0] ?? "")
+    .reduce<string[]>((acc, w) => {
+      if (w) acc.push(w[0] ?? "");
+      return acc;
+    }, [])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -115,11 +117,11 @@ function PlayerRosterAvatar({
   const url = pickPlayerPhotoUrl(imageUrl, cutoutUrl);
   const showImg = url !== "" && !broken;
   const ring =
-    "flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-800";
+    "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-800";
 
   if (showImg && isNextImageRemoteLogo(url)) {
     return (
-      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-zinc-800">
+      <div className="relative size-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-zinc-800">
         <Image
           src={url}
           alt=""
@@ -157,7 +159,7 @@ function PlayerRosterAvatar({
 
   return (
     <div className={ring} aria-hidden>
-      <User className="h-5 w-5 text-zinc-500" />
+      <User className="size-5 text-zinc-500" />
     </div>
   );
 }
@@ -318,11 +320,11 @@ export const MatchLineups = memo(function MatchLineups({
       <div className="mt-6 grid animate-pulse gap-3 md:grid-cols-2">
         {[0, 1].map((i) => (
           <div
-            key={i}
+            key={`lineup-skeleton-${i}`}
             className="rounded-2xl border border-white/10 bg-zinc-900 p-4"
           >
             <div className="mb-4 flex items-center gap-2">
-              <div className="h-7 w-7 rounded-md bg-zinc-800" />
+              <div className="size-7 rounded-md bg-zinc-800" />
               <div className="h-4 w-32 rounded-full bg-zinc-800" />
             </div>
             <div className="space-y-2">
@@ -346,7 +348,7 @@ export const MatchLineups = memo(function MatchLineups({
   if (!hasAny) {
     return (
       <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
-        <Users className="h-10 w-10 text-zinc-600" />
+        <Users className="size-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
           Les compos ne sont pas encore tombées. Le coach fait durer le
           suspense.
@@ -364,7 +366,7 @@ export const MatchLineups = memo(function MatchLineups({
       <section className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4">
         <header className="mb-4 flex items-center gap-2 border-b border-white/8 pb-3">
           <TeamLogo url={logo} label={team} />
-          <h3 className="line-clamp-2 min-w-0 flex-1 text-sm font-black uppercase leading-tight tracking-wide text-white">
+          <h3 className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold uppercase leading-tight tracking-wide text-white">
             {team}
           </h3>
         </header>

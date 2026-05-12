@@ -14,7 +14,7 @@ export default function PrivacyPage() {
           href="/"
           className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
           Accueil
         </Link>
 
@@ -22,14 +22,16 @@ export default function PrivacyPage() {
           <p className="text-[10px] font-black uppercase tracking-widest text-green-400 mb-1">
             Légal
           </p>
-          <h1 className="text-2xl font-black">Politique de confidentialité</h1>
+          <h1 className="text-2xl font-semibold">
+            Politique de confidentialité
+          </h1>
           <p className="mt-2 text-xs text-zinc-500">
             Dernière mise à jour : mai 2026
           </p>
         </div>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             1. Données collectées
           </h2>
           <p>
@@ -50,7 +52,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             2. Finalités du traitement
           </h2>
           <ul className="list-disc list-inside space-y-1 text-zinc-400">
@@ -62,7 +64,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             3. Durée de conservation
           </h2>
           <p>
@@ -74,7 +76,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">4. Vos droits</h2>
+          <h2 className="text-base font-semibold text-white">4. Vos droits</h2>
           <p>
             Conformément au RGPD (Règlement UE 2016/679), vous disposez des
             droits suivants :
@@ -92,27 +94,29 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">5. Sous-traitants</h2>
+          <h2 className="text-base font-semibold text-white">
+            5. Sous-traitants
+          </h2>
           <p>Nous utilisons les services tiers suivants :</p>
           <ul className="list-disc list-inside space-y-1 text-zinc-400">
             <li>
-              <strong className="text-white">Supabase</strong> — base de données
+              <strong className="text-white">Supabase</strong> : base de données
               et authentification (Singapour / UE)
             </li>
             <li>
-              <strong className="text-white">Vercel</strong> — hébergement
+              <strong className="text-white">Vercel</strong> : hébergement
               (États-Unis, avec transfert encadré par les clauses contractuelles
               types)
             </li>
             <li>
-              <strong className="text-white">Google</strong> — authentification
+              <strong className="text-white">Google</strong> : authentification
               OAuth
             </li>
           </ul>
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">6. Contact DPO</h2>
+          <h2 className="text-base font-semibold text-white">6. Contact DPO</h2>
           <p>
             Responsable du traitement : Rémi Valet
             <br />

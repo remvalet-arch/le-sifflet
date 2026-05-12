@@ -119,10 +119,10 @@ export function FriendButton({
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-green-500/20 py-3 text-sm font-bold text-green-400 transition hover:bg-red-500/20 hover:text-red-400 group"
       >
         <span className="group-hover:hidden flex items-center gap-2">
-          <UserCheck className="h-4 w-4" /> {t("friendAccepted")}
+          <UserCheck className="size-4" /> {t("friendAccepted")}
         </span>
         <span className="hidden group-hover:flex items-center gap-2">
-          <UserMinus className="h-4 w-4" /> {t("friendRemove")}
+          <UserMinus className="size-4" /> {t("friendRemove")}
         </span>
       </button>
     );
@@ -134,7 +134,7 @@ export function FriendButton({
         disabled
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-zinc-900 py-3 text-sm font-bold text-zinc-400"
       >
-        <Clock className="h-4 w-4" /> {t("friendPending")}
+        <Clock className="size-4" /> {t("friendPending")}
       </button>
     );
   }
@@ -144,7 +144,7 @@ export function FriendButton({
       onClick={handleAdd}
       className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-whistle py-3 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:brightness-110 active:scale-[0.98]"
     >
-      <UserPlus className="h-4 w-4" />
+      <UserPlus className="size-4" />
       {t("friendAdd")}
     </button>
   );

@@ -32,7 +32,7 @@ function useIsClient() {
 function PlayerAvatar({ player }: { player: PlayerForSelect }) {
   if (player.player_name === "CSC") {
     return (
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-sm font-black text-red-400">
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-sm font-black text-red-400">
         CSC
       </div>
     );
@@ -45,13 +45,13 @@ function PlayerAvatar({ player }: { player: PlayerForSelect }) {
         alt={player.player_name}
         width={48}
         height={48}
-        className="h-12 w-12 shrink-0 rounded-full border border-white/5 bg-zinc-800 object-cover"
+        className="size-12 shrink-0 rounded-full border border-white/5 bg-zinc-800 object-cover"
       />
     );
   }
   const init = player.player_name.substring(0, 2).toUpperCase();
   return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/5 bg-zinc-800 text-sm font-bold text-zinc-400">
+    <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/5 bg-zinc-800 text-sm font-bold text-zinc-400">
       {init}
     </div>
   );
@@ -149,15 +149,15 @@ export function PlayerPickerSheet({
             type="button"
             onClick={handleClose}
             aria-label={t("playerPickerClose")}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 active:bg-zinc-700"
+            className="flex size-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 active:bg-zinc-700"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
         {/* Search */}
         <div className="mx-4 mb-2 flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-zinc-800 px-3 py-2.5">
-          <Search className="h-4 w-4 shrink-0 text-zinc-500" />
+          <Search className="size-4 shrink-0 text-zinc-500" />
           <input
             type="text"
             aria-label={t("playerPickerSearch")}

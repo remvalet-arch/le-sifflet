@@ -68,7 +68,7 @@ export function VisionBoosterButton({
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-3 text-sm font-black text-indigo-400 transition hover:bg-indigo-500/20 active:scale-[0.98] disabled:opacity-50"
       >
         {loading ? (
-          <span className="animate-pulse">Activation...</span>
+          <span className="animate-pulse">Activation…</span>
         ) : (
           <>👁️ Activer Vision</>
         )}

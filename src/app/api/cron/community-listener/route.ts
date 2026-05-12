@@ -174,10 +174,10 @@ export async function GET(request: Request) {
         const data = (await res.json()) as {
           content: { type: string; text: string }[];
         };
-        const text = data.content
-          .filter((c) => c.type === "text")
-          .map((c) => c.text)
-          .join("");
+        let text = "";
+        for (const c of data.content) {
+          if (c.type === "text") text += c.text;
+        }
         const clean = text
           .replace(/^```(?:json)?\s*/i, "")
           .replace(/```\s*$/i, "")

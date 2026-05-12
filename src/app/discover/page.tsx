@@ -32,12 +32,12 @@ export default function DiscoverPage() {
       {/* Hero */}
       <section className="mx-auto max-w-2xl px-5 pb-16 pt-8 text-center sm:px-8">
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/8 px-3 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+          <span className="size-1.5 rounded-full bg-green-400" />
           <span className="text-[10px] font-black uppercase tracking-widest text-green-300/90">
             Football interactif
           </span>
         </div>
-        <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-black uppercase leading-tight tracking-tight text-white">
+        <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-semibold uppercase leading-tight tracking-tight text-white">
           Le football, en interactif.
         </h1>
         <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-zinc-400">

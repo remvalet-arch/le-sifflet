@@ -182,7 +182,8 @@ export function PronosticsHubClient({
   const pct = total > 0 ? (submittedCount / total) * 100 : 0;
   const [animatedPct, setAnimatedPct] = useState(0);
   useEffect(() => {
-    setTimeout(() => setAnimatedPct(pct), 0);
+    const id = setTimeout(() => setAnimatedPct(pct), 0);
+    return () => clearTimeout(id);
   }, [pct]);
 
   const countsForSelectedDay = (() => {
@@ -200,7 +201,7 @@ export function PronosticsHubClient({
   if (matches.length === 0) {
     return (
       <div className="space-y-3 rounded-2xl border border-dashed border-zinc-700 px-4 py-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-2xl">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-zinc-800 text-2xl">
           🎯
         </div>
         <div>
@@ -290,11 +291,10 @@ export function PronosticsHubClient({
       )}
       {selectedCompMap && (
         <div className="flex flex-col gap-2">
-          {Array.from(selectedCompMap.entries())
-            .filter(([compId]) =>
-              filterActive ? selectedCompIds.includes(compId) : true,
-            )
-            .map(([compId, groupMatches]) => {
+          {Array.from(selectedCompMap.entries()).map(
+            ([compId, groupMatches]) => {
+              if (filterActive && !selectedCompIds.includes(compId))
+                return null;
               const comp =
                 compId !== "__none__" ? competitionMap.get(compId) : null;
               const sectionKey: SectionKey = `${selectedDay}::${compId}`;
@@ -328,7 +328,7 @@ export function PronosticsHubClient({
                             alt={comp.name}
                             width={20}
                             height={20}
-                            className="h-5 w-5 shrink-0 object-contain"
+                            className="size-5 shrink-0 object-contain"
                           />
                         ) : (
                           <span className="shrink-0 text-sm">🏆</span>
@@ -358,9 +358,9 @@ export function PronosticsHubClient({
                         {sectionDone}/{sectionTotal}
                       </span>
                       {isOpen ? (
-                        <ChevronDown className="h-4 w-4 text-zinc-500" />
+                        <ChevronDown className="size-4 text-zinc-500" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-zinc-500" />
+                        <ChevronRight className="size-4 text-zinc-500" />
                       )}
                     </button>
                   </div>
@@ -391,7 +391,8 @@ export function PronosticsHubClient({
                   )}
                 </div>
               );
-            })}
+            },
+          )}
         </div>
       )}
     </div>

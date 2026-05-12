@@ -149,7 +149,7 @@ export function CreateLeagueWizard({
               onClick={step === 1 ? onClose : () => setStep(step - 1)}
               className="p-2 text-zinc-400 hover:text-white transition"
             >
-              <ArrowLeft className="h-6 w-6" />
+              <ArrowLeft className="size-6" />
             </button>
           ) : (
             <div className="w-10" />
@@ -162,7 +162,7 @@ export function CreateLeagueWizard({
             className="p-2 text-zinc-400 hover:text-white transition"
             aria-label={tCommon("close")}
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
@@ -195,8 +195,8 @@ export function CreateLeagueWizard({
         {/* Body */}
         <div className="flex-1 flex flex-col p-6 sm:px-8 sm:pb-8 justify-between">
           {step === 1 && (
-            <div className="flex flex-col items-center flex-1 justify-center space-y-8 animate-in fade-in">
-              <h2 className="text-3xl font-black text-white text-center">
+            <div className="flex flex-col items-center flex-1 justify-center gap-8 animate-in fade-in">
+              <h2 className="text-3xl font-semibold text-white text-center">
                 {t("wizardStep1Title")}
               </h2>
               <input
@@ -223,9 +223,9 @@ export function CreateLeagueWizard({
           )}
 
           {step === 2 && (
-            <div className="flex flex-col flex-1 space-y-6 animate-in fade-in slide-in-from-right-4">
+            <div className="flex flex-col flex-1 gap-6 animate-in fade-in slide-in-from-right-4">
               <div className="text-center">
-                <h2 className="text-2xl font-black text-white">
+                <h2 className="text-2xl font-semibold text-white">
                   {t("wizardStep2Title")}
                 </h2>
                 <p className="text-sm text-zinc-400 mt-2">
@@ -234,7 +234,7 @@ export function CreateLeagueWizard({
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="h-24 w-24 rounded-full bg-zinc-800 border-2 border-whistle flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(250,204,21,0.2)] mb-8 transition-transform">
+                <div className="size-24 rounded-full bg-zinc-800 border-2 border-whistle flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(250,204,21,0.2)] mb-8 transition-transform">
                   {logo}
                 </div>
 
@@ -261,10 +261,10 @@ export function CreateLeagueWizard({
           )}
 
           {step === 4 && createdSquad && (
-            <div className="flex flex-col flex-1 items-center space-y-6 animate-in fade-in">
+            <div className="flex flex-col flex-1 items-center gap-6 animate-in fade-in">
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="text-6xl">{logo}</div>
-                <h2 className="text-2xl font-black text-white">
+                <h2 className="text-2xl font-semibold text-white">
                   {t("wizardCelebTitle")}
                 </h2>
                 <p className="text-sm text-zinc-400">
@@ -297,12 +297,12 @@ export function CreateLeagueWizard({
               >
                 {copiedInvite ? (
                   <>
-                    <Check className="h-4 w-4 text-green-400" />
+                    <Check className="size-4 text-green-400" />
                     {t("wizardCelebCopied")}
                   </>
                 ) : (
                   <>
-                    <Copy className="h-4 w-4" />
+                    <Copy className="size-4" />
                     {t("wizardCelebCopyBtn")}
                   </>
                 )}
@@ -334,9 +334,9 @@ export function CreateLeagueWizard({
           )}
 
           {step === 3 && (
-            <div className="flex flex-col flex-1 space-y-6 animate-in fade-in slide-in-from-right-4">
+            <div className="flex flex-col flex-1 gap-6 animate-in fade-in slide-in-from-right-4">
               <div className="text-center">
-                <h2 className="text-2xl font-black text-white">
+                <h2 className="text-2xl font-semibold text-white">
                   {t("wizardStep3Title")}
                 </h2>
               </div>
@@ -347,13 +347,13 @@ export function CreateLeagueWizard({
                   className={`flex items-start gap-4 p-5 rounded-3xl border-2 text-left transition active:scale-95 ${mode === "classic" ? "border-whistle bg-whistle/10 shadow-[0_0_30px_rgba(250,204,21,0.1)]" : "border-zinc-800 bg-zinc-900"}`}
                 >
                   <div
-                    className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${mode === "classic" ? "bg-whistle text-zinc-950" : "bg-zinc-800 text-zinc-500"}`}
+                    className={`mt-1 flex size-10 shrink-0 items-center justify-center rounded-full ${mode === "classic" ? "bg-whistle text-zinc-950" : "bg-zinc-800 text-zinc-500"}`}
                   >
-                    <Target className="h-5 w-5" />
+                    <Target className="size-5" />
                   </div>
                   <div>
                     <h3
-                      className={`font-black text-lg ${mode === "classic" ? "text-whistle" : "text-white"}`}
+                      className={`font-semibold text-lg ${mode === "classic" ? "text-whistle" : "text-white"}`}
                     >
                       {t("wizardModeClassicName")}
                     </h3>
@@ -368,13 +368,13 @@ export function CreateLeagueWizard({
                   className={`flex items-start gap-4 p-5 rounded-3xl border-2 text-left transition active:scale-95 ${mode === "braquage" ? "border-purple-500 bg-purple-500/10 shadow-[0_0_30px_rgba(168,85,247,0.1)]" : "border-zinc-800 bg-zinc-900"}`}
                 >
                   <div
-                    className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${mode === "braquage" ? "bg-purple-500 text-white" : "bg-zinc-800 text-zinc-500"}`}
+                    className={`mt-1 flex size-10 shrink-0 items-center justify-center rounded-full ${mode === "braquage" ? "bg-purple-500 text-white" : "bg-zinc-800 text-zinc-500"}`}
                   >
-                    <Shuffle className="h-5 w-5" />
+                    <Shuffle className="size-5" />
                   </div>
                   <div>
                     <h3
-                      className={`font-black text-lg ${mode === "braquage" ? "text-purple-400" : "text-white"}`}
+                      className={`font-semibold text-lg ${mode === "braquage" ? "text-purple-400" : "text-white"}`}
                     >
                       {t("wizardMode1vs1Name")}
                     </h3>
@@ -394,7 +394,7 @@ export function CreateLeagueWizard({
                   t("wizardCreatingText")
                 ) : (
                   <>
-                    {t("wizardCreateButton")} <Users className="w-5 h-5 ml-1" />
+                    {t("wizardCreateButton")} <Users className="size-5 ml-1" />
                   </>
                 )}
               </button>

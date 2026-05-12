@@ -137,7 +137,7 @@ export function SquadDetailClient({
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <LoaderCircle className="h-8 w-8 animate-spin text-zinc-600" />
+        <LoaderCircle className="size-8 animate-spin text-zinc-600" />
       </div>
     );
   }
@@ -207,23 +207,23 @@ export function SquadDetailClient({
         href="/ligues"
         className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="size-4" />
         {t("myLeaguesBackLink")}
       </Link>
 
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-xl mt-4">
-        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-whistle/20 blur-3xl" />
+        <div className="absolute -top-20 -right-20 size-64 rounded-full bg-whistle/20 blur-3xl" />
 
         <p className="text-[10px] font-black uppercase tracking-widest text-whistle/80 relative z-10">
           {squad.is_private ? t("privateLabel") : t("publicLabel")}
         </p>
-        <h1 className="text-3xl font-black tracking-tight text-white relative z-10 mt-1 mb-4">
+        <h1 className="text-3xl font-semibold tracking-tight text-white relative z-10 mt-1 mb-4">
           {squad.name}
         </h1>
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
           <p className="flex flex-wrap items-center gap-3 text-sm font-bold text-green-400/90">
             <span className="inline-flex items-center gap-1.5 bg-green-500/10 px-3 py-1.5 rounded-xl border border-green-500/20">
-              <Wallet className="h-4 w-4" aria-hidden />
+              <Wallet className="size-4" aria-hidden />
               {t("cumulatedPoints")}{" "}
               <span className="font-black tabular-nums">
                 {total_xp_earned.toLocaleString(bcp47)} Points
@@ -238,9 +238,9 @@ export function SquadDetailClient({
               className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800/80 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 disabled:opacity-50 border border-white/5 backdrop-blur-md"
             >
               {nudging ? (
-                <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                <LoaderCircle className="size-3.5 animate-spin" />
               ) : (
-                <BellRing className="h-3.5 w-3.5 text-whistle" />
+                <BellRing className="size-3.5 text-whistle" />
               )}
               {t("nudgeButton")}
             </button>
@@ -276,7 +276,7 @@ export function SquadDetailClient({
           >
             {t("tabLocker")}
             {!vestiaireSeen && (
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-red-500 animate-pulse" />
             )}
           </TabsTrigger>
         </TabsList>

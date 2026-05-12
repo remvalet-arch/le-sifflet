@@ -102,17 +102,22 @@ export async function GET() {
     }
 
     const squadsPayload = (squads ?? []).map((s) => {
-      const members = membersInSquads
-        .filter((m) => m.squad_id === s.id)
-        .map((m) => {
-          const p = profileMap.get(m.user_id);
-          return {
-            user_id: m.user_id,
-            username: p?.username ?? "?",
-            xp: totalPointsMap.get(m.user_id) ?? 0,
-            sifflets_balance: p?.sifflets_balance ?? 0,
-          };
+      const members: {
+        user_id: string;
+        username: string;
+        xp: number;
+        sifflets_balance: number;
+      }[] = [];
+      for (const m of membersInSquads) {
+        if (m.squad_id !== s.id) continue;
+        const p = profileMap.get(m.user_id);
+        members.push({
+          user_id: m.user_id,
+          username: p?.username ?? "?",
+          xp: totalPointsMap.get(m.user_id) ?? 0,
+          sifflets_balance: p?.sifflets_balance ?? 0,
         });
+      }
       const pot_commun = members.reduce((sum, m) => sum + m.xp, 0);
       return {
         ...s,

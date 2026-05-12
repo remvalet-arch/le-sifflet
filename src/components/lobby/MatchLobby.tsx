@@ -66,7 +66,7 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   const trimmed = (url ?? "").trim();
   if (trimmed.startsWith("https://") && isNextImageRemoteLogoUrl(trimmed)) {
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
         <Image
           src={trimmed}
           alt={alt}
@@ -80,7 +80,7 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
   }
   if (trimmed.startsWith("http")) {
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
         <Image
           src={trimmed}
           alt={alt}
@@ -93,7 +93,7 @@ function LeagueBadge({ url, name }: { url: string | null; name: string }) {
     );
   }
   return (
-    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] text-zinc-500">
+    <span className="flex size-6 shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] text-zinc-500">
       ⚽
     </span>
   );
@@ -189,7 +189,7 @@ function LeagueSectionHeader({
     <div className="flex items-center justify-between gap-3 border-b-2 border-white/15 pb-3">
       <div className="flex min-w-0 items-center gap-2">
         <LeagueBadge url={group.badge} name={group.displayName} />
-        <h2 className="line-clamp-2 min-w-0 flex-1 text-sm font-black uppercase leading-tight tracking-wide text-chalk">
+        <h2 className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold uppercase leading-tight tracking-wide text-chalk">
           {group.displayName}
         </h2>
       </div>
@@ -377,12 +377,16 @@ export function MatchLobby({
   // Reorder tabs: preferred leagues first (after Direct), then the rest
   const orderedTabs = useMemo(() => {
     if (preferredLeagueApiIds.length === 0) return TABS;
-    const preferred = TOP_LEAGUES.filter((l) =>
-      preferredLeagueApiIds.includes(l.apiFootballLeagueId),
-    ).map((l) => ({ id: l.tabKey, label: l.label }));
-    const others = TOP_LEAGUES.filter(
-      (l) => !preferredLeagueApiIds.includes(l.apiFootballLeagueId),
-    ).map((l) => ({ id: l.tabKey, label: l.label }));
+    const preferred: { id: LobbyTabKey; label: string }[] = [];
+    const others: { id: LobbyTabKey; label: string }[] = [];
+    for (const l of TOP_LEAGUES) {
+      const entry = { id: l.tabKey as LobbyTabKey, label: l.label };
+      if (preferredLeagueApiIds.includes(l.apiFootballLeagueId)) {
+        preferred.push(entry);
+      } else {
+        others.push(entry);
+      }
+    }
     return [
       { id: "direct" as LobbyTabKey, label: "Direct" },
       ...preferred,
@@ -478,7 +482,7 @@ export function MatchLobby({
               href="/pronos"
               className="mt-6 flex h-12 items-center gap-2 rounded-xl bg-whistle px-6 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:bg-whistle/90 active:scale-95"
             >
-              <Target className="h-4 w-4" />
+              <Target className="size-4" />
               {t("makeMyPronos")}
             </Link>
             <div className="mt-2 flex w-full gap-2">

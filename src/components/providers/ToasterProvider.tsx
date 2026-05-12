@@ -12,7 +12,8 @@ function useSafeAreaTop(): number {
     document.body.appendChild(el);
     const computed = parseFloat(getComputedStyle(el).top) || 0;
     document.body.removeChild(el);
-    setTimeout(() => setTop(Math.max(computed + 8, 60)), 0);
+    const id = setTimeout(() => setTop(Math.max(computed + 8, 60)), 0);
+    return () => clearTimeout(id);
   }, []);
   return top;
 }

@@ -28,11 +28,11 @@ export default async function PressOutreachPage() {
         href="/admin/resolve"
         className="mb-6 flex items-center gap-1 text-sm text-zinc-500 hover:text-white"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="size-4" />
         Admin
       </Link>
 
-      <h1 className="mb-1 text-xl font-black text-white">Press Outreach</h1>
+      <h1 className="mb-1 text-xl font-semibold text-white">Press Outreach</h1>
       <p className="mb-6 text-sm text-zinc-500">
         Génère un email personnalisé pour chaque journaliste ou influenceur.
         Relis, ajuste en 2 min, envoie depuis ton Gmail.

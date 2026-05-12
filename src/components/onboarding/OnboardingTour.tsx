@@ -97,7 +97,7 @@ export function OnboardingTour() {
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px]" />
         <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-900 p-8 shadow-2xl animate-in fade-in zoom-in-95">
-          <h2 className="text-center text-xl font-bold text-white">
+          <h2 className="text-center text-xl font-semibold text-white">
             {t("skipConfirm")}
           </h2>
           <p className="mt-2 text-center text-sm text-zinc-400">
@@ -148,7 +148,7 @@ export function OnboardingTour() {
                 🏆
               </span>
             </div>
-            <h2 className="text-3xl font-bold uppercase tracking-tight text-white">
+            <h2 className="text-3xl font-semibold uppercase tracking-tight text-white">
               VAR TIME
             </h2>
             <p className="mt-1 text-xs font-black uppercase tracking-widest text-whistle">
@@ -189,7 +189,7 @@ export function OnboardingTour() {
               <p className="mb-1 text-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 {t("step2Subtitle")}
               </p>
-              <h2 className="mb-5 text-center text-xl font-bold text-white">
+              <h2 className="mb-5 text-center text-xl font-semibold text-white">
                 {t("step2Title")}
               </h2>
 
@@ -206,7 +206,7 @@ export function OnboardingTour() {
                 <div className="flex items-center justify-center gap-6">
                   <p className="text-sm font-black text-white">PSG</p>
                   <div className="text-center">
-                    <p className="text-3xl font-black text-white">1 — 1</p>
+                    <p className="text-3xl font-black text-white">1 : 1</p>
                     <p className="text-[10px] text-zinc-500">68&apos;</p>
                   </div>
                   <p className="text-sm font-black text-white">Real</p>
@@ -285,7 +285,7 @@ export function OnboardingTour() {
               </div>
 
               {/* Rules */}
-              <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                 {t("step2RulesTitle")}
               </h3>
               <ul className="mb-5 space-y-2">
@@ -329,7 +329,7 @@ export function OnboardingTour() {
 
           <ProgressDots current={3} />
 
-          <h2 className="mb-1 text-center text-xl font-bold text-white">
+          <h2 className="mb-1 text-center text-xl font-semibold text-white">
             {t("step3Title")}
           </h2>
           <p className="mb-5 text-center text-sm text-zinc-400">
@@ -375,7 +375,7 @@ export function OnboardingTour() {
                   className="text-xl font-black text-zinc-500"
                   aria-hidden="true"
                 >
-                  —
+                  :
                 </span>
                 <div className="flex-1 text-center">
                   <label className="mb-1 block text-xs font-black text-zinc-500">
@@ -414,7 +414,7 @@ export function OnboardingTour() {
                 className="mx-auto mb-4 size-16 text-green-400"
                 aria-hidden="true"
               />
-              <h3 className="text-2xl font-bold text-white">
+              <h3 className="text-2xl font-semibold text-white">
                 {t("step3SuccessTitle")}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-zinc-400">
@@ -425,7 +425,7 @@ export function OnboardingTour() {
                   className="text-2xl font-black text-white"
                   aria-label={`${homeScore} à ${awayScore}`}
                 >
-                  {homeScore} — {awayScore}
+                  {homeScore} · {awayScore}
                 </p>
                 <p className="mt-0.5 text-xs text-zinc-500">
                   PSG vs Real Madrid
@@ -459,7 +459,7 @@ export function OnboardingTour() {
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold uppercase tracking-tight text-white">
+            <h2 className="text-2xl font-semibold uppercase tracking-tight text-white">
               {t("step5Title")}
             </h2>
             <p className="mx-auto mt-3 max-w-[280px] text-sm leading-relaxed text-zinc-400">

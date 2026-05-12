@@ -20,8 +20,8 @@ export function MigrationBanner() {
 
     const dismissed = localStorage.getItem(STORAGE_KEY);
     if (!dismissed) {
-      setTimeout(() => setVisible(true), 0);
-      return;
+      const id = setTimeout(() => setVisible(true), 0);
+      return () => clearTimeout(id);
     }
     // Re-show if dismissed more than 7 days ago (stale flag cleanup)
     const dismissedAt = parseInt(dismissed, 10);
@@ -53,7 +53,7 @@ export function MigrationBanner() {
           aria-label={t("migrationClose")}
           className="mt-0.5 shrink-0 text-whistle/60 hover:text-whistle transition"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="size-3.5" />
         </button>
       </div>
     </div>

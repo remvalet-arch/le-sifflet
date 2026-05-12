@@ -49,9 +49,11 @@ export default async function MessagesPage() {
     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
     .eq("status", "accepted");
 
-  const friendIds = (friendRequests ?? [])
-    .map((fr) => (fr.sender_id === user.id ? fr.receiver_id : fr.sender_id))
-    .filter((id) => !threadPartnerIds.has(id));
+  const friendIds = (friendRequests ?? []).reduce<string[]>((acc, fr) => {
+    const id = fr.sender_id === user.id ? fr.receiver_id : fr.sender_id;
+    if (!threadPartnerIds.has(id)) acc.push(id);
+    return acc;
+  }, []);
 
   let friendsWithoutThread: { id: string; username: string }[] = [];
   if (friendIds.length > 0) {

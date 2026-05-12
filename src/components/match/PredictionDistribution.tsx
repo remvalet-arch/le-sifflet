@@ -57,9 +57,10 @@ export function PredictionDistribution({
   );
 
   useEffect(() => {
-    setTimeout(() => {
+    const id = setTimeout(() => {
       void fetchDistribution(scope);
     }, 0);
+    return () => clearTimeout(id);
   }, [scope, fetchDistribution]);
 
   // Realtime: refetch on new prono
@@ -81,7 +82,7 @@ export function PredictionDistribution({
       )
       .subscribe();
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [matchId, scope, fetchDistribution]);
 
@@ -91,7 +92,7 @@ export function PredictionDistribution({
     <div className="rounded-2xl border border-white/8 bg-zinc-900/60 p-4">
       {/* Header + scope toggle */}
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-zinc-400">
+        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
           {t("title")}
         </h3>
         <div className="flex items-center gap-1 rounded-xl border border-white/8 bg-zinc-800 p-0.5">

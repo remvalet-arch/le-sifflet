@@ -52,7 +52,8 @@ export function AlertDrawer({
   useEffect(() => {
     if (!open) {
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
-      setTimeout(() => setConfirmType(null), 0);
+      const id = setTimeout(() => setConfirmType(null), 0);
+      return () => clearTimeout(id);
     }
   }, [open]);
 
@@ -104,7 +105,7 @@ export function AlertDrawer({
 
         {isOnCooldown ? (
           <div className="mx-4 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-6 py-8 text-center">
-            <LoaderCircle className="h-8 w-8 animate-spin text-yellow-400" />
+            <LoaderCircle className="size-8 animate-spin text-yellow-400" />
             <p className="font-black uppercase tracking-wide text-white">
               L&apos;arbitre consulte la VAR…
             </p>
@@ -147,7 +148,7 @@ export function AlertDrawer({
                             : emoji}
                     </span>
                     {isPending ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin text-zinc-400" />
+                      <LoaderCircle className="size-5 animate-spin text-zinc-400" />
                     ) : (
                       <span
                         className={`text-base font-black uppercase tracking-wide ${
@@ -192,7 +193,7 @@ export function AlertDrawer({
                           : emoji}
                   </span>
                   {isPending ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin text-zinc-400" />
+                    <LoaderCircle className="size-4 animate-spin text-zinc-400" />
                   ) : (
                     <span
                       className={`px-2 text-center text-[11px] font-black uppercase leading-tight ${

@@ -10,8 +10,10 @@ export async function generateMetadata() {
 }
 
 export default async function LiguesPage() {
-  const supabase = await createClient();
-  const t = await getTranslations("Ligues");
+  const [supabase, t] = await Promise.all([
+    createClient(),
+    getTranslations("Ligues"),
+  ]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -19,7 +21,7 @@ export default async function LiguesPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 bg-zinc-950 px-4 py-6">
-      <h1 className="text-xl font-black uppercase tracking-wide text-white">
+      <h1 className="text-xl font-semibold uppercase tracking-wide text-white">
         {t("pageTitle")}
       </h1>
       <p className="mt-1 text-xs font-semibold text-zinc-500">

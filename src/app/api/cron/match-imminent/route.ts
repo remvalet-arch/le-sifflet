@@ -107,15 +107,14 @@ export async function GET(request: Request) {
     (alreadyLogged ?? []).map((r) => `${r.user_id}:${r.match_id}`),
   );
 
-  // Budget check
-  const budgetExceeded = await getBudgetExceededUsers(admin, allUserIds);
-
-  // Pronos for prono-aware messaging
-  const { data: pronosData } = await admin
-    .from("pronos")
-    .select("user_id, match_id")
-    .in("match_id", matchIds)
-    .in("user_id", allUserIds);
+  const [budgetExceeded, { data: pronosData }] = await Promise.all([
+    getBudgetExceededUsers(admin, allUserIds),
+    admin
+      .from("pronos")
+      .select("user_id, match_id")
+      .in("match_id", matchIds)
+      .in("user_id", allUserIds),
+  ]);
 
   const pronoKey = new Set(
     (pronosData ?? []).map((p) => `${p.user_id}:${p.match_id}`),
@@ -127,11 +126,14 @@ export async function GET(request: Request) {
   for (const profile of profiles) {
     if (budgetExceeded.has(profile.id)) continue;
 
+    const prefCompSet = profile.preferred_competitions?.length
+      ? new Set(profile.preferred_competitions)
+      : null;
+
     const eligible = activeMatches.filter((m) => {
       if (notifiedKey.has(`${profile.id}:${m.id}`)) return false;
-      if (m.competition_id && profile.preferred_competitions?.length) {
-        if (!profile.preferred_competitions.includes(m.competition_id))
-          return false;
+      if (m.competition_id && prefCompSet) {
+        if (!prefCompSet.has(m.competition_id)) return false;
       }
       return true;
     });

@@ -18,17 +18,17 @@ export async function resolveEvent(
 }> {
   const admin = createAdminClient();
 
-  // Récupère le type et le match avant résolution (pour le chaining)
-  const { data: event } = await admin
-    .from("market_events")
-    .select("type, match_id")
-    .eq("id", eventId)
-    .single();
-
-  const { data, error } = await admin.rpc("resolve_event_parimutuel", {
-    p_event_id: eventId,
-    p_result: result,
-  });
+  const [{ data: event }, { data, error }] = await Promise.all([
+    admin
+      .from("market_events")
+      .select("type, match_id")
+      .eq("id", eventId)
+      .single(),
+    admin.rpc("resolve_event_parimutuel", {
+      p_event_id: eventId,
+      p_result: result,
+    }),
+  ]);
   if (error) throw new Error(error.message);
 
   // Annule le cooldown VAR du match pour permettre une nouvelle alerte immédiate

@@ -3,15 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import JoinSquadButton from "./JoinSquadButton";
 
-export const metadata = { title: "Rejoindre une ligue — VAR TIME" };
+export const metadata = { title: "Rejoindre une ligue · VAR TIME" };
 
 export default async function JoinPage({
   params,
 }: {
   params: Promise<{ code: string }>;
 }) {
-  const { code } = await params;
-  const supabase = await createClient();
+  const [{ code }, supabase] = await Promise.all([params, createClient()]);
 
   // Resolve squad from invite code (uses RPC so RLS doesn't block it)
   const { data: rows } = await supabase.rpc("squad_by_invite_code", {
@@ -24,7 +23,7 @@ export default async function JoinPage({
       <main className="flex min-h-[100dvh] flex-col items-center justify-center bg-zinc-950 px-6">
         <div className="w-full max-w-sm text-center">
           <p className="text-6xl">🚫</p>
-          <h1 className="mt-4 text-2xl font-black uppercase tracking-tight text-white">
+          <h1 className="mt-4 text-2xl font-semibold uppercase tracking-tight text-white">
             Lien invalide
           </h1>
           <p className="mt-2 text-sm text-zinc-400">
@@ -52,7 +51,7 @@ export default async function JoinPage({
         <div className="w-full max-w-sm">
           <div className="rounded-3xl border border-white/10 bg-zinc-900 p-8 text-center shadow-xl">
             <p className="text-5xl">⚽</p>
-            <h1 className="mt-4 text-2xl font-black uppercase tracking-tight text-white">
+            <h1 className="mt-4 text-2xl font-semibold uppercase tracking-tight text-white">
               Tu es invité !
             </h1>
             <p className="mt-2 text-sm text-zinc-400">Rejoins la ligue</p>
@@ -68,26 +67,25 @@ export default async function JoinPage({
             </Link>
           </div>
           <p className="mt-6 text-center text-[10px] text-zinc-600">
-            VAR TIME — Pronostics foot en temps réel · Gratuit
+            VAR TIME · Pronostics foot en temps réel · Gratuit
           </p>
         </div>
       </main>
     );
   }
 
-  // Check if already a member
-  const { data: existing } = await supabase
-    .from("squad_members")
-    .select("user_id")
-    .eq("squad_id", squad.id)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  // Count current members
-  const { count: memberCount } = await supabase
-    .from("squad_members")
-    .select("*", { count: "exact", head: true })
-    .eq("squad_id", squad.id);
+  const [{ data: existing }, { count: memberCount }] = await Promise.all([
+    supabase
+      .from("squad_members")
+      .select("user_id")
+      .eq("squad_id", squad.id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("squad_members")
+      .select("*", { count: "exact", head: true })
+      .eq("squad_id", squad.id),
+  ]);
 
   if (existing) {
     redirect(`/ligues/${squad.id}`);
@@ -108,7 +106,7 @@ export default async function JoinPage({
           <p className="mt-4 text-xs font-black uppercase tracking-widest text-zinc-500">
             Invitation ligue privée
           </p>
-          <h1 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
+          <h1 className="mt-2 text-2xl font-semibold uppercase tracking-tight text-white">
             {squad.name}
           </h1>
           <p className="mt-3 text-sm text-zinc-400">
@@ -116,7 +114,7 @@ export default async function JoinPage({
             <span className="font-bold text-white">
               {myProfile?.username ?? "arbitre"}
             </span>{" "}
-            — rejoins ce vestiaire pour affronter tes potes !
+            : rejoins ce vestiaire pour affronter tes potes !
           </p>
           {memberCount !== null && memberCount > 0 && (
             <p className="mt-2 text-xs text-zinc-500">

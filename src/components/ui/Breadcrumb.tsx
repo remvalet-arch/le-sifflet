@@ -20,10 +20,10 @@ export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
       {items.map((item, i) => {
         const isLast = i === items.length - 1;
         return (
-          <span key={i} className="flex items-center gap-1">
+          <span key={item.label ?? i} className="flex items-center gap-1">
             {i > 0 && (
               <ChevronRight
-                className="h-3 w-3 shrink-0 text-zinc-600"
+                className="size-3 shrink-0 text-zinc-600"
                 aria-hidden
               />
             )}

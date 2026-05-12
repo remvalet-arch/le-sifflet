@@ -25,7 +25,8 @@ export function LiveRoomTutorial() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!localStorage.getItem(STORAGE_KEY)) {
-      setTimeout(() => setVisible(true), 0);
+      const id = setTimeout(() => setVisible(true), 0);
+      return () => clearTimeout(id);
     }
   }, []);
 
@@ -56,7 +57,7 @@ export function LiveRoomTutorial() {
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
               <div
-                key={i}
+                key={`step-`}
                 className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-whistle" : "w-1.5 bg-zinc-700"}`}
               />
             ))}
@@ -67,15 +68,15 @@ export function LiveRoomTutorial() {
             className="rounded-lg p-1 text-zinc-600 hover:text-zinc-400 transition"
             aria-label="Fermer le tutoriel"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
         <div className="text-center space-y-3">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-3xl">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-zinc-800 text-3xl">
             {current.emoji}
           </div>
-          <h2 className="text-lg font-black text-white">{current.title}</h2>
+          <h2 className="text-lg font-semibold text-white">{current.title}</h2>
           <p className="text-sm text-zinc-400 leading-relaxed">
             {current.body}
           </p>

@@ -23,7 +23,7 @@ export type MarketEventType =
   | "corner"
   | "stoppage_ht"
   | "stoppage_ft";
-export type MarketEventStatus = "open" | "closed" | "locked" | "resolved";
+type MarketEventStatus = "open" | "closed" | "locked" | "resolved";
 export type BetStatus = "pending" | "won" | "lost";
 export type AlertActionType =
   | "penalty_check"

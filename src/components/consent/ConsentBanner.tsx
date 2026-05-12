@@ -13,7 +13,8 @@ export function ConsentBanner() {
 
   useEffect(() => {
     restoreConsent();
-    setTimeout(() => setShow(getConsentStatus() === "pending"), 0);
+    const id = setTimeout(() => setShow(getConsentStatus() === "pending"), 0);
+    return () => clearTimeout(id);
   }, []);
 
   if (!show) return null;

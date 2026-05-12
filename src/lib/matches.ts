@@ -56,7 +56,7 @@ const STATUS_ORDER: Record<MatchStatus, number> = {
 export function sortMatchesForLobby<
   T extends Pick<MatchRow, "status" | "start_time">,
 >(matches: T[]): T[] {
-  return [...matches].sort((a, b) => {
+  return matches.toSorted((a, b) => {
     const oa = STATUS_ORDER[a.status] ?? 99;
     const ob = STATUS_ORDER[b.status] ?? 99;
     if (oa !== ob) return oa - ob;

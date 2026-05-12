@@ -14,7 +14,10 @@ export default function ShopLoading() {
       {/* Tab bar */}
       <div className="mt-5 flex gap-2">
         {[0, 1].map((i) => (
-          <div key={i} className="h-9 w-28 rounded-full bg-zinc-800" />
+          <div
+            key={`skeleton-`}
+            className="h-9 w-28 rounded-full bg-zinc-800"
+          />
         ))}
       </div>
 
@@ -22,10 +25,10 @@ export default function ShopLoading() {
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
-            key={i}
+            key={`skeleton-`}
             className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-zinc-900 p-4"
           >
-            <div className="mx-auto h-16 w-16 rounded-full bg-zinc-800" />
+            <div className="mx-auto size-16 rounded-full bg-zinc-800" />
             <SkeletonBox h="h-4" w="w-3/4 mx-auto" />
             <SkeletonBox h="h-3" w="w-1/2 mx-auto" />
             <div className="h-9 w-full rounded-xl bg-zinc-800" />

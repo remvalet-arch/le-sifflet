@@ -64,7 +64,7 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
     <section className="mt-2">
       <div className="mb-3">
         <div className="mb-1.5 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
             {t("myTrophies")}
           </h2>
           <span className="text-[10px] font-black text-zinc-400">
@@ -100,9 +100,9 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
                 <div
                   className={`relative ${isUnlocked ? `rounded-full ring-2 ${ring} animate-pulse` : "grayscale opacity-40"}`}
                 >
-                  <Icon className="h-7 w-7" />
+                  <Icon className="size-7" />
                   {!isUnlocked && (
-                    <Lock className="absolute -right-1.5 -bottom-1.5 h-3.5 w-3.5 text-zinc-500" />
+                    <Lock className="absolute -right-1.5 -bottom-1.5 size-3.5 text-zinc-500" />
                   )}
                 </div>
                 <p

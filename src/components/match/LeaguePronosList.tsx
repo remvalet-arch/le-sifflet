@@ -30,15 +30,15 @@ export function LeaguePronosList({
   if (!hasStarted) {
     return (
       <div className="mx-4 mt-6 flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-zinc-900/50 p-8 text-center shadow-lg">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800">
-          <Lock className="h-6 w-6 text-zinc-500" />
+        <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-zinc-800">
+          <Lock className="size-6 text-zinc-500" />
         </div>
-        <h3 className="mb-2 text-lg font-black tracking-tight text-white">
+        <h3 className="mb-2 text-lg font-semibold tracking-tight text-white">
           Vestiaire Verrouillé
         </h3>
         <p className="max-w-xs text-sm text-zinc-400">
           Les pronos de tes amis seront dévoilés ici au coup d&apos;envoi pour
-          éviter la triche. Suspense... 🤫
+          éviter la triche. Suspense… 🤫
         </p>
       </div>
     );
@@ -125,16 +125,16 @@ export function LeaguePronosList({
         Les pronos de tes ligues
       </p>
 
-      {visible.map((user, i) => (
+      {visible.map((user) => (
         <div
-          key={i}
+          key={user.username}
           className="flex items-center gap-2.5 rounded-xl px-3 py-2 transition hover:bg-zinc-900/60"
         >
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800 text-sm">
+          <div className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800 text-sm">
             {user.avatar_url ? (
               <span aria-hidden="true">{user.avatar_url}</span>
             ) : (
-              <User className="h-3 w-3 text-zinc-500" aria-hidden="true" />
+              <User className="size-3 text-zinc-500" aria-hidden="true" />
             )}
           </div>
           <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">

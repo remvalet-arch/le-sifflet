@@ -17,7 +17,7 @@ async function canPost(
   return (count ?? 0) < SYSTEM_MSG_RATE_LIMIT;
 }
 
-export async function postSquadSystemMessage(
+async function postSquadSystemMessage(
   squadId: string,
   content: string,
 ): Promise<void> {

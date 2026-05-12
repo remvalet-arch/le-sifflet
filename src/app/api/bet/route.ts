@@ -6,13 +6,6 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 const IMPLIED_ODDS_TOLERANCE = 0.03;
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return errorResponse("Non authentifié", 401);
-
   const body = (await request.json()) as {
     event_id?: string;
     chosen_option?: string;
@@ -51,6 +44,13 @@ export async function POST(request: NextRequest) {
   if (typeof multiplier !== "number" || multiplier < 1.0) {
     return errorResponse("Multiplicateur invalide", 400);
   }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return errorResponse("Non authentifié", 401);
 
   const { data: event } = await supabase
     .from("market_events")

@@ -56,7 +56,8 @@ export default function SettingsClient({
   useEffect(() => {
     const saved = localStorage.getItem("theme") as Theme | null;
     if (saved === "light" || saved === "high-contrast") {
-      setTimeout(() => setThemeState(saved), 0);
+      const id = setTimeout(() => setThemeState(saved), 0);
+      return () => clearTimeout(id);
     }
   }, []);
 
@@ -127,15 +128,15 @@ export default function SettingsClient({
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-      <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+      <h1 className="text-2xl font-semibold uppercase tracking-tight text-white">
         {t("title")}
       </h1>
       <p className="mt-1 text-sm text-zinc-400">{t("subtitle")}</p>
 
       {/* Section Pari rapide */}
       <section className="mt-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          <Zap className="h-3 w-3" />
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <Zap className="size-3" />
           {t("quickBetTitle")}
         </h2>
         <div className="rounded-2xl border border-white/8 bg-zinc-900 p-5">
@@ -203,8 +204,8 @@ export default function SettingsClient({
 
       {/* Section Streak Freeze */}
       <section className="mt-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          <Shield className="h-3 w-3" />
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <Shield className="size-3" />
           {t("streakFreezeTitle")}
         </h2>
         <div className="rounded-2xl border border-white/8 bg-zinc-900 p-5">
@@ -245,8 +246,8 @@ export default function SettingsClient({
 
       {/* Section Notifications */}
       <section className="mt-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          <Bell className="h-3 w-3" />
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <Bell className="size-3" />
           Notifications
         </h2>
         <Link
@@ -258,17 +259,17 @@ export default function SettingsClient({
               Gérer les notifications
             </p>
             <p className="mt-0.5 text-xs leading-relaxed text-zinc-400">
-              VAR, pronos, pré-match, bilan quotidien — configure chaque type.
+              VAR, pronos, pré-match, bilan quotidien : configure chaque type.
             </p>
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
+          <ChevronRight className="size-4 shrink-0 text-zinc-500" />
         </Link>
       </section>
 
       {/* Section Apparence */}
       <section className="mt-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          <Palette className="h-3 w-3" />
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <Palette className="size-3" />
           {t("themeTitle")}
         </h2>
         <div className="rounded-2xl border border-white/8 bg-zinc-900 p-5">
@@ -301,8 +302,8 @@ export default function SettingsClient({
 
       {/* Section Intro */}
       <section className="mt-6">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          <RefreshCw className="h-3 w-3" />
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <RefreshCw className="size-3" />
           {t("onboardingReplay")}
         </h2>
         <button
@@ -319,14 +320,14 @@ export default function SettingsClient({
               {t("onboardingReplayDesc")}
             </p>
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
+          <ChevronRight className="size-4 shrink-0 text-zinc-500" />
         </button>
       </section>
 
       {/* Section Compte */}
       <section className="mt-6 mb-8">
-        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          <LogOut className="h-3 w-3" />
+        <h2 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <LogOut className="size-3" />
           Compte
         </h2>
         <form action={signOut}>
@@ -334,7 +335,7 @@ export default function SettingsClient({
             type="submit"
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-transparent py-3 text-sm font-black text-red-400 transition hover:bg-red-500/10 active:scale-[0.98]"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="size-4" />
             Se déconnecter
           </button>
         </form>

@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/logger";
 
-export type AuditActionType =
+type AuditActionType =
   | "resolve_event"
   | "force_finish_match"
   | "sync_matches"

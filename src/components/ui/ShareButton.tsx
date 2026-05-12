@@ -69,7 +69,7 @@ export function ShareButton({
         onClick={handleShare}
         className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800/80 px-3 py-2 text-xs font-black text-zinc-300 transition hover:bg-zinc-700 border border-white/5 backdrop-blur-md"
       >
-        <Share2 className="h-3.5 w-3.5 text-whistle" />
+        <Share2 className="size-3.5 text-whistle" />
         {label}
       </button>
 
@@ -82,7 +82,7 @@ export function ShareButton({
             onClick={() => setShowMenu(false)}
             className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 hover:text-white"
           >
-            <MessageSquare className="h-4 w-4 shrink-0 text-green-400" />
+            <MessageSquare className="size-4 shrink-0 text-green-400" />
             {labelWhatsApp}
           </a>
           <a
@@ -90,7 +90,7 @@ export function ShareButton({
             onClick={() => setShowMenu(false)}
             className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 hover:text-white"
           >
-            <MessageSquare className="h-4 w-4 shrink-0 text-blue-400" />
+            <MessageSquare className="size-4 shrink-0 text-blue-400" />
             {labelSms}
           </a>
           <button
@@ -99,9 +99,9 @@ export function ShareButton({
             className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 hover:text-white"
           >
             {copied ? (
-              <Check className="h-4 w-4 shrink-0 text-green-400" />
+              <Check className="size-4 shrink-0 text-green-400" />
             ) : (
-              <Copy className="h-4 w-4 shrink-0" />
+              <Copy className="size-4 shrink-0" />
             )}
             {copied ? labelCopied : labelCopy}
           </button>

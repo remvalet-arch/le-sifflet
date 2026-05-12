@@ -47,7 +47,7 @@ export default function JoinSquadButton({
       className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 font-black text-zinc-900 transition hover:bg-yellow-300 disabled:opacity-60 active:scale-95"
     >
       {loading ? (
-        <LoaderCircle className="h-5 w-5 animate-spin" />
+        <LoaderCircle className="size-5 animate-spin" />
       ) : (
         "Rejoindre le vestiaire ⚽"
       )}

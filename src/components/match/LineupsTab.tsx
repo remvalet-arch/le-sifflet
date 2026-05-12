@@ -27,7 +27,7 @@ export function LineupsTab({ matchId, teamHome, teamAway }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+        <div className="size-8 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
       </div>
     );
   }

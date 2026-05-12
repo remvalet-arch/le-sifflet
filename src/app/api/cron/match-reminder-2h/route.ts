@@ -66,14 +66,15 @@ export async function GET(request: Request) {
     if (!profiles?.length) continue;
 
     const competitionId = match.competition_id;
-    let eligibleUserIds = profiles
-      .filter((p) => {
-        if (!competitionId) return true;
+    let eligibleUserIds: string[] = [];
+    for (const p of profiles) {
+      if (competitionId) {
         const prefs = p.preferred_competitions;
-        if (!prefs || prefs.length === 0) return true;
-        return prefs.includes(competitionId);
-      })
-      .map((p) => p.id);
+        if (prefs && prefs.length > 0 && !new Set(prefs).has(competitionId))
+          continue;
+      }
+      eligibleUserIds.push(p.id);
+    }
 
     if (eligibleUserIds.length === 0) continue;
 

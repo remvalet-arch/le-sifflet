@@ -234,17 +234,17 @@ export function ProfileEditModal({
         <div className="flex items-center justify-between px-5 py-4">
           <h2
             id="profile-edit-title"
-            className="text-base font-black text-white"
+            className="text-base font-semibold text-white"
           >
             {te("title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white"
+            className="flex size-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white"
             aria-label={te("closeAriaLabel")}
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
@@ -303,7 +303,7 @@ export function ProfileEditModal({
                     {locked ? (
                       <>
                         <span className="opacity-30">{emoji}</span>
-                        <Lock className="absolute bottom-1 right-1 h-2.5 w-2.5 text-zinc-500" />
+                        <Lock className="absolute bottom-1 right-1 size-2.5 text-zinc-500" />
                       </>
                     ) : (
                       emoji
@@ -375,7 +375,7 @@ export function ProfileEditModal({
                       alt={teamName ?? ""}
                       width={28}
                       height={28}
-                      className="h-7 w-7 object-contain"
+                      className="size-7 object-contain"
                     />
                   ) : (
                     <span className="text-lg">⚽</span>
@@ -400,7 +400,7 @@ export function ProfileEditModal({
 
             {/* Recherche */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
               <input
                 type="text"
                 value={teamSearch}
@@ -409,7 +409,7 @@ export function ProfileEditModal({
                 className="w-full rounded-xl border border-white/10 bg-zinc-900 py-3 pl-9 pr-4 text-sm text-white placeholder-zinc-600 outline-none focus:border-whistle"
               />
               {searchLoading && (
-                <LoaderCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-zinc-500" />
+                <LoaderCircle className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-zinc-500" />
               )}
             </div>
 
@@ -434,10 +434,10 @@ export function ProfileEditModal({
                           alt={t.name}
                           width={24}
                           height={24}
-                          className="h-6 w-6 shrink-0 object-contain"
+                          className="size-6 shrink-0 object-contain"
                         />
                       ) : (
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-base">
+                        <span className="flex size-6 shrink-0 items-center justify-center text-base">
                           ⚽
                         </span>
                       )}
@@ -445,7 +445,7 @@ export function ProfileEditModal({
                         {t.name}
                       </span>
                       {teamId === t.id && (
-                        <Check className="h-4 w-4 text-whistle" />
+                        <Check className="size-4 text-whistle" />
                       )}
                     </button>
                   </li>
@@ -469,7 +469,7 @@ export function ProfileEditModal({
             className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-whistle font-black text-pitch-900 transition active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <LoaderCircle className="size-4 animate-spin" />
             ) : (
               te("saveBtnLabel")
             )}

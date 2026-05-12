@@ -69,7 +69,7 @@ export function InviteSheet({ inviteCode, squadName, onClose }: Props) {
             </p>
             <h2
               id="invite-sheet-title"
-              className="mt-0.5 text-lg font-black text-white"
+              className="mt-0.5 text-lg font-semibold text-white"
             >
               {squadName}
             </h2>
@@ -78,9 +78,9 @@ export function InviteSheet({ inviteCode, squadName, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
+            className="flex size-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
@@ -111,11 +111,11 @@ export function InviteSheet({ inviteCode, squadName, onClose }: Props) {
             onClick={copyLink}
             className="flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-4 py-3.5 text-left transition hover:bg-zinc-800 active:scale-[0.99]"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800">
               {copiedLink ? (
-                <Check className="h-4 w-4 text-green-400" />
+                <Check className="size-4 text-green-400" />
               ) : (
-                <Link2 className="h-4 w-4 text-whistle" />
+                <Link2 className="size-4 text-whistle" />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -129,11 +129,11 @@ export function InviteSheet({ inviteCode, squadName, onClose }: Props) {
             onClick={copyCode}
             className="flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-4 py-3.5 text-left transition hover:bg-zinc-800 active:scale-[0.99]"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800">
               {copiedCode ? (
-                <Check className="h-4 w-4 text-green-400" />
+                <Check className="size-4 text-green-400" />
               ) : (
-                <QrCode className="h-4 w-4 text-whistle" />
+                <QrCode className="size-4 text-whistle" />
               )}
             </div>
             <div>

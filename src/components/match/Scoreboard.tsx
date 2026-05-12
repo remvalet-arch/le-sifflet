@@ -50,7 +50,7 @@ function TeamCrest({
   const isUrl = logo?.startsWith("http");
   return (
     <div
-      className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-sm"
+      className="flex size-12 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-sm"
       style={{ backgroundColor: isUrl ? "transparent" : (color ?? "#3f3f46") }}
     >
       {isUrl ? (
@@ -59,7 +59,7 @@ function TeamCrest({
           alt=""
           width={40}
           height={40}
-          className="h-10 w-10 object-contain"
+          className="size-10 object-contain"
           unoptimized
         />
       ) : logo ? (
@@ -109,7 +109,9 @@ export function Scoreboard({ match }: { match: MatchRow }) {
           {showScore ? (
             <span className="text-4xl font-black tabular-nums tracking-tight text-white">
               {match.home_score}
-              <span className="mx-2 text-2xl font-bold text-white/30">—</span>
+              <span className="mx-2 text-2xl font-bold text-white/30">
+                {"—"}
+              </span>
               {match.away_score}
             </span>
           ) : (
@@ -129,9 +131,9 @@ export function Scoreboard({ match }: { match: MatchRow }) {
       {/* Status */}
       <div className="mt-2.5 flex items-center justify-center gap-1.5">
         {inProgress && match.status !== "half_time" && (
-          <span className="relative flex h-2 w-2 shrink-0">
+          <span className="relative flex size-2 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+            <span className="relative inline-flex size-2 rounded-full bg-red-500" />
           </span>
         )}
         <span

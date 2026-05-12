@@ -14,7 +14,7 @@ export default function CguPage() {
           href="/"
           className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-white"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
           Accueil
         </Link>
 
@@ -22,7 +22,7 @@ export default function CguPage() {
           <p className="text-[10px] font-black uppercase tracking-widest text-green-400 mb-1">
             Légal
           </p>
-          <h1 className="text-2xl font-black">
+          <h1 className="text-2xl font-semibold">
             Conditions Générales d&apos;Utilisation
           </h1>
           <p className="mt-2 text-xs text-zinc-500">
@@ -31,7 +31,7 @@ export default function CguPage() {
         </div>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">1. Objet</h2>
+          <h2 className="text-base font-semibold text-white">1. Objet</h2>
           <p>
             VAR Time est une application de jeu de prédiction sportive gratuite.
             Les présentes CGU régissent l&apos;utilisation du service accessible
@@ -40,7 +40,7 @@ export default function CguPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             2. Accès au service
           </h2>
           <p>
@@ -51,7 +51,9 @@ export default function CguPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">3. Nature du jeu</h2>
+          <h2 className="text-base font-semibold text-white">
+            3. Nature du jeu
+          </h2>
           <p>
             VAR Time est un jeu de simulation gratuit. Les &laquo; Sifflets
             &raquo; sont une monnaie virtuelle fictive sans aucune valeur
@@ -62,7 +64,7 @@ export default function CguPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">
+          <h2 className="text-base font-semibold text-white">
             4. Données personnelles
           </h2>
           <p>
@@ -77,7 +79,9 @@ export default function CguPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">5. Responsabilité</h2>
+          <h2 className="text-base font-semibold text-white">
+            5. Responsabilité
+          </h2>
           <p>
             VAR Time est fourni &laquo; en l&apos;état &raquo; sans garantie de
             disponibilité continue. Nous nous réservons le droit de modifier ou
@@ -86,7 +90,7 @@ export default function CguPage() {
         </section>
 
         <section className="space-y-4 text-sm text-zinc-300 leading-relaxed">
-          <h2 className="text-base font-black text-white">6. Contact</h2>
+          <h2 className="text-base font-semibold text-white">6. Contact</h2>
           <p>Pour toute question : rem.valet@gmail.com</p>
         </section>
       </div>
