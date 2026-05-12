@@ -8,9 +8,10 @@ import type { MatchStatus } from "@/types/database";
 import { isAdminRole } from "@/lib/constants/permissions";
 
 // ── Ligues autorisées MVP ─────────────────────────────────────────────────────
-// Ligue 1 : 4334 | Champions League : 4480
-// TODO CDM 2026 : 4362
-const MVP_LEAGUES = new Set(["4334", "4480"]);
+// Ligue 1 : 4334 | Champions League : 4480 | CDM 2026 : 4362 (TODO)
+function isMvpLeague(id: string): boolean {
+  return id === "4334" || id === "4480";
+}
 
 // ── Mappings ──────────────────────────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ export async function syncMatchData(eventId: string) {
   if (!event)
     throw new Error("Événement introuvable — vérifie l'ID TheSportsDB");
 
-  if (!MVP_LEAGUES.has(event.idLeague)) {
+  if (!isMvpLeague(event.idLeague)) {
     throw new Error(
       "Compétition non supportée pour le MVP (Ligue 1 ou Champions League uniquement)",
     );

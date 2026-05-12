@@ -214,7 +214,7 @@ export const MatchStats = memo(function MatchStats({
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [matchId, fetchStats]);
 
@@ -256,7 +256,7 @@ export const MatchStats = memo(function MatchStats({
   if (loading || syncing) {
     return (
       <div className="mt-6 flex flex-col items-center gap-3 px-4 pb-10 text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-whistle" />
+        <div className="mx-auto size-8 animate-spin rounded-full border-2 border-zinc-600 border-t-whistle" />
         {syncing && (
           <p className="text-xs font-bold text-zinc-500">
             Récupération des archives du match…
@@ -269,7 +269,7 @@ export const MatchStats = memo(function MatchStats({
   if (!hasStats) {
     return (
       <div className="mt-6 flex flex-col items-center gap-3 px-4 pb-8 text-center">
-        <BarChart2 className="h-10 w-10 text-zinc-700" strokeWidth={1.5} />
+        <BarChart2 className="size-10 text-zinc-700" strokeWidth={1.5} />
         <p className="text-sm font-bold text-zinc-500">
           {isUpcoming
             ? "Les statistiques seront disponibles dès le coup d'envoi."
@@ -342,12 +342,12 @@ function TeamHeader({
             alt={name}
             width={28}
             height={28}
-            className="h-7 w-7 object-contain"
+            className="size-7 object-contain"
             unoptimized
           />
         ) : (
           <div
-            className="h-7 w-7 rounded-full"
+            className="size-7 rounded-full"
             style={{ backgroundColor: color, opacity: 0.85 }}
           />
         )}

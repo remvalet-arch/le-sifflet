@@ -121,18 +121,18 @@ export default async function ConversationPage({
       <div className="flex items-center gap-3 border-b border-white/8 px-4 py-3">
         <Link
           href="/messages"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
         </Link>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-sm font-black text-zinc-300">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-sm font-black text-zinc-300">
           {other.avatar_url ? (
             <Image
               src={other.avatar_url}
               alt={other.username}
               width={36}
               height={36}
-              className="h-9 w-9 rounded-full object-cover"
+              className="size-9 rounded-full object-cover"
             />
           ) : (
             other.username[0]?.toUpperCase()
@@ -143,7 +143,7 @@ export default async function ConversationPage({
           {isOtherOnline ? (
             <p className="flex items-center gap-1 text-[10px] font-semibold text-green-400">
               <span
-                className="inline-block h-1.5 w-1.5 rounded-full bg-green-400"
+                className="inline-block size-1.5 rounded-full bg-green-400"
                 aria-hidden="true"
               />
               {t("online")}

@@ -7,15 +7,15 @@ import { sendPushToUsers } from "@/lib/push-sender";
 const VAR_ALERT_COOLDOWN_MINUTES = 15;
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as { match_id?: string };
+  if (!body.match_id) return errorResponse("match_id requis", 400);
+  const { match_id } = body;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
-
-  const body = (await request.json()) as { match_id?: string };
-  if (!body.match_id) return errorResponse("match_id requis", 400);
-  const { match_id } = body;
 
   const admin = createAdminClient();
 

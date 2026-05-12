@@ -159,10 +159,10 @@ Génère 3 propositions de tweets pour aujourd'hui.`;
   const data = (await res.json()) as {
     content: { type: string; text: string }[];
   };
-  const raw = data.content
-    .filter((c) => c.type === "text")
-    .map((c) => c.text)
-    .join("");
+  let raw = "";
+  for (const c of data.content) {
+    if (c.type === "text") raw += c.text;
+  }
 
   let tweets: Array<{ type: string; text: string }> = [];
   try {

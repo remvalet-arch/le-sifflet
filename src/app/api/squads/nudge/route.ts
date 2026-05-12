@@ -7,15 +7,15 @@ import { sendPushToUsers } from "@/lib/push-sender";
 const NUDGE_COOLDOWN_MINUTES = 30;
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as { squad_id?: string };
+  if (!body.squad_id) return errorResponse("squad_id requis", 400);
+  const { squad_id } = body;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
-
-  const body = (await request.json()) as { squad_id?: string };
-  if (!body.squad_id) return errorResponse("squad_id requis", 400);
-  const { squad_id } = body;
 
   // Vérifier que l'utilisateur est membre
   const { data: membership } = await supabase

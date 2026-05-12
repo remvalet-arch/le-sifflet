@@ -286,7 +286,7 @@ export default async function ProfilePage() {
       ? Math.round((exactWon / exactResolved.length) * 100)
       : null;
 
-  const sortedPronos = [...pronos].sort(
+  const sortedPronos = pronos.toSorted(
     (a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime(),
   );
   let bestStreak = 0;
@@ -300,9 +300,11 @@ export default async function ProfilePage() {
     }
   }
 
-  const totalMatchesPronoed = new Set(
-    pronos.filter((p) => p.prono_type === "exact_score").map((p) => p.match_id),
-  ).size;
+  const exactScoreMatchIds = new Set<string>();
+  for (const p of pronos) {
+    if (p.prono_type === "exact_score") exactScoreMatchIds.add(p.match_id);
+  }
+  const totalMatchesPronoed = exactScoreMatchIds.size;
 
   const REFILL_THRESHOLD = 500;
   // eslint-disable-next-line react-hooks/purity

@@ -74,7 +74,7 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
     >
       {/* Header glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 rounded-full bg-green-500/10 blur-3xl" />
+        <div className="absolute left-1/2 top-0 size-64 -translate-x-1/2 rounded-full bg-green-500/10 blur-3xl" />
       </div>
 
       <div className="relative flex w-full max-w-sm flex-col items-center gap-5">
@@ -83,7 +83,7 @@ export function MatchdayRecapModal({ recap, onDismiss }: Props) {
           <p className="text-[10px] font-black uppercase tracking-widest text-green-500/70">
             📊 {t("title")}
           </p>
-          <h1 className="mt-1 text-2xl font-black uppercase tracking-tight text-white">
+          <h1 className="mt-1 text-2xl font-semibold uppercase tracking-tight text-white">
             {t("heading")}
           </h1>
         </div>

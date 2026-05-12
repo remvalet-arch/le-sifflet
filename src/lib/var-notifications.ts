@@ -58,7 +58,10 @@ export async function notifyVarBetResults(
     .select("id, notif_var_results")
     .in("id", uniqueUserIds);
   const optedOut = new Set(
-    (prefs ?? []).filter((p) => !p.notif_var_results).map((p) => p.id),
+    (prefs ?? []).reduce<string[]>((acc, p) => {
+      if (!p.notif_var_results) acc.push(p.id);
+      return acc;
+    }, []),
   );
 
   const verdictLabel =
@@ -67,21 +70,22 @@ export async function notifyVarBetResults(
       : (NON_VERDICT[eventType] ?? "ANNULÉ.");
   const eventLabel = EVENT_LABEL[eventType] ?? "Événement VAR";
 
-  await Promise.all(
-    bets
-      .filter((bet) => !optedOut.has(bet.user_id))
-      .map((bet) => {
-        const bodyText =
-          bet.status === "won"
-            ? `${verdictLabel} +${bet.potential_reward} 🪙 gagnés 🔥`
-            : `${verdictLabel} ${bet.amount_staked} 🪙 perdus.`;
-        return sendPushToUsers([bet.user_id], {
-          title: `⚡ VAR Résolue — ${eventLabel}`,
-          body: bodyText,
-          url: `/match/${matchId}`,
-        });
+  const pushJobs: Promise<number>[] = [];
+  for (const bet of bets) {
+    if (optedOut.has(bet.user_id)) continue;
+    const bodyText =
+      bet.status === "won"
+        ? `${verdictLabel} +${bet.potential_reward} 🪙 gagnés 🔥`
+        : `${verdictLabel} ${bet.amount_staked} 🪙 perdus.`;
+    pushJobs.push(
+      sendPushToUsers([bet.user_id], {
+        title: `⚡ VAR Résolue : ${eventLabel}`,
+        body: bodyText,
+        url: `/match/${matchId}`,
       }),
-  );
+    );
+  }
+  await Promise.all(pushJobs);
 
   // Squad system messages for big wins (≥200 Sifflets)
   const bigWinners = bets.filter(

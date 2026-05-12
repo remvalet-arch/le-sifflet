@@ -25,9 +25,9 @@ export function MatchCardCountdown({ startTime }: { startTime: string }) {
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="relative flex h-2 w-2">
+      <span className="relative flex size-2">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
       </span>
       <span className="text-[11px] font-black tabular-nums text-emerald-400">
         {formatCountdown(msLeft)}

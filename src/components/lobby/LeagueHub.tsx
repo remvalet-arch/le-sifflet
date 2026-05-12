@@ -54,7 +54,7 @@ function extractRoundNumber(round: string): number | null {
  */
 function sortRoundsByDateDesc(rows: MatchRow[]): string[] {
   const dateMap = buildRoundDateMap(rows);
-  return [...dateMap.keys()].sort((a, b) => {
+  return Array.from(dateMap.keys()).toSorted((a, b) => {
     const numA = extractRoundNumber(a);
     const numB = extractRoundNumber(b);
     if (numA !== null && numB !== null) return numB - numA;
@@ -67,8 +67,10 @@ function sortRoundsByDateDesc(rows: MatchRow[]): string[] {
 /** Date(s) d'une journée au format DD/MM (heure Paris). Plage si multi-jours. */
 function roundDateLabel(rows: MatchRow[], round: string): string {
   const matchDates = rows
-    .filter((m) => m.round_short === round)
-    .map((m) => toParisDateStr(m.start_time))
+    .reduce<string[]>((acc, m) => {
+      if (m.round_short === round) acc.push(toParisDateStr(m.start_time));
+      return acc;
+    }, [])
     .sort();
   if (matchDates.length === 0) return "";
   const fmt = (d: string) => {
@@ -238,7 +240,7 @@ export function LeagueHub({
                 aria-label="Journée précédente"
                 className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-800 hover:text-white disabled:pointer-events-none disabled:opacity-25"
               >
-                <ChevronLeft className="h-5 w-5" aria-hidden />
+                <ChevronLeft className="size-5" aria-hidden />
               </button>
 
               <div className="flex flex-col items-center gap-0.5">
@@ -259,7 +261,7 @@ export function LeagueHub({
                 aria-label="Journée suivante"
                 className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-800 hover:text-white disabled:pointer-events-none disabled:opacity-25"
               >
-                <ChevronRight className="h-5 w-5" aria-hidden />
+                <ChevronRight className="size-5" aria-hidden />
               </button>
             </div>
           )}

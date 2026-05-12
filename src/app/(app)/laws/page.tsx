@@ -53,12 +53,12 @@ export default async function LawsPage() {
       {/* Header */}
       <div className="mb-6">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="size-1.5 rounded-full bg-amber-400" />
           <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
             {t("protocol")}
           </span>
         </div>
-        <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+        <h1 className="text-2xl font-semibold uppercase tracking-tight text-white">
           {t("title")}
         </h1>
         <p className="mt-1 text-sm text-zinc-400">{t("subtitle")}</p>
@@ -129,7 +129,7 @@ export default async function LawsPage() {
 
       {/* Principes clés */}
       <div className="mt-8">
-        <h2 className="mb-4 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <h2 className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           {t("keyPrinciples")}
         </h2>
         <div className="flex flex-col gap-3">

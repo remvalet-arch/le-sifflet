@@ -24,7 +24,9 @@ export default function GlobalError({
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
               Carton Rouge
             </p>
-            <h1 className="text-xl font-black text-white">Erreur inattendue</h1>
+            <h1 className="text-xl font-semibold text-white">
+              Erreur inattendue
+            </h1>
             <p className="mt-2 text-sm text-zinc-400">
               L&apos;arbitre a perdu le fil. Réessaie ou retourne au lobby.
             </p>

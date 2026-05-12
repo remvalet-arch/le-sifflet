@@ -39,9 +39,6 @@ async function getModerator() {
 // ── POST : créer un événement ─────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const { user, profile, error } = await getModerator();
-  if (error) return error;
-
   const body = (await request.json()) as {
     match_id?: string;
     event_type?: string;
@@ -74,6 +71,9 @@ export async function POST(request: NextRequest) {
   if (typeof player_name !== "string" || player_name.trim().length === 0) {
     return errorResponse("Nom du joueur manquant", 400);
   }
+
+  const { user, profile, error } = await getModerator();
+  if (error) return error;
 
   const admin = createAdminClient();
   const ownGoal = event_type === "goal" ? (is_own_goal ?? false) : false;

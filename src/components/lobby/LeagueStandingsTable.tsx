@@ -64,11 +64,11 @@ function StandingsGrid({ rows }: { rows: LeagueStandingRow[] }) {
                   alt={s.team_name}
                   width={20}
                   height={20}
-                  className="h-5 w-5 shrink-0 object-contain"
+                  className="size-5 shrink-0 object-contain"
                   unoptimized
                 />
               ) : (
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-600">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-600">
                   ⚽
                 </span>
               )}
@@ -95,7 +95,7 @@ function StandingsGrid({ rows }: { rows: LeagueStandingRow[] }) {
             </span>
             <div className="hidden items-center justify-end gap-0.5 sm:flex">
               {formChars.map((c, i) => (
-                <FormPill key={i} char={c} />
+                <FormPill key={`form-`} char={c} />
               ))}
             </div>
           </div>

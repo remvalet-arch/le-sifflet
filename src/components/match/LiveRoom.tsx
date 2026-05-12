@@ -458,7 +458,7 @@ export function LiveRoom({
       });
 
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [match.id, userId, bcp47]);
 
@@ -480,6 +480,7 @@ export function LiveRoom({
     if (!isLive) return;
     if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
     let sentinel: WakeLockSentinel | null = null;
+    let releaseTimerId: ReturnType<typeof setTimeout>;
     void (
       navigator as {
         wakeLock: { request: (type: string) => Promise<WakeLockSentinel> };
@@ -489,14 +490,16 @@ export function LiveRoom({
       .then((s) => {
         sentinel = s;
         setWakeLockActive(true);
-        sentinel.addEventListener("release", () =>
-          setTimeout(() => setWakeLockActive(false), 0),
-        );
+        sentinel.addEventListener("release", () => {
+          clearTimeout(releaseTimerId);
+          releaseTimerId = setTimeout(() => setWakeLockActive(false), 0);
+        });
       })
       .catch(() => {
         /* non-supporté ou refusé — silencieux */
       });
     return () => {
+      clearTimeout(releaseTimerId);
       if (sentinel) void sentinel.release();
     };
   }, [isLive]);
@@ -624,7 +627,7 @@ export function LiveRoom({
           className="sticky top-0 z-[55] flex justify-center py-1.5"
         >
           <div className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/80 px-3 py-1.5 text-[10px] font-black text-red-400 shadow-lg backdrop-blur-sm">
-            <WifiOff className="h-3 w-3" />
+            <WifiOff className="size-3" />
             {t("reconnecting")}
           </div>
         </div>
@@ -733,7 +736,7 @@ export function LiveRoom({
                   </p>
                 </div>
                 {currentVarBet.status === "pending" && (
-                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500" />
+                  <span className="size-2.5 animate-pulse rounded-full bg-amber-500" />
                 )}
               </div>
             </div>
@@ -753,6 +756,7 @@ export function LiveRoom({
               <button
                 type="button"
                 onClick={handleVarAlert}
+                suppressHydrationWarning
                 disabled={
                   sirenLoading ||
                   (sirenCooldownUntil !== null &&
@@ -760,7 +764,7 @@ export function LiveRoom({
                 }
                 className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 py-3 text-sm font-black text-red-400 transition active:scale-[0.98] disabled:opacity-40"
               >
-                <Siren className="h-4 w-4" />
+                <Siren className="size-4" />
                 {sirenLoading
                   ? t("sirenSending")
                   : sirenCooldownSecs > 0

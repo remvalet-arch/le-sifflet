@@ -130,7 +130,7 @@ export function TopBar({
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [userId]);
 

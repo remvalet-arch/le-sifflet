@@ -9,6 +9,15 @@ import { logAdminAction } from "@/lib/audit";
 import { checkRateLimit } from "@/lib/db-rate-limiter";
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as {
+    event_id?: string;
+    result?: string;
+  };
+
+  if (!body.event_id || !body.result || body.result.trim() === "") {
+    return errorResponse("Paramètres invalides", 400);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -35,15 +44,6 @@ export async function POST(request: NextRequest) {
       `Trop de requêtes — réessaie dans ${retryAfter}s`,
       429,
     );
-  }
-
-  const body = (await request.json()) as {
-    event_id?: string;
-    result?: string;
-  };
-
-  if (!body.event_id || !body.result || body.result.trim() === "") {
-    return errorResponse("Paramètres invalides", 400);
   }
 
   const adminClient = createAdminClient();

@@ -119,7 +119,7 @@ export async function LandingPage({
 
         <div className="relative z-10">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+            <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-300/95">
               {t("heroBadge")}
             </span>
@@ -127,10 +127,10 @@ export async function LandingPage({
 
           <div className="relative mb-6 inline-block">
             <div className="pointer-events-none absolute -inset-4" aria-hidden>
-              <div className="absolute left-0 top-0 h-6 w-6 border-l-2 border-t-2 border-amber-400/50" />
-              <div className="absolute right-0 top-0 h-6 w-6 border-r-2 border-t-2 border-amber-400/50" />
-              <div className="absolute bottom-0 left-0 h-6 w-6 border-b-2 border-l-2 border-amber-400/50" />
-              <div className="absolute bottom-0 right-0 h-6 w-6 border-b-2 border-r-2 border-amber-400/50" />
+              <div className="absolute left-0 top-0 size-6 border-l-2 border-t-2 border-amber-400/50" />
+              <div className="absolute right-0 top-0 size-6 border-r-2 border-t-2 border-amber-400/50" />
+              <div className="absolute bottom-0 left-0 size-6 border-b-2 border-l-2 border-amber-400/50" />
+              <div className="absolute bottom-0 right-0 size-6 border-b-2 border-r-2 border-amber-400/50" />
             </div>
             <p className="mb-1 text-[9px] font-black uppercase tracking-[0.3em] text-amber-400/80">
               {t("heroStatLabel")}
@@ -149,7 +149,7 @@ export async function LandingPage({
 
           <div className="mb-6 h-px w-full bg-gradient-to-r from-amber-500/40 via-amber-500/20 to-transparent" />
 
-          <h1 className="text-[clamp(1.5rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight text-white">
+          <h1 className="text-[clamp(1.5rem,4.5vw,2.6rem)] font-semibold leading-tight tracking-tight text-white">
             {t("heroH1Pre")} <span className="text-amber-400">55%</span>
             {t("heroH1Post")}
             <br />
@@ -262,7 +262,7 @@ export async function LandingPage({
       ═══════════════════════════════════════════ */}
       <section className="border-t border-white/8 py-14 md:py-16">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-semibold uppercase leading-tight tracking-tight text-white">
             {t("kopTitle")}
           </h2>
           <div className="mx-auto mt-10 max-w-2xl rounded-3xl border border-green-500/40 bg-zinc-900/50 p-6 shadow-[0_0_40px_rgba(34,197,94,0.15)] backdrop-blur-sm sm:p-8">
@@ -313,7 +313,7 @@ export async function LandingPage({
       ═══════════════════════════════════════════ */}
       <section className="border-t border-white/8 py-14 md:py-16">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+          <h2 className="text-center text-[clamp(1.35rem,4vw,2rem)] font-semibold uppercase leading-tight tracking-tight text-white">
             {t("shopTitle")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-sm text-zinc-400">
@@ -352,7 +352,7 @@ export async function LandingPage({
             <div className="h-px flex-1 bg-white/8" />
           </div>
 
-          <h2 className="mt-4 text-center text-[clamp(1.8rem,5vw,2.8rem)] font-black uppercase leading-[0.95] tracking-tight text-white">
+          <h2 className="mt-4 text-center text-[clamp(1.8rem,5vw,2.8rem)] font-semibold uppercase leading-[0.95] tracking-tight text-white">
             {t("gameTitle")}
             <br />
             <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
@@ -399,7 +399,7 @@ export async function LandingPage({
             <div className="h-px flex-1 bg-white/8" />
           </div>
 
-          <h3 className="mt-4 text-center text-[clamp(1.5rem,4vw,2.2rem)] font-black uppercase leading-[0.95] tracking-tight text-white">
+          <h3 className="mt-4 text-center text-[clamp(1.5rem,4vw,2.2rem)] font-semibold uppercase leading-[0.95] tracking-tight text-white">
             {t("stepsTitle")}
             <br />
             <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
@@ -453,12 +453,12 @@ export async function LandingPage({
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-10">
               <div className="relative mx-auto h-36 w-56 shrink-0 md:mx-0">
                 <div
-                  className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-500/20 blur-3xl"
+                  className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-500/20 blur-3xl"
                   aria-hidden
                 />
                 <div className="absolute right-0 top-3 w-28 rotate-6 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
                   <div className="mb-1.5 flex items-center gap-1.5">
-                    <div className="h-5 w-5 shrink-0 rounded-full bg-emerald-500/30" />
+                    <div className="size-5 shrink-0 rounded-full bg-emerald-500/30" />
                     <div className="space-y-0.5">
                       <div className="h-1 w-10 rounded bg-zinc-700" />
                       <div className="h-1 w-6 rounded bg-zinc-600" />
@@ -466,7 +466,7 @@ export async function LandingPage({
                   </div>
                   {[0, 1, 2].map((i) => (
                     <div
-                      key={i}
+                      key={`row-a-${i}`}
                       className="mb-0.5 flex items-center justify-between rounded bg-zinc-800 px-1.5 py-1"
                     >
                       <div className="h-1 w-8 rounded bg-zinc-700" />
@@ -489,7 +489,7 @@ export async function LandingPage({
                   </div>
                   {[0, 1, 2].map((i) => (
                     <div
-                      key={i}
+                      key={`row-b-${i}`}
                       className="mb-1 overflow-hidden rounded-lg bg-zinc-800 p-1.5"
                     >
                       <div className="flex items-center justify-between">
@@ -505,7 +505,7 @@ export async function LandingPage({
                 </div>
               </div>
               <div className="min-w-0 flex-1 text-center md:text-left">
-                <h3 className="text-[clamp(1.35rem,4.5vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+                <h3 className="text-[clamp(1.35rem,4.5vw,2rem)] font-semibold uppercase leading-tight tracking-tight text-white">
                   {t("pronoTitle")}
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-zinc-400 sm:text-base">
@@ -541,7 +541,7 @@ export async function LandingPage({
                 {t("pwaLabel")}
               </span>
             </div>
-            <h2 className="text-[clamp(1.4rem,4vw,2rem)] font-black uppercase leading-tight tracking-tight text-white">
+            <h2 className="text-[clamp(1.4rem,4vw,2rem)] font-semibold uppercase leading-tight tracking-tight text-white">
               {t("pwaTitle")}
               <br />
               <span className="text-green-400">{t("pwaTitleSub")}</span>
@@ -587,7 +587,7 @@ export async function LandingPage({
       ═══════════════════════════════════════════ */}
       <section className="border-t border-white/8 py-14">
         <div className="mx-auto max-w-2xl px-5 sm:px-8">
-          <h2 className="mb-8 text-center text-[clamp(1.3rem,4vw,1.8rem)] font-black uppercase leading-tight tracking-tight text-white">
+          <h2 className="mb-8 text-center text-[clamp(1.3rem,4vw,1.8rem)] font-semibold uppercase leading-tight tracking-tight text-white">
             {t("faqTitle")}
           </h2>
           <div className="flex flex-col gap-3">
@@ -735,14 +735,14 @@ function GamePanel({
       className={`group relative h-full overflow-hidden rounded-2xl border bg-zinc-900/50 p-6 backdrop-blur-sm transition-all ${s.border} ${s.shadow}`}
     >
       <div
-        className={`pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full blur-3xl ${s.glow}`}
+        className={`pointer-events-none absolute -right-8 -top-8 size-40 rounded-full blur-3xl ${s.glow}`}
         aria-hidden
       />
-      <Icon className={`relative mb-5 h-10 w-10 ${s.icon}`} strokeWidth={1.5} />
+      <Icon className={`relative mb-5 size-10 ${s.icon}`} strokeWidth={1.5} />
       <p
         className={`mb-2 text-[9px] font-black uppercase tracking-widest ${s.icon}`}
       >
-        {step} — {title}
+        {step}. {title}
       </p>
       <p className="text-sm leading-relaxed text-zinc-400">{body}</p>
     </div>
@@ -787,7 +787,7 @@ function KopRankStep({
         />
       ) : null}
       <div
-        className={`relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[11px] font-black ${circle}`}
+        className={`relative z-[1] flex size-9 shrink-0 items-center justify-center rounded-full border text-[11px] font-black ${circle}`}
       >
         {step}
       </div>
@@ -821,7 +821,7 @@ function PhoneMockup() {
               </span>
               <span className="text-[8px] font-black text-white">TIME</span>
             </div>
-            <div className="h-5 w-5 rounded-full bg-zinc-700" />
+            <div className="size-5 rounded-full bg-zinc-700" />
           </div>
           <div className="flex shrink-0 gap-1 overflow-hidden border-b border-zinc-800 px-2.5 py-1.5">
             {["L1", "PL", "UCL", "ESP"].map((tab, i) => (
@@ -837,7 +837,7 @@ function PhoneMockup() {
             <div className="overflow-hidden rounded-xl bg-zinc-900 px-2.5 py-2">
               <div className="mb-1 flex items-center justify-between">
                 <span className="flex items-center gap-1 text-[7px] font-black text-red-400">
-                  <span className="h-1 w-1 animate-pulse rounded-full bg-red-400" />
+                  <span className="size-1 animate-pulse rounded-full bg-red-400" />
                   LIVE
                 </span>
                 <span className="text-[7px] text-zinc-500">67&rsquo;</span>
@@ -874,7 +874,7 @@ function PhoneMockup() {
         </div>
       </div>
       <div className="absolute -right-4 top-10 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-[0_0_20px_rgba(220,38,38,0.5)]">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+        <span className="size-1.5 animate-pulse rounded-full bg-white" />
         <span className="text-[9px] font-black text-white">LIVE</span>
       </div>
       <div className="absolute -left-6 bottom-[12%] max-w-[130px] rounded-2xl border border-white/10 bg-zinc-800 px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.15)] lg:hidden">

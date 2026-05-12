@@ -53,6 +53,8 @@ export function StatsSection({
 
   // Fetch seasons list + season percentile once
   useEffect(() => {
+    let seasonsId: ReturnType<typeof setTimeout>;
+    let percentileId: ReturnType<typeof setTimeout>;
     const supabase = createClient();
     void supabase
       .from("seasons")
@@ -60,7 +62,7 @@ export function StatsSection({
       .order("starts_at", { ascending: false })
       .limit(6)
       .then(({ data }) => {
-        if (data) setTimeout(() => setSeasons(data), 0);
+        if (data) seasonsId = setTimeout(() => setSeasons(data), 0);
       });
 
     void (async () => {
@@ -82,18 +84,24 @@ export function StatsSection({
         supabase.from("profiles").select("id", { count: "exact", head: true }),
       ]);
       if (total && total > 1) {
-        setTimeout(
+        percentileId = setTimeout(
           () => setPercentile(Math.round(((below ?? 0) / total) * 100)),
           0,
         );
       }
     })();
+    return () => {
+      clearTimeout(seasonsId);
+      clearTimeout(percentileId);
+    };
   }, []);
 
   // Fetch stats on filter change
   useEffect(() => {
     let cancelled = false;
-    setTimeout(() => setLoading(true), 0);
+    let statsId: ReturnType<typeof setTimeout>;
+    let loadingId: ReturnType<typeof setTimeout>;
+    loadingId = setTimeout(() => setLoading(true), 0);
 
     const supabase = createClient();
     void supabase
@@ -106,7 +114,7 @@ export function StatsSection({
         if (cancelled) return;
         if (!error && data?.[0]) {
           const row = data[0];
-          setTimeout(
+          statsId = setTimeout(
             () =>
               setStats({
                 pronos_total: Number(row.pronos_total),
@@ -120,11 +128,13 @@ export function StatsSection({
             0,
           );
         }
-        setTimeout(() => setLoading(false), 0);
+        loadingId = setTimeout(() => setLoading(false), 0);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(statsId);
+      clearTimeout(loadingId);
     };
   }, [selectedSeason, clubFilter, favoriteTeamId]);
 
@@ -239,7 +249,7 @@ export function StatsSection({
       {/* Stats display */}
       {loading ? (
         <div className="flex justify-center py-8">
-          <LoaderCircle className="h-6 w-6 animate-spin text-zinc-600" />
+          <LoaderCircle className="size-6 animate-spin text-zinc-600" />
         </div>
       ) : !stats ? (
         <p className="py-8 text-center text-sm text-zinc-500">{t("noData")}</p>

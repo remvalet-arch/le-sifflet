@@ -49,6 +49,14 @@ type MapFailure = {
  * Délai **6,5 s** entre chaque requête API. Auth : modérateur (`trust_score` ≥ seuil).
  */
 export async function GET() {
+  const apiKey = process.env.API_FOOTBALL_KEY?.trim();
+  if (apiKey === undefined || apiKey === "" || apiKey === "undefined") {
+    return errorResponse(
+      "API_FOOTBALL_KEY manquante ou vide (voir .env.example)",
+      500,
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -63,14 +71,6 @@ export async function GET() {
 
   if (!profile || !isAdminRole(profile.role)) {
     return errorResponse("Accès réservé aux administrateurs", 403);
-  }
-
-  const apiKey = process.env.API_FOOTBALL_KEY?.trim();
-  if (apiKey === undefined || apiKey === "" || apiKey === "undefined") {
-    return errorResponse(
-      "API_FOOTBALL_KEY manquante ou vide (voir .env.example)",
-      500,
-    );
   }
 
   const admin = createAdminClient();

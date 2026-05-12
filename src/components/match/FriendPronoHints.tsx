@@ -99,12 +99,12 @@ export function FriendPronoHints({
   return (
     <div className="mx-4 mb-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3">
       <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400">
-        <Users className="h-3 w-3" />
+        <Users className="size-3" />
         Pronos de tes amis
       </p>
       <div className="flex flex-col gap-1">
-        {hints.slice(0, 3).map((h, i) => (
-          <p key={i} className="text-xs text-zinc-300">
+        {hints.slice(0, 3).map((h) => (
+          <p key={`-`} className="text-xs text-zinc-300">
             <span className="font-black text-amber-400">
               {friendLabel(h.friend_count)}
             </span>{" "}

@@ -45,7 +45,7 @@ export function HeadToHead({
 
   return (
     <div className="mt-4 rounded-2xl border border-white/8 bg-zinc-900 p-4">
-      <h3 className="mb-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+      <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
         {t("title")}
       </h3>
       <div className="flex flex-col gap-2">
@@ -66,7 +66,7 @@ export function HeadToHead({
 
           return (
             <div
-              key={i}
+              key={`h2h-${i}`}
               className="flex items-center justify-between gap-2 rounded-xl border border-white/6 bg-zinc-800/50 px-3 py-2"
             >
               <span className="min-w-0 flex-1 truncate text-right text-[11px] text-zinc-300">

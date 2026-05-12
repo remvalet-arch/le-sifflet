@@ -23,7 +23,7 @@ type ApiStandingEntry = {
   group?: string;
 };
 
-export async function syncLeagueStandings(
+async function syncLeagueStandings(
   leagueId: number,
   season: number,
 ): Promise<void> {
@@ -59,7 +59,7 @@ export async function syncLeagueStandings(
     .upsert(rows, { onConflict: "league_id,season,team_id" });
 }
 
-export async function syncLeagueTopScorers(
+async function syncLeagueTopScorers(
   leagueId: number,
   season: number,
 ): Promise<void> {
@@ -91,7 +91,7 @@ export async function syncLeagueTopScorers(
     .upsert(rows, { onConflict: "league_id,season,type,player_id" });
 }
 
-export async function syncLeagueTopAssists(
+async function syncLeagueTopAssists(
   leagueId: number,
   season: number,
 ): Promise<void> {

@@ -60,16 +60,18 @@ export async function POST() {
     const toResolve = (finishedMatches ?? []).map((m) => m.id);
     summary.pronoMatchesFound = toResolve.length;
 
-    for (const matchId of toResolve) {
-      const { error } = await admin.rpc("resolve_match_pronos", {
-        p_match_id: matchId,
-      });
-      if (error) {
-        summary.errors.push(`pronos[${matchId}]: ${error.message}`);
-      } else {
-        summary.pronoMatchesResolved++;
-      }
-    }
+    await Promise.all(
+      toResolve.map(async (matchId) => {
+        const { error } = await admin.rpc("resolve_match_pronos", {
+          p_match_id: matchId,
+        });
+        if (error) {
+          summary.errors.push(`pronos[${matchId}]: ${error.message}`);
+        } else {
+          summary.pronoMatchesResolved++;
+        }
+      }),
+    );
   }
 
   // ── 2. Market events VAR ouverts sur matchs terminés (info seule) ─────────

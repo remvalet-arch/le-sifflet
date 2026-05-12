@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
           letterSpacing: 2,
         }}
       >
-        vartime.app — Gratuit · Pronostics foot
+        vartime.app · Gratuit · Pronostics foot
       </div>
     </div>,
     {

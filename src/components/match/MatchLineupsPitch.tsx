@@ -25,7 +25,7 @@ function TeamLogoSmall({
 }) {
   const trimmed = (url ?? "").trim();
   const box =
-    "h-6 w-6 shrink-0 rounded border border-white/20 bg-black/20 object-contain p-px";
+    "size-6 shrink-0 rounded border border-white/20 bg-black/20 object-contain p-px";
 
   if (trimmed.startsWith("http") && isNextImageRemoteLogo(trimmed)) {
     return (
@@ -55,7 +55,7 @@ function TeamLogoSmall({
   }
   return (
     <div
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-white/20 bg-black/30 text-[8px] text-white/50"
+      className="flex size-6 shrink-0 items-center justify-center rounded border border-white/20 bg-black/30 text-[8px] text-white/50"
       aria-hidden
     >
       ⚽
@@ -76,8 +76,10 @@ function initials(fullName: string): string {
   return fullName
     .trim()
     .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0] ?? "")
+    .reduce<string[]>((acc, w) => {
+      if (w) acc.push(w[0] ?? "");
+      return acc;
+    }, [])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -121,7 +123,7 @@ function groupByPitchRow(starters: LineupRow[]): LineupRow[][] {
     return [...rowMap.entries()]
       .sort(([a], [b]) => a - b)
       .map(([, players]) =>
-        [...players].sort((a, b) => {
+        players.toSorted((a, b) => {
           const ga = parseGrid(a.grid_position)?.col ?? 0;
           const gb = parseGrid(b.grid_position)?.col ?? 0;
           return ga - gb;
@@ -132,17 +134,17 @@ function groupByPitchRow(starters: LineupRow[]): LineupRow[][] {
   // Fallback: position-based rows
   const order = ["G", "D", "M", "A"] as const;
   const PITCH_STRICT = new Set(["G", "D", "A"]);
-  return order
-    .map((pos) => {
-      const players =
-        pos === "M"
-          ? starters.filter((p) => !PITCH_STRICT.has(p.position))
-          : starters.filter((p) => p.position === pos);
-      return [...players].sort((a, b) =>
-        a.player_name.localeCompare(b.player_name, "fr"),
-      );
-    })
-    .filter((row) => row.length > 0);
+  return order.reduce<(typeof starters)[]>((acc, pos) => {
+    const players =
+      pos === "M"
+        ? starters.filter((p) => !PITCH_STRICT.has(p.position))
+        : starters.filter((p) => p.position === pos);
+    const row = players.toSorted((a, b) =>
+      a.player_name.localeCompare(b.player_name, "fr"),
+    );
+    if (row.length > 0) acc.push(row);
+    return acc;
+  }, []);
 }
 
 function PlayerOnPitch({
@@ -169,7 +171,7 @@ function PlayerOnPitch({
       style={{ width: "clamp(44px, 13%, 64px)" }}
     >
       <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-black tabular-nums shadow-md ${sizeClass} ${
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full border-2 font-black tabular-nums shadow-md ${sizeClass} ${
           textIsWhite
             ? "border-white/40 text-white"
             : "border-black/25 text-zinc-900"
@@ -218,7 +220,7 @@ function PitchMarkings() {
       <div className="absolute left-[32%] right-[32%] top-0 h-[7%] border-x border-b border-white/20" />
       <div className="absolute left-3 right-3 top-1/2 h-px -translate-y-1/2 bg-white/30" />
       <div className="absolute left-1/2 top-1/2 h-[22%] max-h-24 w-[22%] max-w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
-      <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/30" />
+      <div className="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/30" />
       <div className="absolute bottom-0 left-[12%] right-[12%] h-[18%] border-x border-t border-white/20" />
       <div className="absolute bottom-0 left-[32%] right-[32%] h-[7%] border-x border-t border-white/20" />
     </div>
@@ -294,7 +296,7 @@ export const MatchLineupsPitch = memo(function MatchLineupsPitch({
               </span>
             </div>
             {homeRows.map((row, i) => (
-              <PitchRow key={i} players={row} bgColor={homeBg} />
+              <PitchRow key={`home-row-${i}`} players={row} bgColor={homeBg} />
             ))}
           </div>
 
@@ -306,7 +308,7 @@ export const MatchLineupsPitch = memo(function MatchLineupsPitch({
           {/* Extérieur — attaque vers le centre, GK bas */}
           <div className="flex flex-col px-1 pt-1 pb-3">
             {awayRows.map((row, i) => (
-              <PitchRow key={i} players={row} bgColor={awayBg} />
+              <PitchRow key={`away-row-${i}`} players={row} bgColor={awayBg} />
             ))}
             <div className="mt-2 flex items-center justify-center gap-2">
               <TeamLogoSmall url={awayTeamLogo} label={teamAway} />

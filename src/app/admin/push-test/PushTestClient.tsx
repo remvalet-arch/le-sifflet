@@ -107,7 +107,7 @@ export function PushTestClient({
         <div className="mt-3 flex items-center gap-2">
           {subscriptionCount > 0 ? (
             <>
-              <CheckCircle className="h-4 w-4 text-green-400" />
+              <CheckCircle className="size-4 text-green-400" />
               <span className="text-sm font-semibold text-green-400">
                 {subscriptionCount} subscription
                 {subscriptionCount > 1 ? "s" : ""} active
@@ -116,9 +116,9 @@ export function PushTestClient({
             </>
           ) : (
             <>
-              <XCircle className="h-4 w-4 text-red-400" />
+              <XCircle className="size-4 text-red-400" />
               <span className="text-sm font-semibold text-red-400">
-                Aucune subscription — active les notifs dans Paramètres
+                Aucune subscription. Active les notifs dans Paramètres.
               </span>
             </>
           )}
@@ -150,13 +150,13 @@ export function PushTestClient({
               </div>
               <div className="shrink-0">
                 {status === "loading" ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                  <Loader2 className="size-4 animate-spin text-zinc-400" />
                 ) : status === "ok" ? (
-                  <CheckCircle className="h-4 w-4 text-green-400" />
+                  <CheckCircle className="size-4 text-green-400" />
                 ) : status === "error" ? (
-                  <XCircle className="h-4 w-4 text-red-400" />
+                  <XCircle className="size-4 text-red-400" />
                 ) : (
-                  <Send className="h-4 w-4 text-zinc-500" />
+                  <Send className="size-4 text-zinc-500" />
                 )}
               </div>
             </button>

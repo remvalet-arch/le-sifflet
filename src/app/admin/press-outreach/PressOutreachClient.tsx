@@ -97,7 +97,7 @@ export function PressOutreachClient() {
 
         <div>
           <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-zinc-500">
-            Contexte — articles récents, ligne éditoriale, audience
+            Contexte : articles récents, ligne éditoriale, audience
           </label>
           <textarea
             value={context}
@@ -133,9 +133,9 @@ export function PressOutreachClient() {
             className="flex items-center gap-2 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-bold text-black transition hover:bg-yellow-400 disabled:opacity-50"
           >
             {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="size-4" />
             )}
             {loading ? "Génération…" : "Générer l'email"}
           </button>
@@ -147,7 +147,7 @@ export function PressOutreachClient() {
         <div className="rounded-xl border border-green-500/20 bg-zinc-900">
           <div className="flex items-center justify-between border-b border-white/8 px-5 py-3">
             <p className="text-xs font-bold uppercase tracking-widest text-green-400">
-              Email généré — relis avant d&apos;envoyer
+              Email généré · relis avant d&apos;envoyer
             </p>
             <div className="flex gap-2">
               <button
@@ -155,7 +155,7 @@ export function PressOutreachClient() {
                 onClick={copy}
                 className="flex items-center gap-1.5 rounded-lg border border-white/8 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800"
               >
-                <Copy className="h-3.5 w-3.5" />
+                <Copy className="size-3.5" />
                 {copied ? "Copié !" : "Copier"}
               </button>
               <button
@@ -164,7 +164,7 @@ export function PressOutreachClient() {
                 disabled={loading}
                 className="flex items-center gap-1.5 rounded-lg border border-white/8 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <RotateCcw className="size-3.5" />
                 Regénérer
               </button>
             </div>

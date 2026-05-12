@@ -45,10 +45,11 @@ export function NewSeasonOverlay() {
     } catch {
       name = MONTH_NAMES_FR[month] ?? "";
     }
-    setTimeout(() => {
+    const id = setTimeout(() => {
       setMonthName(name);
       setVisible(true);
     }, 0);
+    return () => clearTimeout(id);
   }, [locale]);
 
   function dismiss() {
@@ -70,7 +71,7 @@ export function NewSeasonOverlay() {
     >
       <div className="w-full max-w-sm rounded-3xl border border-amber-500/25 bg-zinc-900 p-7 text-center shadow-[0_0_60px_rgba(251,191,36,0.2)]">
         <div className="mb-4 text-5xl">🏆</div>
-        <h2 className="text-lg font-black uppercase tracking-wide text-white">
+        <h2 className="text-lg font-semibold uppercase tracking-wide text-white">
           {t("title", { month: monthName })}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">

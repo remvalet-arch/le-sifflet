@@ -55,7 +55,7 @@ export function PronoResolutionListener({ userId }: { userId: string }) {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [userId]);
 

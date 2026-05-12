@@ -52,16 +52,17 @@ async function fetchPlayersForMatch(
   const VALID_POSITIONS = new Set(["A", "M", "D", "G"]);
 
   if (lineups && lineups.length > 0) {
-    const home = lineups
-      .filter((r) => r.team_side === "home" && VALID_POSITIONS.has(r.position))
-      .map((r) =>
-        withOdds({ player_name: r.player_name, position: r.position }),
-      );
-    const away = lineups
-      .filter((r) => r.team_side === "away" && VALID_POSITIONS.has(r.position))
-      .map((r) =>
-        withOdds({ player_name: r.player_name, position: r.position }),
-      );
+    const home: ReturnType<typeof withOdds>[] = [];
+    const away: ReturnType<typeof withOdds>[] = [];
+    for (const r of lineups) {
+      if (!VALID_POSITIONS.has(r.position)) continue;
+      const entry = withOdds({
+        player_name: r.player_name,
+        position: r.position,
+      });
+      if (r.team_side === "home") home.push(entry);
+      else if (r.team_side === "away") away.push(entry);
+    }
     return { home: [CSC_ENTRY, ...home], away: [CSC_ENTRY, ...away] };
   }
 
@@ -77,15 +78,15 @@ async function fetchPlayersForMatch(
     .in("position", ["A", "M", "D", "G"]);
 
   const rows = players ?? [];
+  const homeEntries: ReturnType<typeof withOdds>[] = [];
+  const awayEntries: ReturnType<typeof withOdds>[] = [];
+  for (const p of rows) {
+    if (p.team_id === homeTeamId) homeEntries.push(withOdds(p));
+    else if (p.team_id === awayTeamId) awayEntries.push(withOdds(p));
+  }
   return {
-    home: [
-      CSC_ENTRY,
-      ...rows.filter((p) => p.team_id === homeTeamId).map(withOdds),
-    ],
-    away: [
-      CSC_ENTRY,
-      ...rows.filter((p) => p.team_id === awayTeamId).map(withOdds),
-    ],
+    home: [CSC_ENTRY, ...homeEntries],
+    away: [CSC_ENTRY, ...awayEntries],
   };
 }
 
@@ -143,7 +144,7 @@ function ScorerSlot({
       }`}
     >
       <span className="text-sm font-bold">{label}</span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
+      <ChevronRight className="size-4 shrink-0 text-zinc-500" />
     </button>
   );
 }
@@ -250,12 +251,12 @@ export function ScorerAllocationEditor({
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 Buteurs {homeTeam}
                 {playersLoading && (
-                  <span className="ml-2 inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300 align-middle" />
+                  <span className="ml-2 inline-block size-2.5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300 align-middle" />
                 )}
               </span>
               {homeSlots.map((name, idx) => (
                 <ScorerSlot
-                  key={idx}
+                  key={name ? `home-${name}` : `home-empty-${idx}`}
                   name={name}
                   slotIndex={idx}
                   total={homeCount}
@@ -273,12 +274,12 @@ export function ScorerAllocationEditor({
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 Buteurs {awayTeam}
                 {playersLoading && (
-                  <span className="ml-2 inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300 align-middle" />
+                  <span className="ml-2 inline-block size-2.5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300 align-middle" />
                 )}
               </span>
               {awaySlots.map((name, idx) => (
                 <ScorerSlot
-                  key={idx}
+                  key={name ? `away-${name}` : `away-empty-${idx}`}
                   name={name}
                   slotIndex={idx}
                   total={awayCount}

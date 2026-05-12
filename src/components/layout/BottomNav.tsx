@@ -114,7 +114,7 @@ export function BottomNav({ userId }: { userId?: string }) {
       .subscribe();
     return () => {
       clearTimeout(timerId);
-      void supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [userId]);
 

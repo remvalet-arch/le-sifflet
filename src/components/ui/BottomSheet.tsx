@@ -39,14 +39,14 @@ export function BottomSheet({
       >
         {title && (
           <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-            <h2 className="text-base font-black text-white">{title}</h2>
+            <h2 className="text-base font-semibold text-white">{title}</h2>
             <button
               type="button"
               onClick={onClose}
               className="p-1 text-zinc-500 transition hover:text-white"
               aria-label="Fermer"
             >
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           </div>
         )}

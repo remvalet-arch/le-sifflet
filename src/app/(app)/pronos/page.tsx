@@ -84,9 +84,9 @@ export default async function PronosPage() {
   const t = await getTranslations("Pronos");
 
   return (
-    <main className="flex flex-col gap-4 px-4 py-4">
+    <main className="flex flex-col gap-4 p-4">
       <div className="flex items-baseline gap-2">
-        <h1 className="text-lg font-black uppercase tracking-wide text-chalk">
+        <h1 className="text-lg font-semibold uppercase tracking-wide text-chalk">
           {t("pageTitle")}
         </h1>
         <span className="text-xs font-medium text-zinc-500">

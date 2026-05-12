@@ -131,16 +131,21 @@ export async function importLeagueAssets(
     }
 
     const chunkSize = 80;
+    const playerChunks: (typeof playerRows)[] = [];
     for (let i = 0; i < playerRows.length; i += chunkSize) {
-      const chunk = playerRows.slice(i, i + chunkSize);
-      const { error: pErr } = await admin
-        .from("players")
-        .upsert(chunk, { onConflict: "thesportsdb_id" });
-      if (pErr) {
-        throw new Error(`players upsert ${fullTeam.idTeam}: ${pErr.message}`);
-      }
-      playersImported += chunk.length;
+      playerChunks.push(playerRows.slice(i, i + chunkSize));
     }
+    await Promise.all(
+      playerChunks.map(async (chunk) => {
+        const { error: pErr } = await admin
+          .from("players")
+          .upsert(chunk, { onConflict: "thesportsdb_id" });
+        if (pErr) {
+          throw new Error(`players upsert ${fullTeam.idTeam}: ${pErr.message}`);
+        }
+      }),
+    );
+    playersImported += playerRows.length;
   }
 
   return {

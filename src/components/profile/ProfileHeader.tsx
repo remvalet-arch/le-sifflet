@@ -141,7 +141,8 @@ export function ProfileHeader({
 
   useEffect(() => {
     if (searchParams.get("section") === "club") {
-      setTimeout(() => setEditOpen(true), 0);
+      const id = setTimeout(() => setEditOpen(true), 0);
+      return () => clearTimeout(id);
     }
   }, [searchParams]);
   const [username, setUsername] = useState(initialUsername);
@@ -214,14 +215,14 @@ export function ProfileHeader({
   if (compact) {
     return (
       <div className="mb-3 flex h-14 items-center gap-3 rounded-xl border border-white/8 bg-zinc-900/80 px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg">
           {avatar.startsWith("http") ? (
             <Image
               src={avatar}
               alt={username}
               width={36}
               height={36}
-              className="h-9 w-9 rounded-full object-cover"
+              className="size-9 rounded-full object-cover"
             />
           ) : (
             avatar
@@ -236,10 +237,10 @@ export function ProfileHeader({
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-zinc-500 hover:text-white"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-zinc-500 hover:text-white"
           aria-label={tp("editProfileAriaLabel")}
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Pencil className="size-3.5" />
         </button>
         {editOpen && (
           <ProfileEditModal
@@ -292,7 +293,7 @@ export function ProfileHeader({
               Personnalise ton pseudo
             </p>
             <p className="text-xs text-zinc-400">
-              Ton pseudo actuel a été généré automatiquement — offre-toi quelque
+              Ton pseudo actuel a été généré automatiquement : offre-toi quelque
               chose de mémorable
             </p>
           </div>
@@ -306,27 +307,27 @@ export function ProfileHeader({
         }}
       >
         <div
-          className="pointer-events-none absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
+          className="pointer-events-none absolute -top-10 -left-10 size-40 rounded-full bg-emerald-500 opacity-20 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-8 right-0 h-36 w-36 rounded-full bg-amber-500 opacity-15 blur-3xl"
+          className="pointer-events-none absolute -bottom-8 right-0 size-36 rounded-full bg-amber-500 opacity-15 blur-3xl"
           aria-hidden
         />
 
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="absolute top-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white active:scale-90"
+          className="absolute top-3 right-3 z-10 flex size-11 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white active:scale-90"
           aria-label={tp("editProfileAriaLabel")}
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="size-4" />
         </button>
 
         <div className="relative px-5 pt-5 pb-4">
           <div className="flex items-start gap-4">
             <div
-              className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ${ringCls}`}
+              className={`flex size-20 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-3xl ${ringCls}`}
             >
               {avatar.startsWith("http") ? (
                 <Image
@@ -334,7 +335,7 @@ export function ProfileHeader({
                   alt={username}
                   width={80}
                   height={80}
-                  className="h-20 w-20 rounded-full object-cover"
+                  className="size-20 rounded-full object-cover"
                 />
               ) : (
                 avatar
@@ -356,7 +357,7 @@ export function ProfileHeader({
                       alt={team.name}
                       width={16}
                       height={16}
-                      className="h-4 w-4 object-contain"
+                      className="size-4 object-contain"
                     />
                   ) : (
                     <span className="text-xs">🏳️</span>

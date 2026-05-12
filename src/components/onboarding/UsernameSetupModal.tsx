@@ -114,10 +114,10 @@ export function UsernameSetupModal({
   }[checkState];
 
   const statusIcon = {
-    checking: <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />,
-    available: <Check className="h-4 w-4 text-green-400" />,
-    taken: <X className="h-4 w-4 text-red-400" />,
-    invalid: <X className="h-4 w-4 text-amber-400" />,
+    checking: <Loader2 className="size-4 animate-spin text-zinc-400" />,
+    available: <Check className="size-4 text-green-400" />,
+    taken: <X className="size-4 text-red-400" />,
+    invalid: <X className="size-4 text-amber-400" />,
     idle: null,
   }[checkState];
 
@@ -130,19 +130,19 @@ export function UsernameSetupModal({
       <div className="relative z-10 w-full max-w-sm animate-in fade-in slide-in-from-bottom-8 rounded-t-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl sm:rounded-3xl">
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-whistle/10">
-            <Sparkles className="h-6 w-6 text-whistle" />
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-whistle/10">
+            <Sparkles className="size-6 text-whistle" />
           </div>
           <button
             onClick={handleSkip}
             className="p-1 text-zinc-500 transition hover:text-white"
             aria-label="Passer"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
-        <h2 className="mb-1 text-xl font-black text-white">
+        <h2 className="mb-1 text-xl font-semibold text-white">
           Choisis ton pseudo
         </h2>
         <p className="mb-5 text-sm text-zinc-400">

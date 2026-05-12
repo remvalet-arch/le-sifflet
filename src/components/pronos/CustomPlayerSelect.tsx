@@ -89,13 +89,13 @@ export function CustomPlayerSelect({
             </span>
           )}
         </div>
-        <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" />
+        <ChevronDown className="size-4 shrink-0 text-zinc-500" />
       </button>
 
       {open && (
         <div className="absolute left-0 top-full z-[100] mt-1 flex max-h-80 w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-zinc-900 shadow-2xl">
           <div className="flex items-center gap-2 border-b border-white/5 bg-zinc-950/50 px-3 py-2">
-            <Search className="h-4 w-4 text-zinc-500" />
+            <Search className="size-4 text-zinc-500" />
             <input
               type="text"
               autoFocus
@@ -206,7 +206,7 @@ function PlayerGroup({
         <button
           key={p.player_name}
           onClick={() => onSelect(p.player_name)}
-          className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-white/5 transition"
+          className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-white/5 transition"
         >
           <PlayerAvatar player={p} size="md" />
           <div className="flex flex-col">
@@ -232,7 +232,7 @@ function PlayerAvatar({
   player: PlayerForSelect;
   size: "sm" | "md";
 }) {
-  const d = size === "sm" ? "h-6 w-6 text-[9px]" : "h-10 w-10 text-xs";
+  const d = size === "sm" ? "size-6 text-[9px]" : "size-10 text-xs";
 
   if (player.player_name === "CSC") {
     return (

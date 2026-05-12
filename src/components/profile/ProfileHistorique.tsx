@@ -197,7 +197,7 @@ function PronoRow({ prono: p }: { prono: PronoEntry }) {
     <div
       className={`flex items-center gap-3 px-4 py-3 ${p.status === "won" ? "bg-green-500/5" : p.status === "lost" ? "bg-red-500/5" : ""}`}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-sm">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-sm">
         🎯
       </div>
       <div className="min-w-0 flex-1">
@@ -257,7 +257,7 @@ function VarBetRow({ bet: b }: { bet: ShortBetEntry }) {
     <div
       className={`flex items-center gap-3 px-4 py-3 ${b.status === "won" ? "bg-green-500/5" : b.status === "lost" ? "bg-red-500/5" : ""}`}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-sm">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-sm">
         {eventLabel.emoji}
       </div>
       <div className="min-w-0 flex-1">
@@ -357,7 +357,7 @@ export function HistoriqueTab({
       )}
 
       <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-zinc-900/60 px-4 py-2.5">
-        <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+        <Lock className="size-3.5 shrink-0 text-zinc-500" />
         <p className="text-[11px] text-zinc-500">{t("upcomingHidden")}</p>
       </div>
 

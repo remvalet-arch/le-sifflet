@@ -72,7 +72,7 @@ export function TopPlayersList({
       {players.map((p, idx) => (
         <div
           key={p.id}
-          className={`flex items-center gap-3 px-3 py-3 transition-colors hover:bg-white/[0.03] ${
+          className={`flex items-center gap-3 p-3 transition-colors hover:bg-white/[0.03] ${
             idx < players.length - 1 ? "border-b border-white/[0.06]" : ""
           }`}
         >
@@ -88,11 +88,11 @@ export function TopPlayersList({
               alt={p.player_name}
               width={40}
               height={40}
-              className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-white/10"
+              className="size-10 shrink-0 rounded-full object-cover ring-1 ring-white/10"
               unoptimized
             />
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg ring-1 ring-white/10">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-lg ring-1 ring-white/10">
               👤
             </div>
           )}
@@ -115,7 +115,7 @@ export function TopPlayersList({
               aria-hidden
               width={24}
               height={24}
-              className="h-6 w-6 shrink-0 object-contain opacity-80"
+              className="size-6 shrink-0 object-contain opacity-80"
               unoptimized
             />
           )}

@@ -32,7 +32,7 @@ export function OfflineBanner() {
       aria-live="assertive"
       className="flex items-center justify-center gap-2 bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-300"
     >
-      <WifiOff className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+      <WifiOff className="size-3.5 shrink-0 text-zinc-400" />
       {t("offlineMessage")}
     </div>
   );

@@ -31,13 +31,6 @@ const VALID_TYPES: AlertActionType[] = [
 ];
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return errorResponse("Non authentifié", 401);
-
   const body = (await request.json()) as {
     match_id?: string;
     action_type?: string;
@@ -51,6 +44,13 @@ export async function POST(request: NextRequest) {
   ) {
     return errorResponse("Paramètres invalides", 400);
   }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return errorResponse("Non authentifié", 401);
 
   const validType = action_type as AlertActionType;
 
@@ -226,9 +226,10 @@ export async function POST(request: NextRequest) {
       ]);
 
       const initiatorSet = new Set(distinctUsers);
-      const candidateIds = (presenceRows ?? [])
-        .map((r) => r.user_id)
-        .filter((id) => !initiatorSet.has(id));
+      const candidateIds: string[] = [];
+      for (const r of presenceRows ?? []) {
+        if (!initiatorSet.has(r.user_id)) candidateIds.push(r.user_id);
+      }
 
       if (candidateIds.length === 0) return;
 

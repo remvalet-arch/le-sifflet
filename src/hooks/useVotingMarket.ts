@@ -194,20 +194,26 @@ export function useVotingMarket({
   );
 
   useEffect(() => {
+    let id: ReturnType<typeof setTimeout>;
     void supabase
       .from("user_boosters_inventory")
       .select("id, booster_id, consumed_at, boosters_catalog(*)")
       .is("consumed_at", null)
       .then(({ data }) => {
         if (!data) return;
-        const items = data
-          .filter((r) => r.boosters_catalog)
-          .map((r) => ({
-            inv_id: r.id,
-            booster: r.boosters_catalog as unknown as BoosterCatalogRow,
-          }));
-        setTimeout(() => setAvailableBoosters(items), 0);
+        const items = data.reduce<
+          { inv_id: string; booster: BoosterCatalogRow }[]
+        >((acc, r) => {
+          if (r.boosters_catalog)
+            acc.push({
+              inv_id: r.id,
+              booster: r.boosters_catalog as unknown as BoosterCatalogRow,
+            });
+          return acc;
+        }, []);
+        id = setTimeout(() => setAvailableBoosters(items), 0);
       });
+    return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

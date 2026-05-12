@@ -59,7 +59,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
             <div className="flex items-end justify-center gap-4">
               {championship.standings[1] && (
                 <div className="flex flex-col items-center gap-1">
-                  <div className="h-12 w-12 flex items-center justify-center rounded-full bg-zinc-300 text-zinc-800 text-lg font-black">
+                  <div className="size-12 flex items-center justify-center rounded-full bg-zinc-300 text-zinc-800 text-lg font-black">
                     2
                   </div>
                   <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
@@ -73,7 +73,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                 </div>
               )}
               <div className="flex flex-col items-center gap-1 -mb-2">
-                <div className="h-16 w-16 flex items-center justify-center rounded-full bg-yellow-500 text-yellow-900 text-2xl font-black shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+                <div className="size-16 flex items-center justify-center rounded-full bg-yellow-500 text-yellow-900 text-2xl font-black shadow-[0_0_20px_rgba(234,179,8,0.4)]">
                   1
                 </div>
                 <p className="text-sm font-black text-yellow-300 max-w-[80px] truncate">
@@ -87,7 +87,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
               </div>
               {championship.standings[2] && (
                 <div className="flex flex-col items-center gap-1">
-                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-700 text-amber-100 text-base font-black">
+                  <div className="size-10 flex items-center justify-center rounded-full bg-amber-700 text-amber-100 text-base font-black">
                     3
                   </div>
                   <p className="text-xs font-bold text-zinc-300 max-w-[60px] truncate">
@@ -112,8 +112,8 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
       {/* Tableau de championnat */}
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <Swords className="h-4 w-4 text-amber-400" aria-hidden />
-          <h2 className="text-sm font-black uppercase tracking-wide text-white">
+          <Swords className="size-4 text-amber-400" aria-hidden />
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-white">
             {t("championshipTitle", {
               round: championship.current_round,
               total: championship.total_rounds,
@@ -133,13 +133,11 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                 <th className="px-3 py-2 text-left">
                   {t("championshipTablePlayer")}
                 </th>
-                <th className="px-2 py-2 text-center">J</th>
-                <th className="px-2 py-2 text-center">V</th>
-                <th className="px-2 py-2 text-center">N</th>
-                <th className="px-2 py-2 text-center">D</th>
-                <th className="px-2 py-2 text-right font-black text-white">
-                  Pts
-                </th>
+                <th className="p-2 text-center">J</th>
+                <th className="p-2 text-center">V</th>
+                <th className="p-2 text-center">N</th>
+                <th className="p-2 text-center">D</th>
+                <th className="p-2 text-right font-black text-white">Pts</th>
               </tr>
             </thead>
             <tbody>
@@ -152,7 +150,7 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                   >
                     <td className="px-3 py-2.5">
                       <span
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black ${
+                        className={`flex size-6 items-center justify-center rounded-full text-[10px] font-black ${
                           idx === 0
                             ? "bg-yellow-500 text-yellow-900"
                             : idx === 1
@@ -177,19 +175,17 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
                         })}
                       </p>
                     </td>
-                    <td className="px-2 py-2.5 text-center text-zinc-400">
+                    <td className="p-2.5 text-center text-zinc-400">
                       {s.played}
                     </td>
-                    <td className="px-2 py-2.5 text-center text-green-400">
+                    <td className="p-2.5 text-center text-green-400">
                       {s.won}
                     </td>
-                    <td className="px-2 py-2.5 text-center text-zinc-400">
+                    <td className="p-2.5 text-center text-zinc-400">
                       {s.drawn}
                     </td>
-                    <td className="px-2 py-2.5 text-center text-red-400">
-                      {s.lost}
-                    </td>
-                    <td className="px-2 py-2.5 text-right font-black tabular-nums text-amber-300">
+                    <td className="p-2.5 text-center text-red-400">{s.lost}</td>
+                    <td className="p-2.5 text-right font-black tabular-nums text-amber-300">
                       {s.points}
                     </td>
                   </tr>
@@ -204,8 +200,8 @@ export function SquadChampionship({ championship, currentUserId }: Props) {
       {championship.current_fixtures.length > 0 && (
         <div>
           <div className="mb-3 flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-blue-400" aria-hidden />
-            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+            <CalendarDays className="size-4 text-blue-400" aria-hidden />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-white">
               {t("championshipMatchWeek", {
                 round: championship.current_round,
               })}

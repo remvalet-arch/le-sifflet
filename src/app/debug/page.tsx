@@ -19,7 +19,7 @@ export default async function DebugPage() {
   if (!url || !anon) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 font-sans text-slate-800">
-        <h1 className="text-xl font-bold text-green-900">
+        <h1 className="text-xl font-semibold text-green-900">
           Variables manquantes
         </h1>
         <p className="mt-2 text-slate-600">
@@ -39,7 +39,7 @@ export default async function DebugPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 font-sans text-slate-800">
-      <h1 className="text-xl font-bold text-green-900">Supabase OK</h1>
+      <h1 className="text-xl font-semibold text-green-900">Supabase OK</h1>
       <p className="mt-2 text-sm text-slate-600">
         Projet :{" "}
         <span className="font-mono text-slate-800">

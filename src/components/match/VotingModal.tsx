@@ -208,7 +208,7 @@ export function VotingModal({
               aria-live="polite"
             >
               <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-indigo-400">
-                👁 Vision — choix de tes amis
+                👁 Vision : choix de tes amis
               </p>
               {Object.keys(revealedHints).length === 0 ? (
                 <p className="text-sm text-zinc-400">

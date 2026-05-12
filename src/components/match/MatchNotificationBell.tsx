@@ -115,9 +115,9 @@ export function MatchNotificationBell({ matchId }: Props) {
         className="flex items-center gap-1.5 rounded-full border border-white/15 bg-zinc-900/80 px-3 py-2 text-[11px] font-black text-zinc-400 transition hover:border-white/25 hover:text-zinc-200 active:scale-95 disabled:opacity-40"
       >
         {pending ? (
-          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
+          <LoaderCircle className="size-4 animate-spin" aria-hidden />
         ) : (
-          <Bell className="h-4 w-4 shrink-0" aria-hidden />
+          <Bell className="size-4 shrink-0" aria-hidden />
         )}
         <span>Suivre</span>
       </button>
@@ -131,18 +131,18 @@ export function MatchNotificationBell({ matchId }: Props) {
       disabled={loading || pending}
       aria-label={label}
       aria-pressed={subscribed && !muted}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition active:scale-95 disabled:opacity-40 ${
+      className={`flex size-10 shrink-0 items-center justify-center rounded-full border transition active:scale-95 disabled:opacity-40 ${
         muted
           ? "border-amber-500/50 bg-amber-500/15 text-amber-300"
           : "border-green-500/50 bg-green-500/15 text-green-400"
       }`}
     >
       {loading || pending ? (
-        <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
+        <LoaderCircle className="size-4 animate-spin" aria-hidden />
       ) : muted ? (
-        <BellOff className="h-5 w-5" aria-hidden />
+        <BellOff className="size-5" aria-hidden />
       ) : (
-        <Bell className="h-5 w-5 fill-current" aria-hidden />
+        <Bell className="size-5 fill-current" aria-hidden />
       )}
     </button>
   );

@@ -19,14 +19,14 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id: matchId } = await params;
+  const scope = request.nextUrl.searchParams.get("scope") ?? "global";
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return errorResponse("Non authentifié", 401);
-
-  const { id: matchId } = await params;
-  const scope = request.nextUrl.searchParams.get("scope") ?? "global";
 
   const admin = createAdminClient();
 

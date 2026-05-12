@@ -99,11 +99,14 @@ export async function GET(request: Request) {
   const userMatchMap = new Map<string, typeof activeMatches>();
 
   for (const profile of profiles) {
+    const prefCompSet = profile.preferred_competitions?.length
+      ? new Set(profile.preferred_competitions)
+      : null;
+
     const eligible = activeMatches.filter((m) => {
       if (notifiedKey.has(`${profile.id}:${m.id}`)) return false;
-      if (m.competition_id && profile.preferred_competitions?.length) {
-        if (!profile.preferred_competitions.includes(m.competition_id))
-          return false;
+      if (m.competition_id && prefCompSet) {
+        if (!prefCompSet.has(m.competition_id)) return false;
       }
       return true;
     });

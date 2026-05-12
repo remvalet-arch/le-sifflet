@@ -14,7 +14,7 @@ export function Toggle({
   size = "md",
 }: ToggleProps) {
   const trackSz = size === "sm" ? "h-5 w-9" : "h-6 w-11";
-  const thumbSz = size === "sm" ? "h-3.5 w-3.5" : "h-4.5 w-4.5";
+  const thumbSz = size === "sm" ? "size-3.5" : "size-4.5";
   const translate = size === "sm" ? "translate-x-4" : "translate-x-5";
 
   return (

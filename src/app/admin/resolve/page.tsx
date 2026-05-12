@@ -49,7 +49,7 @@ export default async function AdminResolvePage() {
     event,
     matchName:
       varMatchMap.get(event.match_id) != null
-        ? `${varMatchMap.get(event.match_id)!.team_home} — ${varMatchMap.get(event.match_id)!.team_away}`
+        ? `${varMatchMap.get(event.match_id)!.team_home} vs ${varMatchMap.get(event.match_id)!.team_away}`
         : event.match_id.slice(0, 8),
     ageMin: Math.floor((now - new Date(event.created_at).getTime()) / 60_000),
   }));
@@ -58,8 +58,8 @@ export default async function AdminResolvePage() {
     <main className="min-h-screen bg-gray-950 px-4 py-8 text-white">
       <div className="mx-auto max-w-2xl space-y-10">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black uppercase tracking-widest text-yellow-400">
-            Admin — Résolution
+          <h1 className="text-2xl font-semibold uppercase tracking-widest text-yellow-400">
+            Admin · Résolution
           </h1>
           <div className="flex gap-2">
             <Link
@@ -90,7 +90,7 @@ export default async function AdminResolvePage() {
         </div>
 
         <section>
-          <h2 className="mb-1 text-sm font-black uppercase tracking-widest text-zinc-400">
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-widest text-zinc-400">
             🔎 Événements VAR en attente de résolution
           </h2>
           <p className="mb-4 text-xs text-white/40">
@@ -116,7 +116,7 @@ export default async function AdminResolvePage() {
         </section>
 
         <section>
-          <h2 className="mb-1 text-sm font-black uppercase tracking-widest text-zinc-400">
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-widest text-zinc-400">
             🔁 Rattrapage des matchs terminés
           </h2>
           <p className="mb-4 text-xs text-white/40">

@@ -140,7 +140,7 @@ export function SquadLeaderboard({
               <>
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-black ${
                       idx === 0
                         ? "bg-yellow-500 text-yellow-900 border-2 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
                         : idx === 1
@@ -210,7 +210,7 @@ export function SquadLeaderboard({
                 onClick={() => setConfirmLaunch(true)}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-6 py-4 text-sm font-black uppercase tracking-wide text-amber-300 transition active:scale-[0.98] hover:bg-amber-500/20"
               >
-                <PlayCircle className="h-5 w-5" />
+                <PlayCircle className="size-5" />
                 {t("launchChampionship")}
               </button>
             ) : (
@@ -236,9 +236,9 @@ export function SquadLeaderboard({
                       className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black uppercase text-black transition disabled:opacity-50"
                     >
                       {launchingChamp ? (
-                        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                        <LoaderCircle className="size-3.5 animate-spin" />
                       ) : (
-                        <PlayCircle className="h-3.5 w-3.5" />
+                        <PlayCircle className="size-3.5" />
                       )}
                       {t("launchButton")}
                     </button>
@@ -269,8 +269,8 @@ export function SquadLeaderboard({
       {activity.length > 0 && (
         <div>
           <div className="mb-3 flex items-center gap-2">
-            <Flame className="h-4 w-4 text-orange-400" aria-hidden />
-            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+            <Flame className="size-4 text-orange-400" aria-hidden />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-white">
               {t("lastExploits")}
             </h2>
           </div>
@@ -281,7 +281,7 @@ export function SquadLeaderboard({
                 item.contre_pied_bonus >= 60 && item.contre_pied_bonus < 100;
               return (
                 <div
-                  key={idx}
+                  key={`leader-${idx}`}
                   className="flex items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900/60 px-4 py-3"
                 >
                   <span className="shrink-0 text-lg" aria-hidden>
@@ -318,8 +318,8 @@ export function SquadLeaderboard({
       {past_seasons && past_seasons.length > 0 && (
         <div>
           <div className="mb-3 flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-yellow-400" aria-hidden />
-            <h2 className="text-sm font-black uppercase tracking-wide text-white">
+            <Trophy className="size-4 text-yellow-400" aria-hidden />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-white">
               {t("palmares")}
             </h2>
           </div>
@@ -344,7 +344,10 @@ export function SquadLeaderboard({
                     · {s.champion_points} Points
                   </p>
                   {s.ended_at && (
-                    <p className="text-[10px] text-zinc-600">
+                    <p
+                      className="text-[10px] text-zinc-600"
+                      suppressHydrationWarning
+                    >
                       {new Date(s.ended_at).toLocaleDateString("fr-FR", {
                         month: "long",
                         year: "numeric",

@@ -41,7 +41,7 @@ function PlayerDot({
   return (
     <div className="flex flex-col items-center gap-0.5">
       <div
-        className={`flex h-8 w-8 items-center justify-center rounded-full border text-[10px] font-black ${
+        className={`flex size-8 items-center justify-center rounded-full border text-[10px] font-black ${
           textIsWhite
             ? "border-white/30 text-white"
             : "border-black/20 text-zinc-900"
@@ -211,7 +211,7 @@ export const SoccerPitch = memo(function SoccerPitch({
               <div key={rowIdx} className="flex justify-center gap-3">
                 {Array.from({ length: count }).map((_, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
-                    <div className="h-8 w-8 rounded-full bg-green-700/50" />
+                    <div className="size-8 rounded-full bg-green-700/50" />
                     <div className="h-1.5 w-10 rounded-full bg-green-700/30" />
                   </div>
                 ))}
@@ -268,8 +268,8 @@ export const SoccerPitch = memo(function SoccerPitch({
             <div className="absolute left-[15%] right-[15%] top-0 h-12 border-b border-l border-r border-white/20" />
             <div className="absolute left-[35%] right-[35%] top-0 h-5 border-b border-l border-r border-white/20" />
             <div className="absolute left-4 right-4 top-1/2 h-px -translate-y-1/2 bg-white/25" />
-            <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25" />
-            <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
+            <div className="absolute left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25" />
+            <div className="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
             <div className="absolute bottom-0 left-[35%] right-[35%] h-5 border-l border-r border-t border-white/20" />
             <div className="absolute bottom-0 left-[15%] right-[15%] h-12 border-l border-r border-t border-white/20" />
           </div>
@@ -354,7 +354,7 @@ export const SoccerPitch = memo(function SoccerPitch({
 
   return (
     <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
-      <Users className="h-10 w-10 text-zinc-600" />
+      <Users className="size-10 text-zinc-600" />
       <p className="text-center text-sm font-semibold text-zinc-400">
         Les compos ne sont pas encore tombées. Le coach fait durer le suspense.
       </p>

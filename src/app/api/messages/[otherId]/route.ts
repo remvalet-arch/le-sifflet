@@ -11,12 +11,28 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ otherId: string }> },
 ) {
+  const [{ otherId }, body] = await Promise.all([
+    params,
+    request.json() as Promise<{ content?: unknown }>,
+  ]);
+  const content = typeof body.content === "string" ? body.content.trim() : null;
+
+  if (!otherId) return errorResponse("Destinataire invalide", 400);
+  if (!content || content.length === 0)
+    return errorResponse("Message vide", 400);
+  if (content.length > MAX_CHARS)
+    return errorResponse(
+      `Message trop long (max ${MAX_CHARS} caractères)`,
+      400,
+    );
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) return errorResponse("Non authentifié", 401);
+  if (otherId === user.id) return errorResponse("Destinataire invalide", 400);
 
   const { limited, retryAfter } = await checkRateLimit(
     supabase,
@@ -27,21 +43,6 @@ export async function POST(
     return errorResponse(
       `Trop de requêtes — réessaie dans ${retryAfter}s`,
       429,
-    );
-
-  const { otherId } = await params;
-  if (!otherId || otherId === user.id)
-    return errorResponse("Destinataire invalide", 400);
-
-  const body = (await request.json()) as { content?: unknown };
-  const content = typeof body.content === "string" ? body.content.trim() : null;
-
-  if (!content || content.length === 0)
-    return errorResponse("Message vide", 400);
-  if (content.length > MAX_CHARS)
-    return errorResponse(
-      `Message trop long (max ${MAX_CHARS} caractères)`,
-      400,
     );
 
   // Vérification amitié acceptée
@@ -92,17 +93,14 @@ export async function POST(
     .eq("id", thread.id);
 
   // Push vers le destinataire si notif_dm=true
-  const { data: recipient } = await admin
-    .from("profiles")
-    .select("username, notif_dm")
-    .eq("id", otherId)
-    .maybeSingle();
-
-  const { data: sender } = await admin
-    .from("profiles")
-    .select("username")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: recipient }, { data: sender }] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("username, notif_dm")
+      .eq("id", otherId)
+      .maybeSingle(),
+    admin.from("profiles").select("username").eq("id", user.id).maybeSingle(),
+  ]);
 
   if (sender) {
     const preview = content.length > 80 ? `${content.slice(0, 77)}…` : content;

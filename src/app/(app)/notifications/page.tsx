@@ -38,7 +38,7 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-      <h1 className="mb-4 text-xl font-black uppercase tracking-wide text-white">
+      <h1 className="mb-4 text-xl font-semibold uppercase tracking-wide text-white">
         {t("pageTitle")}
       </h1>
 
@@ -58,7 +58,10 @@ export default async function NotificationsPage() {
                 <p className="text-sm font-bold text-white">{n.title}</p>
                 <p className="mt-0.5 text-xs text-zinc-400">{n.body}</p>
               </div>
-              <p className="shrink-0 text-[10px] text-zinc-600">
+              <p
+                className="shrink-0 text-[10px] text-zinc-600"
+                suppressHydrationWarning
+              >
                 {new Date(n.created_at).toLocaleString("fr-FR", {
                   day: "2-digit",
                   month: "2-digit",

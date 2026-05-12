@@ -129,13 +129,11 @@ export async function GET(
       return errorResponse(rpcErr.message, 500);
     }
 
-    const memberIds = [
-      ...new Set(
-        (pairs ?? [])
-          .filter((p) => p.squad_id === squadId)
-          .map((p) => p.user_id),
-      ),
-    ];
+    const memberIdSet = new Set<string>();
+    for (const p of pairs ?? []) {
+      if (p.squad_id === squadId) memberIdSet.add(p.user_id);
+    }
+    const memberIds = [...memberIdSet];
     if (memberIds.length === 0) {
       return successResponse({
         squad,
@@ -273,23 +271,22 @@ export async function GET(
       }
     }
 
-    const activity: ActivityItem[] = (bigWins ?? [])
-      .map((w) => {
-        const match = matchMap.get(w.match_id);
-        if (!match) return null;
-        return {
-          user_id: w.user_id,
-          username: usernameById.get(w.user_id) ?? "???",
-          points_earned: w.points_earned,
-          contre_pied_bonus: w.contre_pied_bonus,
-          match_id: w.match_id,
-          team_home: match.team_home,
-          team_away: match.team_away,
-          placed_at: w.placed_at,
-        };
-      })
-      .filter((x): x is ActivityItem => x !== null)
-      .slice(0, 10);
+    const activity: ActivityItem[] = [];
+    for (const w of bigWins ?? []) {
+      if (activity.length >= 10) break;
+      const match = matchMap.get(w.match_id);
+      if (!match) continue;
+      activity.push({
+        user_id: w.user_id,
+        username: usernameById.get(w.user_id) ?? "???",
+        points_earned: w.points_earned,
+        contre_pied_bonus: w.contre_pied_bonus,
+        match_id: w.match_id,
+        team_home: match.team_home,
+        team_away: match.team_away,
+        placed_at: w.placed_at,
+      });
+    }
 
     // ── Championship data (mode braquage) ─────────────────────────────────────
     let championship: ChampionshipData | null = null;

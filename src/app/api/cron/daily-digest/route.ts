@@ -148,9 +148,10 @@ export async function GET(request: Request) {
     .select("id, username, notif_daily_digest")
     .in("id", allActivityUserIds);
 
-  const optedIn = new Set(
-    (profiles ?? []).filter((p) => p.notif_daily_digest).map((p) => p.id),
-  );
+  const optedIn = new Set<string>();
+  for (const p of profiles ?? []) {
+    if (p.notif_daily_digest) optedIn.add(p.id);
+  }
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
 
@@ -194,10 +195,11 @@ export async function GET(request: Request) {
 
   // Send personalized digest pushes + emails to opted-in users
   let sent = 0;
-  await Promise.allSettled(
-    allActivityUserIds
-      .filter((uid) => optedIn.has(uid) && !alreadyDismissed.has(uid))
-      .map(async (uid) => {
+  const digestTasks: Promise<void>[] = [];
+  for (const uid of allActivityUserIds) {
+    if (!optedIn.has(uid) || alreadyDismissed.has(uid)) continue;
+    digestTasks.push(
+      (async () => {
         const recap = userRecaps.get(uid)!;
         const earned = recap.points_earned;
         const profile = profileMap.get(uid);
@@ -232,8 +234,10 @@ export async function GET(request: Request) {
             : Promise.resolve(),
         ]);
         sent++;
-      }),
-  );
+      })(),
+    );
+  }
+  await Promise.allSettled(digestTasks);
 
   log.info(
     "daily-digest",

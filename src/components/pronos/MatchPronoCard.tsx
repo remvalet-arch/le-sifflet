@@ -96,7 +96,7 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
         if (res === "W") {
           return (
             <div
-              key={i}
+              key={`form-w-${i}`}
               className="flex size-2.5 items-center justify-center rounded-full bg-green-500"
             >
               <Check className="size-1.5 text-white" strokeWidth={4} />
@@ -106,7 +106,7 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
         if (res === "L") {
           return (
             <div
-              key={i}
+              key={`form-l-${i}`}
               className="flex size-2.5 items-center justify-center rounded-full bg-red-500"
             >
               <X className="size-1.5 text-white" strokeWidth={4} />
@@ -116,7 +116,7 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
         if (res === "D") {
           return (
             <div
-              key={i}
+              key={`form-d-${i}`}
               className="flex size-2.5 items-center justify-center rounded-full bg-zinc-500"
             >
               <Minus className="size-1.5 text-white" strokeWidth={4} />
@@ -125,7 +125,7 @@ function TeamFormPills({ form }: { form: ("W" | "D" | "L" | "unknown")[] }) {
         }
         return (
           <div
-            key={i}
+            key={`form-empty-${i}`}
             className="flex size-2.5 items-center justify-center rounded-full border border-white/10 bg-zinc-800"
           />
         );
@@ -368,7 +368,7 @@ export function MatchPronoCard({
 
     return (
       <div
-        className={`rounded-2xl border px-4 py-4 ${
+        className={`rounded-2xl border p-4 ${
           isWon
             ? "border-green-500/30 bg-green-500/5 shadow-[0_0_12px_rgba(34,197,94,0.08)]"
             : isLost
@@ -566,7 +566,7 @@ export function MatchPronoCard({
 
           <div className="mx-2 flex shrink-0 flex-col items-center">
             {isLocked ? (
-              <div className="flex flex-col items-center gap-2 px-2 py-2 text-center">
+              <div className="flex flex-col items-center gap-2 p-2 text-center">
                 {match.status === "first_half" ||
                 match.status === "second_half" ||
                 match.status === "half_time" ||
@@ -634,7 +634,7 @@ export function MatchPronoCard({
                           { pts: pts2, active: is2 },
                         ].map(({ pts, active }, idx) => (
                           <div
-                            key={idx}
+                            key={`pts-${idx}`}
                             className={`flex min-w-[1.8rem] items-center justify-center rounded-[5px] px-1.5 py-0.5 transition-all ${active ? "border border-amber-500/50 bg-zinc-900 shadow-[0_0_6px_rgba(245,158,11,0.1)]" : "border border-white/5 bg-zinc-800/80"}`}
                           >
                             <span
@@ -658,7 +658,7 @@ export function MatchPronoCard({
                             match.community_stats?.community_2_pct ?? 0,
                           ].map((pct, idx) => (
                             <div
-                              key={idx}
+                              key={`pct-${idx}`}
                               className="min-w-[1.8rem] text-center"
                             >
                               <span className="text-[9px] font-medium text-zinc-500">
@@ -720,7 +720,7 @@ export function MatchPronoCard({
           </a>
         ) : isLocked ? (
           <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800/50 py-3 text-[11px] font-black uppercase tracking-widest text-zinc-500">
-            🔒 Pronos fermés — match en cours
+            🔒 Pronos fermés, match en cours
           </div>
         ) : scoresValid ? (
           <>

@@ -25,7 +25,9 @@ export default function AppError({
         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
           {t("errorTitle")}
         </p>
-        <h2 className="text-lg font-black text-white">{t("errorHeading")}</h2>
+        <h2 className="text-lg font-semibold text-white">
+          {t("errorHeading")}
+        </h2>
         <p className="mt-2 text-sm text-zinc-400">{t("errorDesc")}</p>
       </div>
       <div className="flex gap-3">

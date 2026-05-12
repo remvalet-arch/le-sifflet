@@ -10,12 +10,13 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ redirect?: string }>;
 }) {
-  const supabase = await createClient();
+  const [supabase, { redirect: redirectParam }] = await Promise.all([
+    createClient(),
+    searchParams,
+  ]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const { redirect: redirectParam } = await searchParams;
 
   if (user) redirect(redirectParam ?? "/lobby");
 
@@ -39,7 +40,7 @@ export default async function LoginPage({
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+              <h1 className="text-2xl font-semibold uppercase tracking-tight text-white">
                 Sécurise ton profil
               </h1>
               <p className="mt-2 text-sm text-zinc-400">

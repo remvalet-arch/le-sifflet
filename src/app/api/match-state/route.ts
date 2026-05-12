@@ -32,6 +32,14 @@ const INFO_MINUTES: Partial<Record<MatchStatus, number>> = {
 };
 
 export async function POST(request: NextRequest) {
+  const body = (await request.json()) as { match_id?: string; status?: string };
+  const { match_id, status } = body;
+
+  if (!match_id) return errorResponse("match_id manquant", 400);
+  if (!status || !VALID_STATUSES.includes(status as MatchStatus)) {
+    return errorResponse("Statut invalide", 400);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,14 +54,6 @@ export async function POST(request: NextRequest) {
 
   if (!profile || !isAdminRole(profile.role)) {
     return errorResponse("Accès réservé aux administrateurs", 403);
-  }
-
-  const body = (await request.json()) as { match_id?: string; status?: string };
-  const { match_id, status } = body;
-
-  if (!match_id) return errorResponse("match_id manquant", 400);
-  if (!status || !VALID_STATUSES.includes(status as MatchStatus)) {
-    return errorResponse("Statut invalide", 400);
   }
 
   const newStatus = status as MatchStatus;

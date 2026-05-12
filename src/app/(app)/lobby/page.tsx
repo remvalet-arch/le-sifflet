@@ -59,7 +59,7 @@ async function MatchListFetcher({
   if (data.length === 0 && viewMode === "round" && roundContext != null) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/8 bg-zinc-900 px-6 py-12">
-        <CalendarX className="h-10 w-10 text-zinc-600" />
+        <CalendarX className="size-10 text-zinc-600" />
         <p className="text-center text-sm font-semibold text-zinc-400">
           {t("noMatchesForRound", {
             round: roundContext.roundShort,
@@ -122,9 +122,11 @@ export default async function LobbyPage({ searchParams }: PageProps) {
         .in("id", profile.preferred_competitions)
         .not("api_football_league_id", "is", null);
 
-      preferredLeagueApiIds = (comps ?? [])
-        .map((c) => c.api_football_league_id)
-        .filter((id): id is number => id != null);
+      preferredLeagueApiIds = (comps ?? []).reduce<number[]>((acc, c) => {
+        if (c.api_football_league_id != null)
+          acc.push(c.api_football_league_id);
+        return acc;
+      }, []);
     }
   }
 

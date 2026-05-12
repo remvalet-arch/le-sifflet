@@ -293,7 +293,7 @@ export function ModeratorDrawer({
             className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-green-500 font-black uppercase tracking-wide text-zinc-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? (
-              <LoaderCircle className="h-5 w-5 animate-spin" />
+              <LoaderCircle className="size-5 animate-spin" />
             ) : (
               "Valider"
             )}

@@ -23,7 +23,7 @@ export default function MatchLoading() {
       {/* Onglets */}
       <div className="mt-4 flex gap-6 border-b border-white/8 pb-3">
         {[0, 1, 2].map((i) => (
-          <SkeletonBlock key={i} h="h-3" w="w-20" />
+          <SkeletonBlock key={`skeleton-`} h="h-3" w="w-20" />
         ))}
       </div>
 
@@ -36,13 +36,13 @@ export default function MatchLoading() {
             { side: "away", w: "w-32" },
             { side: "home", w: "w-24" },
           ].map((item, i) => (
-            <div key={i} className="relative flex items-start">
+            <div key={`skeleton-`} className="relative flex items-start">
               <div className="flex flex-1 justify-end pr-4">
                 {item.side === "home" && (
                   <div className={`h-12 ${item.w} rounded-xl bg-zinc-800/80`} />
                 )}
               </div>
-              <div className="z-10 mt-4 h-3 w-3 shrink-0 rounded-full bg-zinc-700 ring-2 ring-zinc-950" />
+              <div className="z-10 mt-4 size-3 shrink-0 rounded-full bg-zinc-700 ring-2 ring-zinc-950" />
               <div className="flex flex-1 justify-start pl-4">
                 {item.side === "away" && (
                   <div className={`h-12 ${item.w} rounded-xl bg-zinc-800/80`} />

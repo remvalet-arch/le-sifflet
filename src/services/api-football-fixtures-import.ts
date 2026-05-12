@@ -97,14 +97,22 @@ async function fetchTeamsByApiIds(
   const unique = [...new Set(apiIds.filter((n) => n > 0))];
   if (unique.length === 0) return map;
   const chunk = 100;
+  const slices: number[][] = [];
   for (let i = 0; i < unique.length; i += chunk) {
-    const slice = unique.slice(i, i + chunk);
-    const { data, error } = await admin
-      .from("teams")
-      .select("id, api_football_id, logo_url, color_primary")
-      .in("api_football_id", slice);
-    if (error) throw new Error(`teams by api_football_id: ${error.message}`);
-    for (const row of data ?? []) {
+    slices.push(unique.slice(i, i + chunk));
+  }
+  const results = await Promise.all(
+    slices.map(async (slice) => {
+      const { data, error } = await admin
+        .from("teams")
+        .select("id, api_football_id, logo_url, color_primary")
+        .in("api_football_id", slice);
+      if (error) throw new Error(`teams by api_football_id: ${error.message}`);
+      return data ?? [];
+    }),
+  );
+  for (const rows of results) {
+    for (const row of rows) {
       if (row.api_football_id != null) {
         map.set(row.api_football_id, {
           id: row.id,
@@ -294,26 +302,28 @@ async function importFixtureList(
 
     if (!homeRow || !awayRow) {
       try {
-        if (!homeRow) {
-          homeRow = await upsertTeamByApiId(
-            admin,
-            homeApi,
-            homeName,
-            homeLogo || null,
-            competitionId,
-          );
-          teamMap.set(homeApi, homeRow);
-        }
-        if (!awayRow) {
-          awayRow = await upsertTeamByApiId(
-            admin,
-            awayApi,
-            awayName,
-            awayLogo || null,
-            competitionId,
-          );
-          teamMap.set(awayApi, awayRow);
-        }
+        [homeRow, awayRow] = await Promise.all([
+          homeRow
+            ? Promise.resolve(homeRow)
+            : upsertTeamByApiId(
+                admin,
+                homeApi,
+                homeName,
+                homeLogo || null,
+                competitionId,
+              ),
+          awayRow
+            ? Promise.resolve(awayRow)
+            : upsertTeamByApiId(
+                admin,
+                awayApi,
+                awayName,
+                awayLogo || null,
+                competitionId,
+              ),
+        ]);
+        teamMap.set(homeApi, homeRow);
+        teamMap.set(awayApi, awayRow);
       } catch (e) {
         out.skippedNoTeams += 1;
         out.errors.push(
