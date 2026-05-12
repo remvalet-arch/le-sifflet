@@ -16,7 +16,6 @@ type Props = {
   pronos: import("./ProfileHistorique").PronoEntry[];
   allBadges: BadgeRow[];
   unlockedBadgeIds: string[];
-  unlockedAtMap?: Record<string, string>;
   amisContent: React.ReactNode;
   refillContent: React.ReactNode;
   winRate: number;
@@ -56,7 +55,6 @@ export function ProfileClient({
   pronos,
   allBadges,
   unlockedBadgeIds,
-  unlockedAtMap,
   amisContent,
   refillContent,
   winRate,
@@ -200,7 +198,6 @@ export function ProfileClient({
         <ProfileBadges
           allBadges={allBadges}
           unlockedBadgeIds={unlockedBadgeIds}
-          unlockedAtMap={unlockedAtMap}
         />
       )}
 

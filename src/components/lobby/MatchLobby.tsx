@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -22,9 +22,7 @@ import type { LobbyMatchRow } from "@/types/lobby";
 import { toMatchRow } from "@/types/lobby";
 import type { MatchGoalLine } from "@/components/lobby/MatchCard";
 
-import { Target, Clock, Trophy, Shield } from "lucide-react";
-import { PullToRefresh } from "@/components/ui/PullToRefresh";
-import { formatMatchDateTimeParis } from "@/lib/format-match-time";
+import { Target } from "lucide-react";
 
 /** Ordre des sections « Direct » / Europe : Top 5 puis coupes UEFA. */
 const LOBBY_GROUP_ORDER: readonly number[] = [
@@ -316,95 +314,6 @@ function EuropeHubView({
   );
 }
 
-function StadeIdleState({
-  rows,
-  t,
-}: {
-  rows: LobbyMatchRow[];
-  t: ReturnType<typeof useTranslations<"Lobby">>;
-}) {
-  // Prochains matchs à venir dans les 24 h (non encore live)
-  const upcoming = rows
-    .filter((m) => m.status === "upcoming")
-    .sort(
-      (a, b) =>
-        new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-    )
-    .slice(0, 3);
-
-  return (
-    <div className="flex flex-col gap-3">
-      {/* Bloc "La VAR dort" — compact */}
-      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-zinc-900/60 px-4 py-4">
-        <span className="text-3xl shrink-0" aria-hidden="true">
-          😴
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-black text-white">{t("varSleeping")}</p>
-          <p className="mt-0.5 text-xs text-zinc-500">{t("noDirectMatches")}</p>
-        </div>
-        <Link
-          href="/pronos"
-          className="ml-auto shrink-0 flex items-center gap-1.5 rounded-xl bg-whistle px-4 py-2 text-xs font-black uppercase tracking-wide text-pitch-900 transition hover:bg-whistle/90 active:scale-95"
-        >
-          <Target className="size-3.5" />
-          {t("makeMyPronos")}
-        </Link>
-      </div>
-
-      {/* Prochains matchs */}
-      {upcoming.length > 0 && (
-        <div className="rounded-2xl border border-white/8 bg-zinc-900/60 px-4 py-3">
-          <p className="mb-2.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-            Prochains matchs
-          </p>
-          <ul className="flex flex-col gap-2">
-            {upcoming.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/match/${m.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-white/8 bg-zinc-800/60 px-3 py-2.5 transition hover:border-white/15 active:scale-[0.99]"
-                >
-                  <Clock className="size-3.5 shrink-0 text-zinc-500" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-white">
-                      {m.team_home} — {m.team_away}
-                    </p>
-                    <p className="text-[10px] tabular-nums text-zinc-500">
-                      {formatMatchDateTimeParis(m.start_time)}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-lg bg-whistle/15 px-2 py-0.5 text-[10px] font-black uppercase text-whistle">
-                    Prono
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* CTA secondaires */}
-      <div className="flex gap-2">
-        <Link
-          href="/leaderboard"
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
-        >
-          <Trophy className="size-3.5" />
-          {t("leaderboard")}
-        </Link>
-        <Link
-          href="/ligues"
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
-        >
-          <Shield className="size-3.5" />
-          {t("myLeagues")}
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 export function MatchLobby({
   initialMatches,
   viewMode = "day",
@@ -424,29 +333,6 @@ export function MatchLobby({
   const [tab, setTab] = useState<LobbyTabKey>(() =>
     defaultTabForProps(viewMode, roundContext),
   );
-
-  // Fades dynamiques sur la barre de filtres
-  const filterNavRef = useRef<HTMLElement>(null);
-  const [filterScrollState, setFilterScrollState] = useState({
-    showLeft: false,
-    showRight: true,
-  });
-
-  const updateFilterFades = useCallback(() => {
-    const el = filterNavRef.current;
-    if (!el) return;
-    const atStart = el.scrollLeft <= 4;
-    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
-    setFilterScrollState({ showLeft: !atStart, showRight: !atEnd });
-  }, []);
-
-  useEffect(() => {
-    const el = filterNavRef.current;
-    if (!el) return;
-    updateFilterFades();
-    el.addEventListener("scroll", updateFilterFades, { passive: true });
-    return () => el.removeEventListener("scroll", updateFilterFades);
-  }, [updateFilterFades]);
 
   const rows = useMemo(
     () =>
@@ -524,127 +410,145 @@ export function MatchLobby({
   }
 
   return (
-    <PullToRefresh>
-      <div className="flex flex-col gap-4">
-        {roundView && roundContext != null && (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/90 px-3 py-2.5 text-xs text-zinc-400">
-            <span>
-              {t("matchday")}{" "}
-              <span className="font-mono font-bold text-chalk">
-                {roundContext.roundShort}
-              </span>
+    <div className="flex flex-col gap-4">
+      {roundView && roundContext != null && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/90 px-3 py-2.5 text-xs text-zinc-400">
+          <span>
+            {t("matchday")}{" "}
+            <span className="font-mono font-bold text-chalk">
+              {roundContext.roundShort}
             </span>
-            <Link
-              href="/lobby"
-              className="font-bold uppercase tracking-wide text-whistle hover:underline"
-            >
-              {t("backToMatchDay")}
-            </Link>
-          </div>
-        )}
-
-        {!roundView && dayFallbackBanner != null && (
-          <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-xs leading-snug text-amber-100/95">
-            <p className="font-black uppercase tracking-wide text-amber-400/95">
-              {t("todayRest")}
-            </p>
-            <p className="mt-1 font-medium text-amber-50/90">
-              {t("nextMatchesOn")}{" "}
-              <span className="font-bold capitalize text-white">
-                {dayFallbackBanner.shownDayLabelFr}
-              </span>
-            </p>
-          </div>
-        )}
-
-        <div className="relative -mx-1">
-          {filterScrollState.showLeft && (
-            <div
-              className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 bg-gradient-to-r from-zinc-950 to-transparent transition-opacity duration-200"
-              aria-hidden
-            />
-          )}
-          <nav
-            ref={filterNavRef}
-            className="flex gap-1 overflow-x-auto pb-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            aria-label="Filtrer par compétition"
+          </span>
+          <Link
+            href="/lobby"
+            className="font-bold uppercase tracking-wide text-whistle hover:underline"
           >
-            {orderedTabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={`shrink-0 rounded-full px-3 py-2 text-xs font-black uppercase tracking-wide transition ${
-                  tab === t.id
-                    ? "bg-whistle text-pitch-900"
-                    : "bg-zinc-800/90 text-zinc-400 hover:bg-zinc-800"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
-          {filterScrollState.showRight && (
-            <div
-              className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-zinc-950 to-transparent transition-opacity duration-200"
-              aria-hidden
-            />
-          )}
+            {t("backToMatchDay")}
+          </Link>
         </div>
+      )}
 
-        {tab === "direct" ? (
-          directRows.length === 0 ? (
-            <StadeIdleState rows={rows} t={t} />
-          ) : (
-            <div className="flex flex-col gap-10">
-              {directGrouped.map((group) => (
-                <section
-                  key={group.groupKey}
-                  className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4"
-                >
-                  <LeagueSectionHeader
-                    group={group}
-                    showRoundLink
-                    roundView={roundView}
-                  />
-                  <ul className="mt-4 flex flex-col gap-3">
-                    {group.rows.map((m) => (
-                      <li key={m.id}>
-                        <MatchCard
-                          match={toMatchRow(m)}
-                          goalEvents={goalsFromTimeline(m)}
-                          mpgLayout
-                          hasLineups={m.has_lineups}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          )
-        ) : tab === "europe" ? (
-          <EuropeHubView
-            europeGrouped={europeGrouped}
-            europeRows={europeRows}
-            roundView={roundView}
-            roundContext={roundContext}
-          />
-        ) : (
-          (() => {
-            const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
-            if (!league) return null;
-            return (
-              <LeagueHubBoundary leagueName={league.label}>
-                <LeagueHub
-                  leagueApiId={league.apiFootballLeagueId}
-                  initialRound={roundContext?.roundShort ?? null}
-                />
-              </LeagueHubBoundary>
-            );
-          })()
-        )}
+      {!roundView && dayFallbackBanner != null && (
+        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-xs leading-snug text-amber-100/95">
+          <p className="font-black uppercase tracking-wide text-amber-400/95">
+            {t("todayRest")}
+          </p>
+          <p className="mt-1 font-medium text-amber-50/90">
+            {t("nextMatchesOn")}{" "}
+            <span className="font-bold capitalize text-white">
+              {dayFallbackBanner.shownDayLabelFr}
+            </span>
+          </p>
+        </div>
+      )}
+
+      <div className="relative -mx-1">
+        <nav
+          className="flex gap-1 overflow-x-auto pb-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Filtrer par compétition"
+        >
+          {orderedTabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 rounded-full px-3 py-2 text-xs font-black uppercase tracking-wide transition ${
+                tab === t.id
+                  ? "bg-whistle text-pitch-900"
+                  : "bg-zinc-800/90 text-zinc-400 hover:bg-zinc-800"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+        <div
+          className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-zinc-950 to-transparent"
+          aria-hidden
+        />
       </div>
-    </PullToRefresh>
+
+      {tab === "direct" ? (
+        directRows.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-zinc-900/60 px-6 py-10 text-center shadow-inner">
+            <span className="text-4xl mb-3" aria-hidden="true">
+              😴
+            </span>
+            <p className="text-base font-black text-white">
+              {t("varSleeping")}
+            </p>
+            <p className="mt-2 text-sm text-zinc-400">{t("noDirectMatches")}</p>
+            <Link
+              href="/pronos"
+              className="mt-6 flex h-12 items-center gap-2 rounded-xl bg-whistle px-6 text-sm font-black uppercase tracking-wide text-pitch-900 transition hover:bg-whistle/90 active:scale-95"
+            >
+              <Target className="size-4" />
+              {t("makeMyPronos")}
+            </Link>
+            <div className="mt-2 flex w-full gap-2">
+              <Link
+                href="/leaderboard"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
+              >
+                🏆 {t("leaderboard")}
+              </Link>
+              <Link
+                href="/ligues"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-800/80 py-2.5 text-xs font-black uppercase tracking-wide text-zinc-300 transition hover:bg-zinc-700 active:scale-95"
+              >
+                🛡️ {t("myLeagues")}
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-10">
+            {directGrouped.map((group) => (
+              <section
+                key={group.groupKey}
+                className="rounded-xl border border-white/8 bg-zinc-950/40 px-3 pb-4 pt-3 sm:px-4"
+              >
+                <LeagueSectionHeader
+                  group={group}
+                  showRoundLink
+                  roundView={roundView}
+                />
+                <ul className="mt-4 flex flex-col gap-3">
+                  {group.rows.map((m) => (
+                    <li key={m.id}>
+                      <MatchCard
+                        match={toMatchRow(m)}
+                        goalEvents={goalsFromTimeline(m)}
+                        mpgLayout
+                        hasLineups={m.has_lineups}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )
+      ) : tab === "europe" ? (
+        <EuropeHubView
+          europeGrouped={europeGrouped}
+          europeRows={europeRows}
+          roundView={roundView}
+          roundContext={roundContext}
+        />
+      ) : (
+        (() => {
+          const league = TOP_LEAGUES.find((l) => l.tabKey === tab);
+          if (!league) return null;
+          return (
+            <LeagueHubBoundary leagueName={league.label}>
+              <LeagueHub
+                leagueApiId={league.apiFootballLeagueId}
+                initialRound={roundContext?.roundShort ?? null}
+              />
+            </LeagueHubBoundary>
+          );
+        })()
+      )}
+    </div>
   );
 }

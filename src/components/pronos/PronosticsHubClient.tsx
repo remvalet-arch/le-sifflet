@@ -15,7 +15,6 @@ import {
   type MatchStub,
   type ExistingProno,
 } from "./MatchPronoCard";
-import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 export type CompetitionStub = {
   id: string;
@@ -218,191 +217,184 @@ export function PronosticsHubClient({
   const selectedCompMap = dayMap.get(selectedDay);
 
   return (
-    <PullToRefresh>
-      <div className="flex flex-col gap-4">
-        {/* Global progress bar */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-bold text-zinc-400">
-              {submittedCount} pronostiqué{submittedCount !== 1 ? "s" : ""}
-              <span className="mx-1.5 text-zinc-600">·</span>
-              <span className="text-zinc-500">
-                {total - submittedCount} restant
-                {total - submittedCount !== 1 ? "s" : ""}
-              </span>
+    <div className="flex flex-col gap-4">
+      {/* Global progress bar */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="font-bold text-zinc-400">
+            {submittedCount} pronostiqué{submittedCount !== 1 ? "s" : ""}
+            <span className="mx-1.5 text-zinc-600">·</span>
+            <span className="text-zinc-500">
+              {total - submittedCount} restant
+              {total - submittedCount !== 1 ? "s" : ""}
             </span>
-            {submittedCount === total && (
-              <span className="font-black text-green-400">
-                {t("progressComplete")}
-              </span>
-            )}
-          </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-800">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ease-out ${
-                pct > 50 ? "bg-yellow-400" : "bg-zinc-600"
-              }`}
-              style={{ width: `${animatedPct}%` }}
-            />
-          </div>
+          </span>
+          {submittedCount === total && (
+            <span className="font-black text-green-400">
+              {t("progressComplete")}
+            </span>
+          )}
         </div>
-
-        <MatchFilterBar
-          dayOrder={dayOrder}
-          dayMap={dayMap}
-          selectedDay={selectedDay}
-          onSelectedDayChange={setSelectedDay}
-          isMatchDone={isMatchDone}
-        />
-
-        {competitions.length > 1 && (
-          <CompetitionFilter
-            competitions={competitions}
-            selectedIds={selectedCompIds}
-            onChange={setSelectedCompIds}
-            showCounts={countsForSelectedDay}
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ease-out ${
+              pct > 50 ? "bg-yellow-400" : "bg-zinc-600"
+            }`}
+            style={{ width: `${animatedPct}%` }}
           />
-        )}
+        </div>
+      </div>
 
-        {!selectedCompMap && (
-          <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
-            <p className="mb-2 text-2xl">📅</p>
-            <p className="text-sm font-black text-white">
-              {t("noMatchesDayTitle")}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              {t("noMatchesDayDesc")}
-            </p>
-          </div>
-        )}
-        {selectedCompMap && total === 0 && filterActive && (
-          <div className="space-y-3 rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
-            <p className="text-2xl">🔍</p>
-            <p className="text-sm font-black text-white">
-              {t("noMatchesFilterTitle")}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              {t("noMatchesFilterDesc")}
-            </p>
-            <button
-              type="button"
-              onClick={() => setSelectedCompIds([])}
-              className="mt-2 rounded-full border border-white/10 bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-300 transition hover:text-white"
-            >
-              {t("showAllMatches")}
-            </button>
-          </div>
-        )}
-        {selectedCompMap && (
-          <div className="flex flex-col gap-2">
-            {Array.from(selectedCompMap.entries()).map(
-              ([compId, groupMatches]) => {
-                if (filterActive && !selectedCompIds.includes(compId))
-                  return null;
-                const comp =
-                  compId !== "__none__" ? competitionMap.get(compId) : null;
-                const sectionKey: SectionKey = `${selectedDay}::${compId}`;
-                const isOpen = expanded.has(sectionKey);
-                const sectionDone = groupMatches.filter((m) =>
-                  isMatchDone(m.id),
-                ).length;
-                const sectionTotal = groupMatches.length;
-                const allDone = sectionDone === sectionTotal;
-                const roundShort =
-                  groupMatches.find((m) => m.round_short)?.round_short ?? null;
-                const lobbyHref =
-                  comp?.api_football_league_id && roundShort
-                    ? `/lobby?league=${comp.api_football_league_id}&round=${encodeURIComponent(roundShort)}`
-                    : null;
+      <MatchFilterBar
+        dayOrder={dayOrder}
+        dayMap={dayMap}
+        selectedDay={selectedDay}
+        onSelectedDayChange={setSelectedDay}
+        isMatchDone={isMatchDone}
+      />
 
-                return (
-                  <div
-                    key={sectionKey}
-                    className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/40"
-                  >
-                    <div className="flex w-full items-center gap-2.5 px-4 py-3">
-                      {lobbyHref ? (
-                        <Link
-                          href={lobbyHref}
-                          className="flex min-w-0 items-center gap-2.5 transition active:opacity-70"
-                        >
-                          {comp?.badge_url?.startsWith("http") ? (
-                            <Image
-                              src={comp.badge_url}
-                              alt={comp.name}
-                              width={20}
-                              height={20}
-                              className="size-5 shrink-0 object-contain"
-                            />
-                          ) : (
-                            <span className="shrink-0 text-sm">🏆</span>
-                          )}
-                          <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300 underline-offset-2 hover:underline">
-                            {comp?.name ?? t("competitionFallback")}
-                          </span>
-                        </Link>
-                      ) : (
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <span className="shrink-0 text-sm">🏆</span>
-                          <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300">
-                            {comp?.name ?? t("competitionFallback")}
-                          </span>
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => toggleSection(sectionKey)}
-                        className="ml-auto flex flex-1 items-center justify-end gap-1.5 py-1 pl-2 transition active:opacity-70"
+      {competitions.length > 1 && (
+        <CompetitionFilter
+          competitions={competitions}
+          selectedIds={selectedCompIds}
+          onChange={setSelectedCompIds}
+          showCounts={countsForSelectedDay}
+        />
+      )}
+
+      {!selectedCompMap && (
+        <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
+          <p className="mb-2 text-2xl">📅</p>
+          <p className="text-sm font-black text-white">
+            {t("noMatchesDayTitle")}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">{t("noMatchesDayDesc")}</p>
+        </div>
+      )}
+      {selectedCompMap && total === 0 && filterActive && (
+        <div className="space-y-3 rounded-2xl border border-dashed border-zinc-700 px-4 py-10 text-center">
+          <p className="text-2xl">🔍</p>
+          <p className="text-sm font-black text-white">
+            {t("noMatchesFilterTitle")}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            {t("noMatchesFilterDesc")}
+          </p>
+          <button
+            type="button"
+            onClick={() => setSelectedCompIds([])}
+            className="mt-2 rounded-full border border-white/10 bg-zinc-800 px-4 py-2 text-xs font-bold text-zinc-300 transition hover:text-white"
+          >
+            {t("showAllMatches")}
+          </button>
+        </div>
+      )}
+      {selectedCompMap && (
+        <div className="flex flex-col gap-2">
+          {Array.from(selectedCompMap.entries()).map(
+            ([compId, groupMatches]) => {
+              if (filterActive && !selectedCompIds.includes(compId))
+                return null;
+              const comp =
+                compId !== "__none__" ? competitionMap.get(compId) : null;
+              const sectionKey: SectionKey = `${selectedDay}::${compId}`;
+              const isOpen = expanded.has(sectionKey);
+              const sectionDone = groupMatches.filter((m) =>
+                isMatchDone(m.id),
+              ).length;
+              const sectionTotal = groupMatches.length;
+              const allDone = sectionDone === sectionTotal;
+              const roundShort =
+                groupMatches.find((m) => m.round_short)?.round_short ?? null;
+              const lobbyHref =
+                comp?.api_football_league_id && roundShort
+                  ? `/lobby?league=${comp.api_football_league_id}&round=${encodeURIComponent(roundShort)}`
+                  : null;
+
+              return (
+                <div
+                  key={sectionKey}
+                  className="overflow-hidden rounded-2xl border border-white/8 bg-zinc-900/40"
+                >
+                  <div className="flex w-full items-center gap-2.5 px-4 py-3">
+                    {lobbyHref ? (
+                      <Link
+                        href={lobbyHref}
+                        className="flex min-w-0 items-center gap-2.5 transition active:opacity-70"
                       >
-                        <span
-                          className={`text-[11px] font-bold tabular-nums ${
-                            allDone ? "text-green-400" : "text-zinc-500"
-                          }`}
-                        >
-                          {sectionDone}/{sectionTotal}
-                        </span>
-                        {isOpen ? (
-                          <ChevronDown className="size-4 text-zinc-500" />
+                        {comp?.badge_url?.startsWith("http") ? (
+                          <Image
+                            src={comp.badge_url}
+                            alt={comp.name}
+                            width={20}
+                            height={20}
+                            className="size-5 shrink-0 object-contain"
+                          />
                         ) : (
-                          <ChevronRight className="size-4 text-zinc-500" />
+                          <span className="shrink-0 text-sm">🏆</span>
                         )}
-                      </button>
-                    </div>
-
-                    {isOpen && (
-                      <div className="flex flex-col gap-2 border-t border-white/5 px-3 pb-3 pt-2">
-                        {groupMatches.map((m) => {
-                          const p = pronoByMatchId.get(m.id);
-                          return (
-                            <MatchPronoCard
-                              key={m.id}
-                              match={m}
-                              existingProno={compositeProno(
-                                existingPronos,
-                                m.id,
-                              )}
-                              existingScore={p?.score ?? null}
-                              existingScorers={p?.scorers ?? null}
-                              onSubmittedChange={(submitted) => {
-                                setLocalSubmittedIds((prev) => {
-                                  const next = new Set(prev);
-                                  if (submitted) next.add(m.id);
-                                  else next.delete(m.id);
-                                  return next;
-                                });
-                              }}
-                            />
-                          );
-                        })}
+                        <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300 underline-offset-2 hover:underline">
+                          {comp?.name ?? t("competitionFallback")}
+                        </span>
+                      </Link>
+                    ) : (
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="shrink-0 text-sm">🏆</span>
+                        <span className="text-[12px] font-black uppercase tracking-wide text-zinc-300">
+                          {comp?.name ?? t("competitionFallback")}
+                        </span>
                       </div>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(sectionKey)}
+                      className="ml-auto flex flex-1 items-center justify-end gap-1.5 py-1 pl-2 transition active:opacity-70"
+                    >
+                      <span
+                        className={`text-[11px] font-bold tabular-nums ${
+                          allDone ? "text-green-400" : "text-zinc-500"
+                        }`}
+                      >
+                        {sectionDone}/{sectionTotal}
+                      </span>
+                      {isOpen ? (
+                        <ChevronDown className="size-4 text-zinc-500" />
+                      ) : (
+                        <ChevronRight className="size-4 text-zinc-500" />
+                      )}
+                    </button>
                   </div>
-                );
-              },
-            )}
-          </div>
-        )}
-      </div>
-    </PullToRefresh>
+
+                  {isOpen && (
+                    <div className="flex flex-col gap-2 border-t border-white/5 px-3 pb-3 pt-2">
+                      {groupMatches.map((m) => {
+                        const p = pronoByMatchId.get(m.id);
+                        return (
+                          <MatchPronoCard
+                            key={m.id}
+                            match={m}
+                            existingProno={compositeProno(existingPronos, m.id)}
+                            existingScore={p?.score ?? null}
+                            existingScorers={p?.scorers ?? null}
+                            onSubmittedChange={(submitted) => {
+                              setLocalSubmittedIds((prev) => {
+                                const next = new Set(prev);
+                                if (submitted) next.add(m.id);
+                                else next.delete(m.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            },
+          )}
+        </div>
+      )}
+    </div>
   );
 }

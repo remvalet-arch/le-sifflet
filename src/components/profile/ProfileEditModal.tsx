@@ -283,21 +283,18 @@ export function ProfileEditModal({
                   <button
                     key={emoji}
                     type="button"
-                    onClick={() => {
-                      if (locked) {
-                        toast(
-                          te("fieldAvatarLocked", {
-                            xp: minXp.toLocaleString(bcp47),
-                          }),
-                          { icon: "🔒" },
-                        );
-                      } else {
-                        setAvatar(emoji);
-                      }
-                    }}
-                    className={`relative flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-2xl transition active:scale-95 ${
+                    disabled={locked}
+                    onClick={() => !locked && setAvatar(emoji)}
+                    title={
                       locked
-                        ? "bg-zinc-900/40"
+                        ? te("fieldAvatarLocked", {
+                            minXp: minXp.toLocaleString(bcp47),
+                          })
+                        : undefined
+                    }
+                    className={`relative flex h-12 w-full items-center justify-center rounded-xl text-2xl transition ${
+                      locked
+                        ? "cursor-not-allowed bg-zinc-900/40 opacity-40"
                         : avatar === emoji
                           ? "bg-whistle/20 ring-2 ring-whistle"
                           : "bg-zinc-900 hover:bg-zinc-800"
@@ -306,15 +303,10 @@ export function ProfileEditModal({
                     {locked ? (
                       <>
                         <span className="opacity-30">{emoji}</span>
-                        <span className="text-[8px] font-black tabular-nums text-zinc-600">
-                          {minXp.toLocaleString(bcp47)} XP
-                        </span>
+                        <Lock className="absolute bottom-1 right-1 size-2.5 text-zinc-500" />
                       </>
                     ) : (
                       emoji
-                    )}
-                    {locked && (
-                      <Lock className="absolute top-0.5 right-0.5 size-2.5 text-zinc-600" />
                     )}
                   </button>
                 );
