@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Trophy, Flame, LoaderCircle, PlayCircle, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useBcp47 } from "@/lib/use-bcp47";
+import { UserName } from "@/components/ui/UserName";
 
 type LeaderboardRow = {
   user_id: string;
@@ -180,8 +181,12 @@ export function SquadLeaderboard({
                     {idx + 1}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate font-bold text-white">
-                      {isMe ? tCommon("you") : row.username}
+                    <p className="font-bold text-white">
+                      {isMe ? (
+                        tCommon("you")
+                      ) : (
+                        <UserName fullName={row.username} />
+                      )}
                     </p>
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
                       {row.rank}

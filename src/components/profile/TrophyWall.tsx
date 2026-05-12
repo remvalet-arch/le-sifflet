@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   Trophy,
   Lock,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { BadgeRow } from "@/types/database";
@@ -49,16 +50,20 @@ const BADGE_RING: Record<string, string> = {
 type Props = {
   badges: BadgeRow[];
   unlockedBadgeIds: string[];
+  unlockedAtMap?: Record<string, string>;
 };
 
-export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
+export function TrophyWall({ badges, unlockedBadgeIds, unlockedAtMap }: Props) {
   const t = useTranslations("Profile");
-  const [tooltip, setTooltip] = useState<string | null>(null);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeRow | null>(null);
   const unlocked = new Set(unlockedBadgeIds);
 
   if (badges.length === 0) return null;
 
   const pct = Math.round((unlocked.size / badges.length) * 100);
+
+  const openBadge = (badge: BadgeRow) => setSelectedBadge(badge);
+  const closeBadge = () => setSelectedBadge(null);
 
   return (
     <section className="mt-2">
@@ -86,54 +91,126 @@ export function TrophyWall({ badges, unlockedBadgeIds }: Props) {
           const ring = BADGE_RING[badge.slug] ?? "ring-white/20";
 
           return (
-            <div key={badge.id} className="flex flex-col gap-0">
-              <button
-                onClick={() =>
-                  setTooltip(tooltip === badge.id ? null : badge.id)
-                }
-                className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 px-2 py-5 text-center transition-all active:scale-95 ${
-                  isUnlocked
-                    ? neon
-                    : "border-zinc-700 bg-zinc-900 text-zinc-600"
-                }`}
+            <button
+              key={badge.id}
+              type="button"
+              onClick={() => openBadge(badge)}
+              className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 px-2 py-5 text-center transition-all active:scale-95 ${
+                isUnlocked ? neon : "border-zinc-700 bg-zinc-900 text-zinc-600"
+              }`}
+            >
+              <div
+                className={`relative ${isUnlocked ? `rounded-full ring-2 ${ring} animate-pulse` : "grayscale opacity-40"}`}
               >
-                <div
-                  className={`relative ${isUnlocked ? `rounded-full ring-2 ${ring} animate-pulse` : "grayscale opacity-40"}`}
-                >
-                  <Icon className="size-7" />
-                  {!isUnlocked && (
-                    <Lock className="absolute -right-1.5 -bottom-1.5 size-3.5 text-zinc-500" />
-                  )}
-                </div>
-                <p
-                  className={`text-[10px] font-black uppercase tracking-wide leading-tight ${isUnlocked ? "" : "text-zinc-600"}`}
-                >
-                  {badge.label}
-                </p>
-              </button>
-
-              {!isUnlocked && (
-                <p className="mt-1 px-1 text-center text-[8px] font-medium leading-tight text-zinc-700 line-clamp-2">
-                  {badge.description}
-                </p>
-              )}
-
-              {tooltip === badge.id && (
-                <div className="mt-1.5 rounded-xl border border-white/8 bg-zinc-800 px-3 py-2.5 text-center">
-                  <p className="text-xs font-semibold text-zinc-300">
-                    {badge.description}
-                  </p>
-                  {isUnlocked && (
-                    <p className="mt-1 text-[10px] font-bold text-green-400">
-                      {t("badgeUnlocked")}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+                <Icon className="size-7" />
+                {!isUnlocked && (
+                  <Lock className="absolute -right-1.5 -bottom-1.5 size-3.5 text-zinc-500" />
+                )}
+              </div>
+              <p
+                className={`text-[10px] font-black uppercase tracking-wide leading-tight ${isUnlocked ? "" : "text-zinc-600"}`}
+              >
+                {badge.label}
+              </p>
+            </button>
           );
         })}
       </div>
+
+      {/* Badge detail modal */}
+      {selectedBadge && (
+        <div className="fixed inset-0 z-50 flex items-end" onClick={closeBadge}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative w-full rounded-t-3xl border-t border-white/10 bg-zinc-900 px-5 pt-6 animate-in slide-in-from-bottom-4 duration-200"
+            style={{
+              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeBadge}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+              aria-label="Fermer"
+            >
+              <X className="size-4" />
+            </button>
+
+            <BadgeModalContent
+              badge={selectedBadge}
+              isUnlocked={unlocked.has(selectedBadge.id)}
+              unlockedAt={unlockedAtMap?.[selectedBadge.id]}
+              t={t}
+            />
+          </div>
+        </div>
+      )}
     </section>
+  );
+}
+
+function BadgeModalContent({
+  badge,
+  isUnlocked,
+  unlockedAt,
+  t,
+}: {
+  badge: BadgeRow;
+  isUnlocked: boolean;
+  unlockedAt?: string;
+  t: ReturnType<typeof useTranslations<"Profile">>;
+}) {
+  const Icon = BADGE_ICONS[badge.icon_name] ?? Trophy;
+  const neon =
+    BADGE_NEON[badge.slug] ?? "border-zinc-700 bg-zinc-800 text-zinc-400";
+  const ring = BADGE_RING[badge.slug] ?? "ring-white/20";
+
+  const formattedDate = unlockedAt
+    ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(
+        new Date(unlockedAt),
+      )
+    : null;
+
+  return (
+    <div className="flex flex-col items-center gap-4 py-4 text-center">
+      <div
+        className={`flex size-20 items-center justify-center rounded-full border-2 ${neon} ${isUnlocked ? `ring-2 ${ring}` : "grayscale opacity-50"}`}
+      >
+        <Icon className="size-10" />
+      </div>
+
+      <div>
+        <p className="text-lg font-black text-white">{badge.label}</p>
+        {isUnlocked ? (
+          <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-0.5 text-[11px] font-black text-green-400">
+            ✓ {t("badgeUnlocked")}
+            {formattedDate && (
+              <span className="font-medium text-green-500/70">
+                · {formattedDate}
+              </span>
+            )}
+          </span>
+        ) : (
+          <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-0.5 text-[11px] font-bold text-zinc-500">
+            <Lock className="size-3" />
+            {t("badgeLocked")}
+          </span>
+        )}
+      </div>
+
+      <p className="max-w-xs text-sm leading-relaxed text-zinc-300">
+        {badge.description}
+      </p>
+
+      {!isUnlocked && (
+        <div className="w-full rounded-2xl border border-white/8 bg-zinc-800/60 px-4 py-3 text-left">
+          <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+            {t("badgeCondition")}
+          </p>
+          <p className="text-xs text-zinc-400">{badge.criteria_type}</p>
+        </div>
+      )}
+    </div>
   );
 }

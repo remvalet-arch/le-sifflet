@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import {
   Copy,
@@ -23,6 +23,7 @@ import { readActiveSquadFromStorage } from "@/lib/squads/active-squad-storage";
 import type { SquadRow } from "@/types/database";
 import { CreateLeagueWizard } from "./CreateLeagueWizard";
 import { track } from "@/lib/analytics";
+import { createClient } from "@/lib/supabase/client";
 
 type SquadMember = {
   user_id: string;
@@ -43,6 +44,8 @@ export function LiguesPageClient({ userId }: { userId: string }) {
   const bcp47 = useBcp47();
   const { squadId: activeId, setActiveSquad } = useActiveSquad();
   const [squads, setSquads] = useState<SquadWithMembers[] | null>(null);
+  const markedReadRef = useRef(false);
+  const supabase = createClient();
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [copiedSquadId, setCopiedSquadId] = useState<string | null>(null);
@@ -67,6 +70,17 @@ export function LiguesPageClient({ userId }: { userId: string }) {
   useEffect(() => {
     loadSquads();
   }, [loadSquads, tick]);
+
+  // Mark all squads as read on first load — met à jour last_read_at en DB
+  // pour que le badge BottomNav ne réapparaisse pas au prochain reload
+  useEffect(() => {
+    if (!squads || squads.length === 0 || markedReadRef.current) return;
+    markedReadRef.current = true;
+    squads.forEach((s) => {
+      void supabase.rpc("mark_squad_read", { p_squad_id: s.id });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [squads]);
 
   useEffect(() => {
     if (!squads || squads.length !== 1) return;

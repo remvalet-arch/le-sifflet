@@ -8,9 +8,14 @@ import type { BadgeRow } from "@/types/database";
 type Props = {
   allBadges: BadgeRow[];
   unlockedBadgeIds: string[];
+  unlockedAtMap?: Record<string, string>;
 };
 
-export function ProfileBadges({ allBadges, unlockedBadgeIds }: Props) {
+export function ProfileBadges({
+  allBadges,
+  unlockedBadgeIds,
+  unlockedAtMap,
+}: Props) {
   const t = useTranslations("Profile");
 
   return (
@@ -29,7 +34,11 @@ export function ProfileBadges({ allBadges, unlockedBadgeIds }: Props) {
       {allBadges.length === 0 ? (
         <EmptyState emoji="🏅" title={t("badgesComingSoon")} />
       ) : (
-        <TrophyWall badges={allBadges} unlockedBadgeIds={unlockedBadgeIds} />
+        <TrophyWall
+          badges={allBadges}
+          unlockedBadgeIds={unlockedBadgeIds}
+          unlockedAtMap={unlockedAtMap}
+        />
       )}
     </div>
   );
