@@ -231,7 +231,7 @@ export default function SettingsClient({
             type="button"
             onClick={() => void handleBuyFreeze()}
             disabled={buyingFreeze || freezesOwned >= 3 || balance < 500}
-            className="mt-4 w-full rounded-xl bg-sky-500/20 border border-sky-500/30 py-3 text-sm font-black text-sky-400 transition hover:bg-sky-500/30 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+            className="mt-4 w-full rounded-xl bg-whistle/20 border border-whistle/30 py-3 text-sm font-black text-whistle transition hover:bg-whistle/30 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
           >
             {buyingFreeze
               ? t("streakFreezeBuying")

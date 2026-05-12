@@ -2,27 +2,51 @@
 
 import { useState, useEffect, useRef } from "react";
 import { trySubscribePush } from "@/components/pwa/PushOptIn";
-import { X, BellRing, Siren, CheckCircle2 } from "lucide-react";
+import { X, BellRing, Siren, CheckCircle2, ChevronLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const TOTAL_STEPS = 4;
 type VarVote = "oui" | "non" | "timeout" | null;
 
-function ProgressDots({ current }: { current: number }) {
+function ProgressDots({
+  current,
+  onBack,
+}: {
+  current: number;
+  onBack?: () => void;
+}) {
   return (
-    <div className="flex items-center justify-center gap-1.5 mb-6">
-      {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-        <div
-          key={`step-`}
-          className={`rounded-full transition-all duration-300 ${
-            i + 1 === current
-              ? "h-2 w-6 bg-whistle"
-              : i + 1 < current
-                ? "size-2 bg-whistle/60"
-                : "size-2 bg-white/15"
-          }`}
-        />
-      ))}
+    <div className="mb-6 flex items-center gap-3">
+      {onBack && current > 1 ? (
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Étape précédente"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+      ) : (
+        <div className="size-7 shrink-0" aria-hidden />
+      )}
+      <div className="flex flex-1 items-center justify-center gap-1.5">
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={onBack && i + 1 < current ? onBack : undefined}
+            aria-label={i + 1 < current ? "Revenir à cette étape" : undefined}
+            className={`rounded-full transition-all duration-300 ${
+              i + 1 === current
+                ? "h-2 w-6 bg-whistle"
+                : i + 1 < current
+                  ? "size-2 cursor-pointer bg-whistle/60 hover:bg-whistle/90"
+                  : "size-2 bg-white/15"
+            }`}
+          />
+        ))}
+      </div>
+      <div className="size-7 shrink-0" aria-hidden />
     </div>
   );
 }
@@ -77,6 +101,23 @@ export function OnboardingTour() {
   function saveStep(s: number) {
     localStorage.setItem("onboardingStep", String(s));
     setStep(s);
+  }
+
+  function goBack() {
+    if (!step || step <= 1) return;
+    // Réinitialise les états de la step qu'on quitte
+    if (step === 2) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setVarVote(null);
+      setVarTimer(30);
+      setShowVarResult(false);
+    }
+    if (step === 3) {
+      setHomeScore("");
+      setAwayScore("");
+      setPronoSubmitted(false);
+    }
+    saveStep(step - 1);
   }
 
   function close() {
@@ -140,7 +181,7 @@ export function OnboardingTour() {
             <X className="size-4" />
           </button>
 
-          <ProgressDots current={1} />
+          <ProgressDots current={1} onBack={goBack} />
 
           <div className="mb-6 text-center">
             <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-whistle/20">
@@ -184,7 +225,7 @@ export function OnboardingTour() {
 
           {!showVarResult ? (
             <div className="p-6">
-              <ProgressDots current={2} />
+              <ProgressDots current={2} onBack={goBack} />
 
               <p className="mb-1 text-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
                 {t("step2Subtitle")}
@@ -249,7 +290,7 @@ export function OnboardingTour() {
             </div>
           ) : (
             <div className="p-6">
-              <ProgressDots current={2} />
+              <ProgressDots current={2} onBack={goBack} />
 
               {/* Result badge */}
               <div
@@ -327,7 +368,7 @@ export function OnboardingTour() {
             <X className="size-4" />
           </button>
 
-          <ProgressDots current={3} />
+          <ProgressDots current={3} onBack={goBack} />
 
           <h2 className="mb-1 text-center text-xl font-semibold text-white">
             {t("step3Title")}
@@ -447,7 +488,7 @@ export function OnboardingTour() {
       {step === 4 && (
         <div className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl animate-in fade-in slide-in-from-bottom-8">
           <div className="flex flex-col items-center p-8 text-center">
-            <ProgressDots current={4} />
+            <ProgressDots current={4} onBack={goBack} />
 
             <div className="relative mb-5 flex size-20 items-center justify-center rounded-full border-4 border-whistle/20 bg-whistle/10 text-whistle">
               <Siren className="size-10" aria-hidden="true" />

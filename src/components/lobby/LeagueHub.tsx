@@ -8,6 +8,7 @@ import { LeagueStandingsTable } from "@/components/lobby/LeagueStandingsTable";
 import { TopPlayersList } from "@/components/lobby/TopPlayersList";
 import type { MatchRow } from "@/types/database";
 import { SkeletonMatchCard } from "@/components/ui/SkeletonCard";
+import { filterRoundsForLeague } from "@/lib/leagues/matchdayConfig";
 
 type HubTabId = "results" | "standings" | "scorers" | "assists";
 
@@ -179,8 +180,11 @@ export function LeagueHub({
     };
   }, [leagueApiId, initialRound]);
 
-  // Triés du plus récent au plus ancien par date réelle — compatible coupes européennes
-  const rounds = useMemo(() => sortRoundsByDateDesc(matches), [matches]);
+  // Triés du plus récent au plus ancien, filtrés selon le type de compétition
+  const rounds = useMemo(
+    () => filterRoundsForLeague(sortRoundsByDateDesc(matches), leagueApiId),
+    [matches, leagueApiId],
+  );
 
   const selectedRoundIndex = selectedRound ? rounds.indexOf(selectedRound) : 0;
 

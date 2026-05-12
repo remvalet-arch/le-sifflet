@@ -4,6 +4,7 @@ import { Shield, Target, TrendingUp, Trophy, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getMinBetForBalance } from "@/lib/economy/min-bet";
 import { SeasonBadge } from "@/components/shared/SeasonBadge";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { SeasonArchiveRow } from "@/types/database";
 
 type Props = {
@@ -129,9 +130,12 @@ export function ProfileOverview({
       {headerBalance !== undefined && (
         <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-zinc-900 px-5 py-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              {t("minBet")}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                {t("minBet")}
+              </p>
+              <InfoTooltip content={t("minBetTooltip")} />
+            </div>
             <p className="mt-1 text-base font-black text-amber-400">
               {getMinBetForBalance(headerBalance).toLocaleString()} 🪙
             </p>

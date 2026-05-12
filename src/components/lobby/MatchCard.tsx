@@ -9,6 +9,7 @@ import { LiveBadge } from "@/components/lobby/LiveBadge";
 import { MatchCardCountdown } from "@/components/lobby/MatchCardCountdown";
 import { formatMatchDateTimeParis } from "@/lib/format-match-time";
 import { isNextImageRemoteLogoUrl } from "@/lib/remote-logo-hosts";
+import { getTeamShortName } from "@/lib/teams/shortNames";
 
 /** Blason équipe — taille MPG (40px) ou standard (32px). */
 function LobbyTeamLogo({
@@ -265,8 +266,14 @@ export function MatchCard({
           >
             <LobbyTeamLogo url={match.home_team_logo} mpgLayout={mpgLayout} />
           </div>
-          <p className="w-full text-xs font-bold leading-tight text-white line-clamp-2 break-words">
-            {match.team_home}
+          <p
+            className="w-full text-xs font-bold leading-tight text-white line-clamp-2 break-words"
+            title={match.team_home}
+          >
+            <span className="hidden xs:inline">{match.team_home}</span>
+            <span className="xs:hidden">
+              {getTeamShortName(match.team_home)}
+            </span>
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-center justify-center px-3">
@@ -280,8 +287,14 @@ export function MatchCard({
           >
             <LobbyTeamLogo url={match.away_team_logo} mpgLayout={mpgLayout} />
           </div>
-          <p className="w-full text-xs font-bold leading-tight text-white line-clamp-2 break-words">
-            {match.team_away}
+          <p
+            className="w-full text-xs font-bold leading-tight text-white line-clamp-2 break-words"
+            title={match.team_away}
+          >
+            <span className="hidden xs:inline">{match.team_away}</span>
+            <span className="xs:hidden">
+              {getTeamShortName(match.team_away)}
+            </span>
           </p>
         </div>
         {goalsForScore.length > 0 && (isLive || isFinished) && (

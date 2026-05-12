@@ -103,7 +103,10 @@ export default async function ProfilePage() {
       .order("placed_at", { ascending: false })
       .limit(30),
     getCachedBadges(),
-    supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
+    supabase
+      .from("user_badges")
+      .select("badge_id, unlocked_at")
+      .eq("user_id", user.id),
     profile?.favorite_team_id
       ? supabase
           .from("teams")
@@ -324,6 +327,9 @@ export default async function ProfilePage() {
   const rank = rankDisplayFromDb(profile?.rank ?? "", tp);
   const xpTotal = profile?.xp ?? 0;
   const unlockedBadgeIds = (userBadgesData ?? []).map((ub) => ub.badge_id);
+  const unlockedAtMap = Object.fromEntries(
+    (userBadgesData ?? []).map((ub) => [ub.badge_id, ub.unlocked_at]),
+  );
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-5">
@@ -335,6 +341,7 @@ export default async function ProfilePage() {
         pronos={pronoEntries}
         allBadges={allBadges}
         unlockedBadgeIds={unlockedBadgeIds}
+        unlockedAtMap={unlockedAtMap}
         amisContent={<AmisContent currentUserId={user.id} />}
         refillContent={
           balance < REFILL_THRESHOLD ? (
